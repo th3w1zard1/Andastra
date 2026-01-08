@@ -70,7 +70,7 @@ namespace Andastra.Parsing.Resource.Generics.CNV
         public CNV Load()
         {
             // Read GFF first (CNV is a GFF format)
-            GFF gff = GFFAuto.ReadGff(_source, _offset, _size, ResourceType.CNV);
+            GFF gff = GFFAuto.ReadGff(_source, _offset, _size, Andastra.Parsing.Common.ResourceType.CNV);
 
             // Construct CNV from GFF
             _cnv = CNVHelper.ConstructCnv(gff);

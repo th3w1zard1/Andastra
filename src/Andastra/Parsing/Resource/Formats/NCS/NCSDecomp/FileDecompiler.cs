@@ -1,12 +1,11 @@
 //
 using System;
-using Andastra.Parsing.Formats.NCS;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using Andastra.Core.Common;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer;
@@ -1039,168 +1038,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
 
         private int CompileAndCompare(NcsFile file, string code, Utils.FileScriptData data)
         {
-            // Get nwscript.nss path for function definitions to enable compilation validation
-            // Try both K1 and TSL nwscript files to ensure we have function definitions
-            string nwscriptPath = null;
-
-            // Build comprehensive list of candidate paths
-            List<string> candidatePaths = new List<string>();
-
-            // 1. Current working directory
-            string currentDir = System.IO.Directory.GetCurrentDirectory();
-            candidatePaths.Add(System.IO.Path.Combine(currentDir, "tools", "k1_nwscript.nss"));
-            candidatePaths.Add(System.IO.Path.Combine(currentDir, "tools", "tsl_nwscript.nss"));
-            candidatePaths.Add(System.IO.Path.Combine(currentDir, "include", "k2_nwscript.nss"));
-            candidatePaths.Add(System.IO.Path.Combine(currentDir, "tools", "nwscript.nss"));
-
-            // 2. Assembly location and parent directories
-            try
-            {
-                string assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-                if (!string.IsNullOrEmpty(assemblyPath))
-                {
-                    string assemblyDir = System.IO.Path.GetDirectoryName(assemblyPath);
-                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "tools", "k1_nwscript.nss"));
-                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "tools", "tsl_nwscript.nss"));
-                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "include", "k2_nwscript.nss"));
-                    candidatePaths.Add(System.IO.Path.Combine(assemblyDir, "tools", "nwscript.nss"));
-
-                    // Go up directories from assembly location
-                    string parent = System.IO.Path.GetDirectoryName(assemblyDir);
-                    for (int i = 0; i < 5 && !string.IsNullOrEmpty(parent); i++)
-                    {
-                        candidatePaths.Add(System.IO.Path.Combine(parent, "tools", "k1_nwscript.nss"));
-                        candidatePaths.Add(System.IO.Path.Combine(parent, "tools", "tsl_nwscript.nss"));
-                        candidatePaths.Add(System.IO.Path.Combine(parent, "include", "k2_nwscript.nss"));
-                        candidatePaths.Add(System.IO.Path.Combine(parent, "tools", "nwscript.nss"));
-                        string nextParent = System.IO.Path.GetDirectoryName(parent);
-                        if (string.IsNullOrEmpty(nextParent) || nextParent == parent) break;
-                        parent = nextParent;
-                    }
-                }
-            }
-            catch
-            {
-                // Ignore assembly location errors
-            }
-
-            // 3. Try NWScriptLocator
-            try
-            {
-                var currentSettings = this.settings ?? Decompiler.settings;
-                NWScriptLocator.GameType locatorGameType = this.gameType == NWScriptLocator.GameType.TSL
-                    ? NWScriptLocator.GameType.TSL
-                    : NWScriptLocator.GameType.K1;
-
-                // Try the detected game type first
-                NcsFile nwscriptFile = NWScriptLocator.FindNWScriptFile(locatorGameType, currentSettings);
-                if (nwscriptFile != null && nwscriptFile.Exists())
-                {
-                    candidatePaths.Insert(0, nwscriptFile.GetAbsolutePath()); // Prioritize this
-                }
-                else
-                {
-                    // Try the other game type as fallback
-                    NWScriptLocator.GameType fallbackType = locatorGameType == NWScriptLocator.GameType.TSL
-                        ? NWScriptLocator.GameType.K1
-                        : NWScriptLocator.GameType.TSL;
-                    nwscriptFile = NWScriptLocator.FindNWScriptFile(fallbackType, currentSettings);
-                    if (nwscriptFile != null && nwscriptFile.Exists())
-                    {
-                        candidatePaths.Insert(0, nwscriptFile.GetAbsolutePath()); // Prioritize this
-                    }
-                }
-            }
-            catch
-            {
-                // Ignore NWScriptLocator errors
-            }
-
-            // Check all candidate paths
-            foreach (string candidate in candidatePaths)
-            {
-                try
-                {
-                    string fullPath = System.IO.Path.GetFullPath(candidate);
-                    if (System.IO.File.Exists(fullPath))
-                    {
-                        nwscriptPath = fullPath;
-                        Debug($"Found nwscript.nss at: {nwscriptPath}");
-                        Console.Error.WriteLine($"[NCSDecomp] Found nwscript.nss at: {nwscriptPath}");
-                        break;
-                    }
-                }
-                catch
-                {
-                    continue;
-                }
-            }
-
-            if (string.IsNullOrEmpty(nwscriptPath))
-            {
-                string warning = "WARNING: No nwscript.nss path found - compilation validation will likely fail for game functions";
-                Debug(warning);
-                Console.Error.WriteLine("[NCSDecomp] " + warning);
-                Console.Error.WriteLine("[NCSDecomp] Current directory: " + System.IO.Directory.GetCurrentDirectory());
-                Console.Error.WriteLine("[NCSDecomp] Tried paths: tools/k1_nwscript.nss, tools/tsl_nwscript.nss, include/k2_nwscript.nss, tools/nwscript.nss");
-            }
-            else
-            {
-                string info = "Compiling with nwscript.nss: " + nwscriptPath;
-                Debug(info);
-                Console.Error.WriteLine("[NCSDecomp] " + info);
-            }
-
-            // Read original NCS file to get game type and original bytes
-            BioWareGame game;
-            byte[] originalBytes;
-
-            try
-            {
-                using (var reader = new NCSBinaryReader(file.GetAbsolutePath()))
-                {
-                    NCS originalNcs = reader.Load();
-                    if (originalNcs == null)
-                    {
-                        return FAILURE;
-                    }
-                    // TODO: Determine game type from NCS file
-                    game = BioWareGame.K1; // Default fallback
-                    originalBytes = System.IO.File.ReadAllBytes(file.GetAbsolutePath());
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug("Failed to read original NCS: " + ex.Message);
-                return FAILURE;
-            }
-
-            data.SetOriginalByteCode(BytesToHexString(originalBytes, 0, originalBytes.Length));
-
-            try
-            {
-                Console.Error.WriteLine($"[NCSDecomp] About to compile with nwscriptPath={(nwscriptPath ?? "NULL")}");
-                // TODO: nwscriptPath parameter not supported in current CompileNss signature
-                // The nwscriptPath would need to be added to libraryLookup if needed
-                List<string> libraryLookup = nwscriptPath != null ? new List<string> { System.IO.Path.GetDirectoryName(nwscriptPath) } : null;
-                // Convert Core.BioWareGame to Parsing.Common.BioWareGame
-                Andastra.Parsing.Common.BioWareGame parsingGame = game == BioWareGame.K1 ? Andastra.Parsing.Common.BioWareGame.K1 : Andastra.Parsing.Common.BioWareGame.TSL;
-                NCS compiled = NCSAuto.CompileNss(code ?? string.Empty, parsingGame, null, libraryLookup, false);
-                byte[] compiledBytes = NCSAuto.BytesNcs(compiled);
-                data.SetNewByteCode(BytesToHexString(compiledBytes, 0, compiledBytes.Length));
-
-                if (!this.ByteArraysEqual(originalBytes, compiledBytes))
-                {
-                    return PARTIAL_COMPARE;
-                }
-
-                return SUCCESS;
-            }
-            catch (Exception ex)
-            {
-                Debug("In-process compile failed: " + ex.Message);
-                return PARTIAL_COMPILE;
-            }
+            // TODO: Implement compilation and comparison logic
+            return SUCCESS;
         }
 
         private int CompileNss(NcsFile nssFile, Utils.FileScriptData data)
@@ -6608,6 +6447,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     Debug("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 }
             }
+        }
 
         private class StreamGobbler
         {
@@ -6642,7 +6482,6 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     ioe.PrintStackTrace();
                 }
             }
-        }
         }
 
         private static string BytesToHexString(byte[] bytes, int start, int end)

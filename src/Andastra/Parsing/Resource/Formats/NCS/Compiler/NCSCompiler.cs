@@ -7,6 +7,7 @@ using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
+using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Formats.NCS.Compiler
@@ -119,13 +120,16 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
             }
 
             // Build command line arguments using PyKotor's logic for compatibility with all nwnnsscomp versions
-            NwnnsscompConfig config = new NwnnsscompConfig();
-            var compiler = new ExternalNCSCompiler(config);
+            NcsFile compilerFile = new NcsFile(_nwnnsscompPath);
+            NcsFile sourceFile = new NcsFile(nssPath);
+            NcsFile outputFile = new NcsFile(outputPath);
+            bool isK2 = game == BioWareGame.TSL;
+            NwnnsscompConfig config = new NwnnsscompConfig(compilerFile, sourceFile, outputFile, isK2);
 
             var startInfo = new ProcessStartInfo
             {
                 FileName = _nwnnsscompPath,
-                Arguments = string.Join(" ", config.GetCompileArgs(nssPath, outputPath)),
+                Arguments = string.Join(" ", config.GetCompileArgs(_nwnnsscompPath)),
                 WorkingDirectory = _tempScriptFolder,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -183,7 +187,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
                 // Read the compiled NCS file
                 if (!File.Exists(outputPath))
                 {
-                    throw new FileNotFoundException($"Compilation succeeded but output file not found: {outputPath}");
+                    throw new System.IO.FileNotFoundException($"Compilation succeeded but output file not found: {outputPath}");
                 }
 
                 byte[] compiledBytes = File.ReadAllBytes(outputPath);

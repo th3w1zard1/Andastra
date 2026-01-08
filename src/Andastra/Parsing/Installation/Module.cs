@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Andastra.Parsing.Extract;
+using Andastra.Parsing.Formats.Capsule;
+using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
