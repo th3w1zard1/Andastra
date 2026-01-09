@@ -5,6 +5,7 @@ using System.Linq;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
+using ResourceType = Andastra.Parsing.Common.ResourceType;
 
 namespace Andastra.Parsing.Tools
 {
