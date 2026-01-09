@@ -31,7 +31,7 @@ namespace Andastra.Parsing.Tools
         // Original: def disassemble_ncs(ncs_path: Path, output_path: Path | None = None, *, game: Game | None = None, pretty: bool = True) -> str:
         public static string DisassembleNcs(string ncsPath, string outputPath = null, BioWareGame? game = null, bool pretty = true)
         {
-            Andastra.Parsing.Formats.NCS.NCS ncs = Andastra.Parsing.Formats.NCS.NCSAuto.ReadNcs(ncsPath);
+            var ncs = Andastra.Parsing.Formats.NCS.NCSAuto.ReadNcs(ncsPath);
 
             var lines = new System.Collections.Generic.List<string>();
             lines.Add("; NCS Disassembly");
@@ -40,7 +40,7 @@ namespace Andastra.Parsing.Tools
 
             for (int i = 0; i < ncs.Instructions.Count; i++)
             {
-                Andastra.Parsing.Formats.NCS.NCSInstruction instruction = ncs.Instructions[i];
+                var instruction = ncs.Instructions[i];
                 string instructionStr = instruction.ToString();
 
                 if (pretty)
