@@ -2080,7 +2080,7 @@ namespace TSLPatcher
                 // Check LocalizedString fields for StrRef
                 else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.LocalizedString)
                 {
-                    if (value is Common.LocalizedString locString)
+                    if (value is Andastra.Parsing.Common.LocalizedString locString)
                     {
                         if (locString.StringRef == targetStrref)
                         {
