@@ -9,6 +9,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
 using NCSCompiler = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler;
+using EntryPointError = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NSS.EntryPointError;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
