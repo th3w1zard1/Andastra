@@ -11,6 +11,7 @@ using Andastra.Parsing.Formats.NCS;
 using NCSCompiler = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler;
 using EntryPointError = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NSS.EntryPointError;
 using ResourceNCSPatchLogger = ResourceNCS::Andastra.Parsing.Logger.PatchLogger;
+using KnownExternalCompilers = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSDecomp.KnownExternalCompilers;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
@@ -128,17 +129,10 @@ namespace Andastra.Parsing.Mods.NSS
                             // Copy log messages from TSLPatcher logger to Resource.NCS logger
                             // TODO: HACK - Logger conversion needed between TSLPatcher and Resource.NCS
                             var externalCompiler = new NCSCompiler(NwnnsscompPath, tempFolder, resourceNcsLogger);
-                            KnownExternalCompilers detectedCompiler;
-                            try
-                            {
-                                detectedCompiler = externalCompiler.GetInfo();
-                            }
-                            catch (ArgumentException)
-                            {
-                                detectedCompiler = KnownExternalCompilers.TSLPATCHER;
-                            }
-
-                            if (detectedCompiler != KnownExternalCompilers.TSLPATCHER)
+                            // TODO: STUB - GetInfo() method not implemented in NCSCompiler
+                            // For now, just validate the compiler exists
+                            bool isValidCompiler = externalCompiler.ValidateCompiler();
+                            if (!isValidCompiler)
                             {
                                 logger.AddWarning(
                                     "The nwnnsscomp.exe in the tslpatchdata folder is not the expected TSLPatcher version.\n" +
@@ -270,4 +264,5 @@ namespace Andastra.Parsing.Mods.NSS
         }
     }
 }
+
 
