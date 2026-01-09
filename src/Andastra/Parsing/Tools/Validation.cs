@@ -88,11 +88,11 @@ namespace Andastra.Parsing.Tools
             var errors = new List<string>();
             var missingFiles = new List<string>();
 
-            // Check installation path exists
+            // Check Andastra.Parsing.Installation.Installation path exists
             string installPath = installation.Inner.Path;
             if (!Directory.Exists(installPath))
             {
-                errors.Add($"Installation path does not exist: {installPath}");
+                errors.Add($"Andastra.Parsing.Installation.Installation path does not exist: {installPath}");
             }
 
             // Check essential files if requested
