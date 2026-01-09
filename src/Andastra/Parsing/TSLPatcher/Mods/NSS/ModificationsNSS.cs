@@ -1,3 +1,4 @@
+extern alias ResourceNCS;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +8,7 @@ using System.Text.RegularExpressions;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler;
+using NCSCompiler = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
@@ -242,7 +243,7 @@ namespace Andastra.Parsing.Mods.NSS
 
         private byte[] CompileWithExternal(
             string tempScriptFile,
-            global::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler nwnnsscompiler,
+            NCSCompiler nwnnsscompiler,
             PatchLogger logger, BioWareGame game)
         {
             string tempDir = Path.GetTempPath();

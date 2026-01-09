@@ -16,5 +16,8 @@
     <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="..\Installation\Andastra.Parsing.Installation.csproj" />
     <ProjectReference Include="..\Resource\Andastra.Parsing.Resource.csproj" />
+    <ProjectReference Include="..\Resource\Formats\NCS\Andastra.Parsing.Resource.NCS.csproj" Aliases="ResourceNCS" />
+    <ProjectReference Include="..\Tools\Andastra.Parsing.Tools.csproj" />
+    <PackageReference Include="ini-parser" Version="2.5.2" />
   </ItemGroup>
 </Project>
