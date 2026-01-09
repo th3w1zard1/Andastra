@@ -257,7 +257,7 @@ namespace Andastra.Parsing.Mods.NSS
                 
                 return compiledBytes;
             }
-            catch (NCSCompiler.EntryPointException)
+            catch (EntryPointError)
             {
                 return null;
             }
