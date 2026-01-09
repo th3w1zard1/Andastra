@@ -30,7 +30,7 @@ namespace KotorDiff.Diff
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -296,7 +296,7 @@ namespace KotorDiff.Diff
             Action<string> logFunc = null,
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             bool? isSameResult = true;
             int processedCount = 0;
@@ -441,7 +441,7 @@ namespace KotorDiff.Diff
             bool compareHashes = true,
             ModificationsByType modificationsByType = null,
             Action<string> logFunc = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -523,7 +523,7 @@ namespace KotorDiff.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -578,7 +578,7 @@ namespace KotorDiff.Diff
             ModificationsByType modificationsByType,
             Action<string> logFunc,
             bool compareHashes,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -634,7 +634,7 @@ namespace KotorDiff.Diff
             DiffContext context,
             ModificationsByType modificationsByType,
             Action<string> logFunc,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -685,7 +685,7 @@ namespace KotorDiff.Diff
             ModificationsByType modificationsByType,
             Action<string> logFunc,
             bool compareHashes,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             try
             {
@@ -920,7 +920,7 @@ namespace KotorDiff.Diff
             Func<string, string, bool?> diffFilesFunc = null,
             DiffCache diffCache = null,
             ModificationsByType modificationsByType = null,
-            IncrementalTSLPatchDataWriter incrementalWriter = null)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
@@ -1354,7 +1354,7 @@ namespace KotorDiff.Diff
             string relPath,
             Action<string> logFunc,
             string file2Path,
-            IncrementalTSLPatchDataWriter incrementalWriter)
+            global::TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter)
         {
             if (logFunc == null)
             {
