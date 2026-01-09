@@ -133,10 +133,10 @@ namespace TSLPatcher
         // TODO: STUB - Ensure inner dictionaries use StringComparer.OrdinalIgnoreCase for case-insensitive filename lookups
         // When creating inner Dictionary<string, Tools.TwoDAMemoryReferenceCache> instances, use:
         // new Dictionary<string, Tools.TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase)
-        [CanBeNull] private readonly Dictionary<int, Dictionary<string, Tools.TwoDAMemoryReferenceCache>> _twodaCaches;
+        [CanBeNull] private readonly Dictionary<int, Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache>> _twodaCaches;
 
         // Helper method to create case-insensitive inner dictionaries
-        private static Dictionary<string, Tools.TwoDAMemoryReferenceCache> CreateCaseInsensitiveTwoDACache()
+        private static Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache> CreateCaseInsensitiveTwoDACache()
         {
             return new Dictionary<string, Tools.TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase);
         }
@@ -166,8 +166,8 @@ namespace TSLPatcher
             string iniFilename,
             [CanBeNull] string baseDataPath = null,
             [CanBeNull] string moddedDataPath = null,
-            [CanBeNull] Tools.StrRefReferenceCache strrefCache = null,
-            [CanBeNull] Dictionary<int, Dictionary<string, Tools.TwoDAMemoryReferenceCache>> twodaCaches = null,
+            [CanBeNull] Andastra.Parsing.Tools.StrRefReferenceCache strrefCache = null,
+            [CanBeNull] Dictionary<int, Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache>> twodaCaches = null,
             [CanBeNull] Action<string> logFunc = null)
         {
             _tslpatchdataPath = tslpatchdataPath;
@@ -175,7 +175,7 @@ namespace TSLPatcher
             _baseDataPath = baseDataPath;
             _moddedDataPath = moddedDataPath;
             _strrefCache = strrefCache;
-            _twodaCaches = twodaCaches ?? new Dictionary<int, Dictionary<string, Tools.TwoDAMemoryReferenceCache>>();
+            _twodaCaches = twodaCaches ?? new Dictionary<int, Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache>>();
             _logFunc = logFunc ?? Console.WriteLine;
 
             // Create tslpatchdata directory
@@ -2053,7 +2053,7 @@ namespace TSLPatcher
         /// <summary>
         /// Recursively search GFF structure for fields containing a specific StrRef value.
         /// </summary>
-        public List<string> FindStrRefFieldsRecursive(Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
+        public List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
         {
             var foundPaths = new List<string>();
 
@@ -2119,7 +2119,7 @@ namespace TSLPatcher
         /// <summary>
         /// Search 2DA file for cells containing a specific StrRef value.
         /// </summary>
-        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Formats.TwoDA.TwoDA twoda, int targetStrref)
+        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Andastra.Parsing.Formats.TwoDA.TwoDA twoda, int targetStrref)
         {
             var foundCells = new List<TwoDaCellReference>();
 

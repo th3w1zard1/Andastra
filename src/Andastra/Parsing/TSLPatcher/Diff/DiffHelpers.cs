@@ -8,7 +8,8 @@ using Andastra.Parsing.Formats.ERF;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Mods;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Tools;
+// Removed: using Andastra.Parsing.Tools; // Removed to break circular dependency
+// Using fully qualified names instead
 using Andastra.Parsing.TSLPatcher;
 using JetBrains.Annotations;
 
@@ -26,11 +27,11 @@ namespace Andastra.Parsing.Diff
         // Original: def _determine_tslpatchdata_source(file1_path: Path, file2_path: Path) -> str:
         /// <summary>
         /// Determine which source file should be copied to tslpatchdata.
-        /// 
+        ///
         /// Logic:
         /// - For 2-way diff: Use file1 (vanilla/base) as it will be patched
         /// - For 3+ way diff: Use second-to-last version that exists (not yet implemented)
-        /// 
+        ///
         /// The returned string is used for logging purposes to indicate which source file
         /// will be copied to the tslpatchdata directory.
         /// </summary>
@@ -202,7 +203,7 @@ namespace Andastra.Parsing.Diff
             string capsuleDestination,
             string capsulePath = null,
             Action<string> logFunc = null,
-            [CanBeNull] IncrementalTSLPatchDataWriter incrementalWriter = null)
+            [CanBeNull] Andastra.Parsing.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
