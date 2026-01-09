@@ -89,9 +89,8 @@ namespace Andastra.Parsing.Mods.NSS
                         mutableSource.Value,
                         game,
                         null,
-                        null,
                         new List<string> { tempFolder },
-                        null);
+                        false);
                     compiledBytes = NCSAuto.BytesNcs(ncs);
                     return compiledBytes;
                 }
