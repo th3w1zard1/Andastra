@@ -242,7 +242,7 @@ namespace Andastra.Parsing.Mods.NSS
 
         private byte[] CompileWithExternal(
             string tempScriptFile,
-            Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler nwnnsscompiler,
+            global::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler nwnnsscompiler,
             PatchLogger logger, BioWareGame game)
         {
             string tempDir = Path.GetTempPath();
