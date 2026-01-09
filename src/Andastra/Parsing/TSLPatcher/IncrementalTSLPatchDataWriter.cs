@@ -129,7 +129,7 @@ namespace TSLPatcher
         private int _next2DATokenId = 0;
 
         // StrRef and 2DA memory reference caches for linking patches
-        [CanBeNull] private readonly Tools.StrRefReferenceCache _strrefCache;
+        [CanBeNull] private readonly Andastra.Parsing.Tools.StrRefReferenceCache _strrefCache;
         // TODO: STUB - Ensure inner dictionaries use StringComparer.OrdinalIgnoreCase for case-insensitive filename lookups
         // When creating inner Dictionary<string, Tools.TwoDAMemoryReferenceCache> instances, use:
         // new Dictionary<string, Tools.TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase)

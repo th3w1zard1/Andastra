@@ -203,7 +203,7 @@ namespace Andastra.Parsing.Diff
             string capsuleDestination,
             string capsulePath = null,
             Action<string> logFunc = null,
-            [CanBeNull] Andastra.Parsing.TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
+            [CanBeNull] TSLPatcher.IncrementalTSLPatchDataWriter incrementalWriter = null)
         {
             if (logFunc == null)
             {
