@@ -140,4 +140,10 @@
     <AvaloniaResource Remove="**\*.axaml" />
   </ItemGroup>
 
+  <!-- Exclude generated assembly attributes files to prevent duplicate attribute errors -->
+  <ItemGroup>
+    <Compile Remove="**\obj\**\*.AssemblyAttributes.cs" />
+    <Compile Remove="**\obj\**\*.NETCoreApp,Version=*.AssemblyAttributes.cs" />
+  </ItemGroup>
+
 </Project>

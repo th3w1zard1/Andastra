@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
     <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 </Project>
