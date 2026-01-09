@@ -131,7 +131,7 @@ namespace TSLPatcher
         // StrRef and 2DA memory reference caches for linking patches
         [CanBeNull] private readonly Andastra.Parsing.Tools.StrRefReferenceCache _strrefCache;
         // TODO: STUB - Ensure inner dictionaries use StringComparer.OrdinalIgnoreCase for case-insensitive filename lookups
-        // When creating inner Dictionary<string, Tools.TwoDAMemoryReferenceCache> instances, use:
+        // When creating inner Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache> instances, use:
         // new Dictionary<string, Tools.TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase)
         [CanBeNull] private readonly Dictionary<int, Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache>> _twodaCaches;
 
