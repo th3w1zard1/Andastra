@@ -397,7 +397,7 @@ namespace Andastra.Parsing.Merge
         // Original: def extract_all_resources(self, module_name: str, output_dir: str) -> None:
         public void ExtractAllResources(string moduleName, string outputDir)
         {
-            bool useDotMod = FileHelpers.IsModFile(moduleName);
+            bool useDotMod = Andastra.Parsing.Tools.FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             var moduleDir = Path.Combine(outputDir, moduleName);
             Directory.CreateDirectory(moduleDir);
@@ -467,7 +467,7 @@ namespace Andastra.Parsing.Merge
                     moduleName = moduleName.Substring(0, moduleName.Length - 4);
                 }
 
-                bool useDotMod = FileHelpers.IsModFile(moduleFile);
+                bool useDotMod = Andastra.Parsing.Tools.FileHelpers.IsModFile(moduleFile);
                 try
                 {
                     var module = new Module(moduleName, _installation, useDotMod: useDotMod);
@@ -520,7 +520,7 @@ namespace Andastra.Parsing.Merge
         // Original: def find_missing_resources(self, module_name: str) -> None:
         public void FindMissingResources(string moduleName)
         {
-            bool useDotMod = FileHelpers.IsModFile(moduleName);
+            bool useDotMod = Andastra.Parsing.Tools.FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             Console.WriteLine($"Checking for missing resources in module '{moduleName}'...");
 
@@ -550,7 +550,7 @@ namespace Andastra.Parsing.Merge
         // Original: def find_unused_resources(self, module_name: str) -> None:
         public void FindUnusedResources(string moduleName)
         {
-            bool useDotMod = FileHelpers.IsModFile(moduleName);
+            bool useDotMod = Andastra.Parsing.Tools.FileHelpers.IsModFile(moduleName);
             var module = new Module(moduleName, _installation, useDotMod: useDotMod);
             Console.WriteLine($"Checking for unused resources in module '{moduleName}'...");
 
