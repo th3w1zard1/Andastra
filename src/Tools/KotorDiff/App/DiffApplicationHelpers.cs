@@ -269,7 +269,7 @@ namespace KotorDiff.AppCore
         {
             if (GlobalConfig.Instance.Config == null)
             {
-                return LogOutput;
+                return (msg) => LogOutput(msg);
             }
 
             bool isVerbose = GlobalConfig.Instance.Config.Verbose || GlobalConfig.Instance.Config.Debug;

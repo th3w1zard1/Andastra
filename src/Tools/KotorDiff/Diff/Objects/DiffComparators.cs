@@ -6,6 +6,7 @@ using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.LIP;
 using Andastra.Parsing.Formats.TLK;
 using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Common;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff.Objects

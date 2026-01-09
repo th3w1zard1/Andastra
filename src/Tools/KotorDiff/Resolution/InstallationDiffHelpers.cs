@@ -16,6 +16,7 @@ using Andastra.Parsing.Mods.GFF;
 using Andastra.Parsing.Mods.SSF;
 using Andastra.Parsing.Mods.TwoDA;
 using Andastra.Parsing.Resource;
+using Andastra.Parsing.Common;
 using KotorDiff.Diff;
 using Andastra.Parsing.TSLPatcher;
 using JetBrains.Annotations;
