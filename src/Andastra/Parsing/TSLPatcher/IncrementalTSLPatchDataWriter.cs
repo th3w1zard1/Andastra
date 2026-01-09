@@ -138,7 +138,7 @@ namespace TSLPatcher
         // Helper method to create case-insensitive inner dictionaries
         private static Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache> CreateCaseInsensitiveTwoDACache()
         {
-            return new Dictionary<string, Tools.TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase);
+            return new Dictionary<string, Andastra.Parsing.Tools.TwoDAMemoryReferenceCache>(StringComparer.OrdinalIgnoreCase);
         }
         // Track TLK modifications with their source paths for intelligent cache building
         // Key: source_index (0=first/vanilla, 1=second/modded, 2=third, etc.)
