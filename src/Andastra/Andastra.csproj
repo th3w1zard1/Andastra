@@ -88,17 +88,6 @@
     <ProjectReference Include="Parsing\Minimal\Andastra.Parsing.Minimal.csproj" Condition="'$(ExcludeGameProject)' != 'true'" />
     <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="Parsing\Core\Andastra.Parsing.Core.csproj" />
-    <ProjectReference Include="Parsing\GFF.Only\Andastra.Parsing.GFF.Only.csproj" />
-    <ProjectReference Include="Parsing\TwoDA.Only\Andastra.Parsing.TwoDA.Only.csproj" />
-    <ProjectReference Include="Parsing\TLK.Only\Andastra.Parsing.TLK.Only.csproj" />
-    <ProjectReference Include="Parsing\ERF.Only\Andastra.Parsing.ERF.Only.csproj" />
-    <ProjectReference Include="Parsing\NSS.Only\Andastra.Parsing.NSS.Only.csproj" />
-    <ProjectReference Include="Parsing\LYT.Only\Andastra.Parsing.LYT.Only.csproj" />
-    <ProjectReference Include="Parsing\SSF.Only\Andastra.Parsing.SSF.Only.csproj" />
-    <ProjectReference Include="Parsing\TSLPatcher.Only\Andastra.Parsing.TSLPatcher.Only.csproj" />
-    <ProjectReference Include="Parsing\WAV.Only\Andastra.Parsing.WAV.Only.csproj" />
-    <ProjectReference Include="Parsing\NCS.Only\Andastra.Parsing.NCS.Only.csproj" />
-    <ProjectReference Include="Parsing\VIS.Only\Andastra.Parsing.VIS.Only.csproj" />
     <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="Parsing\Extract\Andastra.Parsing.Extract.csproj" />
     <ProjectReference Include="Parsing\Tools\Andastra.Parsing.Tools.csproj" />
