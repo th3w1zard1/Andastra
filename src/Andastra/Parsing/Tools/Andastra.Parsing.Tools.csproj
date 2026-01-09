@@ -16,6 +16,7 @@
     <ProjectReference Include="..\Common\Andastra.Parsing.Common.csproj" />
     <ProjectReference Include="..\Extract\Andastra.Parsing.Extract.csproj" />
     <ProjectReference Include="..\Installation\Andastra.Parsing.Installation.csproj" />
+    <ProjectReference Include="..\Resource\Formats\NCS\Andastra.Parsing.Resource.NCS.csproj" Aliases="ResourceNCS" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
   </ItemGroup>

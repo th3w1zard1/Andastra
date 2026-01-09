@@ -1,10 +1,13 @@
+extern alias ResourceNCS;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Common.Script;
-// Removed: using Andastra.Parsing.Formats.NCS; // Causes conflict between Resource and Resource.NCS
+using NCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
+using NCSAuto = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSAuto;
+using NCSInstruction = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSInstruction;
 
 namespace Andastra.Parsing.Tools
 {
@@ -16,8 +19,8 @@ namespace Andastra.Parsing.Tools
         // Original: def decompile_ncs_to_nss(ncs_path: Path, output_path: Path | None = None, *, game: Game, functions: list[ScriptFunction] | None = None, constants: list[ScriptConstant] | None = None) -> str:
         public static string DecompileNcsToNss(string ncsPath, string outputPath = null, BioWareGame game = BioWareGame.K1, List<ScriptFunction> functions = null, List<ScriptConstant> constants = null)
         {
-            var ncs = global::Andastra.Parsing.Formats.NCS.NCSAuto.ReadNcs(ncsPath);
-            string source = global::Andastra.Parsing.Formats.NCS.NCSAuto.DecompileNcs(ncs, game, functions, constants);
+            NCS ncs = NCSAuto.ReadNcs(ncsPath);
+            string source = NCSAuto.DecompileNcs(ncs, game, functions, constants);
 
             if (!string.IsNullOrEmpty(outputPath))
             {
@@ -31,7 +34,7 @@ namespace Andastra.Parsing.Tools
         // Original: def disassemble_ncs(ncs_path: Path, output_path: Path | None = None, *, game: Game | None = None, pretty: bool = True) -> str:
         public static string DisassembleNcs(string ncsPath, string outputPath = null, BioWareGame? game = null, bool pretty = true)
         {
-            var ncs = global::Andastra.Parsing.Formats.NCS.NCSAuto.ReadNcs(ncsPath);
+            NCS ncs = NCSAuto.ReadNcs(ncsPath);
 
             var lines = new System.Collections.Generic.List<string>();
             lines.Add("; NCS Disassembly");
