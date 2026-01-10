@@ -1,10 +1,11 @@
 using System;
 using Andastra.Parsing;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Resource.Formats.TwoDA;
 using Andastra.Parsing.Memory;
 using Andastra.Parsing.Mods.NSS;
 using Andastra.Utility;
 using JetBrains.Annotations;
+using Formats = Andastra.Parsing.Resource.Formats;
 
 namespace Andastra.Parsing.Mods.TwoDA
 {

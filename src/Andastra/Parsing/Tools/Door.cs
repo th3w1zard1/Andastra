@@ -4,23 +4,24 @@ using System.IO;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.Extract.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
 using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
+using Formats = Andastra.Parsing.Resource.Formats;
 
 namespace Andastra.Parsing.Tools
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py
     public static class Door
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:25-64
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:25-64
         // Original: def get_model(utd: UTD, installation: Installation, *, genericdoors: 2DA | SOURCE_TYPES | None = None) -> str:
         public static string GetModel(
             UTD utd,
-            Andastra.Parsing.Installation.Installation installation,
+            Installation installation,
             TwoDA genericdoors = null)
         {
             if (genericdoors == null)
@@ -37,10 +38,10 @@ namespace Andastra.Parsing.Tools
             return genericdoors.GetRow(utd.AppearanceId).GetString("modelname");
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:67-118
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:67-118
         // Original: def load_genericdoors_2da(installation: Installation, logger: RobustLogger | None = None) -> TwoDA | None:
         public static TwoDA LoadGenericDoors2DA(
-            Installation.Installation installation,
+            Installation installation,
             RobustLogger logger = null)
         {
             if (logger == null)
@@ -53,7 +54,7 @@ namespace Andastra.Parsing.Tools
             // Try locations() first (more reliable, handles BIF files)
             try
             {
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:67-118
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:67-118
                 // Original: locations_result = installation.locations([ResourceIdentifier("genericdoors", ResourceType.TwoDA)], [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
                 var locationResults = installation.Locations(
                     new List<ResourceIdentifier> { new ResourceIdentifier("genericdoors", ResourceType.TwoDA) },
@@ -104,7 +105,7 @@ namespace Andastra.Parsing.Tools
             return genericdoors2DA;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:215-237
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:215-237
         // Original: def _get_model_variations(model_name: str) -> list[str]:
         private static List<string> GetModelVariations(string modelName)
         {
@@ -130,11 +131,11 @@ namespace Andastra.Parsing.Tools
             return result;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:240-297
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:240-297
         // Original: def _load_mdl_with_variations(model_name: str, installation: Installation, logger: RobustLogger | None = None) -> tuple[MDL | None, bytes | None]:
         private static (Formats.MDLData.MDL mdl, byte[] mdlData) LoadMdlWithVariations(
             string modelName,
-            Andastra.Parsing.Installation.Installation installation,
+            Installation installation,
             RobustLogger logger = null)
         {
             if (logger == null)
@@ -205,7 +206,7 @@ namespace Andastra.Parsing.Tools
             return (null, null);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:300-387
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:300-387
         // Original: def _get_door_dimensions_from_model(mdl: MDL, model_name: str, door_name: str | None = None, logger: RobustLogger | None = None) -> tuple[float, float] | None:
         private static (float width, float height)? GetDoorDimensionsFromModel(
             Formats.MDLData.MDL mdl,
@@ -301,11 +302,11 @@ namespace Andastra.Parsing.Tools
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:390-480
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:390-480
         // Original: def _get_door_dimensions_from_texture(model_name: str, installation: Installation, door_name: str | None = None, logger: RobustLogger | None = None) -> tuple[float, float] | None:
         private static (float width, float height)? GetDoorDimensionsFromTexture(
             string modelName,
-            Andastra.Parsing.Installation.Installation installation,
+            Installation installation,
             string doorName = null,
             RobustLogger logger = null)
         {
@@ -413,11 +414,11 @@ namespace Andastra.Parsing.Tools
             return (doorWidth, doorHeight);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:483-587
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:483-587
         // Original: def get_door_dimensions(utd_data: bytes, installation: Installation, *, door_name: str | None = None, default_width: float = 2.0, default_height: float = 3.0, genericdoors: 2DA | None = None, logger: RobustLogger | None = None) -> tuple[float, float]:
         public static (float width, float height) GetDoorDimensions(
             byte[] utdData,
-            Andastra.Parsing.Installation.Installation installation,
+            Installation installation,
             string doorName = null,
             float defaultWidth = 2.0f,
             float defaultHeight = 3.0f,
@@ -436,7 +437,7 @@ namespace Andastra.Parsing.Tools
 
             try
             {
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:483-587
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:483-587
                 // Original: utd_data = read_utd(utd_data)
                 var utd = ResourceAutoHelpers.ReadUtd(utdData);
                 logger.Debug($"[DOOR DEBUG] Processing door {doorNameStr} (appearance_id={utd.AppearanceId})");
@@ -457,12 +458,12 @@ namespace Andastra.Parsing.Tools
                 }
 
                 // Try method 1: Get dimensions from model bounding box
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:547-565
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:547-565
                 // Original: mdl, mdl_data = _load_mdl_with_variations(model_name, installation, logger)
                 var (mdl, mdlData) = LoadMdlWithVariations(modelName, installation, logger);
                 if (mdl != null)
                 {
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:550-553
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:550-553
                     // Original: dimensions = _get_door_dimensions_from_model(mdl, model_name, door_name, logger)
                     var dimensions = GetDoorDimensionsFromModel(mdl, modelName, doorName, logger);
                     if (dimensions.HasValue)
@@ -484,7 +485,7 @@ namespace Andastra.Parsing.Tools
                 }
 
                 // Fallback: Get dimensions from door texture if model-based extraction failed
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/door.py:567-576
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/door.py:567-576
                 // Original: dimensions = _get_door_dimensions_from_texture(model_name, installation, door_name, logger)
                 var textureDimensions = GetDoorDimensionsFromTexture(modelName, installation, doorName, logger);
                 if (textureDimensions.HasValue)

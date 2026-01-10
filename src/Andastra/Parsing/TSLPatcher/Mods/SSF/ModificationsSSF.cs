@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.SSF;
+using Andastra.Parsing.Resource.Formats.SSF;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
+using Formats = Andastra.Parsing.Resource.Formats;
 
 namespace Andastra.Parsing.Mods.SSF
 {

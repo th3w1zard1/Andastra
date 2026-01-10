@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Resource.Formats.TLK;
 using Andastra.Parsing.Logger;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
+using Formats = Andastra.Parsing.Resource.Formats;
 
 namespace Andastra.Parsing.Mods.TLK
 {

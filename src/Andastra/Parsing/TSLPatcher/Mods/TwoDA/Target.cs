@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Resource.Formats.TwoDA;
 using Andastra.Parsing.Memory;
 using JetBrains.Annotations;
+using Formats = Andastra.Parsing.Resource.Formats;
 
 namespace Andastra.Parsing.Mods.TwoDA
 {
