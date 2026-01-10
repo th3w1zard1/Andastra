@@ -7,6 +7,8 @@
     <!-- Suppress NU1102 for System.Text.RegularExpressions and System.Threading.Tasks.Extensions -->
     <!-- Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist, but we explicitly provide correct versions (4.3.1, 4.6.3) -->
     <!-- These packages are built into .NET 9.0, so this is a valid suppression -->
+    <!-- Use RestoreNoWarn to suppress restore errors (NU1102 is a restore error, not a warning) -->
+    <RestoreNoWarn>$(RestoreNoWarn);NU1102</RestoreNoWarn>
     <NoWarn>$(NoWarn);NU1102</NoWarn>
   </PropertyGroup>
   
