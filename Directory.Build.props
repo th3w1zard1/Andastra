@@ -2,18 +2,14 @@
   <PropertyGroup>
     <GenerateMSBuildEditorConfigFile>false</GenerateMSBuildEditorConfigFile>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <!-- For .NET 9.0, these packages are built into the framework - prefer framework assemblies -->
+    <AssetTargetFallback>$(AssetTargetFallback);net9.0</AssetTargetFallback>
   </PropertyGroup>
   
   <!-- Override transitive dependency versions - Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist -->
-  <!-- PackageOverride forces NuGet to use these versions even when transitive dependencies request higher versions -->
+  <!-- PackageVersion pins versions when packages are explicitly referenced -->
   <ItemGroup>
     <PackageVersion Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
-  </ItemGroup>
-  
-  <!-- Use PackageOverride to override transitive dependency version constraints -->
-  <ItemGroup>
-    <PackageOverride Include="System.Text.RegularExpressions" OverrideVersion="4.3.1" />
-    <PackageOverride Include="System.Threading.Tasks.Extensions" OverrideVersion="4.6.3" />
   </ItemGroup>
 </Project>
