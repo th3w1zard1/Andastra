@@ -75,7 +75,7 @@ namespace Andastra.Runtime.Core.Entities
         // Module ObjectId: 0x7F000002 (special object ID for module, between OBJECT_SELF 0x7F000001 and area IDs 0x7F000010+)
         // Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
         public const uint ModuleObjectId = 0x7F000002;
-        private IModule _registeredModule;
+        private Andastra.Runtime.Core.Interfaces.IModule _registeredModule;
 
         public World(ITimeManager timeManager)
         {
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Core.Entities
         }
 
         public IArea CurrentArea { get; set; }
-        public IModule CurrentModule { get; set; }
+        public Andastra.Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
 
         /// <summary>
         /// Sets the current area.
@@ -233,7 +233,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
         /// Common across all engines: Modules are registered with fixed ObjectId when set as current
         /// </remarks>
-        public void SetCurrentModule(IModule module)
+        public void SetCurrentModule(Andastra.Runtime.Core.Interfaces.IModule module)
         {
             CurrentModule = module;
             _registeredModule = module;
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Common across all engines: Modules use fixed ObjectId (0x7F000002) for script references
         /// Used by GetModule NWScript function to return the module object ID
         /// </remarks>
-        public uint GetModuleId(IModule module)
+        public uint GetModuleId(Andastra.Runtime.Core.Interfaces.IModule module)
         {
             if (module == null)
             {

@@ -21,7 +21,8 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Graphics.Common.Effects;
 using JetBrains.Annotations;
-using ParsingIModule = Andastra.Parsing.Common.IModule;
+// Removed: ParsingIModule - IModule does not exist in Andastra.Parsing.Common
+// Use RuntimeIModule (Andastra.Runtime.Core.Interfaces.IModule) instead if needed
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
@@ -90,7 +91,7 @@ namespace Andastra.Runtime.Games.Odyssey
         private IAreaRenderContext _renderContext;
 
         // Module reference for loading WOK files (optional, set when available)
-        private Andastra.Parsing.Common.Module _module;
+        private Andastra.Parsing.Installation.Module _module;
 
         // Area heartbeat and transition state
         private float _areaHeartbeatTimer;
@@ -126,7 +127,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public OdysseyArea(string resRef, byte[] areData, byte[] gitData, Andastra.Parsing.Common.Module module = null)
+        public OdysseyArea(string resRef, byte[] areData, byte[] gitData, Andastra.Parsing.Installation.Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -173,7 +174,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(Andastra.Parsing.Common.Module module)
+        public void SetModule(Andastra.Parsing.Installation.Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now
@@ -1852,7 +1853,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // If we can access parsing Module directly, read Mod_Area_list
-                var parsingModule = module as Andastra.Parsing.Common.Module;
+                var parsingModule = module as Andastra.Parsing.Installation.Module;
                 if (parsingModule != null)
                 {
                     return ReadAreaListFromIFO(parsingModule);
@@ -1876,7 +1877,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Each entry contains Area_Name field with the area ResRef.
         /// This matches the IFO format specification in vendor/PyKotor/wiki/GFF-IFO.md.
         /// </remarks>
-        private List<string> ReadAreaListFromIFO(Andastra.Parsing.Common.Module module)
+        private List<string> ReadAreaListFromIFO(Andastra.Parsing.Installation.Module module)
         {
             if (module == null)
             {

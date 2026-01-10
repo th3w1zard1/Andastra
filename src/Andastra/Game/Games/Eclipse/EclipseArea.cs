@@ -64,7 +64,7 @@ using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTe
 using MonoGameViewport = Andastra.Runtime.MonoGame.Interfaces.Viewport;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ParsingColor = Andastra.Parsing.Common.Color;
-using ParsingResourceType = Andastra.Parsing.Resource.ResourceType;
+using ParsingResourceType = Andastra.Parsing.Common.ResourceType;
 using ParsingSearchLocation = Andastra.Parsing.Installation.SearchLocation;
 using XnaBlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 using XnaColor = Microsoft.Xna.Framework.Color;
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Games.Eclipse
         private ShaderCache _shaderCache;
 
         // Module reference for loading WOK walkmesh files (optional)
-        private Andastra.Parsing.Common.Module _module;
+        private Andastra.Parsing.Installation.Module _module;
 
         // Resource provider for loading MDL/MDX and other resources (optional)
         // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
@@ -397,7 +397,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public EclipseArea(string resRef, byte[] areaData, Andastra.Parsing.Common.Module module = null)
+        public EclipseArea(string resRef, byte[] areaData, Andastra.Parsing.Installation.Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -446,7 +446,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(Andastra.Parsing.Common.Module module)
+        public void SetModule(Andastra.Parsing.Installation.Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now

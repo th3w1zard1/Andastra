@@ -303,7 +303,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 // Ghidra analysis: FUN_0057bd70 @ 0x0057bd70 saves party data, FUN_0057dcd0 @ 0x0057dcd0 loads party data
                 // EntityFactory accessed via ModuleLoader.EntityFactory property
                 // Get current module from ModuleLoader
-                Andastra.Parsing.Common.Module module = moduleLoader.GetCurrentModule();
+                Andastra.Parsing.Installation.Module module = moduleLoader.GetCurrentModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)

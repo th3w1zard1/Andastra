@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Andastra.Parsing;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core;
@@ -164,7 +165,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
         /// </summary>
         [CanBeNull]
-        public Andastra.Parsing.Common.Module GetCurrentParsingModule()
+        public Andastra.Parsing.Installation.Module GetCurrentParsingModule()
         {
             return _moduleLoader?.GetCurrentModule();
         }

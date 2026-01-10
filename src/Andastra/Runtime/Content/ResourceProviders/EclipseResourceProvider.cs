@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.PCC;
 using Andastra.Parsing.Formats.RIM;
 using Andastra.Parsing.Resource;

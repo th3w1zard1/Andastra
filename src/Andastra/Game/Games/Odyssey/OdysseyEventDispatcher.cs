@@ -563,7 +563,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     return null;
                 }
 
-                var module = new Andastra.Parsing.Common.Module(moduleName, installation);
+                var module = new Andastra.Parsing.Installation.Module(moduleName, installation);
 
                 // Load area using ModuleLoader
                 // Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0 loads ARE + GIT + LYT + VIS

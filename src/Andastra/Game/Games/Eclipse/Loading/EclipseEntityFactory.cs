@@ -5,6 +5,7 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
 using Andastra.Parsing.Formats.TLK;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;

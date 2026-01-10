@@ -4280,7 +4280,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Get parsing Module for resource loading
             // Based on swkotor2.exe: Module resources (UTC, UTP, etc.) are loaded from module archives
-            Andastra.Parsing.Common.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
+            Andastra.Parsing.Installation.Module parsingModule = GetParsingModuleFromRuntimeModule(runtimeModule);
             if (parsingModule == null)
             {
                 System.Diagnostics.Debug.WriteLine("[OdysseySaveSerializer] SpawnDynamicEntities: Cannot spawn entities - parsing module not available");
@@ -4451,7 +4451,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Module resources are accessed via parsing Module
         /// Runtime Module may contain reference to parsing Module for resource loading
         /// </remarks>
-        private Andastra.Parsing.Common.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
+        private Andastra.Parsing.Installation.Module GetParsingModuleFromRuntimeModule(RuntimeIModule runtimeModule)
         {
             if (runtimeModule == null)
             {
@@ -4464,14 +4464,14 @@ namespace Andastra.Runtime.Games.Odyssey
             var parsingModuleProperty = runtimeModule.GetType().GetProperty("ParsingModule");
             if (parsingModuleProperty != null)
             {
-                return parsingModuleProperty.GetValue(runtimeModule) as Andastra.Parsing.Common.Module;
+                return parsingModuleProperty.GetValue(runtimeModule) as Andastra.Parsing.Installation.Module;
             }
 
             // Try to get via GetParsingModule method if available
             var getParsingModuleMethod = runtimeModule.GetType().GetMethod("GetParsingModule");
             if (getParsingModuleMethod != null)
             {
-                return getParsingModuleMethod.Invoke(runtimeModule, null) as Andastra.Parsing.Common.Module;
+                return getParsingModuleMethod.Invoke(runtimeModule, null) as Andastra.Parsing.Installation.Module;
             }
 
             // Try to access ModuleLoader if available
@@ -4485,7 +4485,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     var getParsingModuleMethod2 = moduleLoader.GetType().GetMethod("GetParsingModule");
                     if (getParsingModuleMethod2 != null)
                     {
-                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as Andastra.Parsing.Common.Module;
+                        return getParsingModuleMethod2.Invoke(moduleLoader, null) as Andastra.Parsing.Installation.Module;
                     }
                 }
             }
@@ -4500,7 +4500,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Template resource types determine ObjectType
         /// UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
         /// </remarks>
-        private Andastra.Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, Andastra.Parsing.Common.Module module)
+        private Andastra.Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, Andastra.Parsing.Installation.Module module)
         {
             if (string.IsNullOrEmpty(blueprintResRef) || module == null)
             {
@@ -4574,7 +4574,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <remarks>
         /// Based on swkotor2.exe: EntityFactory creates entities from templates
         /// </remarks>
-        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, Andastra.Parsing.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, Andastra.Parsing.Installation.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
         {
             if (entityFactory == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4610,7 +4610,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Based on swkotor2.exe: Template data is loaded into entity after creation
         /// Used when entity is created with specific ObjectId (not via EntityFactory)
         /// </remarks>
-        private void LoadTemplateIntoEntity(IEntity entity, Andastra.Parsing.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType)
+        private void LoadTemplateIntoEntity(IEntity entity, Andastra.Parsing.Installation.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType)
         {
             if (entity == null || module == null || string.IsNullOrEmpty(templateResRef))
             {

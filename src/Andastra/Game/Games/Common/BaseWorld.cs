@@ -69,7 +69,7 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// The current module.
         /// </summary>
-        public abstract IModule CurrentModule { get; set; }
+        public abstract Andastra.Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
 
         /// <summary>
         /// The simulation time manager.
@@ -304,7 +304,7 @@ namespace Andastra.Runtime.Games.Common
         /// Based on swkotor2.exe: Module object ID constant
         /// Located via string references: "GetModule" NWScript function, module object references
         /// </remarks>
-        public virtual uint GetModuleId(IModule module)
+        public virtual uint GetModuleId(Andastra.Runtime.Core.Interfaces.IModule module)
         {
             if (module == null)
                 return 0;

@@ -4,6 +4,7 @@ using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Formats.GFF;
+using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;

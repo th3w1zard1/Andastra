@@ -49,7 +49,7 @@ namespace Andastra.Runtime.Core.Module
     /// 
     /// Based on IFO file format documentation in vendor/PyKotor/wiki/GFF-IFO.md.
     /// </remarks>
-    public class RuntimeModule : IModule
+    public class RuntimeModule : Andastra.Runtime.Core.Interfaces.IModule
     {
         private readonly Dictionary<string, RuntimeArea> _areas;
         private readonly Dictionary<ScriptEvent, string> _scripts;

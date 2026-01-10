@@ -199,7 +199,7 @@ namespace Andastra.Runtime.Core.Save
             saveData.SaveTime = DateTime.Now;
 
             // Save module info
-            IModule module = _world.CurrentModule;
+            Andastra.Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
             if (module != null)
             {
                 saveData.CurrentModule = module.ResRef;
@@ -480,7 +480,7 @@ namespace Andastra.Runtime.Core.Save
             // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
             // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
             // This allows verification of area-to-module relationships without loading the module IFO
-            IModule module = _world.CurrentModule;
+            Andastra.Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
             if (module != null && !string.IsNullOrEmpty(module.ResRef))
             {
                 // Initialize the mapping for this module if not already present
@@ -1479,7 +1479,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Convert IModule to parsing Module type if needed
-            // EntityFactory.CreateItemFromTemplate expects Andastra.Parsing.Common.Module
+            // EntityFactory.CreateItemFromTemplate expects Andastra.Parsing.Installation.Module
             object parsingModule = GetParsingModule(currentModule);
             if (parsingModule == null)
             {
@@ -1644,7 +1644,7 @@ namespace Andastra.Runtime.Core.Save
         /// Gets parsing Module from IModule interface.
         /// </summary>
         /// <returns>Parsing Module instance or null if conversion not possible.</returns>
-        private object GetParsingModule(IModule module)
+        private object GetParsingModule(Andastra.Runtime.Core.Interfaces.IModule module)
         {
             if (module == null)
             {
@@ -1652,7 +1652,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // If module is already the parsing Module type, return it
-            var parsingModuleTypeName = "Andastra.Parsing.Common.Module";
+            var parsingModuleTypeName = "Andastra.Parsing.Installation.Module";
             var parsingModuleType = System.Type.GetType(parsingModuleTypeName);
             if (parsingModuleType != null && parsingModuleType.IsAssignableFrom(module.GetType()))
             {
@@ -1926,13 +1926,13 @@ namespace Andastra.Runtime.Core.Save
         /// Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
         /// Module IFO file contains Mod_Area_list field (GFF List) with area ResRefs
         /// This method verifies the relationship by checking if the module contains the area
-        /// 
+        ///
         /// Cross-engine analysis:
         /// - Odyssey (swkotor.exe, swkotor2.exe): Mod_Area_list in IFO GFF file
         /// - Aurora (nwmain.exe): Similar area list in Module.ifo
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Area list in module definition
         /// - Infinity (, ): Level area associations
-        /// 
+        ///
         /// Common pattern: All engines maintain a list of areas that belong to each module.
         /// This method uses IModule.GetArea() to check if the area exists in the module,
         /// which internally checks the module's area list.
@@ -1945,7 +1945,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Get the module to check
-            IModule module = null;
+            Andastra.Runtime.Core.Interfaces.IModule module = null;
 
             // First, check if the current module matches
             if (_world.CurrentModule != null &&

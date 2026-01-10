@@ -813,7 +813,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// This avoids creating a new Module object every time resources are accessed.
         /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
         /// </summary>
-        private Andastra.Parsing.Common.Module _cachedParsingModule;
+        private Andastra.Parsing.Installation.Module _cachedParsingModule;
 
         /// <summary>
         /// Gets the currently loaded module.
@@ -830,7 +830,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// Returns the cached Module object to avoid recreating it on every access.
         /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
         /// </summary>
-        public Andastra.Parsing.Common.Module GetCurrentModule()
+        public Andastra.Parsing.Installation.Module GetCurrentModule()
         {
             return _cachedParsingModule;
         }

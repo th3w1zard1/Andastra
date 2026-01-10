@@ -72,7 +72,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             // Based on swkotor2.exe: Module must be loaded before entities can be created from templates
             // Located via string references: Module loading precedes entity template loading
             // Original implementation: Template creation requires module to be loaded for resource access
-            Andastra.Parsing.Common.Module module = _moduleLoader?.GetCurrentModule();
+            Andastra.Parsing.Installation.Module module = _moduleLoader?.GetCurrentModule();
             if (module == null)
             {
                 // Module not loaded yet - this is expected before LoadModuleAsync completes

@@ -80,7 +80,7 @@ namespace Andastra.Runtime.Engines.Odyssey
             {
                 // Load entry area if not already loaded
                 RuntimeArea entryArea = _internalLoader.LoadArea(
-                    new Andastra.Parsing.Common.Module(moduleName, _installation),
+                    new Andastra.Parsing.Installation.Module(moduleName, _installation),
                     _currentRuntimeModule.EntryArea);
                 if (entryArea != null)
                 {
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.Engines.Odyssey
 
             try
             {
-                var module = new Andastra.Parsing.Common.Module(moduleName, _installation);
+                var module = new Andastra.Parsing.Installation.Module(moduleName, _installation);
                 return module.Info() != null;
             }
             catch

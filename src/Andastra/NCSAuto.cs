@@ -1,3 +1,4 @@
+extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,13 +7,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Formats.NCS.Compiler;
 using Andastra.Parsing.Formats.NCS.NCSDecomp;
 using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using Andastra.Parsing.Formats.NCS.Optimizers;
 using Andastra.Parsing.Common.Script;
+using Andastra.Script;
 using JetBrains.Annotations;
-using FileScriptData = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.FileScriptData;
+// Note: NCSBinaryReader/Writer use NCS from Resource assembly, so use that NCS type here
+// ResourceNCS alias is for types that specifically need the Resource.NCS assembly version
+using FileScriptData = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.FileScriptData;
 
 namespace Andastra
 {
@@ -566,6 +570,7 @@ namespace Andastra
             }
 
             // Use FileDecompiler (DeNCS port) for 1:1 accurate decompilation
+            // FileDecompiler is in Resource assembly (not ResourceNCS), use NCS from Resource assembly
             NCSDecomp.FileDecompiler fileDecompiler;
             if (!string.IsNullOrEmpty(nwscriptPath) && System.IO.File.Exists(nwscriptPath))
             {

@@ -1,3 +1,4 @@
+extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -6,9 +7,9 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS;
 using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
+using NCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
 
 namespace Andastra
 {

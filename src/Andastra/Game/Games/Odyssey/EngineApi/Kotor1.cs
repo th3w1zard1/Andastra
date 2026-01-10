@@ -6128,7 +6128,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             {
                 if (services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
                 {
-                    Andastra.Parsing.Common.Module parsingModule = moduleLoader.GetParsingModule();
+                    Andastra.Parsing.Installation.Module parsingModule = moduleLoader.GetParsingModule();
                     if (parsingModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);

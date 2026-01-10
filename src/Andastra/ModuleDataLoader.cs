@@ -26,11 +26,8 @@ namespace Andastra
         T Resource();
     }
 
-    // Basic ModuleResource stub to avoid circular dependencies
-    public class ModuleResource
-    {
-        public bool IsActive() => true;
-    }
+    // NOTE: ModuleResource is defined in src/Andastra/Module.cs (line 1698)
+    // The stub was removed to avoid duplicate definition error (CS0101)
 
     public interface IModule
     {
@@ -46,7 +43,7 @@ namespace Andastra
     /// </summary>
     public class ModuleDataLoader
     {
-        private readonly Installation.Installation _installation;
+        private readonly Andastra.Parsing.Installation.Installation _installation;
 
         public TwoDA TableDoors { get; private set; }
         public TwoDA TablePlaceables { get; private set; }
@@ -54,7 +51,7 @@ namespace Andastra
         public TwoDA TableHeads { get; private set; }
         public TwoDA TableBaseItems { get; private set; }
 
-        public ModuleDataLoader(Installation.Installation installation)
+        public ModuleDataLoader(Andastra.Parsing.Installation.Installation installation)
         {
             _installation = installation;
             Load2daTables();
@@ -71,7 +68,7 @@ namespace Andastra
 
         private TwoDA Load2da(string name)
         {
-            Installation.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, ModuleDataSearch.SearchOrder2DA);
+            Andastra.Parsing.Installation.ResourceResult res = _installation.Resources.LookupResource(name, ResourceType.TwoDA, new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN });
             if (res == null)
             {
                 return new TwoDA();

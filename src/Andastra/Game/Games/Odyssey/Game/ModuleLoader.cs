@@ -177,7 +177,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Gets the current Andastra.Parsing Module for resource loading.
         /// </summary>
         [CanBeNull]
-        public Andastra.Parsing.Common.Module GetParsingModule()
+        public Andastra.Parsing.Installation.Module GetParsingModule()
         {
             if (_installation == null || string.IsNullOrEmpty(_currentModuleRoot))
             {
@@ -187,7 +187,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             try
             {
                 // Create a Module instance from the current module root
-                return new Andastra.Parsing.Common.Module(_currentModuleRoot, _installation);
+                return new Andastra.Parsing.Installation.Module(_currentModuleRoot, _installation);
             }
             catch (Exception ex)
             {
@@ -200,7 +200,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Gets the current module (alias for GetParsingModule for API compatibility).
         /// </summary>
         [CanBeNull]
-        public Andastra.Parsing.Common.Module GetCurrentModule()
+        public Andastra.Parsing.Installation.Module GetCurrentModule()
         {
             return GetParsingModule();
         }
@@ -659,7 +659,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Get Parsing Module for NavigationMeshFactory
-            Andastra.Parsing.Common.Module parsingModule = GetParsingModule();
+            Andastra.Parsing.Installation.Module parsingModule = GetParsingModule();
             if (parsingModule == null)
             {
                 Console.WriteLine("[ModuleLoader] WARNING: Cannot get Parsing Module, creating placeholder navmesh");
