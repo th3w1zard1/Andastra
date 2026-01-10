@@ -78,34 +78,21 @@
     <ProjectReference Include="..\Performance\Andastra.Tests.Performance.csproj" />
   </ItemGroup>
 
-  <!-- Copy xunit.runner.json from parent directory -->
-  <ItemGroup>
-    <None Include="..\xunit.runner.json" Link="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\Andastra\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\GFF.Only\Andastra.Parsing.GFF.Only.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\TwoDA.Only\Andastra.Parsing.TwoDA.Only.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\TLK.Only\Andastra.Parsing.TLK.Only.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\ERF.Only\Andastra.Parsing.ERF.Only.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\NSS.Only\Andastra.Parsing.NSS.Only.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\LYT.Only\Andastra.Parsing.LYT.Only.csproj" />
-    <ProjectReference Include="..\..\..\Andastra\Parsing\SSF.Only\Andastra.Parsing.SSF.Only.csproj" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Xunit" Version="2.9.2" />
-    <PackageReference Include="xunit.runner.console" Version="2.8.2">
+    <PackageReference Include="xunit.runner.console" Version="2.9.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
   <!-- Copy required DLLs to output directory for .NET 9 compatibility -->

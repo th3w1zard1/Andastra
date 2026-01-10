@@ -84,20 +84,12 @@
   <ItemGroup>
     <ProjectReference Include="Graphics\Andastra.Graphics.csproj" />
     <ProjectReference Include="UI\Andastra.UI.csproj" />
-    <ProjectReference Include="Game\Andastra.Game.csproj" Condition="'$(ExcludeGameProject)' != 'true'" />
-    <ProjectReference Include="Parsing\Minimal\Andastra.Parsing.Minimal.csproj" Condition="'$(ExcludeGameProject)' != 'true'" />
-    <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
-    <ProjectReference Include="Parsing\Core\Andastra.Parsing.Core.csproj" />
-    <ProjectReference Include="Parsing\Common\Andastra.Parsing.Common.csproj" />
-    <ProjectReference Include="Parsing\Extract\Andastra.Parsing.Extract.csproj" />
-    <ProjectReference Include="Parsing\Tools\Andastra.Parsing.Tools.csproj" />
-    <ProjectReference Include="Parsing\TSLPatcher\Andastra.Parsing.TSLPatcher.csproj" />
-    <ProjectReference Include="Parsing\Resource\Andastra.Parsing.Resource.csproj" />
-    <ProjectReference Include="Parsing\Resource\Formats\NCS\Andastra.Parsing.Resource.NCS.csproj" Aliases="ResourceNCS" />
-    <ProjectReference Include="Parsing\Installation\Andastra.Parsing.Installation.csproj" />
-    <ProjectReference Include="Parsing\Merge\Andastra.Parsing.Merge.csproj" />
+    <ProjectReference Include="Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="Utility\Andastra.Utility.csproj" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\**\*.xnb">
@@ -146,30 +138,4 @@
     <Compile Remove="**\obj\**\*.AssemblyAttributes.cs" />
     <Compile Remove="**\obj\**\*.NETCoreApp,Version=*.AssemblyAttributes.cs" />
   </ItemGroup>
-
-  <!-- Exclude duplicate type definitions to prevent CS0101 errors -->
-  <!-- UltraMinimal/NCS.cs is a duplicate of Resource/Formats/NCS/NCS.cs -->
-  <!-- Minimal/NCSDecomp/* files are duplicates of Resource/Formats/NCS/NCSDecomp/* -->
-  <!-- Parsing.NCS.Core/* files are duplicates of Resource/Formats/NCS/NCSDecomp/* -->
-  <!-- Exclude separate project directories to prevent duplicate compilation -->
-  <ItemGroup>
-    <Compile Remove="Parsing\UltraMinimal\NCS.cs" />
-    <Compile Remove="Parsing\Minimal\NCSDecomp\**\*.cs" />
-    <Compile Remove="Parsing.NCS.Core\**\*.cs" />
-    <Compile Remove="Parsing\Extract\**\*.cs" />
-    <Compile Remove="Parsing\Tools\**\*.cs" />
-    <Compile Remove="Parsing\TSLPatcher\**\*.cs" />
-    <Compile Remove="Parsing\Installation\**\*.cs" />
-    <Compile Remove="Parsing\Merge\**\*.cs" />
-    <Compile Remove="Parsing\Common\**\*.cs" />
-    <Compile Remove="Parsing\Core\**\*.cs" />
-    <Compile Remove="Parsing\Resource\**\*.cs" />
-    <Compile Remove="Parsing\ERF.Only\**\*.cs" />
-    <Compile Remove="Parsing\GFF.Only\**\*.cs" />
-    <Compile Remove="Parsing\SSF.Only\**\*.cs" />
-    <Compile Remove="Parsing\TLK.Only\**\*.cs" />
-    <Compile Remove="Parsing\TwoDA.Only\**\*.cs" />
-    <Compile Remove="Parsing\Minimal\**\*.cs" />
-  </ItemGroup>
-
 </Project>

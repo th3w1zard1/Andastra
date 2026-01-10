@@ -14,7 +14,8 @@
 
   <!-- Debug Configuration: Optimized for faster development builds -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <!-- Build only latest .NET (net9.0) for Debug to speed up development builds (unless TargetFramework is explicitly set) -->
+    <!-- Build only latest .NET (net9.0) for Debug to speed up development builds (unless
+    TargetFramework is explicitly set) -->
     <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net9.0</TargetFrameworks>
     <OutputType>Library</OutputType>
     <!-- Disable analyzers in Debug builds for faster compilation -->
@@ -49,13 +50,16 @@
       $([System.String]::Copy('$(TargetFrameworks)').TrimEnd(';').TrimStart(';'))
     </TargetFrameworks>
     <!-- Add each TFM conditionally -->
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
+    <TargetFrameworks
+      Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '10.0.0'))">
       $(TargetFrameworks);net10.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
+    <TargetFrameworks
+      Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '9.0.0'))">
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
+    <TargetFrameworks
+      Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(NETCoreSdkVersion)', '8.0.0'))">
       $(TargetFrameworks);net9.0
     </TargetFrameworks>
     <!-- === .NET 7 SDK: include net7.0 + net6.0 (legacy support) === -->
@@ -66,10 +70,12 @@
     <TargetFrameworks Condition="$([System.String]::new('$(NETCoreSdkVersion)').StartsWith('6.'))">
       $(TargetFrameworks);net6.0
     </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
+    <TargetFrameworks
+      Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8')">
       $(TargetFrameworks);net48
     </TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
+    <TargetFrameworks
+      Condition="'$(OS)' == 'Windows_NT' AND Exists('$(MSBuildProgramFiles32)\..\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.2')">
       $(TargetFrameworks);net462
     </TargetFrameworks>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
@@ -92,10 +98,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Castle.Core" Version="5.2.1" />
     <PackageReference Include="FluentAssertions" Version="7.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -105,12 +107,14 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-  </ItemGroup>
-
-  <!-- Exclude Runtime folder - it has its own csproj file -->
-  <!-- Formats folder is included for NCSRoundtripTests -->
-  <ItemGroup>
-    <Compile Remove="Runtime/**" />
+    <ProjectReference Include="..\..\Andastra\Andastra.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="3.14.0" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
 
   <!-- Copy dependencies that don't have net9.0 targets to output directory -->
@@ -118,8 +122,11 @@
     <PropertyGroup>
       <NuGetPackageRoot Condition="'$(NuGetPackageRoot)' == ''">$(UserProfile)\.nuget\packages</NuGetPackageRoot>
       <DepsJsonPath>$(OutputPath)$(AssemblyName).deps.json</DepsJsonPath>
-      <CopyScriptPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\scripts\CopyTestDependencies.ps1'))</CopyScriptPath>
+      <CopyScriptPath>
+        $([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\scripts\CopyTestDependencies.ps1'))</CopyScriptPath>
     </PropertyGroup>
-    <Exec Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -File &quot;$(CopyScriptPath)&quot; -DepsJsonPath &quot;$(DepsJsonPath)&quot; -OutputPath &quot;$(OutputPath)&quot; -NuGetPackageRoot &quot;$(NuGetPackageRoot)&quot;" Condition="Exists('$(CopyScriptPath)') AND Exists('$(DepsJsonPath)')" ContinueOnError="true" />
+    <Exec
+      Command="powershell.exe -ExecutionPolicy Bypass -NoProfile -File &quot;$(CopyScriptPath)&quot; -DepsJsonPath &quot;$(DepsJsonPath)&quot; -OutputPath &quot;$(OutputPath)&quot; -NuGetPackageRoot &quot;$(NuGetPackageRoot)&quot;"
+      Condition="Exists('$(CopyScriptPath)') AND Exists('$(DepsJsonPath)')" ContinueOnError="true" />
   </Target>
 </Project>

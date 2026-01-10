@@ -9,14 +9,11 @@
     <StartupObject>KotorDiff.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing\Minimal\Andastra.Parsing.Minimal.csproj" />
-    <ProjectReference Include="..\..\Andastra\Parsing\Resource\Andastra.Parsing.Resource.csproj" />
-    <ProjectReference Include="..\..\Andastra\Parsing\Installation\Andastra.Parsing.Installation.csproj" />
-    <ProjectReference Include="..\..\Andastra\Parsing\Tools\Andastra.Parsing.Tools.csproj" />
-    <ProjectReference Include="..\..\Andastra\Parsing\TSLPatcher\Andastra.Parsing.TSLPatcher.csproj" />
-    <ProjectReference Include="..\..\Andastra\Graphics\Andastra.Graphics.csproj" />
-    <ProjectReference Include="..\..\Andastra\UI\Andastra.UI.csproj" />
+    <ProjectReference Include="..\..\Andastra\Parsing\Andastra.Parsing.csproj" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
+    <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="App.axaml.cs">
