@@ -4,9 +4,16 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
   
-  <!-- Override version constraints globally - these packages are built into .NET 9.0 but some packages request non-existent versions -->
+  <!-- Override transitive dependency versions - Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist -->
+  <!-- PackageOverride forces NuGet to use these versions even when transitive dependencies request higher versions -->
   <ItemGroup>
     <PackageVersion Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+  </ItemGroup>
+  
+  <!-- Use PackageOverride to override transitive dependency version constraints -->
+  <ItemGroup>
+    <PackageOverride Include="System.Text.RegularExpressions" OverrideVersion="4.3.1" />
+    <PackageOverride Include="System.Threading.Tasks.Extensions" OverrideVersion="4.6.3" />
   </ItemGroup>
 </Project>
