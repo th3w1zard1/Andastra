@@ -9,11 +9,4 @@
     <PackageVersion Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
-  
-  <!-- Add explicit package references globally to satisfy transitive dependencies -->
-  <!-- Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist, so we provide explicit versions -->
-  <ItemGroup>
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
-  </ItemGroup>
 </Project>
