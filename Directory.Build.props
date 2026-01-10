@@ -18,6 +18,8 @@
     <PackageVersion Include="System.Drawing.Common" Version="9.0.0" />
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="9.0.0" />
     <PackageVersion Include="System.Threading.Tasks.Dataflow" Version="9.0.0" />
+    <PackageVersion Include="System.Windows.Extensions" Version="9.0.0" />
+    <PackageVersion Include="System.Collections.Immutable" Version="9.0.0" />
   </PropertyGroup>
   
   <!-- Override transitive dependency versions - Microsoft.Extensions.* 10.0.1 requests >= 10.0.0 which doesn't exist -->
