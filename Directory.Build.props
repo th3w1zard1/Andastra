@@ -4,8 +4,20 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
   
-  <!-- Add explicit package references for packages that are built into .NET 9.0 but requested by transitive dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0' OR '$(TargetFramework)' == 'net9.0-windows'">
+  <!-- For .NET 9.0, these packages are built into the framework and shouldn't be resolved as NuGet packages -->
+  <PropertyGroup Condition="$([System.String]::Copy('$(TargetFramework)').StartsWith('net9')) OR $([System.String]::Copy('$(TargetFrameworks)').Contains('net9'))">
+    <AssetTargetFallback>$(AssetTargetFallback);net9.0</AssetTargetFallback>
+  </PropertyGroup>
+  
+  <!-- Override version constraints for packages that are built into .NET 9.0 -->
+  <ItemGroup>
+    <PackageVersion Include="System.Text.RegularExpressions" Version="4.3.1" />
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
+  </ItemGroup>
+  
+  <!-- Add explicit package references to satisfy transitive dependencies requesting version >= 10.0.0 -->
+  <!-- These are resolved but won't actually be used at runtime since they're built into .NET 9.0 -->
+  <ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').StartsWith('net9')) OR $([System.String]::Copy('$(TargetFrameworks)').Contains('net9'))">
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>
