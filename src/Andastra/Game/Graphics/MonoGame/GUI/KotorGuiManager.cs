@@ -185,7 +185,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
                 // Parse GUI file using GUIReader
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                GuiResource gui = guiReader.Load();
+                GUI gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -2216,7 +2216,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// </summary>
         private class LoadedGui
         {
-            public GuiResource Gui { get; set; }
+            public GUI Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }
