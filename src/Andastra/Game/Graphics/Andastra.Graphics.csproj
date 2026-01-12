@@ -15,7 +15,6 @@
     <ProjectReference Include="..\..\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\..\Runtime\Andastra.Runtime.csproj" />
     <ProjectReference Include="..\..\Utility\Andastra.Utility.csproj" />
-    <ProjectReference Include="..\Andastra.Game.csproj" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
