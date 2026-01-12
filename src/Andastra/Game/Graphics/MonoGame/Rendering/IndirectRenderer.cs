@@ -5,9 +5,8 @@ using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Microsoft.Xna.Framework;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
+using XnaVector3 = Microsoft.Xna.Framework.Vector3;
+using XnaVector4 = Microsoft.Xna.Framework.Vector4;
 
 namespace Andastra.Runtime.MonoGame.Rendering
 {

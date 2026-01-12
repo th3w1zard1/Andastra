@@ -5,11 +5,9 @@ using System.Runtime.InteropServices;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Microsoft.Xna.Framework;
+using XnaVector3 = Microsoft.Xna.Framework.Vector3;
+using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 using Microsoft.Xna.Framework.Graphics;
-using Matrix4x4 = System.Numerics.Matrix4x4;
-using Rectangle = Microsoft.Xna.Framework.Rectangle;
-using Vector3 = System.Numerics.Vector3;
-using Vector4 = System.Numerics.Vector4;
 
 namespace Andastra.Runtime.MonoGame.Lighting
 {
