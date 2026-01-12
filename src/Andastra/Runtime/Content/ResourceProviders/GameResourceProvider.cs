@@ -65,7 +65,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(
+                Andastra.Parsing.Extract.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(
+                Andastra.Parsing.Extract.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             string installPath = _installation.Path;
 
             // 1. Enumerate from OVERRIDE directory (highest priority)
-            string overridePath = Installation.GetOverridePath(installPath);
+            string overridePath = Andastra.Parsing.Extract.Installation.Installation.GetOverridePath(installPath);
             if (Directory.Exists(overridePath))
             {
                 string extension = type.Extension ?? "";
@@ -197,7 +197,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 2. Enumerate from MODULES directory (module RIM/ERF/MOD files)
-            string modulesPath = Installation.GetModulesPath(installPath);
+            string modulesPath = Andastra.Parsing.Extract.Installation.Installation.GetModulesPath(installPath);
             if (Directory.Exists(modulesPath))
             {
                 var moduleFiles = Directory.GetFiles(modulesPath)
@@ -211,10 +211,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Filter by current module if specified
                 if (!string.IsNullOrWhiteSpace(_currentModule))
                 {
-                    string moduleRoot = Installation.GetModuleRoot(_currentModule);
+                    string moduleRoot = Andastra.Parsing.Extract.Installation.Installation.GetModuleRoot(_currentModule);
                     moduleFiles = moduleFiles.Where(f =>
                     {
-                        string fileRoot = Installation.GetModuleRoot(Path.GetFileName(f));
+                        string fileRoot = Andastra.Parsing.Extract.Installation.Installation.GetModuleRoot(Path.GetFileName(f));
                         return fileRoot.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase);
                     }).ToList();
                 }
@@ -268,7 +268,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 5. Enumerate from TEXTURE_PACKS (ERF files: swpc_tex_tpa.erf, swpc_tex_tpb.erf, swpc_tex_tpc.erf, swpc_tex_gui.erf)
-            string texturePacksPath = Installation.GetTexturePacksPath(installPath);
+            string texturePacksPath = Andastra.Parsing.Extract.Installation.Installation.GetTexturePacksPath(installPath);
             if (Directory.Exists(texturePacksPath))
             {
                 string[] texturePackFiles = new[]
@@ -311,11 +311,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // 6. Enumerate from STREAM directories (Music, Sounds, Voice, Waves, Lips)
             string[] streamDirectories = new[]
             {
-                Installation.GetStreamMusicPath(installPath),
-                Installation.GetStreamSoundsPath(installPath),
-                Installation.GetStreamVoicePath(installPath),
-                Installation.GetStreamWavesPath(installPath),
-                Installation.GetLipsPath(installPath)
+                Andastra.Parsing.Extract.Installation.Installation.GetStreamMusicPath(installPath),
+                Andastra.Parsing.Extract.Installation.Installation.GetStreamSoundsPath(installPath),
+                Andastra.Parsing.Extract.Installation.Installation.GetStreamVoicePath(installPath),
+                Andastra.Parsing.Extract.Installation.Installation.GetStreamWavesPath(installPath),
+                Andastra.Parsing.Extract.Installation.Installation.GetLipsPath(installPath)
             };
 
             foreach (string streamDir in streamDirectories)
@@ -352,7 +352,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 7. Enumerate from LIPS directory (ERF/RIM capsule files)
-            string lipsPath = Installation.GetLipsPath(installPath);
+            string lipsPath = Andastra.Parsing.Extract.Installation.Installation.GetLipsPath(installPath);
             if (Directory.Exists(lipsPath))
             {
                 var capsuleFiles = Directory.GetFiles(lipsPath)
@@ -389,7 +389,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // 8. Enumerate from RIMS directory (RIM files, TSL only)
             if (_gameType == GameType.K2)
             {
-                string rimsPath = Installation.GetRimsPath(installPath);
+                string rimsPath = Andastra.Parsing.Extract.Installation.Installation.GetRimsPath(installPath);
                 if (Directory.Exists(rimsPath))
                 {
                     var rimFiles = Directory.GetFiles(rimsPath, "*.rim", SearchOption.TopDirectoryOnly);
@@ -430,7 +430,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(
+                Andastra.Parsing.Extract.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
