@@ -5,7 +5,6 @@ using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Formats.TLK;
 using Andastra.Parsing.TSLPatcher.Logger;
 using Andastra.Parsing.TSLPatcher.Memory;
-using Andastra.Parsing.TSLPatcher.Mods;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.TSLPatcher.Mods.TLK
@@ -19,6 +18,7 @@ namespace Andastra.Parsing.TSLPatcher.Mods.TLK
     ///
     /// References:
     /// ----------
+    ///     vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/mods/tlk.py - Python TLK modification logic
     ///     vendor/TSLPatcher/TSLPatcher.pl - Perl TLK modification logic (unfinished)
     ///     vendor/Kotor.NET/Kotor.NET.Patcher/ - Incomplete C# patcher
     /// </summary>
@@ -57,13 +57,14 @@ namespace Andastra.Parsing.TSLPatcher.Mods.TLK
         public override object PatchResource(
             byte[] source,
             PatcherMemory memory,
-            PatchLogger logger, BioWareGame game)
+            PatchLogger logger,
+            BioWareGame game)
         {
             var reader = new TLKBinaryReader(source);
-            Resource.Formats.TLK.TLK dialog = reader.Load();
+            Formats.TLK.TLK dialog = reader.Load();
             Apply(dialog, memory, logger, game);
 
-            var writer = new TLKBinaryWriter(dialog);
+            var writer = new Formats.TLK.TLKBinaryWriter(dialog);
             return writer.Write();
         }
 
@@ -114,7 +115,7 @@ namespace Andastra.Parsing.TSLPatcher.Mods.TLK
             PatcherMemory memory,
             PatchLogger logger, BioWareGame game)
         {
-            if (mutableData is Resource.Formats.TLK.TLK dialog)
+            if (mutableData is Formats.TLK.TLK dialog)
             {
                 foreach (ModifyTLK modifier in Modifiers)
                 {
@@ -153,7 +154,7 @@ namespace Andastra.Parsing.TSLPatcher.Mods.TLK
             IsReplacement = isReplacement;
         }
 
-        public void Apply(Resource.Formats.TLK.TLK dialog, PatcherMemory memory)
+        public void Apply(Formats.TLK.TLK dialog, PatcherMemory memory)
         {
             Load();
             if (IsReplacement)
@@ -184,7 +185,7 @@ namespace Andastra.Parsing.TSLPatcher.Mods.TLK
 
             byte[] bytes = File.ReadAllBytes(TlkFilePath);
             var reader = new TLKBinaryReader(bytes);
-            Resource.Formats.TLK.TLK lookupTlk = reader.Load();
+            Formats.TLK.TLK lookupTlk = reader.Load();
             if (string.IsNullOrEmpty(Text))
             {
                 Text = lookupTlk.String(ModIndex);

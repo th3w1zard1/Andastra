@@ -2,11 +2,11 @@ using System;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.TSLPatcher.Memory;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Mods.GFF
+namespace Andastra.Parsing.TSLPatcher.Mods.GFF
 {
 
     /// <summary>

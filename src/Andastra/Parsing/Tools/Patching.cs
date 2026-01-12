@@ -9,19 +9,19 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.TPC;
+using Andastra.Parsing.Resource.Formats.ERF;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.RIM;
+using Andastra.Parsing.Resource.Formats.TLK;
+using Andastra.Parsing.Resource.Formats.TPC;
 // Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Resource.Generics.UTC;
-using Andastra.Parsing.Resource.Generics.UTI;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.ARE;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.DLG;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.UTC;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.UTI;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.UTM;
 
 namespace Andastra.Parsing.Tools
 {
@@ -288,8 +288,8 @@ namespace Andastra.Parsing.Tools
                 }
                 else if (resource.ResType == ResourceType.UTM)
                 {
-                    Andastra.Parsing.Resource.Generics.UTM.UTM utm = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers.ReadUtm(resourceData, 0, dataSize);
-                    convertedBytes = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers.BytesUtm(utm, toGame);
+                    UTM utm = UTMHelpers.ReadUtm(resourceData, 0, dataSize);
+                    convertedBytes = UTMHelpers.BytesUtm(utm, toGame);
                 }
                 else if (resource.ResType == ResourceType.UTP)
                 {

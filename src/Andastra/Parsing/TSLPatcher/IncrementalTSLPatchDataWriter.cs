@@ -9,19 +9,19 @@ using System.Text;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Memory;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.NCS;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Extract.Capsule;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.LIP;
+using Andastra.Parsing.Resource.Formats.SSF;
+using Andastra.Parsing.Resource.Formats.TLK;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.TSLPatcher.Memory;
+using Andastra.Parsing.TSLPatcher.Mods;
+using Andastra.Parsing.TSLPatcher.Mods.GFF;
+using Andastra.Parsing.TSLPatcher.Mods.NCS;
+using Andastra.Parsing.TSLPatcher.Mods.SSF;
+using Andastra.Parsing.TSLPatcher.Mods.TLK;
+using Andastra.Parsing.TSLPatcher.Mods.TwoDA;
 using Andastra.Parsing.Resource;
 // Removed: using Tools; // Removed to break circular dependency
 // Using fully qualified names directly in code instead
@@ -29,7 +29,8 @@ using Andastra.Utility;
 using JetBrains.Annotations;
 using InstallationClass = Andastra.Parsing.Installation.Installation;
 using SystemTextEncoding = System.Text.Encoding;
-namespace TSLPatcher
+
+namespace Andastra.Parsing.TSLPatcher
 {
     // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/writer.py:1166-1212
     // Original: @dataclass class TwoDALinkTarget, PendingStrRefReference, Pending2DARowReference
@@ -1941,7 +1942,7 @@ namespace TSLPatcher
                     {
                         // Load the GFF file
                         byte[] gffData = File.ReadAllBytes(gffFile);
-                        var gffReader = new Andastra.Parsing.Formats.GFF.GFFBinaryReader(gffData);
+                        var gffReader = new Andastra.Parsing.Resource.Formats.GFF.GFFBinaryReader(gffData);
                         var gff = gffReader.Load();
 
                         // Search for StrRef fields in the GFF structure
@@ -1950,13 +1951,13 @@ namespace TSLPatcher
                         if (strrefFields.Count > 0)
                         {
                             // Create GFF modifications to replace StrRef with TLKMEMORY token
-                            var modifications = new Andastra.Parsing.Mods.GFF.ModificationsGFF(gffFile, replace: false, modifiers: null);
+                            var modifications = new Andastra.Parsing.TSLPatcher.Mods.GFF.ModificationsGFF(gffFile, replace: false, modifiers: null);
 
                             foreach (var fieldPath in strrefFields)
                             {
                                 // Create a TLKMEMORY modifier that replaces the StrRef field
-                                var fieldValue = new Andastra.Parsing.Mods.GFF.FieldValueTLKMemory(newTokenId);
-                                var modifier = new Andastra.Parsing.Mods.GFF.ModifyFieldGFF(fieldPath, fieldValue);
+                                var fieldValue = new Andastra.Parsing.TSLPatcher.Mods.GFF.FieldValueTLKMemory(newTokenId);
+                                var modifier = new Andastra.Parsing.TSLPatcher.Mods.GFF.ModifyFieldGFF(fieldPath, fieldValue);
                                 modifications.Modifiers.Add(modifier);
                             }
 
@@ -2000,7 +2001,7 @@ namespace TSLPatcher
                     {
                         // Load the 2DA file
                         byte[] twodaData = File.ReadAllBytes(twodaFile);
-                        var twodaReader = new Andastra.Parsing.Formats.TwoDA.TwoDABinaryReader(twodaData);
+                        var twodaReader = new Andastra.Parsing.Resource.Formats.TwoDA.TwoDABinaryReader(twodaData);
                         var twoda = twodaReader.Load();
 
                         // Search for cells containing the StrRef value
@@ -2009,19 +2010,19 @@ namespace TSLPatcher
                         if (strrefCells.Count > 0)
                         {
                             // Create 2DA modifications to replace StrRef with TLKMEMORY token
-                            var modifications = new Andastra.Parsing.Mods.TwoDA.Modifications2DA(twodaFile);
+                            var modifications = new Andastra.Parsing.TSLPatcher.Mods.TwoDA.Modifications2DA(twodaFile);
 
                             foreach (var cellRef in strrefCells)
                             {
                                 // Create a TLKMEMORY modifier that replaces the cell value
-                                var target = new Andastra.Parsing.Mods.TwoDA.Target(
-                                    Andastra.Parsing.Mods.TwoDA.TargetType.ROW_INDEX,
+                                var target = new Andastra.Parsing.TSLPatcher.Mods.TwoDA.Target(
+                                    Andastra.Parsing.TSLPatcher.Mods.TwoDA.TargetType.ROW_INDEX,
                                     cellRef.RowIndex);
-                                var cells = new Dictionary<string, Andastra.Parsing.Mods.TwoDA.RowValue>
+                                var cells = new Dictionary<string, Andastra.Parsing.TSLPatcher.Mods.TwoDA.RowValue>
                                 {
-                                    { cellRef.ColumnName, new Andastra.Parsing.Mods.TwoDA.RowValueTLKMemory(newTokenId) }
+                                    { cellRef.ColumnName, new Andastra.Parsing.TSLPatcher.Mods.TwoDA.RowValueTLKMemory(newTokenId) }
                                 };
-                                var modifier = new Andastra.Parsing.Mods.TwoDA.ChangeRow2DA(
+                                var modifier = new Andastra.Parsing.TSLPatcher.Mods.TwoDA.ChangeRow2DA(
                                     $"strref_{cellRef.RowIndex}_{cellRef.ColumnName}",
                                     target,
                                     cells);
@@ -2053,7 +2054,7 @@ namespace TSLPatcher
         /// <summary>
         /// Recursively search GFF structure for fields containing a specific StrRef value.
         /// </summary>
-        public List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
+        public List<string> FindStrRefFieldsRecursive(Andastra.Parsing.Resource.Formats.GFF.GFFStruct gffStruct, int targetStrref, string currentPath = "")
         {
             var foundPaths = new List<string>();
 
@@ -2063,7 +2064,7 @@ namespace TSLPatcher
                 string fieldPath = string.IsNullOrEmpty(currentPath) ? label : $"{currentPath}.{label}";
 
                 // Check Int32 fields that might be StrRefs (StrRef fields are typically named with "StrRef" in them)
-                if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.Int32)
+                if (fieldType == Andastra.Parsing.Resource.Formats.GFF.GFFFieldType.Int32)
                 {
                     if (label.Contains("StrRef", StringComparison.OrdinalIgnoreCase) ||
                         label.Contains("strref", StringComparison.OrdinalIgnoreCase) ||
@@ -2078,7 +2079,7 @@ namespace TSLPatcher
                     }
                 }
                 // Check LocalizedString fields for StrRef
-                else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.LocalizedString)
+                else if (fieldType == Andastra.Parsing.Resource.Formats.GFF.GFFFieldType.LocalizedString)
                 {
                     if (value is Andastra.Parsing.Common.LocalizedString locString)
                     {
@@ -2089,21 +2090,21 @@ namespace TSLPatcher
                     }
                 }
                 // Recursively search nested structs
-                else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.Struct)
+                else if (fieldType == Andastra.Parsing.Resource.Formats.GFF.GFFFieldType.Struct)
                 {
-                    if (value is Andastra.Parsing.Formats.GFF.GFFStruct nestedStruct)
+                    if (value is Andastra.Parsing.Resource.Formats.GFF.GFFStruct nestedStruct)
                     {
                         foundPaths.AddRange(FindStrRefFieldsRecursive(nestedStruct, targetStrref, fieldPath));
                     }
                 }
                 // Recursively search list elements
-                else if (fieldType == Andastra.Parsing.Formats.GFF.GFFFieldType.List)
+                else if (fieldType == Andastra.Parsing.Resource.Formats.GFF.GFFFieldType.List)
                 {
-                    if (value is Andastra.Parsing.Formats.GFF.GFFList listData)
+                    if (value is Andastra.Parsing.Resource.Formats.GFF.GFFList listData)
                     {
                         for (int i = 0; i < listData.Count; i++)
                         {
-                            if (listData[i] is Andastra.Parsing.Formats.GFF.GFFStruct listStruct)
+                            if (listData[i] is Andastra.Parsing.Resource.Formats.GFF.GFFStruct listStruct)
                             {
                                 string listPath = $"{fieldPath}[{i}]";
                                 foundPaths.AddRange(FindStrRefFieldsRecursive(listStruct, targetStrref, listPath));
@@ -2119,7 +2120,7 @@ namespace TSLPatcher
         /// <summary>
         /// Search 2DA file for cells containing a specific StrRef value.
         /// </summary>
-        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Andastra.Parsing.Formats.TwoDA.TwoDA twoda, int targetStrref)
+        private List<TwoDaCellReference> FindStrRefCellsInTwoDa(Andastra.Parsing.Resource.Formats.TwoDA.TwoDA twoda, int targetStrref)
         {
             var foundCells = new List<TwoDaCellReference>();
 

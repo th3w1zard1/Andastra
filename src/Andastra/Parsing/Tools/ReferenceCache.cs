@@ -6,12 +6,12 @@ using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Extract.Capsule;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.SSF;
+using Andastra.Parsing.Resource.Formats.TwoDA;
 // Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
-using Andastra.Parsing.Logger;
+using Andastra.Parsing.Common.Logger;
 using Andastra.Parsing.Resource;
 using JetBrains.Annotations;
 

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.TSLPatcher.Mods.GFF;
+using Andastra.Parsing.TSLPatcher.Mods.SSF;
+using Andastra.Parsing.TSLPatcher.Mods.TLK;
+using Andastra.Parsing.TSLPatcher.Mods.TwoDA;
 
-namespace Andastra.Parsing.Diff
+namespace Andastra.Parsing.TSLPatcher.Diff
 {
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tslpatcher/diff/analyzers.py:89-104
     // Original: class DiffAnalyzer(ABC):

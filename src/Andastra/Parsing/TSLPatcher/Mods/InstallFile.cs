@@ -1,11 +1,11 @@
 using System;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Common.Logger;
+using Andastra.Parsing.TSLPatcher.Memory;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Mods
+namespace Andastra.Parsing.TSLPatcher.Mods
 {
 
     /// <summary>

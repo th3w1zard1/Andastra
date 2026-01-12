@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.TSLPatcher.Mods;
+using Andastra.Parsing.TSLPatcher.Mods.GFF;
+using Andastra.Parsing.TSLPatcher.Mods.SSF;
+using Andastra.Parsing.TSLPatcher.Mods.TLK;
+using Andastra.Parsing.TSLPatcher.Mods.TwoDA;
 
 namespace Andastra.Parsing.TSLPatcher
 {
