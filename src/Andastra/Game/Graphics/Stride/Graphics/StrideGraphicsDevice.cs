@@ -2,7 +2,12 @@ using System;
 using System.Reflection;
 using Andastra.Runtime.Graphics;
 using Stride.Core.Mathematics;
+using Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
+using GraphicsViewport = Andastra.Runtime.Graphics.Viewport;
+using GraphicsPrimitiveType = Andastra.Runtime.Graphics.PrimitiveType;
+using StrideViewport = Stride.Graphics.Viewport;
+using StridePrimitiveType = Stride.Graphics.PrimitiveType;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -95,7 +100,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public Viewport Viewport
+        public GraphicsViewport Viewport
         {
             get
             {
@@ -118,7 +123,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     else
                     {
                         // Fallback to a default viewport
-                        _currentViewport = new Viewport(0, 0, 1920, 1080, 0.0f, 1.0f);
+                        _currentViewport = new StrideViewport(0, 0, 1920, 1080, 0.0f, 1.0f);
                     }
                 }
                 return _currentViewport;
@@ -448,7 +453,7 @@ namespace Andastra.Runtime.Stride.Graphics
         }
 
         public void DrawIndexedPrimitives(
-            PrimitiveType primitiveType,
+            GraphicsPrimitiveType primitiveType,
             int baseVertex,
             int minVertexIndex,
             int numVertices,
@@ -479,7 +484,7 @@ namespace Andastra.Runtime.Stride.Graphics
             );
         }
 
-        public void DrawPrimitives(PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
+        public void DrawPrimitives(GraphicsPrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
             // Use ImmediateContext property which retrieves from the per-frame registry
             var commandList = ImmediateContext ?? throw new InvalidOperationException("CommandList is required for DrawPrimitives");
@@ -892,36 +897,36 @@ namespace Andastra.Runtime.Stride.Graphics
             // GraphicsDevice is managed by Game, don't dispose it
         }
 
-        private static StrideGraphics.PrimitiveType ConvertPrimitiveType(PrimitiveType type)
+        private static StrideGraphics.PrimitiveType ConvertPrimitiveType(GraphicsPrimitiveType type)
         {
             switch (type)
             {
-                case PrimitiveType.TriangleList:
+                case GraphicsPrimitiveType.TriangleList:
                     return StrideGraphics.PrimitiveType.TriangleList;
-                case PrimitiveType.TriangleStrip:
+                case GraphicsPrimitiveType.TriangleStrip:
                     return StrideGraphics.PrimitiveType.TriangleStrip;
-                case PrimitiveType.LineList:
+                case GraphicsPrimitiveType.LineList:
                     return StrideGraphics.PrimitiveType.LineList;
-                case PrimitiveType.LineStrip:
+                case GraphicsPrimitiveType.LineStrip:
                     return StrideGraphics.PrimitiveType.LineStrip;
-                case PrimitiveType.PointList:
+                case GraphicsPrimitiveType.PointList:
                     return StrideGraphics.PrimitiveType.PointList;
                 default:
                     return StrideGraphics.PrimitiveType.TriangleList;
             }
         }
 
-        private static int GetVerticesPerPrimitive(PrimitiveType type)
+        private static int GetVerticesPerPrimitive(GraphicsPrimitiveType type)
         {
             switch (type)
             {
-                case PrimitiveType.TriangleList:
-                case PrimitiveType.TriangleStrip:
+                case GraphicsPrimitiveType.TriangleList:
+                case GraphicsPrimitiveType.TriangleStrip:
                     return 3;
-                case PrimitiveType.LineList:
-                case PrimitiveType.LineStrip:
+                case GraphicsPrimitiveType.LineList:
+                case GraphicsPrimitiveType.LineStrip:
                     return 2;
-                case PrimitiveType.PointList:
+                case GraphicsPrimitiveType.PointList:
                     return 1;
                 default:
                     return 3;

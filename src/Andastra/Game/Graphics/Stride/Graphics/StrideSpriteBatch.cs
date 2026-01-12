@@ -1,6 +1,4 @@
 using Andastra.Runtime.Graphics;
-using RectangleF = Stride.Core.Mathematics.RectangleF;
-using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using Stride.Core;
 using Stride.Rendering;
@@ -9,9 +7,14 @@ using Stride.Rendering.Materials.ComputeColors;
 using Stride.Shaders;
 using System;
 using System.Numerics;
-using Vector2 = Andastra.Runtime.Graphics.Vector2;
-using Color = Andastra.Runtime.Graphics.Color;
-using Rectangle = Andastra.Runtime.Graphics.Rectangle;
+using Stride.Graphics;
+using StrideGraphics = Stride.Graphics;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
+using GraphicsColor = Andastra.Runtime.Graphics.Color;
+using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
+using GraphicsSpriteSortMode = Andastra.Runtime.Graphics.SpriteSortMode;
+using GraphicsSpriteEffects = Andastra.Runtime.Graphics.SpriteEffects;
+using GraphicsBlendState = Andastra.Runtime.Graphics.BlendState;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
@@ -45,7 +48,7 @@ namespace Andastra.Runtime.Stride.Graphics
             // This ensures we always get the current GraphicsDevice, allowing for dynamic changes
         }
 
-        public void Begin(SpriteSortMode sortMode = SpriteSortMode.Deferred, BlendState blendState = null)
+        public void Begin(GraphicsSpriteSortMode sortMode = GraphicsSpriteSortMode.Deferred, GraphicsBlendState blendState = null)
         {
             if (_isBegun)
             {
@@ -106,7 +109,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _isBegun = false;
         }
 
-        public void Draw(ITexture2D texture, Vector2 position, Color color)
+        public void Draw(ITexture2D texture, GraphicsVector2 position, GraphicsColor color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -115,7 +118,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Rectangle destinationRectangle, Color color)
+        public void Draw(ITexture2D texture, GraphicsRectangle destinationRectangle, GraphicsColor color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -124,7 +127,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideRect, strideColor);
         }
 
-        public void Draw(ITexture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color)
+        public void Draw(ITexture2D texture, GraphicsVector2 position, GraphicsRectangle? sourceRectangle, GraphicsColor color)
         {
             EnsureBegun();
             var strideTexture = GetStrideTexture(texture);
@@ -147,7 +150,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     int clampedY = System.Math.Max(0, System.Math.Min(srcRect.Y, texture.Height - 1));
                     int clampedWidth = System.Math.Min(srcRect.Width, texture.Width - clampedX);
                     int clampedHeight = System.Math.Min(srcRect.Height, texture.Height - clampedY);
-                    srcRect = new Rectangle(clampedX, clampedY, clampedWidth, clampedHeight);
+                    srcRect = new GraphicsRectangle(clampedX, clampedY, clampedWidth, clampedHeight);
                 }
                 
                 // Create destination rectangle with source rectangle dimensions
@@ -177,12 +180,12 @@ namespace Andastra.Runtime.Stride.Graphics
 
         public void Draw(
             ITexture2D texture,
-            Rectangle destinationRectangle,
-            Rectangle? sourceRectangle,
-            Color color,
+            GraphicsRectangle destinationRectangle,
+            GraphicsRectangle? sourceRectangle,
+            GraphicsColor color,
             float rotation,
-            Vector2 origin,
-            SpriteEffects effects,
+            GraphicsVector2 origin,
+            GraphicsSpriteEffects effects,
             float layerDepth)
         {
             EnsureBegun();
@@ -193,7 +196,7 @@ namespace Andastra.Runtime.Stride.Graphics
             var strideEffects = ConvertSpriteEffects(effects);
 
             // Handle source rectangle - validate and clamp to texture bounds
-            Rectangle? validatedSourceRect = null;
+            GraphicsRectangle? validatedSourceRect = null;
             if (sourceRectangle.HasValue)
             {
                 var srcRect = sourceRectangle.Value;
@@ -208,7 +211,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     int clampedY = System.Math.Max(0, System.Math.Min(srcRect.Y, texture.Height - 1));
                     int clampedWidth = System.Math.Min(srcRect.Width, texture.Width - clampedX);
                     int clampedHeight = System.Math.Min(srcRect.Height, texture.Height - clampedY);
-                    validatedSourceRect = new Rectangle(clampedX, clampedY, clampedWidth, clampedHeight);
+                    validatedSourceRect = new GraphicsRectangle(clampedX, clampedY, clampedWidth, clampedHeight);
                 }
                 else
                 {
@@ -272,7 +275,7 @@ namespace Andastra.Runtime.Stride.Graphics
             _spriteBatch.Draw(strideTexture, strideDestRect, strideColor);
         }
 
-        public void DrawString(IFont font, string text, Vector2 position, Color color)
+        public void DrawString(IFont font, string text, GraphicsVector2 position, GraphicsColor color)
         {
             EnsureBegun();
             var strideFont = GetStrideFont(font);
@@ -306,14 +309,14 @@ namespace Andastra.Runtime.Stride.Graphics
             throw new System.ArgumentException("Font must be a StrideFont", nameof(font));
         }
 
-        private StrideGraphics.SpriteSortMode ConvertSortMode(SpriteSortMode sortMode)
+        private StrideGraphics.SpriteSortMode ConvertSortMode(GraphicsSpriteSortMode sortMode)
         {
             // Stride uses the same enum values, so we can cast directly
             return (StrideGraphics.SpriteSortMode)sortMode;
         }
 
 
-        private StrideGraphics.SpriteEffects ConvertSpriteEffects(SpriteEffects effects)
+        private StrideGraphics.SpriteEffects ConvertSpriteEffects(GraphicsSpriteEffects effects)
         {
             StrideGraphics.SpriteEffects result = StrideGraphics.SpriteEffects.None;
             if ((effects & SpriteEffects.FlipHorizontally) != 0)
@@ -574,18 +577,18 @@ namespace Andastra.Runtime.Stride.Graphics
         /// <summary>
         /// Gets the current viewport for screen space calculations.
         /// </summary>
-        private Viewport GetCurrentViewport()
+        private GraphicsViewport GetCurrentViewport()
         {
             if (_graphicsDevice == null)
             {
-                return new Viewport(0, 0, 1920, 1080); // Default viewport
+                return new GraphicsViewport(0, 0, 1920, 1080); // Default viewport
             }
 
             // Try to get viewport from graphics device
             var presenter = _graphicsDevice.Presenter;
             if (presenter != null && presenter.Description != null)
             {
-                return new Viewport(
+                return new GraphicsViewport(
                     0, 0,
                     presenter.Description.BackBufferWidth,
                     presenter.Description.BackBufferHeight,
@@ -594,7 +597,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
 
             // Fallback to default viewport
-            return new Viewport(0, 0, 1920, 1080);
+            return new GraphicsViewport(0, 0, 1920, 1080);
         }
 
         /// <summary>

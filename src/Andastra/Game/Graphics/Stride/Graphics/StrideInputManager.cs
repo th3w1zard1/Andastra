@@ -263,7 +263,7 @@ namespace Andastra.Runtime.Stride.Graphics
             }
         }
 
-        public bool IsButtonUp(MouseButton button)
+        public bool IsButtonUp(GraphicsMouseButton button)
         {
             return !IsButtonDown(button);
         }
