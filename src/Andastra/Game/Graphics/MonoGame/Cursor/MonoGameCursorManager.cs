@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Numerics;
+
 using Andastra.Parsing.Extract.Installation;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
@@ -33,7 +33,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         private readonly Installation _installation;
         private CursorType _currentCursorType;
         private bool _isPressed;
-        private System.Numerics.Vector2 _position;
+        private Vector2 _position;
         private bool _disposed;
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             _installation = installation;
             _cursorCache = new Dictionary<CursorType, ICursor>();
             _currentCursorType = CursorType.Default;
-            _position = new System.Numerics.Vector2(0, 0);
+            _position = new Vector2(0, 0);
         }
 
         public ICursor CurrentCursor
@@ -84,7 +84,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             set { _isPressed = value; }
         }
 
-        public System.Numerics.Vector2 Position
+        public Vector2 Position
         {
             get { return _position; }
             set { _position = value; }
