@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.Formats.TwoDA;
 using Andastra.Runtime.Core.Interfaces;
 
 namespace Andastra.Runtime.Games.Common.Components
