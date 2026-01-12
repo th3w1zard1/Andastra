@@ -6,6 +6,7 @@ using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {

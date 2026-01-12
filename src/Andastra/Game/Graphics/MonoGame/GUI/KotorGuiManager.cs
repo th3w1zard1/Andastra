@@ -17,7 +17,7 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using XnaVector2 = Microsoft.Xna.Framework.Vector2;
+using XnaVector2 = Microsoft.Xna.Framework.Vector2; using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace Andastra.Runtime.MonoGame.GUI
 {
