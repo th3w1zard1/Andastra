@@ -14,6 +14,7 @@
     <ProjectReference Include="..\Core\Andastra.Core.csproj" />
     <ProjectReference Include="..\Parsing\Andastra.Parsing.csproj" />
     <ProjectReference Include="..\Utility\Andastra.Utility.csproj" />
+    <ProjectReference Include="..\Game\Graphics\Andastra.Graphics.csproj" />
     <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
