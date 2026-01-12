@@ -24,7 +24,7 @@ namespace Andastra.Runtime.Stride.Graphics
         private SamplerStateDescription[] _currentSamplerStates;
         private bool _stateDirty;
         private PipelineStateKey _lastPipelineStateKey;
-        private Viewport _currentViewport;
+        private StrideViewport _currentViewport;
 
         /// <summary>
         /// Pipeline state cache key for tracking state combinations.
