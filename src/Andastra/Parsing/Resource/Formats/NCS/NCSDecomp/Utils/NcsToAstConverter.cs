@@ -3449,7 +3449,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             {
             }
 
-            public override void ReplaceChild(Node oldChild, Node newChild)
+            public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
             {
             }
         }
@@ -3469,7 +3469,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             {
             }
 
-            public override void ReplaceChild(Node oldChild, Node newChild)
+            public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
             {
             }
         }
@@ -3489,7 +3489,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             {
             }
 
-            public override void ReplaceChild(Node oldChild, Node newChild)
+            public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
             {
             }
         }

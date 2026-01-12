@@ -766,7 +766,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
             origin = null;
         }
 
-        private Node GetNextOrigin(Node.Node node)
+        private Node.Node GetNextOrigin(Node.Node node)
         {
             return this.nodedata.RemoveLastOrigin(node);
         }

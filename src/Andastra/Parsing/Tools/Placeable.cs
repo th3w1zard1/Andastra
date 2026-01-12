@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TwoDA;
+using Andastra.Parsing.Resource.Formats.TwoDA;
 using Andastra.Parsing.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
 using Andastra.Parsing.Logger;
 using JetBrains.Annotations;
 

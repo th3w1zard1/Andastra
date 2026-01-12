@@ -34,7 +34,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
         private byte id;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:40-50
         // Original: public SubroutineState(NodeAnalysisData nodedata, Node root, byte id) { this.status = 0; ... }
-        public SubroutineState(NodeAnalysisData nodedata, Node root, byte id)
+        public SubroutineState(NodeAnalysisData nodedata, Node.Node root, byte id)
         {
             this.nodedata = nodedata;
             this.@params = new List<Type>();

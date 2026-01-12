@@ -184,7 +184,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:145-153
         // Original: private void removeDestination(Node.Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
-        private void RemoveDestination(Node.Node origin, Node destination, Dictionary<object, object> hash)
+        private void RemoveDestination(Node.Node origin, Node.Node destination, Dictionary<object, object> hash)
         {
             object originListObj = hash.ContainsKey(destination) ? hash[destination] : null;
             List<object> originList = originListObj as List<object>;
@@ -206,7 +206,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:160-168
         // Original: private void addDestination(Node.Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
-        private void AddDestination(Node.Node origin, Node destination, Dictionary<object, object> hash)
+        private void AddDestination(Node.Node origin, Node.Node destination, Dictionary<object, object> hash)
         {
             object originsListObj = hash.ContainsKey(destination) ? hash[destination] : null;
             List<object> originsList = originsListObj as List<object>;

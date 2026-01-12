@@ -3,7 +3,7 @@ using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
 
 namespace Andastra.Parsing.Extract.SaveData
 {

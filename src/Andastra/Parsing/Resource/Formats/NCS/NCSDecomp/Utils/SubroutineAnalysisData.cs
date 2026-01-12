@@ -314,7 +314,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             return (StructType)this.globalstructs[index];
         }
 
-        private void AddSubroutine(int pos, Node node, byte id)
+        private void AddSubroutine(int pos, Node.Node node, byte id)
         {
             this.subroutines[pos] = node;
             // Ensure the position is set in nodedata for the subroutine node
@@ -325,13 +325,13 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             this.AddSubState(node, id);
         }
 
-        private void AddSubState(Node sub, byte id)
+        private void AddSubState(Node.Node sub, byte id)
         {
             SubroutineState state = new SubroutineState(this.nodedata, sub, id);
             this.substates[sub] = state;
         }
 
-        private void AddSubState(Node sub, byte id, Type type)
+        private void AddSubState(Node.Node sub, byte id, Type type)
         {
             SubroutineState state = new SubroutineState(this.nodedata, sub, id);
             state.SetReturnType(type, 1);

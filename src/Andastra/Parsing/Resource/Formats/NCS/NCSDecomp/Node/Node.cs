@@ -50,7 +50,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
         }
 
         public abstract void RemoveChild(Node.Node p0);
-        public abstract void ReplaceChild(Node p0, Node p1);
+        public abstract void ReplaceChild(Node.Node p0, Node.Node p1);
         public virtual void ReplaceBy(Node.Node node)
         {
             if (this.parent != null)

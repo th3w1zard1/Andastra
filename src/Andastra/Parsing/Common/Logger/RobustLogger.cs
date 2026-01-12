@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Logger
+namespace Andastra.Parsing.Common.Logger
 {
     /// <summary>
     /// Robust logger for pykotor errors, exceptions, warnings, and info logging.

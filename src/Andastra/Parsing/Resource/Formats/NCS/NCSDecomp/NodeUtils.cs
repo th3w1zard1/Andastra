@@ -648,7 +648,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             return offset / 4;
         }
 
-        public static Node GetCommandChild(Node.Node node)
+        public static Node.Node GetCommandChild(Node.Node node)
         {
             if (IsCommandNode(node))
             {
@@ -773,7 +773,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             throw new Exception("unexpected node type " + node);
         }
 
-        public static Node GetPreviousCommand(Node.Node node, NodeAnalysisData nodedata)
+        public static Node.Node GetPreviousCommand(Node.Node node, NodeAnalysisData nodedata)
         {
             if (typeof(AReturn).IsInstanceOfType(node))
             {
@@ -807,7 +807,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             return null;
         }
 
-        public static Node GetNextCommand(Node.Node node, NodeAnalysisData nodedata)
+        public static Node.Node GetNextCommand(Node.Node node, NodeAnalysisData nodedata)
         {
             Node.Node up;
             for (up = node.Parent(); !typeof(ACommandBlock).IsInstanceOfType(up); up = up.Parent())

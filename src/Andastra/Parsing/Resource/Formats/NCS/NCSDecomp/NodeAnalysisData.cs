@@ -102,7 +102,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:63-70
         // Original: public Node getDestination(Node.Node node)
-        public virtual Node GetDestination(Node.Node node)
+        public virtual Node.Node GetDestination(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -117,7 +117,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 
         // Helper method to safely get destination without throwing exception
         // Returns null if node is not in hashtable or has no destination
-        public virtual Node TryGetDestination(Node.Node node)
+        public virtual Node.Node TryGetDestination(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -259,7 +259,7 @@ namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
             data.AddOrigin(origin);
         }
 
-        public virtual Node RemoveLastOrigin(Node.Node node)
+        public virtual Node.Node RemoveLastOrigin(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
