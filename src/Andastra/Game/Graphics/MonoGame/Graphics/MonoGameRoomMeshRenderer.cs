@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
+using Andastra.Parsing.Resource.Formats.MDL;
+using Andastra.Parsing.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 
 namespace Andastra.Runtime.MonoGame.Graphics
 {

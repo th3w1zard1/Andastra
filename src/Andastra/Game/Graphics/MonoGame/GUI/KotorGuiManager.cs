@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource.Formats.TPC;
+using Andastra.Parsing.Extract.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.GUI;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Games.Common;
 using Andastra.Runtime.Graphics;
@@ -17,12 +17,6 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
-using GuiResource = Andastra.Parsing.Resource.Generics.GUI.GUI;
-using ParsingColor = Andastra.Parsing.Common.ParsingColor;
-using XnaColor = Microsoft.Xna.Framework.Color;
-using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
-using XnaSpriteEffects = Microsoft.Xna.Framework.Graphics.SpriteEffects;
 using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 
 namespace Andastra.Runtime.MonoGame.GUI
