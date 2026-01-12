@@ -15,6 +15,7 @@ using GraphicsRectangle = Andastra.Runtime.Graphics.Rectangle;
 using GraphicsSpriteSortMode = Andastra.Runtime.Graphics.SpriteSortMode;
 using GraphicsSpriteEffects = Andastra.Runtime.Graphics.SpriteEffects;
 using GraphicsBlendState = Andastra.Runtime.Graphics.BlendState;
+using GraphicsViewport = Andastra.Runtime.Graphics.Viewport;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
