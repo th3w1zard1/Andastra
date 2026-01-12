@@ -6,10 +6,10 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     public class FloatConst : Const
     {
@@ -18,7 +18,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
         private float value;
         public FloatConst(float value)
         {
-            this.type = new UtilsType((byte)4);
+            this.type = new Utils.Type((byte)4);
             this.value = value;
             this.size = 1;
         }

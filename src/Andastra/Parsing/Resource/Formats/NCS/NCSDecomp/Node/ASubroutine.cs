@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class ASubroutine : PSubroutine
     {
@@ -106,7 +106,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _return = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_commandBlock == child)
             {

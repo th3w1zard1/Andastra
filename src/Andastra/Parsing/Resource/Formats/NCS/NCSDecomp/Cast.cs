@@ -5,8 +5,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Cast.java:12-23
     // Original: public interface Cast<T> extends Serializable { T cast(Object o); }

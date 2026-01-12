@@ -1,9 +1,9 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AIf.java
 // Original: public class AIf extends AControlLoop
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AIf.java:8-26
     // Original: public AIf(int start, int end, AExpression condition) { super(start, end); this.condition(condition); }

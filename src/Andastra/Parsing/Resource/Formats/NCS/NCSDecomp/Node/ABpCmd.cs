@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class ABpCmd : PCmd
     {
@@ -58,7 +58,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _bpCommand = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_bpCommand == child)
             {

@@ -2,9 +2,9 @@
 // Original: public class ASwitchCase extends ScriptRootNode
 using System.Collections.Generic;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ASwitchCase : ScriptRootNode
     {

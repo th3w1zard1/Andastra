@@ -6,8 +6,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/KnownExternalCompilers.java:26-216
     // Original: public enum KnownExternalCompilers

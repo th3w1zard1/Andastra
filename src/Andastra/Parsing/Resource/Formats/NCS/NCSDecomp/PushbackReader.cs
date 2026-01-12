@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Lexer
 {
     public class PushbackReader
     {

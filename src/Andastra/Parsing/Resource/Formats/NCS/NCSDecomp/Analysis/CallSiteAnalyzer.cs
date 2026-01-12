@@ -5,10 +5,10 @@
 
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:36-243
     // Original: public class CallSiteAnalyzer extends PrunedDepthFirstAdapter
@@ -76,8 +76,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
         }
 
         // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallSiteAnalyzer.java:88-93
-        // Original: @Override public void defaultIn(Node node)
-        public override void DefaultIn(Node node)
+        // Original: @Override public void defaultIn(Node.Node node)
+        public override void DefaultIn(Node.Node node)
         {
             if (NodeUtils.IsCommandNode(node))
             {

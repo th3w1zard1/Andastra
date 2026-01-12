@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class AProgram : PProgram
     {
@@ -157,7 +157,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _subroutine.Add(sub);
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_size == child)
             {

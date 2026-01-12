@@ -2,12 +2,12 @@
 // Original: public class ASub extends ScriptRootNode
 using System.Collections.Generic;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class ASub : ScriptRootNode
     {

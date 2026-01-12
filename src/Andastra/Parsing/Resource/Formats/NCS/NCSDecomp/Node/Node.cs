@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public abstract class Node : Switchable, Cloneable
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Node.java
-        // Original: private Node parent;
-        private Node parent;
+        // Original: private Node.Node parent;
+        private Node.Node parent;
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/node/Node.java
         // Original: public void apply(Switch sw) { ... }
@@ -44,14 +44,14 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return this.parent;
         }
 
-        public virtual void Parent(Node parent)
+        public virtual void Parent(Node.Node parent)
         {
             this.parent = parent;
         }
 
-        public abstract void RemoveChild(Node p0);
+        public abstract void RemoveChild(Node.Node p0);
         public abstract void ReplaceChild(Node p0, Node p1);
-        public virtual void ReplaceBy(Node node)
+        public virtual void ReplaceBy(Node.Node node)
         {
             if (this.parent != null)
             {
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        protected virtual string ToString(Node node)
+        protected virtual string ToString(Node.Node node)
         {
             if (node != null)
             {
@@ -80,7 +80,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return s.ToString();
         }
 
-        protected virtual Node CloneNode(Node node)
+        protected virtual Node CloneNode(Node.Node node)
         {
             if (node != null)
             {

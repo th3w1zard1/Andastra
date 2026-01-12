@@ -1,8 +1,8 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AContinueStatement.java:7-12
 // Original: public class AContinueStatement extends ScriptNode
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AContinueStatement : ScriptNode
     {

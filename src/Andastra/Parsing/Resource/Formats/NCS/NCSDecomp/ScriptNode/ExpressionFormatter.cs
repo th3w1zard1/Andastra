@@ -5,9 +5,9 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     /// <summary>
     /// Centralized expression pretty-printer that minimizes redundant parentheses

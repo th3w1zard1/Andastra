@@ -1,7 +1,6 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
-    public abstract class Token : Node
-    {
+    public abstract class Token : Node.Node {
         private string _text;
         private int _line;
         private int _pos;
@@ -52,7 +51,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             return _text + " ";
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
         }
 

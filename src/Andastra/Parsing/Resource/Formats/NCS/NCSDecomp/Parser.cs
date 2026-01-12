@@ -6,19 +6,18 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using LexerClass = Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
 // Decompiled by Procyon v0.6.0
 // 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Parser
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Parser
 {
     public class Parser
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/parser/Parser.java:190-207
-        // Original: private static final int SHIFT = 0; private static final int REDUCE = 1; private static final int ACCEPT = 2; private static final int ERROR = 3; private static int[][][] actionTable; private static int[][][] gotoTable; private static String[] errorMessages; private static int[] errors; public final Analysis ignoredTokens = new AnalysisAdapter(); protected Node node; private final Lexer lexer; private final ListIterator<State> stack = new LinkedList<State>().listIterator(); private int last_shift; private int last_pos; private int last_line; private Token last_token; private final TokenIndex converter = new TokenIndex(); private final int[] action = new int[2];
+        // Original: private static final int SHIFT = 0; private static final int REDUCE = 1; private static final int ACCEPT = 2; private static final int ERROR = 3; private static int[][][] actionTable; private static int[][][] gotoTable; private static String[] errorMessages; private static int[] errors; public final Analysis ignoredTokens = new AnalysisAdapter(); protected Node.Node node; private final Lexer lexer; private final ListIterator<State> stack = new LinkedList<State>().listIterator(); private int last_shift; private int last_pos; private int last_line; private Token last_token; private final TokenIndex converter = new TokenIndex(); private final int[] action = new int[2];
         private const int SHIFT = 0;
         private const int REDUCE = 1;
         private const int ACCEPT = 2;
@@ -28,8 +27,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Parser
         private static String[] errorMessages;
         private static int[] errors;
         public readonly IAnalysis ignoredTokens;
-        protected Node node;
-        private readonly Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer.Lexer lexer;
+        protected Node.Node node;
+        private readonly Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Lexer.Lexer lexer;
         private readonly ListIterator stack;
         private int last_shift;
         private int last_pos;
@@ -37,7 +36,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Parser
         private Token last_token;
         private readonly TokenIndex converter;
         private readonly int[] action;
-        public Parser(Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer.Lexer lexer)
+        public Parser(Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Lexer.Lexer lexer)
         {
             this.ignoredTokens = new AnalysisAdapter();
             this.stack = LinkedListExtensions.ListIterator(new LinkedList<object>());
@@ -49,9 +48,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Parser
                 try
                 {
                     // Match Lexer.cs pattern: try executing assembly first, then calling assembly
-                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Andastra.Parsing.Formats.NCS.NCSDecomp.parser.dat") ??
-                                              System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("Andastra.Parsing.Formats.NCS.NCSDecomp.parser.dat") ??
-                                              typeof(Parser).Assembly.GetManifestResourceStream("Andastra.Parsing.Formats.NCS.NCSDecomp.parser.dat") ??
+                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.parser.dat") ??
+                                              System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.parser.dat") ??
+                                              typeof(Parser).Assembly.GetManifestResourceStream("Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.parser.dat") ??
                                               System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("parser.dat") ??
                                               System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("parser.dat");
                     if (stream == null)
@@ -263,567 +262,567 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Parser
                             {
                                 case 0:
                                     {
-                                        Node node = this.New0();
+                                        Node.Node.Node node = this.New0();
                                         this.Push(this.GoTo(0), node, true);
                                         continue;
                                     }
 
                                 case 1:
                                     {
-                                        Node node = this.New1();
+                                        Node.Node.Node node = this.New1();
                                         this.Push(this.GoTo(31), node, false);
                                         continue;
                                     }
 
                                 case 2:
                                     {
-                                        Node node = this.New2();
+                                        Node.Node.Node node = this.New2();
                                         this.Push(this.GoTo(31), node, false);
                                         continue;
                                     }
 
                                 case 3:
                                     {
-                                        Node node = this.New3();
+                                        Node.Node.Node node = this.New3();
                                         this.Push(this.GoTo(0), node, true);
                                         continue;
                                     }
 
                                 case 4:
                                     {
-                                        Node node = this.New4();
+                                        Node.Node.Node node = this.New4();
                                         this.Push(this.GoTo(1), node, true);
                                         continue;
                                     }
 
                                 case 5:
                                     {
-                                        Node node = this.New5();
+                                        Node.Node.Node node = this.New5();
                                         this.Push(this.GoTo(1), node, true);
                                         continue;
                                     }
 
                                 case 6:
                                     {
-                                        Node node = this.New6();
+                                        Node.Node.Node node = this.New6();
                                         this.Push(this.GoTo(2), node, true);
                                         continue;
                                     }
 
                                 case 7:
                                     {
-                                        Node node = this.New7();
+                                        Node.Node.Node node = this.New7();
                                         this.Push(this.GoTo(32), node, false);
                                         continue;
                                     }
 
                                 case 8:
                                     {
-                                        Node node = this.New8();
+                                        Node.Node.Node node = this.New8();
                                         this.Push(this.GoTo(32), node, false);
                                         continue;
                                     }
 
                                 case 9:
                                     {
-                                        Node node = this.New9();
+                                        Node.Node.Node node = this.New9();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 10:
                                     {
-                                        Node node = this.New10();
+                                        Node.Node.Node node = this.New10();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 11:
                                     {
-                                        Node node = this.New11();
+                                        Node.Node.Node node = this.New11();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 12:
                                     {
-                                        Node node = this.New12();
+                                        Node.Node.Node node = this.New12();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 13:
                                     {
-                                        Node node = this.New13();
+                                        Node.Node.Node node = this.New13();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 14:
                                     {
-                                        Node node = this.New14();
+                                        Node.Node.Node node = this.New14();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 15:
                                     {
-                                        Node node = this.New15();
+                                        Node.Node.Node node = this.New15();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 16:
                                     {
-                                        Node node = this.New16();
+                                        Node.Node.Node node = this.New16();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 17:
                                     {
-                                        Node node = this.New17();
+                                        Node.Node.Node node = this.New17();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 18:
                                     {
-                                        Node node = this.New18();
+                                        Node.Node.Node node = this.New18();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 19:
                                     {
-                                        Node node = this.New19();
+                                        Node.Node.Node node = this.New19();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 20:
                                     {
-                                        Node node = this.New20();
+                                        Node.Node.Node node = this.New20();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 21:
                                     {
-                                        Node node = this.New21();
+                                        Node.Node.Node node = this.New21();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 22:
                                     {
-                                        Node node = this.New22();
+                                        Node.Node.Node node = this.New22();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 23:
                                     {
-                                        Node node = this.New23();
+                                        Node.Node.Node node = this.New23();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 24:
                                     {
-                                        Node node = this.New24();
+                                        Node.Node.Node node = this.New24();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 25:
                                     {
-                                        Node node = this.New25();
+                                        Node.Node.Node node = this.New25();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 26:
                                     {
-                                        Node node = this.New26();
+                                        Node.Node.Node node = this.New26();
                                         this.Push(this.GoTo(3), node, true);
                                         continue;
                                     }
 
                                 case 27:
                                     {
-                                        Node node = this.New27();
+                                        Node.Node.Node node = this.New27();
                                         this.Push(this.GoTo(4), node, true);
                                         continue;
                                     }
 
                                 case 28:
                                     {
-                                        Node node = this.New28();
+                                        Node.Node.Node node = this.New28();
                                         this.Push(this.GoTo(4), node, true);
                                         continue;
                                     }
 
                                 case 29:
                                     {
-                                        Node node = this.New29();
+                                        Node.Node.Node node = this.New29();
                                         this.Push(this.GoTo(4), node, true);
                                         continue;
                                     }
 
                                 case 30:
                                     {
-                                        Node node = this.New30();
+                                        Node.Node.Node node = this.New30();
                                         this.Push(this.GoTo(4), node, true);
                                         continue;
                                     }
 
                                 case 31:
                                     {
-                                        Node node = this.New31();
+                                        Node.Node.Node node = this.New31();
                                         this.Push(this.GoTo(4), node, true);
                                         continue;
                                     }
 
                                 case 32:
                                     {
-                                        Node node = this.New32();
+                                        Node.Node.Node node = this.New32();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 33:
                                     {
-                                        Node node = this.New33();
+                                        Node.Node.Node node = this.New33();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 34:
                                     {
-                                        Node node = this.New34();
+                                        Node.Node.Node node = this.New34();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 35:
                                     {
-                                        Node node = this.New35();
+                                        Node.Node.Node node = this.New35();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 36:
                                     {
-                                        Node node = this.New36();
+                                        Node.Node.Node node = this.New36();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 37:
                                     {
-                                        Node node = this.New37();
+                                        Node.Node.Node node = this.New37();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 38:
                                     {
-                                        Node node = this.New38();
+                                        Node.Node.Node node = this.New38();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 39:
                                     {
-                                        Node node = this.New39();
+                                        Node.Node.Node node = this.New39();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 40:
                                     {
-                                        Node node = this.New40();
+                                        Node.Node.Node node = this.New40();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 41:
                                     {
-                                        Node node = this.New41();
+                                        Node.Node.Node node = this.New41();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 42:
                                     {
-                                        Node node = this.New42();
+                                        Node.Node.Node node = this.New42();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 43:
                                     {
-                                        Node node = this.New43();
+                                        Node.Node.Node node = this.New43();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 44:
                                     {
-                                        Node node = this.New44();
+                                        Node.Node.Node node = this.New44();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 45:
                                     {
-                                        Node node = this.New45();
+                                        Node.Node.Node node = this.New45();
                                         this.Push(this.GoTo(5), node, true);
                                         continue;
                                     }
 
                                 case 46:
                                     {
-                                        Node node = this.New46();
+                                        Node.Node.Node node = this.New46();
                                         this.Push(this.GoTo(6), node, true);
                                         continue;
                                     }
 
                                 case 47:
                                     {
-                                        Node node = this.New47();
+                                        Node.Node.Node node = this.New47();
                                         this.Push(this.GoTo(6), node, true);
                                         continue;
                                     }
 
                                 case 48:
                                     {
-                                        Node node = this.New48();
+                                        Node.Node.Node node = this.New48();
                                         this.Push(this.GoTo(6), node, true);
                                         continue;
                                     }
 
                                 case 49:
                                     {
-                                        Node node = this.New49();
+                                        Node.Node.Node node = this.New49();
                                         this.Push(this.GoTo(7), node, true);
                                         continue;
                                     }
 
                                 case 50:
                                     {
-                                        Node node = this.New50();
+                                        Node.Node.Node node = this.New50();
                                         this.Push(this.GoTo(7), node, true);
                                         continue;
                                     }
 
                                 case 51:
                                     {
-                                        Node node = this.New51();
+                                        Node.Node.Node node = this.New51();
                                         this.Push(this.GoTo(7), node, true);
                                         continue;
                                     }
 
                                 case 52:
                                     {
-                                        Node node = this.New52();
+                                        Node.Node.Node node = this.New52();
                                         this.Push(this.GoTo(7), node, true);
                                         continue;
                                     }
 
                                 case 53:
                                     {
-                                        Node node = this.New53();
+                                        Node.Node.Node node = this.New53();
                                         this.Push(this.GoTo(8), node, true);
                                         continue;
                                     }
 
                                 case 54:
                                     {
-                                        Node node = this.New54();
+                                        Node.Node.Node node = this.New54();
                                         this.Push(this.GoTo(8), node, true);
                                         continue;
                                     }
 
                                 case 55:
                                     {
-                                        Node node = this.New55();
+                                        Node.Node.Node node = this.New55();
                                         this.Push(this.GoTo(8), node, true);
                                         continue;
                                     }
 
                                 case 56:
                                     {
-                                        Node node = this.New56();
+                                        Node.Node.Node node = this.New56();
                                         this.Push(this.GoTo(9), node, true);
                                         continue;
                                     }
 
                                 case 57:
                                     {
-                                        Node node = this.New57();
+                                        Node.Node.Node node = this.New57();
                                         this.Push(this.GoTo(9), node, true);
                                         continue;
                                     }
 
                                 case 58:
                                     {
-                                        Node node = this.New58();
+                                        Node.Node.Node node = this.New58();
                                         this.Push(this.GoTo(10), node, true);
                                         continue;
                                     }
 
                                 case 59:
                                     {
-                                        Node node = this.New59();
+                                        Node.Node.Node node = this.New59();
                                         this.Push(this.GoTo(10), node, true);
                                         continue;
                                     }
 
                                 case 60:
                                     {
-                                        Node node = this.New60();
+                                        Node.Node.Node node = this.New60();
                                         this.Push(this.GoTo(11), node, true);
                                         continue;
                                     }
 
                                 case 61:
                                     {
-                                        Node node = this.New61();
+                                        Node.Node.Node node = this.New61();
                                         this.Push(this.GoTo(12), node, true);
                                         continue;
                                     }
 
                                 case 62:
                                     {
-                                        Node node = this.New62();
+                                        Node.Node.Node node = this.New62();
                                         this.Push(this.GoTo(13), node, true);
                                         continue;
                                     }
 
                                 case 63:
                                     {
-                                        Node node = this.New63();
+                                        Node.Node.Node node = this.New63();
                                         this.Push(this.GoTo(14), node, true);
                                         continue;
                                     }
 
                                 case 64:
                                     {
-                                        Node node = this.New64();
+                                        Node.Node.Node node = this.New64();
                                         this.Push(this.GoTo(15), node, true);
                                         continue;
                                     }
 
                                 case 65:
                                     {
-                                        Node node = this.New65();
+                                        Node.Node.Node node = this.New65();
                                         this.Push(this.GoTo(16), node, true);
                                         continue;
                                     }
 
                                 case 66:
                                     {
-                                        Node node = this.New66();
+                                        Node.Node.Node node = this.New66();
                                         this.Push(this.GoTo(17), node, true);
                                         continue;
                                     }
 
                                 case 67:
                                     {
-                                        Node node = this.New67();
+                                        Node.Node.Node node = this.New67();
                                         this.Push(this.GoTo(18), node, true);
                                         continue;
                                     }
 
                                 case 68:
                                     {
-                                        Node node = this.New68();
+                                        Node.Node.Node node = this.New68();
                                         this.Push(this.GoTo(19), node, true);
                                         continue;
                                     }
 
                                 case 69:
                                     {
-                                        Node node = this.New69();
+                                        Node.Node.Node node = this.New69();
                                         this.Push(this.GoTo(20), node, true);
                                         continue;
                                     }
 
                                 case 70:
                                     {
-                                        Node node = this.New70();
+                                        Node.Node.Node node = this.New70();
                                         this.Push(this.GoTo(21), node, true);
                                         continue;
                                     }
 
                                 case 71:
                                     {
-                                        Node node = this.New71();
+                                        Node.Node.Node node = this.New71();
                                         this.Push(this.GoTo(22), node, true);
                                         continue;
                                     }
 
                                 case 72:
                                     {
-                                        Node node = this.New72();
+                                        Node.Node.Node node = this.New72();
                                         this.Push(this.GoTo(23), node, true);
                                         continue;
                                     }
 
                                 case 73:
                                     {
-                                        Node node = this.New73();
+                                        Node.Node.Node node = this.New73();
                                         this.Push(this.GoTo(24), node, true);
                                         continue;
                                     }
 
                                 case 74:
                                     {
-                                        Node node = this.New74();
+                                        Node.Node.Node node = this.New74();
                                         this.Push(this.GoTo(24), node, true);
                                         continue;
                                     }
 
                                 case 75:
                                     {
-                                        Node node = this.New75();
+                                        Node.Node.Node node = this.New75();
                                         this.Push(this.GoTo(25), node, true);
                                         continue;
                                     }
 
                                 case 76:
                                     {
-                                        Node node = this.New76();
+                                        Node.Node.Node node = this.New76();
                                         this.Push(this.GoTo(26), node, true);
                                         continue;
                                     }
 
                                 case 77:
                                     {
-                                        Node node = this.New77();
+                                        Node.Node.Node node = this.New77();
                                         this.Push(this.GoTo(27), node, true);
                                         continue;
                                     }
 
                                 case 78:
                                     {
-                                        Node node = this.New78();
+                                        Node.Node.Node node = this.New78();
                                         this.Push(this.GoTo(28), node, true);
                                         continue;
                                     }
 
                                 case 79:
                                     {
-                                        Node node = this.New79();
+                                        Node.Node.Node node = this.New79();
                                         this.Push(this.GoTo(29), node, true);
                                         continue;
                                     }
 
                                 case 80:
                                     {
-                                        Node node = this.New80();
+                                        Node.Node.Node node = this.New80();
                                         this.Push(this.GoTo(30), node, true);
                                         continue;
                                     }

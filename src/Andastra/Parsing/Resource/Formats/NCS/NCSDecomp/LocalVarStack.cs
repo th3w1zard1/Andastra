@@ -1,14 +1,13 @@
-// 
+//
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using JavaSystem = Andastra.Parsing.Formats.NCS.NCSDecomp.JavaSystem;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:18-225
     // Original: public class LocalVarStack extends LocalStack<StackEntry>
@@ -136,7 +135,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalVarStack.java:100-102
         // Original: public Type getType(int offset) { return this.get(offset).type(); }
-        public virtual UtilsType GetType(int offset)
+        public virtual Utils.Type GetType(int offset)
         {
             return this.Get(offset).Type();
         }
@@ -250,7 +249,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
         // Original: private Variable newPlaceholderVariable()
         private Variable NewPlaceholderVariable()
         {
-            Variable placeholder = new Variable(new UtilsType((byte)255));
+            Variable placeholder = new Variable(new Utils.Type((byte)255));
             placeholder.Name("__unknown_param_" + (++this.placeholderCounter));
             placeholder.IsParam(true);
             return placeholder;

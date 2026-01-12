@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 // Pcode Reader for NCSDecomp
 // Reads text-based pcode disassembly format and converts to binary NCS
 // Based on xoreos-tools implementation for accurate argument parsing
@@ -20,7 +21,7 @@ using System.Text.RegularExpressions;
 //   00000321 04 05 str                CONSTS "MIN_RACE_GEAR"  (string const)
 //   00000EEC 2C 01 10 0000006C 00000090 STORESTATE sta_00000EFC 108 144
 // 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public class PcodeReader
     {

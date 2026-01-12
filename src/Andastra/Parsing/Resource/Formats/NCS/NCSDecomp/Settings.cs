@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing.Common;
-using JavaSystem = Andastra.Parsing.Formats.NCS.NCSDecomp.JavaSystem;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Settings storage for the NCS decompiler.

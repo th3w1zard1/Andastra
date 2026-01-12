@@ -1,9 +1,9 @@
 //
 using System;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public sealed class X2PSubroutine : XPSubroutine
     {
@@ -51,7 +51,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             _pSubroutine_ = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_pSubroutine_ == child)
             {
@@ -59,7 +59,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        public override void ReplaceChild(Node oldChild, Node newChild)
+        public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
         {
         }
 

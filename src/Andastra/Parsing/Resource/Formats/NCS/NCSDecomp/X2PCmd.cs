@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public sealed class X2PCmd : XPCmd
     {
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             this._pCmd_ = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (this._pCmd_ == child)
             {
@@ -62,7 +62,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        public override void ReplaceChild(Node oldChild, Node newChild)
+        public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
         {
         }
 

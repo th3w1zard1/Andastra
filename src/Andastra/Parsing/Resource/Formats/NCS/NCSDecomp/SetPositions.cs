@@ -1,12 +1,12 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:14-39
 // Original: public class SetPositions extends PrunedReversedDepthFirstAdapter
 using System;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class SetPositions : PrunedReversedDepthFirstAdapter
     {
@@ -33,8 +33,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:27-33
-        // Original: @Override public void defaultIn(Node node) { int pos = NodeUtils.getCommandPos(node); if (pos > 0) { this.currentPos = pos; } }
-        public override void DefaultIn(Node node)
+        // Original: @Override public void defaultIn(Node.Node node) { int pos = NodeUtils.getCommandPos(node); if (pos > 0) { this.currentPos = pos; } }
+        public override void DefaultIn(Node.Node node)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetPositions.java:36-38
         // Original: this.nodedata.setPos(node, this.currentPos);
-        public override void DefaultOut(Node node)
+        public override void DefaultOut(Node.Node node)
         {
             // For ASubroutine nodes, try to get position from first command if currentPos is 0
             // Since we're using reversed depth-first traversal, children are visited first,
@@ -63,7 +63,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 int originalPos = this.currentPos;
                 if (this.currentPos == 0)
                 {
-                    Node firstCmd = NodeUtils.GetCommandChild(node);
+                    Node.Node.Node firstCmd = NodeUtils.GetCommandChild(node);
                     if (firstCmd != null)
                     {
                         // Try to get position that was already set on the first command

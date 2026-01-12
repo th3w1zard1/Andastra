@@ -1,9 +1,9 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AWhileLoop.java
 // Original: public class AWhileLoop extends AControlLoop
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AWhileLoop.java:8-24
     // Original: public AWhileLoop(int start, int end) { super(start, end); }

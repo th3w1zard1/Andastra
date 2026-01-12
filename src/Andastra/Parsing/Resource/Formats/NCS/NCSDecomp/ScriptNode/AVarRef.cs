@@ -1,11 +1,10 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarRef.java:13-68
 // Original: public class AVarRef extends ScriptNode implements AExpression
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AVarRef : ScriptNode, AExpression
     {
@@ -29,7 +28,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AVarRef.java:24-26
         // Original: public Type type() { return this.var.type(); }
-        public UtilsType Type()
+        public Utils.Type Type()
         {
             return this.var.Type();
         }

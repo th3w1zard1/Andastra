@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public sealed class AStackOpCmd : PCmd
     {
@@ -60,7 +60,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return new StringBuilder().Append(this.ToString(this._stackCommand_)).ToString();
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (this._stackCommand_ == child)
             {
@@ -68,7 +68,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        public override void ReplaceChild(Node oldChild, Node newChild)
+        public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
         {
             if (this._stackCommand_ == oldChild)
             {

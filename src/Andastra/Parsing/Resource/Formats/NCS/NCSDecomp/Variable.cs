@@ -2,12 +2,11 @@
 // Original: public class Variable extends StackEntry implements Comparable<Variable>
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using Comparable = System.IComparable;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
-    public class Variable : StackEntry, Comparable
+    public class Variable : StackEntry, IComparable
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:15-17
         // Original: protected static final byte FCN_NORMAL = 0; protected static final byte FCN_RETURN = 1; protected static final byte FCN_PARAM = 2;
@@ -24,7 +23,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:24-31
         // Original: public Variable(Type type) { this.type = type; this.varstruct = null; this.assigned = false; this.size = 1; this.function = 0; this.stackcounts = new Hashtable<>(1); }
-        public Variable(UtilsType type)
+        public Variable(Utils.Type type)
         {
             this.type = type;
             this.varstruct = null;
@@ -36,7 +35,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Variable.java:33-35
         // Original: public Variable(byte type) { this(new Type(type)); }
-        public Variable(byte type) : this(new UtilsType(type))
+        public Variable(byte type) : this(new Utils.Type(type))
         {
         }
 

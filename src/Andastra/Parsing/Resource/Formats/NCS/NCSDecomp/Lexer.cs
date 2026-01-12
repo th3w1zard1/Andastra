@@ -7,10 +7,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Lexer
 {
     public class Lexer
     {
@@ -38,7 +38,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer
             {
                 try
                 {
-                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Andastra.Parsing.Formats.NCS.NCSDecomp.lexer.dat") ?? System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("Andastra.Parsing.Formats.NCS.NCSDecomp.lexer.dat");
+                    System.IO.Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.lexer.dat") ?? System.Reflection.Assembly.GetCallingAssembly().GetManifestResourceStream("Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.lexer.dat");
                     if (stream == null)
                     {
                         throw new Exception("The file \"lexer.dat\" is either missing or corrupted.");

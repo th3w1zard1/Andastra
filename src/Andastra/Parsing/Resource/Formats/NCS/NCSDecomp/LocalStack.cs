@@ -5,7 +5,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalStack.java:13-31
     // Original: public class LocalStack<T> implements Cloneable

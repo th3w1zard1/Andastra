@@ -2,11 +2,10 @@
 // Original: public class Decoder
 using System;
 using System.IO;
-using System.Numerics;
 using System.Text;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using NumBigInteger = System.Numerics.BigInteger;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public class Decoder
     {
@@ -273,7 +272,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
 
             this.pos += 4;
-            NumBigInteger i = this.ToBigIntegerSigned(buffer);
+            BigInteger i = this.ToBigIntegerSigned(buffer);
             return i.ToString();
         }
 
@@ -287,7 +286,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
 
             this.pos += 2;
-            NumBigInteger i = this.ToBigIntegerSigned(buffer);
+            BigInteger i = this.ToBigIntegerSigned(buffer);
             return i.ToString();
         }
 
@@ -301,8 +300,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
 
             this.pos += 4;
-            NumBigInteger i = this.ToBigIntegerSigned(buffer);
-            int bits = (int)i;
+            BigInteger i = this.ToBigIntegerSigned(buffer);
+            int bits = i.IntValue();
             float value = BitConverter.Int32BitsToSingle(bits);
             return value.ToString();
         }
@@ -317,8 +316,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
 
             this.pos += 2;
-            NumBigInteger sizeInt = this.ToBigIntegerSigned(buffer);
-            int size = (int)sizeInt;
+            BigInteger sizeInt = this.ToBigIntegerSigned(buffer);
+            int size = sizeInt.IntValue();
             buffer = new byte[size];
             status = this.@in.Read(buffer, 0, size);
             if (status <= 0)
@@ -453,7 +452,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        private NumBigInteger ToBigIntegerSigned(byte[] bigEndian)
+        private BigInteger ToBigIntegerSigned(byte[] bigEndian)
         {
             int len = bigEndian.Length;
             byte[] little = new byte[len];
@@ -472,10 +471,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
 
                 extended[extended.Length - 1] = 0xFF;
-                return new NumBigInteger(extended);
+                return new BigInteger(extended);
             }
 
-            return new NumBigInteger(little);
+            return new BigInteger(little);
         }
 
         private bool SequenceEqual(byte[] left, byte[] right)

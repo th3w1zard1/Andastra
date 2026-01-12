@@ -2,10 +2,9 @@
 // Original: public class VarStruct extends Variable
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using NCSDecompLinkedList = Andastra.Parsing.Formats.NCS.NCSDecomp.LinkedList;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     public class VarStruct : Variable
     {
@@ -19,7 +18,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/VarStruct.java:22-26
         // Original: public VarStruct() { super(new Type((byte)-15)); this.size = 0; this.structtype = new StructType(); }
-        public VarStruct() : base(new UtilsType(unchecked((byte)(-15))))
+        public VarStruct() : base(new Utils.Type(unchecked((byte)(-15))))
         {
             this.size = 0;
             this.structtype = new StructType();
@@ -34,7 +33,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
             List<object> types = structtype.Types();
             foreach (object typeObj in types)
             {
-                UtilsType type = (UtilsType)typeObj;
+                Utils.Type type = (Utils.Type)typeObj;
                 if (type is StructType)
                 {
                     this.AddVar(new VarStruct((StructType)type));

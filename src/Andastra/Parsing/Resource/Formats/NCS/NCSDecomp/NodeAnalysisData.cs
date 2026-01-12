@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class NodeAnalysisData
     {
@@ -32,8 +33,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:33-41
-        // Original: public void setPos(Node node, int pos) { NodeAnalysisData.NodeData data = this.nodedatahash.get(node); if (data == null) { data = new NodeAnalysisData.NodeData(pos); this.nodedatahash.put(node, data); } else { data.pos = pos; } }
-        public virtual void SetPos(Node node, int pos)
+        // Original: public void setPos(Node.Node node, int pos) { NodeAnalysisData.NodeData data = this.nodedatahash.get(node); if (data == null) { data = new NodeAnalysisData.NodeData(pos); this.nodedatahash.put(node, data); } else { data.pos = pos; } }
+        public virtual void SetPos(Node.Node node, int pos)
         {
             object existing;
             NodeData data;
@@ -51,8 +52,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:43-50
-        // Original: public int getPos(Node node)
-        public virtual int GetPos(Node node)
+        // Original: public int getPos(Node.Node node)
+        public virtual int GetPos(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -67,7 +68,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
         // Helper method to safely get position without throwing exception
         // Returns -1 if node is not in hashtable
-        public virtual int TryGetPos(Node node)
+        public virtual int TryGetPos(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -81,8 +82,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:52-61
-        // Original: public void setDestination(Node jump, Node destination)
-        public virtual void SetDestination(Node jump, Node destination)
+        // Original: public void setDestination(Node.Node jump, Node.Node destination)
+        public virtual void SetDestination(Node.Node jump, Node.Node destination)
         {
             object existing;
             NodeData data;
@@ -100,8 +101,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:63-70
-        // Original: public Node getDestination(Node node)
-        public virtual Node GetDestination(Node node)
+        // Original: public Node getDestination(Node.Node node)
+        public virtual Node GetDestination(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -116,7 +117,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
         // Helper method to safely get destination without throwing exception
         // Returns null if node is not in hashtable or has no destination
-        public virtual Node TryGetDestination(Node node)
+        public virtual Node TryGetDestination(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -130,8 +131,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:72-81
-        // Original: public void setCodeState(Node node, byte state)
-        public virtual void SetCodeState(Node node, byte state)
+        // Original: public void setCodeState(Node.Node node, byte state)
+        public virtual void SetCodeState(Node.Node node, byte state)
         {
             object existing;
             NodeData data;
@@ -149,8 +150,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:83-94
-        // Original: public void deadCode(Node node, boolean deadcode)
-        public virtual void DeadCode(Node node, bool deadcode)
+        // Original: public void deadCode(Node.Node node, boolean deadcode)
+        public virtual void DeadCode(Node.Node node, bool deadcode)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -172,8 +173,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:96-103
-        // Original: public boolean deadCode(Node node)
-        public virtual bool DeadCode(Node node)
+        // Original: public boolean deadCode(Node.Node node)
+        public virtual bool DeadCode(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -188,8 +189,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeAnalysisData.java:105-112
-        // Original: public boolean processCode(Node node)
-        public virtual bool ProcessCode(Node node)
+        // Original: public boolean processCode(Node.Node node)
+        public virtual bool ProcessCode(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -205,7 +206,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
 
         // Helper method to safely check if code should be processed without throwing exception
         // Returns true if node is not in hashtable (assume it should be processed)
-        public virtual bool TryProcessCode(Node node)
+        public virtual bool TryProcessCode(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -219,7 +220,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
         }
 
-        private NodeData GetOrCreateNodeData(Node node)
+        private NodeData GetOrCreateNodeData(Node.Node node)
         {
             object existing;
             NodeData data;
@@ -235,13 +236,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return data;
         }
 
-        public virtual void LogOrCode(Node node, bool logor)
+        public virtual void LogOrCode(Node.Node node, bool logor)
         {
             NodeData data = this.GetOrCreateNodeData(node);
             data.state = logor ? (byte)2 : (byte)0;
         }
 
-        public virtual bool LogOrCode(Node node)
+        public virtual bool LogOrCode(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -252,13 +253,13 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return ((NodeData)existing).state == 2;
         }
 
-        public virtual void AddOrigin(Node node, Node origin)
+        public virtual void AddOrigin(Node.Node node, Node.Node origin)
         {
             NodeData data = this.GetOrCreateNodeData(node);
             data.AddOrigin(origin);
         }
 
-        public virtual Node RemoveLastOrigin(Node node)
+        public virtual Node RemoveLastOrigin(Node.Node node)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -277,7 +278,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return (Node)removed;
         }
 
-        public virtual void SetStack(Node node, LocalStack stack, bool overwrite)
+        public virtual void SetStack(Node.Node node, LocalStack stack, bool overwrite)
         {
             object existing;
             if (!this.nodedatahash.TryGetValue(node, out existing))
@@ -296,7 +297,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
         }
 
-        public virtual LocalStack GetStack(Node node)
+        public virtual LocalStack GetStack(Node.Node node)
         {
             object existing;
             if (this.nodedatahash.TryGetValue(node, out existing))
@@ -322,7 +323,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             public static readonly byte STATE_LOGOR = 2;
             public static readonly byte STATE_DEAD_PROCESS = 3;
             public int pos;
-            public Node jumpDestination;
+            public Node.Node jumpDestination;
             public LocalStack stack;
             public byte state;
             public List<object> origins;
@@ -342,7 +343,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 this.state = 0;
             }
 
-            public virtual void AddOrigin(Node origin)
+            public virtual void AddOrigin(Node.Node origin)
             {
                 if (this.origins == null)
                 {

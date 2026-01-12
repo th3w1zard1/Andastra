@@ -2,13 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 using JetBrains.Annotations;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using Scriptutils = Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class FileScriptData
     {

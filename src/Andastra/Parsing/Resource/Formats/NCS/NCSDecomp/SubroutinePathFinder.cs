@@ -1,11 +1,11 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:37-343
 // Original: public class SubroutinePathFinder extends PrunedDepthFirstAdapter
 using System;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutinePathFinder : PrunedDepthFirstAdapter
     {
@@ -233,7 +233,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         {
         }
 
-        private void SetupDestinationCommands(TypedLinkedList commands, Node ast)
+        private void SetupDestinationCommands(TypedLinkedList commands, Node.Node ast)
         {
             this.destinationcommands = new HashMap();
             ast.Apply(new AnonymousPrunedDepthFirstAdapter(this, commands));
@@ -319,10 +319,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutinePathFinder.java:272-288
-        // Original: private int getCommandIndexByPos(int pos, LinkedList<PCmd> commands) { Node node = (Node)commands.get(0); int i; for (i = 1; i < commands.size() && this.nodedata.getPos(node) < pos; i++) { ... } if (this.nodedata.getPos(node) > pos) { throw new RuntimeException(...); } else { return i; } }
+        // Original: private int getCommandIndexByPos(int pos, LinkedList<PCmd> commands) { Node.Node.Node node = (Node)commands.get(0); int i; for (i = 1; i < commands.size() && this.nodedata.getPos(node) < pos; i++) { ... } if (this.nodedata.getPos(node) > pos) { throw new RuntimeException(...); } else { return i; } }
         private int GetCommandIndexByPos(int pos, TypedLinkedList commands)
         {
-            Node node = (Node)commands[0];
+            Node.Node.Node node = (Node)commands[0];
 
             int i;
             for (i = 1; i < commands.Count && this.nodedata.GetPos(node) < pos; i++)

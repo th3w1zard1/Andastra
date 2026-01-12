@@ -6,10 +6,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public class ActionsData
     {
@@ -138,12 +137,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 this.actions.Add(null);
             }
 
-            ((JavaPrintStream)JavaSystem.@out).Println("read actions.  There were " + this.actions.Count.ToString());
+            Console.WriteLine("read actions.  There were " + this.actions.Count.ToString());
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ActionsData.java:76-81
         // Original: public Type getReturnType(int index)
-        public virtual UtilsType GetReturnType(int index)
+        public virtual Utils.Type GetReturnType(int index)
         {
             if (index < 0 || index >= this.actions.Count)
             {
@@ -201,7 +200,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         public class Action
         {
             private string name;
-            private UtilsType returntype;
+            private Utils.Type returntype;
             private int paramsize;
             private List<object> paramList;
             private List<string> defaultValues;
@@ -210,7 +209,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             public Action(string type, string name, string @params)
             {
                 this.name = name;
-                this.returntype = UtilsType.ParseType(type);
+                this.returntype = Utils.Type.ParseType(type);
                 this.paramList = new List<object>();
                 this.defaultValues = new List<string>();
                 this.paramsize = 0;
@@ -221,10 +220,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     Matcher m = p.Matcher(tokens[i]);
                     if (m.Matches())
                     {
-                        this.paramList.Add(new UtilsType(m.Group(1)));
+                        this.paramList.Add(new Utils.Type(m.Group(1)));
                         string defaultValue = m.Group(3);
                         this.defaultValues.Add(defaultValue != null ? defaultValue.Trim() : null);
-                        this.paramsize += UtilsType.TypeSize(m.Group(1));
+                        this.paramsize += Utils.Type.TypeSize(m.Group(1));
                     }
                 }
             }
@@ -239,7 +238,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 return this.paramList;
             }
 
-            public virtual UtilsType ReturnType()
+            public virtual Utils.Type ReturnType()
             {
                 return this.returntype;
             }

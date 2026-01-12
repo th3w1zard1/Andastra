@@ -4,9 +4,9 @@ using System;
 using System.IO;
 using System.Text;
 using Andastra.Parsing.Common;
-using IOException = Andastra.Parsing.Formats.NCS.NCSDecomp.IOException;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Shared utility class for round-trip decompilation operations.

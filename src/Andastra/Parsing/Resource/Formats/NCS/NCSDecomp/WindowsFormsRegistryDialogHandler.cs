@@ -1,9 +1,10 @@
 using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Windows Forms implementation of IRegistryDialogHandler.

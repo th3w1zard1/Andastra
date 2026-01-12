@@ -5,10 +5,11 @@
 
 using System;
 using System.IO;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/CompilerUtil.java:29-363
     // Original: public class CompilerUtil

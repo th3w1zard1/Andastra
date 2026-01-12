@@ -1,6 +1,6 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/AUnkLoopControl.java:8-23
 // Original: public class AUnkLoopControl extends ScriptNode
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AUnkLoopControl : ScriptNode
     {

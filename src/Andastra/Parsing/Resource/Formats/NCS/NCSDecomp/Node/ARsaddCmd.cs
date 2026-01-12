@@ -1,6 +1,6 @@
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class ARsaddCmd : PCmd
     {
@@ -64,7 +64,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _rsaddCommand = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_rsaddCommand == child)
             {

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/ScriptNode/ACodeBlock.java:7-10
     // Original: public class ACodeBlock extends ScriptRootNode { public ACodeBlock(int start, int end) { super(start, end); } }

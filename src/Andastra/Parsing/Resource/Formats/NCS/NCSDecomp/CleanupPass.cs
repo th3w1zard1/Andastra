@@ -2,10 +2,11 @@
 // Original: public class CleanupPass
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class CleanupPass
     {

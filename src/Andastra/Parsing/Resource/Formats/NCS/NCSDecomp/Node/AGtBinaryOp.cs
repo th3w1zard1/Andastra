@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class AGtBinaryOp : PBinaryOp
     {
@@ -45,7 +45,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _gt = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_gt == child)
             {

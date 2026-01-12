@@ -1,10 +1,10 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:24-203
 // Original: public class SetDeadCode extends PrunedDepthFirstAdapter
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class SetDeadCode : PrunedDepthFirstAdapter
     {
@@ -48,8 +48,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:54-69
-        // Original: @Override public void defaultIn(Node node) { ... }
-        public override void DefaultIn(Node node)
+        // Original: @Override public void defaultIn(Node.Node node) { ... }
+        public override void DefaultIn(Node.Node node)
         {
             if (this.actionarg > 0 && this.origins.ContainsKey(node))
             {
@@ -72,8 +72,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:71-76
-        // Original: @Override public void defaultOut(Node node) { ... }
-        public override void DefaultOut(Node node)
+        // Original: @Override public void defaultOut(Node.Node node) { ... }
+        public override void DefaultOut(Node.Node node)
         {
             if (NodeUtils.IsCommandNode(node))
             {
@@ -170,21 +170,21 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:136-139
-        // Original: public boolean isJumpToReturn(AJumpCommand node) { Node dest = this.nodedata.getDestination(node); return AReturn.class.isInstance(dest); }
+        // Original: public boolean isJumpToReturn(AJumpCommand node) { Node.Node.Node dest = this.nodedata.getDestination(node); return AReturn.class.isInstance(dest); }
         public virtual bool IsJumpToReturn(AJumpCommand node)
         {
-            Node dest = this.nodedata.GetDestination(node);
+            Node.Node.Node dest = this.nodedata.GetDestination(node);
             return typeof(AReturn).IsInstanceOfType(dest);
         }
 
-        private void RemoveDestination(Node origin, Node destination)
+        private void RemoveDestination(Node.Node origin, Node.Node destination)
         {
             this.RemoveDestination(origin, destination, this.origins);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:145-153
-        // Original: private void removeDestination(Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
-        private void RemoveDestination(Node origin, Node destination, Dictionary<object, object> hash)
+        // Original: private void removeDestination(Node.Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
+        private void RemoveDestination(Node.Node origin, Node destination, Dictionary<object, object> hash)
         {
             object originListObj = hash.ContainsKey(destination) ? hash[destination] : null;
             List<object> originList = originListObj as List<object>;
@@ -198,15 +198,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             }
         }
 
-        private void TransferDestination(Node origin, Node destination)
+        private void TransferDestination(Node.Node origin, Node.Node destination)
         {
             this.RemoveDestination(origin, destination, this.origins);
             this.AddDestination(origin, destination, this.deadorigins);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDeadCode.java:160-168
-        // Original: private void addDestination(Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
-        private void AddDestination(Node origin, Node destination, Dictionary<object, object> hash)
+        // Original: private void addDestination(Node.Node origin, Node destination, Hashtable<Node, ArrayList<Node>> hash)
+        private void AddDestination(Node.Node origin, Node destination, Dictionary<object, object> hash)
         {
             object originsListObj = hash.ContainsKey(destination) ? hash[destination] : null;
             List<object> originsList = originsListObj as List<object>;

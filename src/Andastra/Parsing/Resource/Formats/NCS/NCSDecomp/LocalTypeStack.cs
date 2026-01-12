@@ -1,35 +1,31 @@
 // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:16-154
 // Original: public class LocalTypeStack extends LocalStack<Type>
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using JavaSystem = Andastra.Parsing.Formats.NCS.NCSDecomp.JavaSystem;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     public class LocalTypeStack : LocalStack
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:17-19
         // Original: public void push(Type type) { this.stack.addFirst(type); }
-        public virtual void Push(UtilsType type)
+        public virtual void Push(Utils.Type type)
         {
             this.stack.AddFirst(type);
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:21-38
         // Original: public Type get(int offset) { ... return new Type((byte)-1); }
-        public virtual UtilsType Get(int offset)
+        public virtual Utils.Type Get(int offset)
         {
             ListIterator it = this.stack.ListIterator();
             int pos = 0;
 
             while (it.HasNext())
             {
-                UtilsType type = (UtilsType)it.Next();
+                Utils.Type type = (Utils.Type)it.Next();
                 pos += type.Size();
                 if (pos > offset)
                 {
@@ -42,19 +38,19 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
                 }
             }
 
-            return new UtilsType(unchecked((byte)(-1)));
+            return new Utils.Type(unchecked((byte)(-1)));
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:40-64
         // Original: public Type get(int offset, SubroutineState state) { ... }
-        public virtual UtilsType Get(int offset, SubroutineState state)
+        public virtual Utils.Type Get(int offset, SubroutineState state)
         {
             ListIterator it = this.stack.ListIterator();
             int pos = 0;
 
             while (it.HasNext())
             {
-                UtilsType type = (UtilsType)it.Next();
+                Utils.Type type = (Utils.Type)it.Next();
                 pos += type.Size();
                 if (pos > offset)
                 {
@@ -69,14 +65,14 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
             if (state.IsPrototyped())
             {
-                UtilsType typex = state.GetParamType(offset - pos);
+                Utils.Type typex = state.GetParamType(offset - pos);
                 if (!typex.Equals((byte)0))
                 {
                     return typex;
                 }
             }
 
-            return new UtilsType(unchecked((byte)(-1)));
+            return new Utils.Type(unchecked((byte)(-1)));
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/LocalTypeStack.java:66-71
@@ -98,7 +94,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
             for (int i = 0; i < count; i++)
             {
-                UtilsType type = this.stack.Count == 0 ? new UtilsType(unchecked((byte)(-1))) : (UtilsType)this.stack.RemoveFirst();
+                Utils.Type type = this.stack.Count == 0 ? new Utils.Type(unchecked((byte)(-1))) : (Utils.Type)this.stack.RemoveFirst();
                 @params.AddFirst(type);
             }
 
@@ -121,7 +117,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
                 }
                 else
                 {
-                    UtilsType type = (UtilsType)this.stack.RemoveFirst();
+                    Utils.Type type = (Utils.Type)this.stack.RemoveFirst();
                     i += type.Size();
                 }
             }
@@ -152,7 +148,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
             for (int i = 1; i <= max; i++)
             {
-                UtilsType type = (UtilsType)this.stack[max - i];
+                Utils.Type type = (Utils.Type)this.stack[max - i];
                 buffer.Append("-->" + i.ToString() + " is type " + type + newline);
             }
 

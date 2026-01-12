@@ -5,19 +5,19 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis
 {
     public interface IAnalysis : Switch
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/Analysis.java:148-154
-        // Original: Object getIn(Node var1); void setIn(Node var1, Object var2); Object getOut(Node var1); void setOut(Node var1, Object var2);
-        object GetIn(Node p0);
-        void SetIn(Node p0, object p1);
-        object GetOut(Node p0);
-        void SetOut(Node p0, object p1);
+        // Original: Object getIn(Node.Node var1); void setIn(Node var1, Object var2); Object getOut(Node.Node var1); void setOut(Node var1, Object var2);
+        object GetIn(Node.Node p0);
+        void SetIn(Node.Node p0, object p1);
+        object GetOut(Node.Node p0);
+        void SetOut(Node.Node p0, object p1);
         void CaseStart(Start p0);
         void CaseAProgram(AProgram p0);
         void CaseASubroutine(ASubroutine p0);

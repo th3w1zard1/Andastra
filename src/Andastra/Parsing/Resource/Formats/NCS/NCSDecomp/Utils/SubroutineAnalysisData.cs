@@ -3,15 +3,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using IAnalysis = Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis.IAnalysis;
-using IEnumerator = Andastra.Parsing.Formats.NCS.NCSDecomp.IEnumerator<object>;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Scriptutils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineAnalysisData
     {
@@ -120,7 +118,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             IEnumerator<object> subnodes = new DictionaryKeyEnumeratorAdapter(this.substates);
             while (subnodes.HasNext())
             {
-                Node node = (Node)subnodes.Next();
+                Node.Node node = (Node)subnodes.Next();
                 SubroutineState state = (SubroutineState)this.substates[node];
                 Console.WriteLine("Printing state for subroutine at " + this.nodedata.GetPos(node).ToString());
                 state.PrintState();
@@ -186,10 +184,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return count;
         }
 
-        public SubroutineState GetState(Node sub)
+        public SubroutineState GetState(Node.Node sub)
         {
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineAnalysisData.java:188-192
-            // Original: public SubroutineState getState(Node sub) { return this.substates.get(sub); }
+            // Original: public SubroutineState getState(Node.Node sub) { return this.substates.get(sub); }
             // Use TryGetValue to avoid KeyNotFoundException if state wasn't added
             if (this.substates.TryGetValue(sub, out object stateObj))
             {
@@ -209,7 +207,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 }
                 throw new Exception("Checking prototype on a subroutine not in the hash");
             }
-            Node sub = (Node)subObj;
+            Node.Node sub = (Node)subObj;
             if (sub != null)
             {
                 SubroutineState state = (SubroutineState)this.substates[sub];
@@ -229,7 +227,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
             }
-            Node sub = (Node)subObj;
+            Node.Node sub = (Node)subObj;
             if (sub == null)
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
@@ -245,7 +243,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
             }
-            Node sub = (Node)subObj;
+            Node.Node sub = (Node)subObj;
             if (sub == null)
             {
                 throw new Exception("Checking prototype on a subroutine not in the hash");
@@ -350,7 +348,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 // Try to get position from first command
                 try
                 {
-                    Node firstCmd = NodeUtils.GetCommandChild(this.mainsub);
+                    Node.Node firstCmd = NodeUtils.GetCommandChild(this.mainsub);
                     if (firstCmd != null)
                     {
                         mainPos = this.nodedata.TryGetPos(firstCmd);
@@ -516,7 +514,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             public void Dispose() { }
         }
 
-        public void SplitOffSubroutines(Node ast)
+        public void SplitOffSubroutines(Node.Node ast)
         {
             Start rootStart = ast as Start;
             if (rootStart == null)
@@ -588,7 +586,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 // If the subroutine doesn't have a position set, try to get it from the first command
                 if (pos < 0)
                 {
-                    Node firstCmd = NodeUtils.GetCommandChild(node);
+                    Node.Node firstCmd = NodeUtils.GetCommandChild(node);
                     if (firstCmd != null)
                     {
                         pos = this.nodedata.TryGetPos(firstCmd);

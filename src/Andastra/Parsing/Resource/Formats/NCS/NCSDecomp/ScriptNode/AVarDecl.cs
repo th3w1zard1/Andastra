@@ -1,10 +1,10 @@
 using System;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode
 {
     public class AVarDecl : ScriptNode
     {

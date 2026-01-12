@@ -5,8 +5,9 @@
 //
 using System;
 using System.Collections.Generic;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Factory for creating tree model data structures for the subroutines/variables tree.

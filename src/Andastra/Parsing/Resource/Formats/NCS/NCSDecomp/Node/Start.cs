@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
-    public sealed class Start : Node
-    {
+    public sealed class Start : Node.Node {
         private PProgram _pProgram;
         private EOF _eof;
 
@@ -73,7 +72,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _eof = node ?? new EOF();
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_pProgram == child)
             {

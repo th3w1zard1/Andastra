@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis
 {
     public class PrunedReversedDepthFirstAdapter : AnalysisAdapter
     {
@@ -24,11 +24,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
             this.DefaultOut(node);
         }
 
-        public new virtual void DefaultIn(Node node)
+        public new virtual void DefaultIn(Node.Node node)
         {
         }
 
-        public new virtual void DefaultOut(Node node)
+        public new virtual void DefaultOut(Node.Node node)
         {
         }
 

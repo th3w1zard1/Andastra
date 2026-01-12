@@ -1,25 +1,20 @@
 //
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Lexer;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using InputStream = System.IO.Stream;
-using Process = System.Diagnostics.Process;
-using Thread = System.Threading.Thread;
-using Throwable = System.Exception;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Lexer;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Scriptutils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/FileDecompiler.java:56-79
     public class FileDecompiler
@@ -2819,7 +2814,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 // Extract return type
                 try
                 {
-                    UtilsType returnType = state.Type();
+                    Utils.Type returnType = state.Type();
                     if (returnType != null)
                     {
                         string returnTypeStr = returnType.ToString();
@@ -2848,7 +2843,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         {
                             foreach (object paramObj in paramsList)
                             {
-                                if (paramObj is UtilsType paramType)
+                                if (paramObj is Utils.Type paramType)
                                 {
                                     string paramTypeStr = paramType.ToString();
                                     if (!string.IsNullOrEmpty(paramTypeStr))
@@ -3608,7 +3603,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             string commands = null;
             SetDestinations setdest = null;
             DoTypes dotypes = null;
-            Node ast = null;
+            Node.Node.Node ast = null;
             NodeAnalysisData nodedata = null;
             SubroutineAnalysisData subdata = null;
             IEnumerator<object> subs = null;
@@ -4926,7 +4921,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             Utils.FileScriptData data = null;
             SetDestinations setdest = null;
             DoTypes dotypes = null;
-            Node ast = null;
+            Node.Node.Node ast = null;
             NodeAnalysisData nodedata = null;
             SubroutineAnalysisData subdata = null;
             IEnumerator<object> subs = null;
@@ -6452,9 +6447,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         private class StreamGobbler
         {
             private Thread thread;
-            InputStream @is;
+            Stream @is;
             string type;
-            public StreamGobbler(InputStream @is, string type)
+            public StreamGobbler(Stream @is, string type)
             {
                 this.@is = @is;
                 this.type = type;
@@ -6479,7 +6474,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 }
                 catch (IOException ioe)
                 {
-                    JavaExtensions.PrintStackTrace(ioe);
+                    Console.WriteLine(ioe.ToString());
                 }
             }
         }

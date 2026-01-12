@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Andastra.Parsing.Common;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.SyntaxHighlighting
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.SyntaxHighlighting
 {
     /// <summary>
     /// Syntax highlighter patterns and utilities for NWScript code.

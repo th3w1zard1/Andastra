@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     /*
     NCS to AST Converter - Comprehensive instruction conversion.
@@ -3445,7 +3445,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 ((AnalysisAdapter)sw).DefaultCase(this);
             }
 
-            public override void RemoveChild(Node child)
+            public override void RemoveChild(Node.Node child)
             {
             }
 
@@ -3465,7 +3465,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 ((AnalysisAdapter)sw).DefaultCase(this);
             }
 
-            public override void RemoveChild(Node child)
+            public override void RemoveChild(Node.Node child)
             {
             }
 
@@ -3485,7 +3485,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 ((AnalysisAdapter)sw).DefaultCase(this);
             }
 
-            public override void RemoveChild(Node child)
+            public override void RemoveChild(Node.Node child)
             {
             }
 

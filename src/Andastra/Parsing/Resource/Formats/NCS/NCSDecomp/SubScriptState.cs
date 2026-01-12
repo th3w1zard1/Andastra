@@ -5,16 +5,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using AVarRef = Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode.AVarRef;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Scriptutils
 {
     public class SubScriptState
     {
@@ -50,7 +48,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             this.stack = stack;
             this.varcounts = new HashMap();
             this.varprefix = "";
-            UtilsType type = protostate.Type();
+            Utils.Type type = protostate.Type();
             byte id = protostate.GetId();
             this.root = new ScriptNode.ASub(type, id, this.GetParams(protostate.GetParamCount()), protostate.GetStart(), protostate.GetEnd());
             this.current = this.root;
@@ -87,7 +85,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
         // Helper method to safely get position from a node, returning fallback if not available
         // This prevents exceptions when SetPositions fails to set positions on some nodes
-        private int SafeGetPos(Node node, int fallback = 0)
+        private int SafeGetPos(Node.Node node, int fallback = 0)
         {
             if (node == null) return fallback;
             int pos = this.nodedata.TryGetPos(node);
@@ -295,7 +293,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             return this.root.IsMain();
         }
 
-        private void AssertState(Node node)
+        private void AssertState(Node.Node node)
         {
             if (this.state == 0)
             {
@@ -318,11 +316,11 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
         }
 
-        private void CheckStart(Node node)
+        private void CheckStart(Node.Node node)
         {
             this.AssertState(node);
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:292-314
-            // Original: private void checkStart(Node node) { this.assertState(node); ... if (this.current.hasChildren()) { ... } }
+            // Original: private void checkStart(Node.Node node) { this.assertState(node); ... if (this.current.hasChildren()) { ... } }
             // Note: The vendor code doesn't check for null current - it assumes current is never null
             // If current is null, we need to reset it to root (this can happen for globals)
             if (this.current == null)
@@ -349,7 +347,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
         }
 
-        private void CheckEnd(Node node)
+        private void CheckEnd(Node.Node node)
         {
             // Use TryGetPos to handle cases where node might not be registered
             int nodePos = this.nodedata.TryGetPos(node);
@@ -385,7 +383,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 if (typeof(AIf).IsInstanceOfType(this.current))
                 {
                     // Use TryGetDestination to handle cases where node might not be registered
-                    Node dest = this.nodedata.TryGetDestination(node);
+                    Node.Node.Node dest = this.nodedata.TryGetDestination(node);
                     if (dest == null)
                     {
                         return;
@@ -401,7 +399,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
                     if (destPos != this.current.GetEnd() + 6)
                     {
-                        Node prevCmd = NodeUtils.GetPreviousCommand(dest, this.nodedata);
+                        Node.Node.Node prevCmd = NodeUtils.GetPreviousCommand(dest, this.nodedata);
                         int prevPos = prevCmd != null ? this.nodedata.TryGetPos(prevCmd) : -1;
                         AElse aelse = new AElse(this.current.GetEnd() + 6, prevPos >= 0 ? prevPos : this.current.GetEnd() + 6);
                         (this.current = (ScriptRootNode)this.current.Parent()).AddChild(aelse);
@@ -460,8 +458,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:476-483
-        // Original: public void emitError(Node node, int pos) { String message = "ERROR: failed to decompile statement"; if (pos >= 0) { message = message + " at " + pos; } this.current.addChild(new AErrorComment(message)); }
-        public virtual void EmitError(Node node, int pos)
+        // Original: public void emitError(Node.Node node, int pos) { String message = "ERROR: failed to decompile statement"; if (pos >= 0) { message = message + " at " + pos; } this.current.addChild(new AErrorComment(message)); }
+        public virtual void EmitError(Node.Node node, int pos)
         {
             string message = "ERROR: failed to decompile statement";
             if (pos >= 0)
@@ -472,7 +470,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             this.current.AddChild(new AErrorComment(message));
         }
 
-        private bool RemovingSwitchVar(List<object> vars, Node node)
+        private bool RemovingSwitchVar(List<object> vars, Node.Node node)
         {
             if (vars.Count == 1 && this.current.HasChildren() && typeof(ScriptNode.ASwitch).IsInstanceOfType(this.current.GetLastChild()))
             {
@@ -483,7 +481,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             return false;
         }
 
-        public virtual void TransformMoveSPVariablesRemoved(List<object> vars, Node node)
+        public virtual void TransformMoveSPVariablesRemoved(List<object> vars, Node.Node node)
         {
             if (this.AtLastCommand(node) && this.CurrentContainsVars(vars))
             {
@@ -522,7 +520,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             if (earliestdec != -1)
             {
-                Node prev = NodeUtils.GetPreviousCommand(node, this.nodedata);
+                Node.Node.Node prev = NodeUtils.GetPreviousCommand(node, this.nodedata);
                 ACodeBlock block = new ACodeBlock(-1, this.SafeGetPos(prev));
                 List<ScriptNode.ScriptNode> children = this.current.RemoveChildren(earliestdec);
                 this.current.AddChild(block);
@@ -554,12 +552,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                AConst constTrue = new AConst(Const.NewConst(new UtilsType((byte)3), Long.ParseLong("1")));
+                AConst constTrue = new AConst(Const.NewConst(new Utils.Type((byte)3), Long.ParseLong("1")));
                 ((ADoLoop)this.current).Condition(constTrue);
             }
         }
 
-        public virtual void TransformOriginFound(Node destination, Node origin)
+        public virtual void TransformOriginFound(Node.Node destination, Node.Node origin)
         {
             ScriptNode.AControlLoop loop = this.GetLoop(destination, origin);
             this.current.AddChild(loop);
@@ -613,10 +611,10 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                                 ScriptNode.ASwitchCase aprevcase = existingSwitch.GetLastCase();
                                 if (aprevcase != null)
                                 {
-                                    Node prevCmd = NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata);
+                                    Node.Node.Node prevCmd = NodeUtils.GetPreviousCommand(this.nodedata.GetDestination(node), this.nodedata);
                                     aprevcase.End(this.SafeGetPos(prevCmd));
                                 }
-                                Node dest = this.nodedata.GetDestination(node);
+                                Node.Node.Node dest = this.nodedata.GetDestination(node);
                                 ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
                                 existingSwitch.AddCase(acasex);
                                 this.state = 4;
@@ -629,7 +627,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     if (canCreateSwitch)
                     {
                         ScriptNode.ASwitch aswitch = null;
-                        Node dest = this.nodedata.GetDestination(node);
+                        Node.Node.Node dest = this.nodedata.GetDestination(node);
                         ScriptNode.ASwitchCase acase = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)cond.GetRight());
                         if (this.current.HasChildren())
                         {
@@ -661,7 +659,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     else
                     {
                         // Fall back to if statement if we can't create a switch
-                        Node dest = this.nodedata.GetDestination(node);
+                        Node.Node.Node dest = this.nodedata.GetDestination(node);
                         AIf aif = new AIf(this.SafeGetPos(node), this.SafeGetPos(dest) - 6, cond);
                         this.current.AddChild(aif);
                         this.current = aif;
@@ -672,8 +670,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                     AConditionalExp condx = (AConditionalExp)this.RemoveLastExp(true);
                     ScriptNode.ASwitch aswitchx = (ScriptNode.ASwitch)this.current.GetLastChild();
                     ScriptNode.ASwitchCase aprevcase = aswitchx.GetLastCase();
-                    Node dest = this.nodedata.GetDestination(node);
-                    Node prevCmd = NodeUtils.GetPreviousCommand(dest, this.nodedata);
+                    Node.Node.Node dest = this.nodedata.GetDestination(node);
+                    Node.Node.Node prevCmd = NodeUtils.GetPreviousCommand(dest, this.nodedata);
                     aprevcase.End(this.SafeGetPos(prevCmd));
                     ScriptNode.ASwitchCase acasex = new ScriptNode.ASwitchCase(this.SafeGetPos(dest), (ScriptNode.AConst)(object)(ScriptNode.AConst)condx.GetRight());
                     aswitchx.AddCase(acasex);
@@ -684,7 +682,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             else if (typeof(AIf).IsInstanceOfType(this.current) && this.IsModifyConditional() && this.state != 4)
             {
                 // Don't modify AIf's end when processing switch cases (state == 4)
-                Node dest = this.nodedata.GetDestination(node);
+                Node.Node.Node dest = this.nodedata.GetDestination(node);
                 int newEnd = this.SafeGetPos(dest) - 6;
                 ((AIf)this.current).End(newEnd);
                 if (this.current.HasChildren())
@@ -698,7 +696,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             else if (typeof(AWhileLoop).IsInstanceOfType(this.current) && this.IsModifyConditional())
             {
-                Node dest = this.nodedata.GetDestination(node);
+                Node.Node.Node dest = this.nodedata.GetDestination(node);
                 ((AWhileLoop)this.current).End(this.SafeGetPos(dest) - 6);
                 if (this.current.HasChildren())
                 {
@@ -707,7 +705,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             }
             else
             {
-                Node dest = this.nodedata.GetDestination(node);
+                Node.Node.Node dest = this.nodedata.GetDestination(node);
                 // For JZ instructions, first search backwards through children to find a conditional expression
                 // This is more reliable than RemoveLastExp which might find the wrong expression
                 ScriptNode.AExpression condExp = null;
@@ -863,7 +861,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         public virtual void TransformJump(AJumpCommand node)
         {
             this.CheckStart(node);
-            Node dest = this.nodedata.GetDestination(node);
+            Node.Node.Node dest = this.nodedata.GetDestination(node);
             if (this.state == 2)
             {
                 this.state = 0;
@@ -920,7 +918,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                             // CRITICAL FOR ROUNDTRIP FIDELITY: Check if there's cleanup code after this return JMP
                             // The external compiler adds cleanup code (MOVSP+RETN) after return JMPs
                             // We need to preserve this cleanup code even though it's unreachable
-                            Node nextAfterJmp = NodeUtils.GetNextCommand(node, this.nodedata);
+                            Node.Node.Node nextAfterJmp = NodeUtils.GetNextCommand(node, this.nodedata);
                             bool hasCleanupCode = false;
                             if (nextAfterJmp != null)
                             {
@@ -936,7 +934,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                                     Error($"DEBUG transformJump: Found cleanup code after return JMP - JMP at {jmpPos}, next at {nextPos}, dest at {destPos}");
 
                                     // Check if it's a MOVSP+RETN pattern (common cleanup code)
-                                    Node afterNext = NodeUtils.GetNextCommand(nextAfterJmp, this.nodedata);
+                                    Node.Node.Node afterNext = NodeUtils.GetNextCommand(nextAfterJmp, this.nodedata);
                                     if (afterNext != null && typeof(AMoveSpCommand).IsInstanceOfType(nextAfterJmp))
                                     {
                                         int afterNextPos = this.nodedata.TryGetPos(afterNext);
@@ -1062,7 +1060,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             if (!this.GetFcnType(node).Equals((byte)0))
             {
                 // Ensure there's a decl to attach; if none, create a placeholder
-                Variable retVar = this.stack.Size() >= 1 ? (Variable)this.stack.Get(1) : new Variable(new UtilsType((byte)0));
+                Variable retVar = this.stack.Size() >= 1 ? (Variable)this.stack.Get(1) : new Variable(new Utils.Type((byte)0));
                 AVarDecl decl;
                 // Check if variable is already declared to prevent duplicates
                 decl = this.vardecs.TryGetValue(retVar, out object existingDecl) ? (AVarDecl)existingDecl : null;
@@ -1129,7 +1127,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             AActionExp act = new AActionExp(actionName, NodeUtils.GetActionId(node), @params, this.actions);
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:938-944
             // Original: Type type; try { type = NodeUtils.getReturnType(node, this.actions); } catch (RuntimeException e) { type = new Type((byte) 0); }
-            UtilsType type;
+            Utils.Type type;
             try
             {
                 type = NodeUtils.GetReturnType(node, this.actions);
@@ -1137,7 +1135,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             catch (Exception)
             {
                 // Action metadata missing or invalid - assume void return
-                type = new UtilsType((byte)0);
+                type = new Utils.Type((byte)0);
             }
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:956-975
             // Original: if (!type.equals((byte) 0)) { Variable var = (Variable) this.stack.get(1); ... } else { this.current.addChild(act); }
@@ -2161,12 +2159,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             this.CheckEnd(node);
         }
 
-        public virtual void TransformDeadCode(Node node)
+        public virtual void TransformDeadCode(Node.Node node)
         {
             this.CheckEnd(node);
         }
 
-        public virtual bool AtLastCommand(Node node)
+        public virtual bool AtLastCommand(Node.Node node)
         {
             if (node == null)
             {
@@ -2191,7 +2189,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             if (typeof(ASub).IsInstanceOfType(this.current))
             {
-                Node next = NodeUtils.GetNextCommand(node, this.nodedata);
+                Node.Node.Node next = NodeUtils.GetNextCommand(node, this.nodedata);
                 if (next == null)
                 {
                     return true;
@@ -2200,7 +2198,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             if (typeof(AIf).IsInstanceOfType(this.current) || typeof(AElse).IsInstanceOfType(this.current))
             {
-                Node next = NodeUtils.GetNextCommand(node, this.nodedata);
+                Node.Node.Node next = NodeUtils.GetNextCommand(node, this.nodedata);
                 if (next != null)
                 {
                     int nextPos = this.nodedata.TryGetPos(next);
@@ -2214,7 +2212,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             return false;
         }
 
-        public virtual bool IsMiddleOfReturn(Node node)
+        public virtual bool IsMiddleOfReturn(Node.Node node)
         {
             if (!this.root.GetType().Equals((byte)0) && this.current.HasChildren() && typeof(AReturnStatement).IsInstanceOfType(this.current.GetLastChild()))
             {
@@ -2223,7 +2221,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             if (this.root.GetType().Equals((byte)0))
             {
-                Node next = NodeUtils.GetNextCommand(node, this.nodedata);
+                Node.Node.Node next = NodeUtils.GetNextCommand(node, this.nodedata);
                 if (next != null && typeof(AJumpCommand).IsInstanceOfType(next) && typeof(AReturn).IsInstanceOfType(this.nodedata.GetDestination(next)))
                 {
                     return true;
@@ -2295,12 +2293,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/scriptutils/SubScriptState.java:1294-1337
-        // Original: private boolean isAtIfEnd(Node node) { ... }
+        // Original: private boolean isAtIfEnd(Node.Node node) { ... }
         /**
          * Checks if the current node position is at the end of any enclosing AIf.
          * This is used to detect "skip else" jumps that should not be treated as returns.
          */
-        private bool IsAtIfEnd(Node node)
+        private bool IsAtIfEnd(Node.Node node)
         {
             int nodePos = this.nodedata.TryGetPos(node);
             if (nodePos == -1)
@@ -2366,7 +2364,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             if (!this.current.HasChildren())
             {
                 Error("DEBUG getReturnExp: no children, returning placeholder");
-                return new ScriptNode.AConst(Const.NewConst(new UtilsType((byte)3), 0L));
+                return new ScriptNode.AConst(Const.NewConst(new Utils.Type((byte)3), 0L));
             }
 
             ScriptNode.ScriptNode last = this.current.RemoveLastChild();
@@ -2401,7 +2399,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
                 else
                 {
                     Error("DEBUG getReturnExp: AExpressionStatement with unexpected exp type, returning placeholder");
-                    return new ScriptNode.AConst(Const.NewConst(new UtilsType((byte)3), 0L));
+                    return new ScriptNode.AConst(Const.NewConst(new Utils.Type((byte)3), 0L));
                 }
             }
             else if (typeof(ScriptNode.AReturnStatement).IsInstanceOfType(last))
@@ -2418,7 +2416,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             {
                 // Keep decompilation alive; emit placeholder when structure is unexpected.
                 Error("DEBUG getReturnExp: unexpected last child type, returning placeholder");
-                return new ScriptNode.AConst(Const.NewConst(new UtilsType((byte)3), 0L));
+                return new ScriptNode.AConst(Const.NewConst(new Utils.Type((byte)3), 0L));
             }
         }
 
@@ -2487,9 +2485,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             return null;
         }
 
-        private ScriptNode.AControlLoop GetLoop(Node destination, Node origin)
+        private ScriptNode.AControlLoop GetLoop(Node.Node destination, Node.Node origin)
         {
-            Node beforeJump = NodeUtils.GetPreviousCommand(origin, this.nodedata);
+            Node.Node.Node beforeJump = NodeUtils.GetPreviousCommand(origin, this.nodedata);
             if (NodeUtils.IsJzPastOne(beforeJump))
             {
                 ScriptNode.ADoLoop doloop = new ScriptNode.ADoLoop(this.nodedata.GetPos(destination), this.nodedata.GetPos(origin));
@@ -2792,7 +2790,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             if (varstruct.Name() == null)
             {
                 int count = 1;
-                UtilsType key = new UtilsType(unchecked((byte)(-15)));
+                Utils.Type key = new Utils.Type(unchecked((byte)(-15)));
                 object curcountObj = this.varcounts[key];
                 if (curcountObj != null)
                 {
@@ -2810,7 +2808,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         private void UpdateVarCount(Variable var)
         {
             int count = 1;
-            UtilsType key = var.Type();
+            Utils.Type key = var.Type();
             object curcountObj;
             if (this.varcounts.TryGetValue(key, out curcountObj) && curcountObj != null)
             {
@@ -2943,7 +2941,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
         private bool IsReturn(AJumpCommand node)
         {
-            Node dest = NodeUtils.GetCommandChild(this.nodedata.GetDestination(node));
+            Node.Node.Node dest = NodeUtils.GetCommandChild(this.nodedata.GetDestination(node));
             if (NodeUtils.IsReturn(dest))
             {
                 return true;
@@ -2951,7 +2949,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             if (typeof(AMoveSpCommand).IsInstanceOfType(dest))
             {
-                Node afterdest = NodeUtils.GetNextCommand(dest, this.nodedata);
+                Node.Node.Node afterdest = NodeUtils.GetNextCommand(dest, this.nodedata);
                 return afterdest == null;
             }
 
@@ -3168,7 +3166,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
             for (int i = 0; i < paramcount; i++)
             {
-                UtilsType paramtype = (UtilsType)paramtypes[i];
+                Utils.Type paramtype = (Utils.Type)paramtypes[i];
                 ScriptNode.AExpression exp;
                 try
                 {
@@ -3237,7 +3235,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
             return this.subdata.GetState(this.nodedata.GetDestination(node)).GetId();
         }
 
-        private UtilsType GetFcnType(AJumpToSubroutine node)
+        private Utils.Type GetFcnType(AJumpToSubroutine node)
         {
             return this.subdata.GetState(this.nodedata.GetDestination(node)).Type();
         }
@@ -3249,7 +3247,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
 
         private int GetPriorToDestCommand(AJumpCommand node)
         {
-            Node dest = this.nodedata.GetDestination(node);
+            Node.Node.Node dest = this.nodedata.GetDestination(node);
             return this.SafeGetPos(dest) - 2;
         }
 
@@ -3257,7 +3255,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils
         // Original: private AVarRef buildPlaceholderParam(int ordinal) { Variable placeholder = new Variable(new Type((byte)-1)); placeholder.name("__unknown_param_" + ordinal); placeholder.isParam(true); return new AVarRef(placeholder); }
         private AVarRef BuildPlaceholderParam(int ordinal)
         {
-            Variable placeholder = new Variable(new UtilsType(unchecked((byte)(-1))));
+            Variable placeholder = new Variable(new Utils.Type(unchecked((byte)(-1))));
             placeholder.Name("__unknown_param_" + ordinal);
             placeholder.IsParam(true);
             return new AVarRef(placeholder);

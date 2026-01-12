@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public sealed class AActionJumpCmd : PCmd
     {
@@ -141,7 +141,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return this.ToString(this._storeStateCommand_) + this.ToString(this._jumpCommand_) + this.ToString(this._commandBlock_) + this.ToString(this._return_);
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (this._storeStateCommand_ == child)
             {
@@ -167,7 +167,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        public override void ReplaceChild(Node oldChild, Node newChild)
+        public override void ReplaceChild(Node.Node oldChild, Node.Node newChild)
         {
             if (this._storeStateCommand_ == oldChild)
             {

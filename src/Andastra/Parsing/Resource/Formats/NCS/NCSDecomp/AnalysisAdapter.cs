@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis
 {
     public class AnalysisAdapter : IAnalysis
     {
@@ -17,8 +17,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
         private Dictionary<object, object> @in;
         private Dictionary<object, object> @out;
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:152-154
-        // Original: @Override public Object getIn(Node node) { return this.in == null ? null : this.in.get(node); }
-        public virtual object GetIn(Node node)
+        // Original: @Override public Object getIn(Node.Node node) { return this.in == null ? null : this.in.get(node); }
+        public virtual object GetIn(Node.Node node)
         {
             if (this.@in == null)
             {
@@ -30,8 +30,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:156-168
-        // Original: @Override public void setIn(Node node, Object in) { if (this.in == null) { this.in = new Hashtable<>(1); } if (in != null) { this.in.put(node, in); } else { this.in.remove(node); } }
-        public virtual void SetIn(Node node, object @in)
+        // Original: @Override public void setIn(Node.Node node, Object in) { if (this.in == null) { this.in = new Hashtable<>(1); } if (in != null) { this.in.put(node, in); } else { this.in.remove(node); } }
+        public virtual void SetIn(Node.Node node, object @in)
         {
             if (this.@in == null)
             {
@@ -49,8 +49,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:170-172
-        // Original: @Override public Object getOut(Node node) { return this.out == null ? null : this.out.get(node); }
-        public virtual object GetOut(Node node)
+        // Original: @Override public Object getOut(Node.Node node) { return this.out == null ? null : this.out.get(node); }
+        public virtual object GetOut(Node.Node node)
         {
             if (this.@out == null)
             {
@@ -62,8 +62,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/AnalysisAdapter.java:174-185
-        // Original: @Override public void setOut(Node node, Object out) { if (this.out == null) { this.out = new Hashtable<>(1); } if (out != null) { this.out.put(node, out); } else { this.out.remove(node); } }
-        public virtual void SetOut(Node node, object @out)
+        // Original: @Override public void setOut(Node.Node node, Object out) { if (this.out == null) { this.out = new Hashtable<>(1); } if (out != null) { this.out.put(node, out); } else { this.out.remove(node); } }
+        public virtual void SetOut(Node.Node node, object @out)
         {
             if (this.@out == null)
             {
@@ -735,15 +735,15 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
             this.DefaultCase(node);
         }
 
-        public virtual void DefaultCase(Node node)
+        public virtual void DefaultCase(Node.Node node)
         {
         }
 
-        public virtual void DefaultIn(Node node)
+        public virtual void DefaultIn(Node.Node node)
         {
         }
 
-        public virtual void DefaultOut(Node node)
+        public virtual void DefaultOut(Node.Node node)
         {
         }
     }

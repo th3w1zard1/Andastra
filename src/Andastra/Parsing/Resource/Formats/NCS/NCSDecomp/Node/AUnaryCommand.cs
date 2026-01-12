@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class AUnaryCommand : PUnaryCommand
     {
@@ -135,7 +135,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             _semi = node;
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_unaryOp == child)
             {

@@ -7,9 +7,9 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using File = Andastra.Parsing.Formats.NCS.NCSDecomp.NcsFile;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/HashUtil.java:21-67
     // Original: public class HashUtil

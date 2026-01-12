@@ -1,4 +1,4 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
     public sealed class AActionCmd : PCmd
     {
@@ -61,7 +61,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
             return ToString(_actionCommand);
         }
 
-        public override void RemoveChild(Node child)
+        public override void RemoveChild(Node.Node child)
         {
             if (_actionCommand == child)
             {

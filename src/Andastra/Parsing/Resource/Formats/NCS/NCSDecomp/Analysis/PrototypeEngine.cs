@@ -5,11 +5,11 @@
 
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/PrototypeEngine.java:26-156
     // Original: public class PrototypeEngine

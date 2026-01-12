@@ -5,10 +5,10 @@
 
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis
 {
     // Matching NCSDecomp implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/analysis/CallGraphBuilder.java:23-89
     // Original: public class CallGraphBuilder extends PrunedDepthFirstAdapter
@@ -54,7 +54,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis
         // Original: @Override public void outAJumpToSubroutine(AJumpToSubroutine node)
         public override void OutAJumpToSubroutine(AJumpToSubroutine node)
         {
-            Node dest = this.nodedata.GetDestination(node);
+            Node.Node dest = this.nodedata.GetDestination(node);
             if (dest is ASubroutine)
             {
                 int dstPos = this.nodedata.GetPos(dest);

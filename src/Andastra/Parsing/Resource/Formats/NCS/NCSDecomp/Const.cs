@@ -5,16 +5,16 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     public class Const : StackEntry
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:14-19
         // Original: public static Const newConst(Type type, Long intValue)
-        public static Const NewConst(UtilsType type, long intValue)
+        public static Const NewConst(Utils.Type type, long intValue)
         {
             if (type.ByteValue() != 3)
             {
@@ -25,7 +25,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:21-26
         // Original: public static Const newConst(Type type, Float floatValue)
-        public static Const NewConst(UtilsType type, float floatValue)
+        public static Const NewConst(Utils.Type type, float floatValue)
         {
             if (type.ByteValue() != 4)
             {
@@ -36,7 +36,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:28-33
         // Original: public static Const newConst(Type type, String stringValue)
-        public static Const NewConst(UtilsType type, string stringValue)
+        public static Const NewConst(Utils.Type type, string stringValue)
         {
             if (type.ByteValue() != 5)
             {
@@ -47,7 +47,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/Const.java:35-40
         // Original: public static Const newConst(Type type, Integer objectValue)
-        public static Const NewConst(UtilsType type, int objectValue)
+        public static Const NewConst(Utils.Type type, int objectValue)
         {
             if (type.ByteValue() != 6)
             {

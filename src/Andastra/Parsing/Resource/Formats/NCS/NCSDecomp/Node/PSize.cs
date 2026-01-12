@@ -1,7 +1,6 @@
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.AST
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node
 {
-    public abstract class PSize : Node
-    {
+    public abstract class PSize : Node.Node {
     }
 }
 

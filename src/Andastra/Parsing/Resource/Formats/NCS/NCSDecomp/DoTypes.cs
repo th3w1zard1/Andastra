@@ -5,15 +5,14 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public class DoTypes : PrunedDepthFirstAdapter
     {
@@ -91,7 +90,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         {
             if (!this.protoskipping && !this.skipdeadcode)
             {
-                UtilsType type = NodeUtils.GetType(node);
+                Utils.Type type = NodeUtils.GetType(node);
                 this.stack.Push(type);
             }
         }
@@ -156,7 +155,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         {
             if (!this.protoskipping && !this.skipdeadcode)
             {
-                UtilsType type = NodeUtils.GetType(node);
+                Utils.Type type = NodeUtils.GetType(node);
                 this.stack.Push(type);
             }
         }
@@ -171,7 +170,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             {
                 int before = this.stack.Size();
                 int remove = NodeUtils.ActionRemoveElementCount(node, this.actions);
-                UtilsType type = NodeUtils.GetReturnType(node, this.actions);
+                Utils.Type type = NodeUtils.GetReturnType(node, this.actions);
                 int add = NodeUtils.StackSizeToPos(type.TypeSize());
 
                 // Safety check: don't remove more than we have
@@ -218,7 +217,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     this.stack.Remove(2);
                 }
 
-                this.stack.Push(new UtilsType((byte)3));
+                this.stack.Push(new Utils.Type((byte)3));
             }
         }
 
@@ -237,7 +236,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                 int sizep3;
                 int sizep2;
                 int sizeresult;
-                UtilsType resulttype;
+                Utils.Type resulttype;
                 string opType;
                 if (NodeUtils.IsEqualityOp(node))
                 {
@@ -253,7 +252,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     }
 
                     sizeresult = 1;
-                    resulttype = new UtilsType((byte)3);
+                    resulttype = new Utils.Type((byte)3);
                 }
                 else if (NodeUtils.IsVectorAllowedOp(node))
                 {
@@ -268,7 +267,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     sizep3 = 1;
                     sizep2 = 1;
                     sizeresult = 1;
-                    resulttype = new UtilsType((byte)3);
+                    resulttype = new Utils.Type((byte)3);
                     opType = "default";
                 }
 
@@ -506,7 +505,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         var typesList = structType.Types();
                         for (int i = 0; i < typesList.Count; ++i)
                         {
-                            UtilsType type = this.stack.Get(typesList.Count - i, this.state);
+                            Utils.Type type = this.stack.Get(typesList.Count - i, this.state);
                             if (!type.Equals(unchecked((byte)(-1))))
                             {
                                 structType.UpdateType(i, type);
@@ -652,7 +651,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Safety check
         // Second removal
         // CPDOWNBP copies from stack to global - doesn't change SP stack size
-        public override void DefaultIn(Node node)
+        public override void DefaultIn(Node.Node node)
         {
             if (!this.protoskipping)
             {
@@ -684,7 +683,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Safety check
         // Second removal
         // CPDOWNBP copies from stack to global - doesn't change SP stack size
-        private void CheckProtoskippingDone(Node node)
+        private void CheckProtoskippingDone(Node.Node node)
         {
             if (this.state.GetSkipEnd(this.nodedata.GetPos(node)))
             {
@@ -707,7 +706,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Safety check
         // Second removal
         // CPDOWNBP copies from stack to global - doesn't change SP stack size
-        private void CheckProtoskippingStart(Node node)
+        private void CheckProtoskippingStart(Node.Node node)
         {
             if (this.state.GetSkipStart(this.nodedata.GetPos(node)))
             {
@@ -730,7 +729,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Safety check
         // Second removal
         // CPDOWNBP copies from stack to global - doesn't change SP stack size
-        private void StoreStackState(Node node)
+        private void StoreStackState(Node.Node node)
         {
             if (NodeUtils.IsStoreStackNode(node))
             {
@@ -753,7 +752,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Safety check
         // Second removal
         // CPDOWNBP copies from stack to global - doesn't change SP stack size
-        private void RestoreStackState(Node node)
+        private void RestoreStackState(Node.Node node)
         {
             LocalTypeStack restore = (LocalTypeStack)this.nodedata.GetStack(node);
             if (restore != null)
@@ -777,7 +776,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         // Safety check
         // Second removal
         // CPDOWNBP copies from stack to global - doesn't change SP stack size
-        private bool IsLogOr(Node node)
+        private bool IsLogOr(Node.Node node)
         {
             return this.nodedata.LogOrCode(node);
         }

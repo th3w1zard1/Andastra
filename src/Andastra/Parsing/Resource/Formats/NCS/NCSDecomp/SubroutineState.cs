@@ -5,18 +5,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class SubroutineState
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:23-38
-        // Original: private static final byte PROTO_NO = 0; private static final byte PROTO_IN_PROGRESS = 1; private static final byte PROTO_DONE = 2; protected static final byte JUMP_YES = 0; protected static final byte JUMP_NO = 1; protected static final byte JUMP_NA = 2; private Type type; private ArrayList<Type> params; private int returndepth; private Node root; private int paramsize; private boolean paramstyped; private byte status; private NodeAnalysisData nodedata; private LinkedList<DecisionData> decisionqueue; private byte id;
+        // Original: private static final byte PROTO_NO = 0; private static final byte PROTO_IN_PROGRESS = 1; private static final byte PROTO_DONE = 2; protected static final byte JUMP_YES = 0; protected static final byte JUMP_NO = 1; protected static final byte JUMP_NA = 2; private Type type; private ArrayList<Type> params; private int returndepth; private Node.Node root; private int paramsize; private boolean paramstyped; private byte status; private NodeAnalysisData nodedata; private LinkedList<DecisionData> decisionqueue; private byte id;
         private static readonly byte PROTO_NO = 0;
         private static readonly byte PROTO_IN_PROGRESS = 1;
         private static readonly byte PROTO_DONE = 2;
@@ -26,7 +25,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         private Type type;
         private List<Type> @params;
         private int returndepth;
-        private Node root;
+        private Node.Node root;
         private int paramsize;
         private bool paramstyped;
         private byte status;
@@ -408,7 +407,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         {
             while (this.@params.Count < this.paramsize)
             {
-                this.@params.Add(new UtilsType(UtilsType.VT_INTEGER));
+                this.@params.Add(new Utils.Type(Utils.Type.VT_INTEGER));
             }
             while (this.@params.Count > this.paramsize)
             {
@@ -434,7 +433,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 return pos;
             }
             // If subroutine node doesn't have position, get it from the first command
-            Node firstCmd = NodeUtils.GetCommandChild(this.root);
+            Node.Node.Node firstCmd = NodeUtils.GetCommandChild(this.root);
             if (firstCmd != null)
             {
                 pos = this.nodedata.TryGetPos(firstCmd);
@@ -455,8 +454,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:312-318
-        // Original: public void addDecision(Node node, int destination) { SubroutineState.DecisionData decision = new SubroutineState.DecisionData(node, destination, false); this.decisionqueue.addLast(decision); if (this.decisionqueue.size() > 3000) { throw new RuntimeException("Decision queue size over 3000 - probable infinite loop"); } }
-        public virtual void AddDecision(Node node, int destination)
+        // Original: public void addDecision(Node.Node node, int destination) { SubroutineState.DecisionData decision = new SubroutineState.DecisionData(node, destination, false); this.decisionqueue.addLast(decision); if (this.decisionqueue.size() > 3000) { throw new RuntimeException("Decision queue size over 3000 - probable infinite loop"); } }
+        public virtual void AddDecision(Node.Node node, int destination)
         {
             DecisionData decision = new DecisionData(node, destination, false);
             this.decisionqueue.AddLast(decision);
@@ -467,8 +466,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:320-323
-        // Original: public void addJump(Node node, int destination) { SubroutineState.DecisionData decision = new SubroutineState.DecisionData(node, destination, true); this.decisionqueue.addLast(decision); }
-        public virtual void AddJump(Node node, int destination)
+        // Original: public void addJump(Node.Node node, int destination) { SubroutineState.DecisionData decision = new SubroutineState.DecisionData(node, destination, true); this.decisionqueue.addLast(decision); }
+        public virtual void AddJump(Node.Node node, int destination)
         {
             DecisionData decision = new DecisionData(node, destination, true);
             this.decisionqueue.AddLast(decision);
@@ -508,12 +507,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         // Original: private class DecisionData { ... }
         private class DecisionData
         {
-            public Node decisionnode;
+            public Node.Node decisionnode;
             public byte decision;
             public int destination;
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SubroutineState.java:351-360
-            // Original: public DecisionData(Node node, int destination, boolean forcejump) { if (forcejump) { this.decision = 2; } else { this.decision = 1; } this.decisionnode = node; this.destination = destination; }
-            public DecisionData(Node node, int destination, bool forcejump)
+            // Original: public DecisionData(Node.Node node, int destination, boolean forcejump) { if (forcejump) { this.decision = 2; } else { this.decision = 1; } this.decisionnode = node; this.destination = destination; }
+            public DecisionData(Node.Node node, int destination, bool forcejump)
             {
                 if (forcejump)
                 {

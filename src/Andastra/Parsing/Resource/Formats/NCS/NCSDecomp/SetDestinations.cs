@@ -2,27 +2,27 @@
 // Original: public class SetDestinations extends PrunedDepthFirstAdapter
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public class SetDestinations : PrunedDepthFirstAdapter
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:29-36
-        // Original: private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private Node destination; private int currentPos; private Node ast; private int actionarg; private Hashtable<Node, ArrayList<Node>> origins; private boolean deadcode;
+        // Original: private NodeAnalysisData nodedata; private SubroutineAnalysisData subdata; private Node.Node destination; private int currentPos; private Node.Node ast; private int actionarg; private Hashtable<Node, ArrayList<Node>> origins; private boolean deadcode;
         private NodeAnalysisData nodedata;
         private SubroutineAnalysisData subdata;
-        private Node destination;
+        private Node.Node destination;
         private int currentPos;
-        private Node ast;
+        private Node.Node ast;
         private int actionarg;
         private Dictionary<object, object> origins;
         private bool deadcode;
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:38-45
-        // Original: public SetDestinations(Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata) { this.nodedata = nodedata; this.currentPos = 0; this.ast = ast; this.subdata = subdata; this.actionarg = 0; this.origins = new Hashtable<>(1); }
-        public SetDestinations(Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata)
+        // Original: public SetDestinations(Node.Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata) { this.nodedata = nodedata; this.currentPos = 0; this.ast = ast; this.subdata = subdata; this.actionarg = 0; this.origins = new Hashtable<>(1); }
+        public SetDestinations(Node.Node ast, NodeAnalysisData nodedata, SubroutineAnalysisData subdata)
         {
             this.nodedata = nodedata;
             this.currentPos = 0;
@@ -82,7 +82,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 this.nodedata.SetDestination(node, this.destination);
                 if (pos < this.nodedata.GetPos(node))
                 {
-                    Node dest = NodeUtils.GetCommandChild(this.destination);
+                    Node.Node.Node dest = NodeUtils.GetCommandChild(this.destination);
                     this.nodedata.AddOrigin(dest, node);
                 }
 
@@ -108,8 +108,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/SetDestinations.java:100-108
-        // Original: private void addDestination(Node origin, Node destination)
-        private void AddDestination(Node origin, Node destination)
+        // Original: private void addDestination(Node.Node origin, Node.Node destination)
+        private void AddDestination(Node.Node origin, Node.Node destination)
         {
             object originsListObj = this.origins.ContainsKey(destination) ? this.origins[destination] : null;
             List<object> originsList = originsListObj as List<object>;
@@ -122,7 +122,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             originsList.Add(origin);
         }
 
-        private int GetPos(Node node)
+        private int GetPos(Node.Node node)
         {
             return this.nodedata.GetPos(node);
         }
@@ -145,7 +145,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             private readonly SetDestinations parent;
             private int pos;
             private bool needcommand;
-            public override void DefaultIn(Node node)
+            public override void DefaultIn(Node.Node node)
             {
                 if (this.parent.GetPos(node) == this.pos && this.parent.destination == null && (!this.needcommand || NodeUtils.IsCommandNode(node)))
                 {

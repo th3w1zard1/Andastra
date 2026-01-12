@@ -4,8 +4,9 @@
 // See LICENSE.txt file in the project root for full license information.
 
 using System;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/DecompilerException.java:11-32
     // Original: public class DecompilerException extends Exception

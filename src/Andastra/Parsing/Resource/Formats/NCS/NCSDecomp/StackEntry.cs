@@ -5,21 +5,21 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     public abstract class StackEntry
     {
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:14-15
         // Original: protected Type type; protected int size;
-        protected UtilsType type;
+        protected Utils.Type type;
         protected int size;
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/stack/StackEntry.java:17-19
         // Original: public Type type() { return this.type; }
-        public virtual UtilsType Type()
+        public virtual Utils.Type Type()
         {
             return this.type;
         }

@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils
 {
     public sealed class NodeUtils
     {
@@ -20,8 +20,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         public static readonly int CMDSIZE_RETN = 2;
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:20-29
-        // Original: public static boolean isStoreStackNode(Node node) { ... }
-        public static bool IsStoreStackNode(Node node)
+        // Original: public static boolean isStoreStackNode(Node.Node node) { ... }
+        public static bool IsStoreStackNode(Node.Node node)
         {
             if (typeof(ALogiiCmd).IsInstanceOfType(node))
             {
@@ -36,27 +36,27 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:112-116
-        // Original: public static boolean isJzPastOne(Node node) { return AConditionalJumpCommand.class.isInstance(node) && AZeroJumpIf.class.isInstance(((AConditionalJumpCommand)node).getJumpIf()) ? Integer.parseInt(((AConditionalJumpCommand)node).getOffset().getText()) == 12 : false; }
-        public static bool IsJzPastOne(Node node)
+        // Original: public static boolean isJzPastOne(Node.Node node) { return AConditionalJumpCommand.class.isInstance(node) && AZeroJumpIf.class.isInstance(((AConditionalJumpCommand)node).getJumpIf()) ? Integer.parseInt(((AConditionalJumpCommand)node).getOffset().getText()) == 12 : false; }
+        public static bool IsJzPastOne(Node.Node node)
         {
             return typeof(AConditionalJumpCommand).IsInstanceOfType(node) && typeof(AZeroJumpIf).IsInstanceOfType(((AConditionalJumpCommand)node).GetJumpIf()) ? Integer.ParseInt(((AConditionalJumpCommand)node).GetOffset().GetText()) == 12 : false;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:118-120
-        // Original: public static boolean isJz(Node node) { return AConditionalJumpCommand.class.isInstance(node) ? AZeroJumpIf.class.isInstance(((AConditionalJumpCommand)node).getJumpIf()) : false; }
-        public static bool IsJz(Node node)
+        // Original: public static boolean isJz(Node.Node node) { return AConditionalJumpCommand.class.isInstance(node) ? AZeroJumpIf.class.isInstance(((AConditionalJumpCommand)node).getJumpIf()) : false; }
+        public static bool IsJz(Node.Node node)
         {
             return typeof(AConditionalJumpCommand).IsInstanceOfType(node) ? typeof(AZeroJumpIf).IsInstanceOfType(((AConditionalJumpCommand)node).GetJumpIf()) : false;
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/utils/NodeUtils.java:122-142
-        // Original: public static boolean isCommandNode(Node node) { return ... }
-        public static bool IsCommandNode(Node node)
+        // Original: public static boolean isCommandNode(Node.Node node) { return ... }
+        public static bool IsCommandNode(Node.Node node)
         {
             return typeof(AConditionalJumpCommand).IsInstanceOfType(node) || typeof(AJumpCommand).IsInstanceOfType(node) || typeof(AJumpToSubroutine).IsInstanceOfType(node) || typeof(AReturn).IsInstanceOfType(node) || typeof(ACopyDownSpCommand).IsInstanceOfType(node) || typeof(ACopyTopSpCommand).IsInstanceOfType(node) || typeof(ACopyDownBpCommand).IsInstanceOfType(node) || typeof(ACopyTopBpCommand).IsInstanceOfType(node) || typeof(AMoveSpCommand).IsInstanceOfType(node) || typeof(ARsaddCommand).IsInstanceOfType(node) || typeof(AConstCommand).IsInstanceOfType(node) || typeof(AActionCommand).IsInstanceOfType(node) || typeof(ALogiiCommand).IsInstanceOfType(node) || typeof(ABinaryCommand).IsInstanceOfType(node) || typeof(AUnaryCommand).IsInstanceOfType(node) || typeof(AStackCommand).IsInstanceOfType(node) || typeof(ADestructCommand).IsInstanceOfType(node) || typeof(ABpCommand).IsInstanceOfType(node) || typeof(AStoreStateCommand).IsInstanceOfType(node);
         }
 
-        public static int GetCommandPos(Node node)
+        public static int GetCommandPos(Node.Node node)
         {
             // Helper to safely get position from a token, returning -1 if null or invalid
             int SafeGetPosFromToken(object tokenObj)
@@ -270,7 +270,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return -1;
         }
 
-        public static int GetJumpDestinationPos(Node node)
+        public static int GetJumpDestinationPos(Node.Node node)
         {
             if (typeof(AConditionalJumpCommand).IsInstanceOfType(node))
             {
@@ -648,7 +648,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return offset / 4;
         }
 
-        public static Node GetCommandChild(Node node)
+        public static Node GetCommandChild(Node.Node node)
         {
             if (IsCommandNode(node))
             {
@@ -773,7 +773,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             throw new Exception("unexpected node type " + node);
         }
 
-        public static Node GetPreviousCommand(Node node, NodeAnalysisData nodedata)
+        public static Node GetPreviousCommand(Node.Node node, NodeAnalysisData nodedata)
         {
             if (typeof(AReturn).IsInstanceOfType(node))
             {
@@ -783,7 +783,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
                 return GetCommandChild((Node)cmdList[cmdList.Count - 1]);
             }
 
-            Node up;
+            Node.Node up;
             for (up = node.Parent(); !typeof(ACommandBlock).IsInstanceOfType(up) && up != null; up = up.Parent())
             {
             }
@@ -807,9 +807,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return null;
         }
 
-        public static Node GetNextCommand(Node node, NodeAnalysisData nodedata)
+        public static Node GetNextCommand(Node.Node node, NodeAnalysisData nodedata)
         {
-            Node up;
+            Node.Node up;
             for (up = node.Parent(); !typeof(ACommandBlock).IsInstanceOfType(up); up = up.Parent())
             {
             }
@@ -818,7 +818,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             var cmdList = ((ACommandBlock)up).GetCmd();
             foreach (PCmd cmd in cmdList)
             {
-                Node next = (Node)cmd;
+                Node.Node.Node next = (Node)cmd;
                 if (nodedata.GetPos(next) == searchPos)
                 {
                     int nextIndex = cmdList.IndexOf(cmd) + 1;
@@ -834,12 +834,12 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Utils
             return null;
         }
 
-        public static bool IsReturn(Node node)
+        public static bool IsReturn(Node.Node node)
         {
             return typeof(AReturnCmd).IsInstanceOfType(node) || typeof(AReturn).IsInstanceOfType(node);
         }
 
-        public static Type GetType(Node node)
+        public static Type GetType(Node.Node node)
         {
             if (typeof(AConditionalJumpCommand).IsInstanceOfType(node))
             {

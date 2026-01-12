@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing.Common;
-using JavaSystem = Andastra.Parsing.Formats.NCS.NCSDecomp.JavaSystem;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Utility class to locate nwscript.nss files for K1 and TSL decompilation.

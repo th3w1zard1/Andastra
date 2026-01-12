@@ -5,10 +5,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack
 {
     public class StringConst : Const
     {
@@ -17,7 +17,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp.Stack
         private string value;
         public StringConst(string value)
         {
-            this.type = new UtilsType((byte)5);
+            this.type = new Utils.Type((byte)5);
             this.value = value;
             this.size = 1;
         }

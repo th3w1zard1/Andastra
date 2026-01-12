@@ -1,7 +1,8 @@
 using System;
 using Microsoft.Extensions.Logging;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     /// <summary>
     /// Static logger wrapper for NCS decompiler, compatible with C# 7.3 and .NET 4.6.2.

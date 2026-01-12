@@ -5,17 +5,16 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Analysis;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.AST;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.ScriptNode;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Scriptutils;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Stack;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using static Andastra.Parsing.Formats.NCS.NCSDecomp.DecompilerLogger;
-using UtilsType = Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.Type;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Analysis;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Node;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.ScriptNode;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Scriptutils;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Stack;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.Utils;
+using static Andastra.Parsing.Resource.Formats.NCS.NCSDecomp.DecompilerLogger;
 
-namespace Andastra.Parsing.Formats.NCS.NCSDecomp
+namespace Andastra.Parsing.Resource.Formats.NCS.NCSDecomp
 {
     public class MainPass : PrunedDepthFirstAdapter
     {
@@ -66,7 +65,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             this.backupstack = null;
             // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:85
             // Original: this.type = new Type((byte)-1);
-            this.type = new UtilsType(unchecked((byte)-1));
+            this.type = new Utils.Type(unchecked((byte)-1));
         }
 
         public virtual void Done()
@@ -132,7 +131,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     // Fallback to NodeUtils.GetType for compatibility
                     typeVal = NodeUtils.GetType(node).ByteValue();
                 }
-                Variable var = new Variable(new UtilsType((byte)typeVal));
+                Variable var = new Variable(new Utils.Type((byte)typeVal));
                 this.stack.Push(var);
                 var = null;
                 this.state.TransformRSAdd(node);
@@ -217,7 +216,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             {
                 this.WithRecovery(node, () =>
                 {
-                    UtilsType type = NodeUtils.GetType(node);
+                    Utils.Type type = NodeUtils.GetType(node);
                     Const aconst;
                     switch (type.ByteValue())
                     {
@@ -301,7 +300,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                             i += entry.Size();
                         }
 
-                        UtilsType type;
+                        Utils.Type type;
                         try
                         {
                             type = NodeUtils.GetReturnType(node, this.actions);
@@ -309,7 +308,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         catch (Exception)
                         {
                             // Action metadata missing or invalid - assume void return
-                            type = new UtilsType((byte)0);
+                            type = new Utils.Type((byte)0);
                         }
                         if (!type.Equals(unchecked((byte)(-16))))
                         {
@@ -385,7 +384,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                     int sizep1;
                     int sizep2;
                     int sizeresult;
-                    UtilsType resulttype;
+                    Utils.Type resulttype;
                     if (NodeUtils.IsEqualityOp(node))
                     {
                         if (NodeUtils.GetType(node).Equals((byte)36))
@@ -399,7 +398,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         }
 
                         sizeresult = 1;
-                        resulttype = new UtilsType((byte)3);
+                        resulttype = new Utils.Type((byte)3);
                     }
                     else if (NodeUtils.IsVectorAllowedOp(node))
                     {
@@ -413,7 +412,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
                         sizep1 = 1;
                         sizep2 = 1;
                         sizeresult = 1;
-                        resulttype = new UtilsType((byte)3);
+                        resulttype = new Utils.Type((byte)3);
                     }
 
                     Debug($"DEBUG MainPass.OutABinaryCommand: Calling TransformBinary for {opName}, sizep1={sizep1}, sizep2={sizep2}");
@@ -678,7 +677,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         {
         }
 
-        public override void DefaultIn(Node node)
+        public override void DefaultIn(Node.Node node)
         {
             this.RestoreStackState(node);
             this.CheckOrigins(node);
@@ -706,7 +705,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             return entry;
         }
 
-        private void StoreStackState(Node node, bool isdead)
+        private void StoreStackState(Node.Node node, bool isdead)
         {
             if (NodeUtils.IsStoreStackNode(node))
             {
@@ -714,7 +713,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        private void RestoreStackState(Node node)
+        private void RestoreStackState(Node.Node node)
         {
             LocalVarStack restore = (LocalVarStack)this.nodedata.GetStack(node);
             if (restore != null)
@@ -734,8 +733,8 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
         }
 
         // Matching DeNCS implementation at vendor/DeNCS/src/main/java/com/kotor/resource/formats/ncs/MainPass.java:540-554
-        // Original: private void withRecovery(Node node, Runnable action) { LocalVarStack stackSnapshot = (LocalVarStack)this.stack.clone(); LocalVarStack backupSnapshot = this.backupstack != null ? (LocalVarStack)this.backupstack.clone() : null; try { action.run(); } catch (RuntimeException e) { System.err.println("Decompiler recovery triggered at position " + this.nodedata.getPos(node) + ": " + e.getMessage()); e.printStackTrace(); this.stack = stackSnapshot; this.state.setStack(this.stack); this.backupstack = backupSnapshot; this.state.emitError(node, this.nodedata.getPos(node)); } }
-        private void WithRecovery(Node node, System.Action action)
+        // Original: private void withRecovery(Node.Node node, Runnable action) { LocalVarStack stackSnapshot = (LocalVarStack)this.stack.clone(); LocalVarStack backupSnapshot = this.backupstack != null ? (LocalVarStack)this.backupstack.clone() : null; try { action.run(); } catch (RuntimeException e) { System.err.println("Decompiler recovery triggered at position " + this.nodedata.getPos(node) + ": " + e.getMessage()); e.printStackTrace(); this.stack = stackSnapshot; this.state.setStack(this.stack); this.backupstack = backupSnapshot; this.state.emitError(node, this.nodedata.getPos(node)); } }
+        private void WithRecovery(Node.Node node, System.Action action)
         {
             LocalVarStack stackSnapshot = (LocalVarStack)this.stack.Clone();
             LocalVarStack backupSnapshot = this.backupstack != null ? (LocalVarStack)this.backupstack.Clone() : null;
@@ -756,9 +755,9 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             }
         }
 
-        private void CheckOrigins(Node node)
+        private void CheckOrigins(Node.Node node)
         {
-            Node origin;
+            Node.Node origin;
             while ((origin = this.GetNextOrigin(node)) != null)
             {
                 this.state.TransformOriginFound(node, origin);
@@ -767,7 +766,7 @@ namespace Andastra.Parsing.Formats.NCS.NCSDecomp
             origin = null;
         }
 
-        private Node GetNextOrigin(Node node)
+        private Node GetNextOrigin(Node.Node node)
         {
             return this.nodedata.RemoveLastOrigin(node);
         }
