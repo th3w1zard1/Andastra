@@ -5,18 +5,20 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
+using Andastra.Parsing.Common.Logger;
+using Andastra.Parsing.Extract.Installation;
 using Microsoft.Win32;
 
 namespace Andastra.Parsing.Tools
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py
-    // Original: Windows registry paths and game Andastra.Parsing.Installation.Installation detection
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py
+    // Original: Windows registry paths and game Installation detection
     /// <summary>
-    /// Windows registry paths and game Andastra.Parsing.Installation.Installation detection.
+    /// Windows registry paths and game Installation detection.
     /// </summary>
     public static class Registry
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:32-62
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:32-62
         // Original: KOTOR_REG_PATHS: dict[Game, dict[ProcessorArchitecture, list[tuple[str, str]]]]
         private static readonly Dictionary<BioWareGame, Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>> KotorRegPaths =
             new Dictionary<BioWareGame, Dictionary<ProcessorArchitecture, List<Tuple<string, string>>>>
@@ -75,7 +77,7 @@ namespace Andastra.Parsing.Tools
                 }
             };
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:66-83
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:66-83
         // Original: def find_software_key(software_name: str) -> str | None:
         /// <summary>
         /// Amazon's k1 reg key can be found using this code. Doesn't store it in HKLM for some reason.
@@ -122,7 +124,7 @@ namespace Andastra.Parsing.Tools
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:86-115
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:86-115
         // Original: def resolve_reg_key_to_path(registry: str | int | HKEYType, subkey: str, value_name: str | None = None) -> str | None:
         /// <summary>
         /// Resolve a registry key to a file system path.
@@ -193,7 +195,7 @@ namespace Andastra.Parsing.Tools
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:149-170
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:149-170
         // Original: def winreg_key(game: Game) -> list[tuple[str, str]]:
         /// <summary>
         /// Returns a list of registry keys that are utilized by KOTOR.
@@ -209,7 +211,7 @@ namespace Andastra.Parsing.Tools
             return KotorRegPaths[game][arch];
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:173-194
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:173-194
         // Original: def get_winreg_path(game: Game) -> tuple[Any, int] | None | Literal[""]:
         /// <summary>
         /// (untested) Returns the specified path value in the windows registry for the given game.
@@ -258,7 +260,7 @@ namespace Andastra.Parsing.Tools
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:197-224
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:197-224
         // Original: def set_winreg_path(game: Game, path: str) -> None:
         /// <summary>
         /// (untested) Sets the kotor install folder path value in the windows registry for the given game.
@@ -294,14 +296,14 @@ namespace Andastra.Parsing.Tools
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:227-247
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:227-247
         // Original: def create_registry_path(hive: HKEYType | int, path: str) -> None:
         /// <summary>
         /// Recursively creates the registry path if it doesn't exist.
         /// </summary>
         public static void CreateRegistryPath(RegistryKey hive, string path)
         {
-            Andastra.Parsing.Logger.RobustLogger log = new Andastra.Parsing.Logger.RobustLogger();
+            RobustLogger log = new RobustLogger();
             try
             {
                 string currentPath = "";
@@ -329,7 +331,7 @@ namespace Andastra.Parsing.Tools
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:250-253
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:250-253
         // Original: def get_retail_key(game: Game) -> str:
         /// <summary>
         /// Gets the retail registry key path for the given game.
@@ -348,14 +350,14 @@ namespace Andastra.Parsing.Tools
                 : @"HKEY_LOCAL_MACHINE\SOFTWARE\BioWare\SW\KOTOR";
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:300-350
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:300-350
         // Original: def set_registry_key_value(full_key_path: str, value_name: str, value_data: str) -> None:
         /// <summary>
         /// Sets a registry key value, creating the key (and its parents, if necessary).
         /// </summary>
         public static void SetRegistryKeyValue(string fullKeyPath, string valueName, string valueData)
         {
-            Andastra.Parsing.Logger.RobustLogger log = new Andastra.Parsing.Logger.RobustLogger();
+            RobustLogger log = new RobustLogger();
             try
             {
                 string[] parts = fullKeyPath.Split(new[] { '\\' }, 2);
@@ -407,7 +409,7 @@ namespace Andastra.Parsing.Tools
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:353-369
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:353-369
         // Original: def remove_winreg_path(game: Game):
         /// <summary>
         /// (untested) Removes the registry path for the given game.
@@ -451,7 +453,7 @@ namespace Andastra.Parsing.Tools
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:256-297
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:256-297
     // Original: class SpoofKotorRegistry:
     /// <summary>
     /// A context manager used to safely spoof the KOTOR 1/2 disk retail registry path temporarily.
@@ -464,7 +466,7 @@ namespace Andastra.Parsing.Tools
         private readonly string _originalValue;
         private bool _wasModified;
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:259-281
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:259-281
         // Original: def __init__(self, installation_path: os.PathLike | str, game: Game | None = None):
         public SpoofKotorRegistry(string installationPath, BioWareGame? game = null)
         {
@@ -478,7 +480,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                BioWareGame? determinedGameNullable = Andastra.Parsing.Installation.Installation.DetermineGame(installationPath);
+                BioWareGame? determinedGameNullable = Installation.DetermineGame(installationPath);
                 if (determinedGameNullable == null)
                 {
                     throw new ArgumentException($"Could not auto-determine the game k1 or k2 from '{installationPath}'. Try sending 'game' enum to prevent auto-detections like this.");
@@ -490,7 +492,7 @@ namespace Andastra.Parsing.Tools
             _originalValue = Registry.ResolveRegKeyToPath(_registryPath, _key);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:283-286
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:283-286
         // Original: def __enter__(self) -> Self:
         public void Activate()
         {
@@ -501,7 +503,7 @@ namespace Andastra.Parsing.Tools
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py:288-297
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py:288-297
         // Original: def __exit__(self, exc_type, exc_val, exc_tb):
         public void Dispose()
         {
@@ -522,7 +524,7 @@ namespace Andastra.Parsing.Tools
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py (ProcessorArchitecture enum)
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py (ProcessorArchitecture enum)
     /// <summary>
     /// Processor architecture enumeration.
     /// </summary>
@@ -537,7 +539,7 @@ namespace Andastra.Parsing.Tools
     /// </summary>
     public static class ProcessorArchitectureExtensions
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/registry.py
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/registry.py
         // Original: ProcessorArchitecture.from_os()
         /// <summary>
         /// Gets the processor architecture from the operating system.

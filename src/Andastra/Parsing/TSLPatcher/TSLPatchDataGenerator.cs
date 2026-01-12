@@ -7,25 +7,19 @@ using System.Linq;
 using System.Numerics;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Memory;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Extract.Capsule;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.LIP;
+using Andastra.Parsing.Resource.Formats.SSF;
+using Andastra.Parsing.Resource.Formats.TLK;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.TSLPatcher.Mods;
+using Andastra.Parsing.TSLPatcher.Mods.GFF;
+using Andastra.Parsing.TSLPatcher.Mods.SSF;
+using Andastra.Parsing.TSLPatcher.Mods.TLK;
+using Andastra.Parsing.TSLPatcher.Mods.TwoDA;
+using Andastra.Parsing.TSLPatcher.Memory;
 using Andastra.Parsing.Resource;
-using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
-using GFFContent = Andastra.Parsing.Formats.GFF.GFFContent;
-using LIPAuto = Andastra.Parsing.Formats.LIP.LIPAuto;
-using SSFAuto = Andastra.Parsing.Formats.SSF.SSFAuto;
-using TLKAuto = Andastra.Parsing.Formats.TLK.TLKAuto;
-using TwoDAAuto = Andastra.Parsing.Formats.TwoDA.TwoDAAuto;
 
 namespace Andastra.Parsing.TSLPatcher
 {
@@ -356,7 +350,7 @@ namespace Andastra.Parsing.TSLPatcher
                     PatcherMemory memory = new PatcherMemory();
                     foreach (var modifier in modSsf.Modifiers)
                     {
-                        if (modifier is Andastra.Parsing.Mods.SSF.ModifySSF modifySsf)
+                        if (modifier is ModifySSF modifySsf)
                         {
                             try
                             {

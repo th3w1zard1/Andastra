@@ -1,16 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Numerics;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.TSLPatcher.Logger;
+using Andastra.Parsing.TSLPatcher.Memory;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Mods.GFF
+namespace Andastra.Parsing.TSLPatcher.Mods.GFF
 {
 
     /// <summary>

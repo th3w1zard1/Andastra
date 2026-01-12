@@ -1,15 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Resource.Formats.TLK;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.TSLPatcher.Logger;
+using Andastra.Parsing.TSLPatcher.Memory;
+using Andastra.Parsing.TSLPatcher.Mods;
 using JetBrains.Annotations;
-using Formats = Andastra.Parsing.Resource.Formats;
 
-namespace Andastra.Parsing.Mods.TLK
+namespace Andastra.Parsing.TSLPatcher.Mods.TLK
 {
 
     /// <summary>
@@ -61,7 +60,7 @@ namespace Andastra.Parsing.Mods.TLK
             PatchLogger logger, BioWareGame game)
         {
             var reader = new TLKBinaryReader(source);
-            Formats.TLK.TLK dialog = reader.Load();
+            Resource.Formats.TLK.TLK dialog = reader.Load();
             Apply(dialog, memory, logger, game);
 
             var writer = new TLKBinaryWriter(dialog);
@@ -115,7 +114,7 @@ namespace Andastra.Parsing.Mods.TLK
             PatcherMemory memory,
             PatchLogger logger, BioWareGame game)
         {
-            if (mutableData is Formats.TLK.TLK dialog)
+            if (mutableData is Resource.Formats.TLK.TLK dialog)
             {
                 foreach (ModifyTLK modifier in Modifiers)
                 {
@@ -154,7 +153,7 @@ namespace Andastra.Parsing.Mods.TLK
             IsReplacement = isReplacement;
         }
 
-        public void Apply(Formats.TLK.TLK dialog, PatcherMemory memory)
+        public void Apply(Resource.Formats.TLK.TLK dialog, PatcherMemory memory)
         {
             Load();
             if (IsReplacement)
@@ -185,7 +184,7 @@ namespace Andastra.Parsing.Mods.TLK
 
             byte[] bytes = File.ReadAllBytes(TlkFilePath);
             var reader = new TLKBinaryReader(bytes);
-            Formats.TLK.TLK lookupTlk = reader.Load();
+            TLK lookupTlk = reader.Load();
             if (string.IsNullOrEmpty(Text))
             {
                 Text = lookupTlk.String(ModIndex);

@@ -3,24 +3,25 @@ using System.Collections.Generic;
 using System.IO;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Installation;
+using Andastra.Parsing.Common.Logger;
+using Andastra.Parsing.Resource.Formats.ERF;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.RIM;
+using Andastra.Parsing.Resource.Formats.TPC;
+using Andastra.Parsing.Resource.Formats.VIS;
+using Andastra.Parsing.Extract.Installation;
 using Andastra.Parsing.Resource;
 using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.ARE;
 
 namespace Andastra.Parsing.Tools
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/module.py
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/module.py
     // Original: Module-related utility functions
     public static class ModuleTools
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/module.py:296-341
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/module.py:296-341
         // Original: def rim_to_mod(...)
         public static void RimToMod(
             string filepath,
@@ -34,7 +35,7 @@ namespace Andastra.Parsing.Tools
                 throw new ArgumentException("Specified file must end with the .mod extension");
             }
 
-            moduleRoot = Andastra.Parsing.Installation.Installation.GetModuleRoot(moduleRoot ?? filepath);
+            moduleRoot = Installation.GetModuleRoot(moduleRoot ?? filepath);
             var rRimFolderpath = rimFolderpath != null ? new CaseAwarePath(rimFolderpath) : new CaseAwarePath(Path.GetDirectoryName(filepath));
 
             string filepathRim = Path.Combine(rRimFolderpath.GetResolvedPath(), $"{moduleRoot}.rim");
@@ -72,14 +73,14 @@ namespace Andastra.Parsing.Tools
             ERFAuto.WriteErf(mod, filepath, ResourceType.MOD);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/module.py:51-293
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/module.py:51-293
         // Original: def clone_module(...)
         public static void CloneModule(
             string root,
             string identifier,
             string prefix,
             string name,
-            Andastra.Parsing.Installation.Installation installation,
+            Installation installation,
             bool copyTextures = false,
             bool copyLightmaps = false,
             bool keepDoors = false,
@@ -91,14 +92,14 @@ namespace Andastra.Parsing.Tools
             var newModule = new ERF(ERFType.MOD);
 
             var gitRes = oldModule.Git();
-            var git = gitRes?.Resource() as Resource.Generics.GIT;
+            var git = gitRes?.Resource() as GIT;
             if (git == null)
             {
                 throw new ArgumentException($"No GIT file found in module '{root}'");
             }
 
             var ifoRes = oldModule.Info();
-            var ifo = ifoRes?.Resource() as Resource.Generics.IFO;
+            var ifo = ifoRes?.Resource() as IFO;
             ResRef oldResref = null;
             if (ifo != null)
             {
@@ -111,7 +112,7 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"No IFO found in module to be cloned: '{root}'");
+                new RobustLogger().Warning($"No IFO found in module to be cloned: '{root}'");
             }
 
             var areRes = oldModule.Are();
@@ -123,13 +124,13 @@ namespace Andastra.Parsing.Tools
             }
             else
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"No ARE found in module to be cloned: '{root}'");
+                new RobustLogger().Warning($"No ARE found in module to be cloned: '{root}'");
             }
 
             if (keepPathing)
             {
                 var pthRes = oldModule.Pth();
-                var pth = pthRes?.Resource() as Resource.Generics.PTH;
+                var pth = pthRes?.Resource() as PTH;
                 if (pth != null)
                 {
                     newModule.SetData(identifier, ResourceType.PTH, GFFAuto.BytesGff(PTHHelpers.DismantlePth(pth), ResourceType.GFF));
@@ -156,13 +157,13 @@ namespace Andastra.Parsing.Tools
                     var utdModRes = oldModule.Door(oldResname);
                     if (utdModRes == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"No UTD found for door '{oldResname}' in module '{root}'");
+                        new RobustLogger().Warning($"No UTD found for door '{oldResname}' in module '{root}'");
                         continue;
                     }
-                    var utdRes = utdModRes.Resource() as Resource.Generics.UTD;
+                    var utdRes = utdModRes.Resource() as UTD;
                     if (utdRes == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"UTD resource is None for door '{oldResname}' in module '{root}'");
+                        new RobustLogger().Warning($"UTD resource is None for door '{oldResname}' in module '{root}'");
                         continue;
                     }
 
@@ -187,13 +188,13 @@ namespace Andastra.Parsing.Tools
                     var utpModRes = oldModule.Placeable(oldResname);
                     if (utpModRes == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"No UTP found for placeable '{oldResname}' in module '{root}'");
+                        new RobustLogger().Warning($"No UTP found for placeable '{oldResname}' in module '{root}'");
                         continue;
                     }
-                    var utpRes = utpModRes.Resource() as Resource.Generics.UTP;
+                    var utpRes = utpModRes.Resource() as UTP;
                     if (utpRes == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"UTP resource is None for placeable '{oldResname}' in module '{root}'");
+                        new RobustLogger().Warning($"UTP resource is None for placeable '{oldResname}' in module '{root}'");
                         continue;
                     }
 
@@ -222,13 +223,13 @@ namespace Andastra.Parsing.Tools
                     var utsModRes = oldModule.Sound(oldResname);
                     if (utsModRes == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"No UTS found for sound '{oldResname}' in module '{root}'");
+                        new RobustLogger().Warning($"No UTS found for sound '{oldResname}' in module '{root}'");
                         continue;
                     }
-                    var utsRes = utsModRes.Resource() as Resource.Generics.UTS;
+                    var utsRes = utsModRes.Resource() as UTS;
                     if (utsRes == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning($"UTS resource is None for sound '{oldResname}' in module '{root}'");
+                        new RobustLogger().Warning($"UTS resource is None for sound '{oldResname}' in module '{root}'");
                         continue;
                     }
                     newModule.SetData(newResname, ResourceType.UTS, GFFAuto.BytesGff(UTSHelpers.DismantleUts(utsRes), ResourceType.GFF));
@@ -238,10 +239,10 @@ namespace Andastra.Parsing.Tools
             newModule.SetData(identifier, ResourceType.GIT, GFFAuto.BytesGff(GITHelpers.DismantleGit(git), ResourceType.GFF));
 
             var lytRes = oldModule.Layout();
-            var lyt = lytRes?.Resource() as Andastra.Parsing.Resource.Formats.LYT.LYT;
+            var lyt = lytRes?.Resource() as LYT;
 
             var visRes = oldModule.Vis();
-            var vis = visRes?.Resource() as Formats.VIS.VIS;
+            var vis = visRes?.Resource() as VIS;
 
             var newLightmaps = new Dictionary<string, string>();
             var newTextures = new Dictionary<string, string>();
@@ -252,7 +253,7 @@ namespace Andastra.Parsing.Tools
                     string oldModelName = room.Model;
                     string newModelName = StringUtils.IReplace(oldModelName, oldResref?.ToString() ?? "", identifier);
 
-                    room.Model = new Andastra.Parsing.Common.ResRef(newModelName);
+                    room.Model = new ResRef(newModelName);
                     if (vis != null && vis.RoomExists(oldModelName))
                     {
                         vis.RenameRoom(oldModelName, newModelName);
@@ -299,19 +300,19 @@ namespace Andastra.Parsing.Tools
                                 });
                             if (tpc == null)
                             {
-                                new Andastra.Parsing.Logger.RobustLogger().Warning($"TPC/TGA resource not found for texture '{texture}' in module '{root}'");
+                                new RobustLogger().Warning($"TPC/TGA resource not found for texture '{texture}' in module '{root}'");
                                 continue;
                             }
                             tpc = tpc.Copy();
-                            if (tpc.Format() == Formats.TPC.TPCTextureFormat.BGR || tpc.Format() == Formats.TPC.TPCTextureFormat.DXT1 || tpc.Format() == Formats.TPC.TPCTextureFormat.Greyscale)
+                            if (tpc.Format() == TPCTextureFormat.BGR || tpc.Format() == TPCTextureFormat.DXT1 || tpc.Format() == TPCTextureFormat.Greyscale)
                             {
-                                tpc.Convert(Formats.TPC.TPCTextureFormat.RGB);
+                                tpc.Convert(TPCTextureFormat.RGB);
                             }
-                            else if (tpc.Format() == Formats.TPC.TPCTextureFormat.BGRA || tpc.Format() == Formats.TPC.TPCTextureFormat.DXT3 || tpc.Format() == Formats.TPC.TPCTextureFormat.DXT5)
+                            else if (tpc.Format() == TPCTextureFormat.BGRA || tpc.Format() == TPCTextureFormat.DXT3 || tpc.Format() == TPCTextureFormat.DXT5)
                             {
-                                tpc.Convert(Formats.TPC.TPCTextureFormat.RGBA);
+                                tpc.Convert(TPCTextureFormat.RGBA);
                             }
-                            newModule.SetData(newTextureName, ResourceType.TGA, Formats.TPC.TPCAuto.BytesTpc(tpc, ResourceType.TGA));
+                            newModule.SetData(newTextureName, ResourceType.TGA, TPCAuto.BytesTpc(tpc, ResourceType.TGA));
                         }
                         mdlData = ModelTools.ChangeTextures(mdlData, newTextures);
                     }
@@ -338,19 +339,19 @@ namespace Andastra.Parsing.Tools
                                 });
                             if (tpc == null)
                             {
-                                new Andastra.Parsing.Logger.RobustLogger().Warning($"TPC/TGA resource not found for lightmap '{lightmap}' in module '{root}'");
+                                new RobustLogger().Warning($"TPC/TGA resource not found for lightmap '{lightmap}' in module '{root}'");
                                 continue;
                             }
                             tpc = tpc.Copy();
-                            if (tpc.Format() == Formats.TPC.TPCTextureFormat.BGR || tpc.Format() == Formats.TPC.TPCTextureFormat.DXT1 || tpc.Format() == Formats.TPC.TPCTextureFormat.Greyscale)
+                            if (tpc.Format() == TPCTextureFormat.BGR || tpc.Format() == TPCTextureFormat.DXT1 || tpc.Format() == TPCTextureFormat.Greyscale)
                             {
-                                tpc.Convert(Formats.TPC.TPCTextureFormat.RGB);
+                                tpc.Convert(TPCTextureFormat.RGB);
                             }
-                            else if (tpc.Format() == Formats.TPC.TPCTextureFormat.BGRA || tpc.Format() == Formats.TPC.TPCTextureFormat.DXT3 || tpc.Format() == Formats.TPC.TPCTextureFormat.DXT5)
+                            else if (tpc.Format() == TPCTextureFormat.BGRA || tpc.Format() == TPCTextureFormat.DXT3 || tpc.Format() == TPCTextureFormat.DXT5)
                             {
-                                tpc.Convert(Formats.TPC.TPCTextureFormat.RGBA);
+                                tpc.Convert(TPCTextureFormat.RGBA);
                             }
-                            newModule.SetData(newLightmapName, ResourceType.TGA, Formats.TPC.TPCAuto.BytesTpc(tpc));
+                            newModule.SetData(newLightmapName, ResourceType.TGA, TPCAuto.BytesTpc(tpc));
                         }
                         mdlData = ModelTools.ChangeLightmaps(mdlData, newLightmaps);
                     }
@@ -364,24 +365,24 @@ namespace Andastra.Parsing.Tools
 
             if (vis != null)
             {
-                newModule.SetData(identifier, ResourceType.VIS, Formats.VIS.VISAuto.BytesVis(vis));
+                newModule.SetData(identifier, ResourceType.VIS, VISAuto.BytesVis(vis));
             }
             else
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"No VIS found in module to be cloned: '{root}'");
+                new RobustLogger().Warning($"No VIS found in module to be cloned: '{root}'");
             }
 
             if (lyt != null)
             {
-                newModule.SetData(identifier, ResourceType.LYT, Andastra.Parsing.Resource.Formats.LYT.LYTAuto.BytesLyt(lyt));
+                newModule.SetData(identifier, ResourceType.LYT, LYTAuto.BytesLyt(lyt));
             }
             else
             {
-                new Andastra.Parsing.Logger.RobustLogger().Error($"No LYT found in module to be cloned: '{root}'");
+                new RobustLogger().Error($"No LYT found in module to be cloned: '{root}'");
             }
 
             string modulePath = installation.ModulePath();
-            string outputPath = System.IO.Path.Combine(modulePath, $"{identifier}.mod");
+            string outputPath = Path.Combine(modulePath, $"{identifier}.mod");
             ERFAuto.WriteErf(newModule, outputPath, ResourceType.MOD);
         }
     }

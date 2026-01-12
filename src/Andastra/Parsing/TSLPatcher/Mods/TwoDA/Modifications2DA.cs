@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.TSLPatcher.Logger;
+using Andastra.Parsing.TSLPatcher.Memory;
+using Andastra.Parsing.TSLPatcher.Mods;
+using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Mods.TwoDA
+namespace Andastra.Parsing.TSLPatcher.Mods.TwoDA
 {
 
     /// <summary>
     /// 2DA modification algorithms for TSLPatcher/HoloPatcher.
-    /// 
+    ///
     /// This module implements 2DA modification logic for applying patches from changes.ini files.
     /// Handles row/column additions, cell modifications, and memory token resolution.
-    /// 
+    ///
     /// References:
     /// ----------
     ///     vendor/TSLPatcher/TSLPatcher.pl - Perl 2DA modification logic (likely unfinished)
@@ -52,7 +53,7 @@ namespace Andastra.Parsing.Mods.TwoDA
             PatcherMemory memory,
             PatchLogger logger, BioWareGame game)
         {
-            Formats.TwoDA.TwoDA twoda = new TwoDABinaryReader(source).Load();
+            var twoda = new TwoDABinaryReader(source).Load();
             Apply(twoda, memory, logger, game);
             return new TwoDABinaryWriter(twoda).Write();
         }
@@ -62,7 +63,7 @@ namespace Andastra.Parsing.Mods.TwoDA
             PatcherMemory memory,
             PatchLogger logger, BioWareGame game)
         {
-            if (!(mutableData is Formats.TwoDA.TwoDA twoda))
+            if (!(mutableData is Resource.Formats.TwoDA.TwoDA twoda))
             {
                 logger.AddError($"Expected 2DA object for Modifications2DA, but got {mutableData.GetType().Name}");
                 return;

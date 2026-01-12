@@ -4,22 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Config;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.NCS;
-using Andastra.Parsing.Mods.NSS;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.TwoDA;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.SSF;
+using Andastra.Parsing.Common.Logger;
+using Andastra.Parsing.TSLPatcher.Config;
+using Andastra.Parsing.TSLPatcher.Mods;
+using Andastra.Parsing.TSLPatcher.Mods.GFF;
+using Andastra.Parsing.TSLPatcher.Mods.NCS;
+using Andastra.Parsing.TSLPatcher.Mods.NSS;
+using Andastra.Parsing.TSLPatcher.Mods.SSF;
+using Andastra.Parsing.TSLPatcher.Mods.TLK;
+using Andastra.Parsing.TSLPatcher.Mods.TwoDA;
+using Andastra.Parsing.TSLPatcher.Memory;
+using Andastra.Parsing.TSLPatcher.Logger;
 using IniParser.Model;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Reader
+namespace Andastra.Parsing.TSLPatcher.Reader
 {
 
     /// <summary>

@@ -1,4 +1,3 @@
-extern alias ResourceNCS;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,16 +6,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS;
-using NCSCompiler = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NCSCompiler;
-using EntryPointError = ResourceNCS::Andastra.Parsing.Formats.NCS.Compiler.NSS.EntryPointError;
-using ResourceNCSPatchLogger = ResourceNCS::Andastra.Parsing.Logger.PatchLogger;
-using KnownExternalCompilers = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSDecomp.KnownExternalCompilers;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.NCSDecomp;
+using Andastra.Parsing.TSLPatcher.Logger;
+using Andastra.Parsing.TSLPatcher.Memory;
+using Andastra.Parsing.TSLPatcher.Mods;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Mods.NSS
+namespace Andastra.Parsing.TSLPatcher.Mods.NSS
 {
 
     /// <summary>
@@ -88,7 +87,7 @@ namespace Andastra.Parsing.Mods.NSS
 
                 try
                 {
-                    Andastra.Parsing.Formats.NCS.NCS ncs = NCSAuto.CompileNss(
+                    Resource.Formats.NCS.NCS ncs = NCSAuto.CompileNss(
                         mutableSource.Value,
                         game,
                         null,
@@ -122,13 +121,10 @@ namespace Andastra.Parsing.Mods.NSS
 
                     if (nwnnsscompExists)
                     {
-                        try
-                        {
-                            // Convert TSLPatcher.PatchLogger to Resource.NCS.PatchLogger
-                            var resourceNcsLogger = new ResourceNCSPatchLogger();
-                            // Copy log messages from TSLPatcher logger to Resource.NCS logger
-                            // TODO: HACK - Logger conversion needed between TSLPatcher and Resource.NCS
-                            var externalCompiler = new NCSCompiler(NwnnsscompPath, tempFolder, resourceNcsLogger);
+                    try
+                    {
+                        // Use TSLPatcher.PatchLogger directly (NCSCompiler accepts it)
+                        var externalCompiler = new Resource.Formats.NCS.Compiler.NCSCompiler(NwnnsscompPath, tempFolder, logger);
                             // TODO: STUB - GetInfo() method not implemented in NCSCompiler
                             // For now, just validate the compiler exists
                             bool isValidCompiler = externalCompiler.ValidateCompiler();
@@ -137,7 +133,7 @@ namespace Andastra.Parsing.Mods.NSS
                                 logger.AddWarning(
                                     "The nwnnsscomp.exe in the tslpatchdata folder validation failed.\n" +
                                     "Using external compiler anyway.\n" +
-                                    "PyKotor will compile regardless, but this may not yield the expected result.");
+                                    "Andastra Patching will compile regardless, but this may not yield the expected result.");
                             }
 
                             compiledBytes = CompileWithExternal(tempScriptFile, externalCompiler, logger, game);
@@ -243,7 +239,7 @@ namespace Andastra.Parsing.Mods.NSS
 
         private byte[] CompileWithExternal(
             string tempScriptFile,
-            NCSCompiler nwnnsscompiler,
+            Resource.Formats.NCS.Compiler.NCSCompiler nwnnsscompiler,
             PatchLogger logger, BioWareGame game)
         {
             try
@@ -251,10 +247,10 @@ namespace Andastra.Parsing.Mods.NSS
                 // Read NSS source from file
                 string nssSource = File.ReadAllText(tempScriptFile, Encoding.GetEncoding("windows-1252"));
                 string filename = Path.GetFileName(tempScriptFile);
-                
+
                 // Use NCSCompiler.Compile which handles external compilation internally
                 byte[] compiledBytes = nwnnsscompiler.Compile(nssSource, filename, game);
-                
+
                 return compiledBytes;
             }
             catch (EntryPointError)
@@ -264,5 +260,3 @@ namespace Andastra.Parsing.Mods.NSS
         }
     }
 }
-
-

@@ -5,23 +5,28 @@ using System.Linq;
 using Andastra.Parsing.Common;
 using Andastra.Parsing.Extract;
 using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Installation;
+using Andastra.Parsing.Resource.Formats.ERF;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.Resource.Formats.MDLData;
+using Andastra.Parsing.Resource.Formats.RIM;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.Resource.Formats.VIS;
+using Andastra.Parsing.Resource.Formats.LYT;
+using Andastra.Parsing.Resource.Formats.TPC;
+using Andastra.Parsing.Resource.Formats.NCS;
+using Andastra.Parsing.Extract.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource.Generics.DLG;
+using Andastra.Parsing.Resource.Formats;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.ARE;
+using Andastra.Parsing.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Parsing.Tools;
-using Andastra.Parsing.Logger;
+using Andastra.Parsing.Common.Logger;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Common
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:70-75
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:70-75
     // Original: SEARCH_ORDER: list[SearchLocation] = [SearchLocation.OVERRIDE, SearchLocation.CUSTOM_MODULES, SearchLocation.CHITIN]
     public static class ModuleSearchOrder
     {
@@ -32,7 +37,7 @@ namespace Andastra.Parsing.Common
         };
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:78-184
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:78-184
     // Original: class KModuleType(Enum):
     /// <summary>
     /// Module file type enumeration.
@@ -122,7 +127,7 @@ namespace Andastra.Parsing.Common
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:136-183
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:136-183
         // Original: def contains(self, restype: ResourceType, *, game: Game | None = None) -> bool:
         //
         // REVERSE ENGINEERING NOTES (swkotor.exe / swkotor2.exe):
@@ -200,7 +205,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:186-213
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:186-213
     // Original: @dataclass(frozen=True) class ModulePieceInfo:
     /// <summary>
     /// Information about a module piece (archive file).
@@ -216,7 +221,7 @@ namespace Andastra.Parsing.Common
             ModType = modType;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:191-199
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:191-199
         // Original: @classmethod def from_filename(cls, filename: str | ResourceIdentifier) -> Self:
         public static ModulePieceInfo FromFilename(string filename)
         {
@@ -260,21 +265,21 @@ namespace Andastra.Parsing.Common
             return FromFilename(identifier.ToString());
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:201-202
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:201-202
         // Original: def filename(self) -> str:
         public string Filename()
         {
             return Root + ModType.GetExtension();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:204-205
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:204-205
         // Original: def res_ident(self) -> ResourceIdentifier:
         public ResourceIdentifier ResIdent()
         {
             return ResourceIdentifier.FromPath(Filename());
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:207-209
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:207-209
         // Original: def resname(self) -> str:
         public string ResName()
         {
@@ -283,7 +288,7 @@ namespace Andastra.Parsing.Common
             return dotIndex >= 0 ? filename.Substring(0, dotIndex) : filename;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:211-212
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:211-212
         // Original: def restype(self) -> ResourceType:
         public ResourceType ResType()
         {
@@ -291,7 +296,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:215-258
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:215-258
     // Original: class ModulePieceResource(Capsule):
     /// <summary>
     /// Base class for module piece resources (archive files that make up a module).
@@ -308,7 +313,7 @@ namespace Andastra.Parsing.Common
             PieceInfo = ModulePieceInfo.FromFilename(pathObj.Name);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:216-234
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:216-234
         // Original: def __new__(cls, path: os.PathLike | str, *args, **kwargs):
         // Factory method to create the appropriate ModulePieceResource subclass based on file extension
         public static ModulePieceResource Create(string path, bool createIfNotExist = false)
@@ -346,7 +351,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:260-312
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:260-312
     // Original: class ModuleLinkPiece(ModulePieceResource):
     /// <summary>
     /// Represents the main module archive (.rim) containing IFO, ARE, and GIT files.
@@ -358,7 +363,7 @@ namespace Andastra.Parsing.Common
         {
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:261-267
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:261-267
         // Original: def ifo(self) -> GFF:
         public GFF Ifo()
         {
@@ -369,11 +374,11 @@ namespace Andastra.Parsing.Common
                 throw new FileNotFoundException($"Module IFO not found", moduleIfoPath);
             }
 
-            var reader = new Formats.GFF.GFFBinaryReader(lookup);
+            var reader = new GFFBinaryReader(lookup);
             return reader.Load();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:269-295
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:269-295
         // Original: def module_id(self) -> ResRef | None:
         public ResRef ModuleId()
         {
@@ -403,14 +408,14 @@ namespace Andastra.Parsing.Common
                 GFFFieldType? actualFtype = gffIfo.Root.GetFieldType("Mod_Area_list");
                 if (actualFtype != GFFFieldType.List)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"{Filename()} has IFO with incorrect field 'Mod_Area_list' type '{actualFtype}', expected 'List'");
+                    new RobustLogger().Warning($"{Filename()} has IFO with incorrect field 'Mod_Area_list' type '{actualFtype}', expected 'List'");
                 }
                 else
                 {
                     GFFList areaList = gffIfo.Root.GetList("Mod_Area_list");
                     if (areaList == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Error($"{Filename()}: Module.IFO has a Mod_Area_list field, but it is not a valid list.");
+                        new RobustLogger().Error($"{Filename()}: Module.IFO has a Mod_Area_list field, but it is not a valid list.");
                         return null;
                     }
 
@@ -432,13 +437,13 @@ namespace Andastra.Parsing.Common
             }
             else
             {
-                new Andastra.Parsing.Logger.RobustLogger().Error($"{Filename()}: Module.IFO does not have an existing Mod_Area_list.");
+                new RobustLogger().Error($"{Filename()}: Module.IFO does not have an existing Mod_Area_list.");
             }
 
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:297-312
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:297-312
         // Original: def area_name(self) -> LocalizedString | ResRef:
         public LocalizedString AreaName()
         {
@@ -455,7 +460,7 @@ namespace Andastra.Parsing.Common
             if (areaFileRes != null)
             {
                 byte[] areData = areaFileRes.Data;
-                var reader = new Formats.GFF.GFFBinaryReader(areData);
+                var reader = new GFFBinaryReader(areData);
                 GFF gffAre = reader.Load();
 
                 if (gffAre.Root.Exists("Name"))
@@ -469,7 +474,7 @@ namespace Andastra.Parsing.Common
                     LocalizedString result = gffAre.Root.GetLocString("Name");
                     if (result == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Error($"{Filename()}: ARE has a Name field, but it is not a valid LocalizedString.");
+                        new RobustLogger().Error($"{Filename()}: ARE has a Name field, but it is not a valid LocalizedString.");
                         return LocalizedString.FromInvalid();
                     }
 
@@ -482,7 +487,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:315
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:315
     // Original: class ModuleDataPiece(ModulePieceResource): ...
     /// <summary>
     /// Represents the data module archive (_s.rim) containing module resources.
@@ -495,7 +500,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:318
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:318
     // Original: class ModuleDLGPiece(ModulePieceResource): ...
     /// <summary>
     /// Represents the KotOR 2 dialog archive (_dlg.erf) containing dialog files.
@@ -508,7 +513,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:321
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:321
     // Original: class ModuleFullOverridePiece(ModuleDLGPiece, ModuleDataPiece, ModuleLinkPiece): ...
     /// <summary>
     /// Represents the community override module archive (.mod) that replaces all other module files.
@@ -543,7 +548,7 @@ namespace Andastra.Parsing.Common
         }
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:331-2131
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:331-2131
     // Original: class Module:
     /// <summary>
     /// Represents a KotOR game module with its resources and archives.
@@ -555,7 +560,7 @@ namespace Andastra.Parsing.Common
     {
         private readonly Dictionary<ResourceIdentifier, ModuleResource> _resources = new Dictionary<ResourceIdentifier, ModuleResource>();
         private bool _dotMod;
-        // private readonly Installation.Installation _installation;
+        private readonly Installation _installation;
         private readonly string _root;
         private ResRef _cachedModId;
         private readonly Dictionary<string, ModulePieceResource> _capsules = new Dictionary<string, ModulePieceResource>();
@@ -563,12 +568,12 @@ namespace Andastra.Parsing.Common
 
         public Dictionary<ResourceIdentifier, ModuleResource> Resources => _resources;
         public bool DotMod => _dotMod;
-        // public Installation.Installation Installation => _installation;
+        public Installation Installation => _installation;
         public string Root => _root;
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:379-416
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:379-416
         // Original: def __init__(self, filename_or_root: str, installation: Installation, *, use_dot_mod: bool = True):
-        public Module(string filenameOrRoot, Installation.Installation installation, bool useDotMod = true)
+        public Module(string filenameOrRoot, Installation installation, bool useDotMod = true)
         {
             if (filenameOrRoot == null)
             {
@@ -586,9 +591,9 @@ namespace Andastra.Parsing.Common
 
             // Build all capsules relevant to this root in the provided installation
             // Use ModuleFileDiscovery to match exact swkotor.exe/swkotor2.exe behavior
-            // string modulesPath = Andastra.Parsing.Installation.Installation.GetModulesPath(_installation.Path);
-            Andastra.Parsing.Installation.ModuleFileGroup fileGroup =
-                Andastra.Parsing.Installation.ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
+            string modulesPath = Installation.GetModulesPath(_installation.Path);
+            ModuleFileGroup fileGroup =
+                ModuleFileDiscovery.DiscoverModuleFiles(modulesPath, _root, _installation.Game);
 
             if (fileGroup == null || !fileGroup.HasFiles())
             {
@@ -654,7 +659,7 @@ namespace Andastra.Parsing.Common
             ReloadResources();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:516-548
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:516-548
         // Original: @staticmethod @lru_cache(maxsize=5000) def name_to_root(name: str) -> str:
         private static readonly Dictionary<string, string> _nameToRootCache = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
@@ -702,7 +707,7 @@ namespace Andastra.Parsing.Common
             return root;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:550-573
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:550-573
         // Original: @staticmethod def filepath_to_root(filepath: os.PathLike | str) -> str:
         public static string FilepathToRoot(string filepath)
         {
@@ -713,14 +718,14 @@ namespace Andastra.Parsing.Common
             return NameToRoot(filepath);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:464-465
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:464-465
         // Original: def root(self) -> str:
         public string GetRoot()
         {
             return _root.Trim();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:467-478
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:467-478
         // Original: def lookup_main_capsule(self) -> ModuleFullOverridePiece | ModuleLinkPiece:
         public ModulePieceResource LookupMainCapsule()
         {
@@ -763,7 +768,7 @@ namespace Andastra.Parsing.Common
             return relevantCapsule;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:480-491
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:480-491
         // Original: def lookup_data_capsule(self) -> ModuleFullOverridePiece | ModuleDataPiece:
         public ModulePieceResource LookupDataCapsule()
         {
@@ -792,7 +797,7 @@ namespace Andastra.Parsing.Common
             return relevantCapsule;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:493-504
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:493-504
         // Original: def lookup_dlg_capsule(self) -> ModuleFullOverridePiece | ModuleDLGPiece:
         public ModulePieceResource LookupDlgCapsule()
         {
@@ -821,7 +826,7 @@ namespace Andastra.Parsing.Common
             return relevantCapsule;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:506-514
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:506-514
         // Original: def module_id(self) -> ResRef | None:
         public ResRef ModuleId()
         {
@@ -846,7 +851,7 @@ namespace Andastra.Parsing.Common
             return foundId;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:575-582
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:575-582
         // Original: def capsules(self) -> list[ModulePieceResource]:
         /// <summary>
         /// Returns a copy of the capsules used by the module.
@@ -865,7 +870,7 @@ namespace Andastra.Parsing.Common
             return capsules;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:892-909
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:892-909
         // Original: def resource(self, resname: str, restype: ResourceType) -> ModuleResource | None:
         /// <summary>
         /// Returns the resource with the given name and type from the module.
@@ -880,7 +885,7 @@ namespace Andastra.Parsing.Common
 
         /// <summary>
         /// Creates a type-specific ModuleResource instance based on ResourceType.
-        /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:884
+        /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:884
         /// Original: module_resource = ModuleResource(resname, restype, self._installation, self._root)
         /// Uses reflection to create ModuleResource<T> with the appropriate type parameter.
         /// </summary>
@@ -920,7 +925,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.GIT)
             {
-                return typeof(Resource.Generics.GIT);
+                return typeof(GIT);
             }
             if (restype == ResourceType.IFO)
             {
@@ -928,7 +933,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.UTC)
             {
-                return typeof(Andastra.Parsing.Resource.Generics.UTC.UTC);
+                return typeof(Resource.Formats.GFF.Generics.UTC.UTC);
             }
             if (restype == ResourceType.UTD)
             {
@@ -944,7 +949,7 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.UTI)
             {
-                return typeof(Andastra.Parsing.Resource.Generics.UTI.UTI);
+                return typeof(Resource.Formats.GFF.Generics.UTI.UTI);
             }
             if (restype == ResourceType.UTE)
             {
@@ -960,15 +965,15 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.UTM)
             {
-                return typeof(Andastra.Parsing.Resource.Generics.UTM.UTM);
+                return typeof(Resource.Formats.GFF.Generics.UTM.UTM);
             }
             if (restype == ResourceType.LYT)
             {
-                return typeof(Andastra.Parsing.Resource.Formats.LYT.LYT);
+                return typeof(LYT);
             }
             if (restype == ResourceType.VIS)
             {
-                return typeof(Formats.VIS.VIS);
+                return typeof(VIS);
             }
             if (restype == ResourceType.PTH)
             {
@@ -980,11 +985,11 @@ namespace Andastra.Parsing.Common
             }
             if (restype == ResourceType.TPC)
             {
-                return typeof(Formats.TPC.TPC);
+                return typeof(TPC);
             }
             if (restype == ResourceType.NCS)
             {
-                return typeof(Formats.NCS.NCS);
+                return typeof(NCS);
             }
             if (restype == ResourceType.DLG)
             {
@@ -995,7 +1000,7 @@ namespace Andastra.Parsing.Common
             return typeof(object);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:852-887
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:852-887
         // Original: def add_locations(self, resname: str, restype: ResourceType, locations: Iterable[Path]) -> ModuleResource:
         /// <summary>
         /// Creates or extends a ModuleResource keyed by the resname/restype with additional locations.
@@ -1010,14 +1015,14 @@ namespace Andastra.Parsing.Common
             var locationsList = locations.ToList();
             if (locationsList.Count == 0 && !(resname == "dirt" && restype == ResourceType.TPC))
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root));
+                new RobustLogger().Warning(string.Format("No locations found for '{0}.{1}' which are intended to add to module '{2}'", resname, restype, _root));
             }
 
             ResourceIdentifier ident = new ResourceIdentifier(resname, restype);
             if (!_resources.TryGetValue(ident, out ModuleResource moduleResource))
             {
                 // Create type-specific ModuleResource<T> based on ResourceType
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:884
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:884
                 // Original: module_resource = ModuleResource(resname, restype, self._installation, self._root)
                 moduleResource = CreateModuleResource(resname, restype);
                 _resources[ident] = moduleResource;
@@ -1027,7 +1032,7 @@ namespace Andastra.Parsing.Common
             return moduleResource;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:911-920
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:911-920
         // Original: def layout(self) -> ModuleResource[LYT] | None:
         /// <summary>
         /// Returns the LYT layout resource with a matching ID if it exists.
@@ -1038,7 +1043,7 @@ namespace Andastra.Parsing.Common
             return Resource(ModuleId()?.ToString(), ResourceType.LYT);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:975-990
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:975-990
         // Original: def git(self) -> ModuleResource[GIT] | None:
         /// <summary>
         /// Returns the git resource with matching id if found.
@@ -1049,7 +1054,7 @@ namespace Andastra.Parsing.Common
             return Resource(ModuleId()?.ToString(), ResourceType.GIT);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1058-1075
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1058-1075
         // Original: def creature(self, resname: str) -> ModuleResource[UTC] | None:
         /// <summary>
         /// Returns a UTC resource by name if it exists.
@@ -1060,7 +1065,7 @@ namespace Andastra.Parsing.Common
             return Resource(resname, ResourceType.UTC);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1105-1122
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1105-1122
         // Original: def placeable(self, resname: str) -> ModuleResource[UTP] | None:
         /// <summary>
         /// Check if a placeable UTP resource with the given resname exists.
@@ -1071,7 +1076,7 @@ namespace Andastra.Parsing.Common
             return Resource(resname, ResourceType.UTP);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1152-1169
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1152-1169
         // Original: def door(self, resname: str) -> ModuleResource[UTD] | None:
         /// <summary>
         /// Returns a UTD resource matching the provided resname from this module.
@@ -1082,7 +1087,7 @@ namespace Andastra.Parsing.Common
             return Resource(resname, ResourceType.UTD);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1033-1056
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1033-1056
         // Original: def info(self) -> ModuleResource[IFO] | None:
         /// <summary>
         /// Returns the ModuleResource with type IFO if it exists.
@@ -1093,7 +1098,7 @@ namespace Andastra.Parsing.Common
             return Resource("module", ResourceType.IFO);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:951-973
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:951-973
         // Original: def are(self) -> ModuleResource[ARE] | None:
         /// <summary>
         /// Returns the ARE resource with the given ID if it exists.
@@ -1105,7 +1110,7 @@ namespace Andastra.Parsing.Common
             return modId != null ? Resource(modId.ToString(), ResourceType.ARE) : null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1007-1028
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1007-1028
         // Original: def pth(self) -> ModuleResource[PTH] | None:
         /// <summary>
         /// Finds the PTH resource with matching ID.
@@ -1117,7 +1122,7 @@ namespace Andastra.Parsing.Common
             return modId != null ? Resource(modId.ToString(), ResourceType.PTH) : null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1560-1577
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1560-1577
         // Original: def sound(self, resname: str) -> ModuleResource[UTS] | None:
         /// <summary>
         /// Returns a UTS resource by name if it exists.
@@ -1128,7 +1133,7 @@ namespace Andastra.Parsing.Common
             return Resource(resname, ResourceType.UTS);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:933-949
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:933-949
         // Original: def vis(self) -> ModuleResource[VIS] | None:
         /// <summary>
         /// Finds the VIS resource with matching ID.
@@ -1140,7 +1145,7 @@ namespace Andastra.Parsing.Common
             return modId != null ? Resource(modId.ToString(), ResourceType.VIS) : null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1225-1245
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1225-1245
         // Original: def items(self) -> list[ModuleResource[UTI]]:
         /// <summary>
         /// Returns a list of UTI resources for this module.
@@ -1154,7 +1159,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTD).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1247-1271
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1247-1271
         // Original: def encounter(self, resname: str) -> ModuleResource[UTE] | None:
         /// <summary>
         /// Find UTE resource by the specified resname.
@@ -1168,7 +1173,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1273-1293
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1273-1293
         // Original: def encounters(self) -> list[ModuleResource[UTE]]:
         /// <summary>
         /// Returns a list of UTE resources for this module.
@@ -1178,7 +1183,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTE).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1295-1317
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1295-1317
         // Original: def store(self, resname: str) -> ModuleResource[UTM] | None:
         /// <summary>
         /// Looks up a material (UTM) resource by the specified resname from this module and returns the resource data.
@@ -1192,7 +1197,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1319-1323
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1319-1323
         // Original: def stores(self) -> list[ModuleResource[UTM]]:
         /// <summary>
         /// Returns a list of material (UTM) resources for this module.
@@ -1202,7 +1207,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTM).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1325-1350
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1325-1350
         // Original: def trigger(self, resname: str) -> ModuleResource[UTT] | None:
         /// <summary>
         /// Returns a trigger (UTT) resource by the specified resname if it exists.
@@ -1216,7 +1221,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1352-1372
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1352-1372
         // Original: def triggers(self) -> list[ModuleResource[UTT]]:
         /// <summary>
         /// Returns a list of UTT resources for this module.
@@ -1226,7 +1231,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTT).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1374-1399
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1374-1399
         // Original: def waypoint(self, resname: str) -> ModuleResource[UTW] | None:
         /// <summary>
         /// Returns the UTW resource with the given name if it exists.
@@ -1240,7 +1245,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1401-1417
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1401-1417
         // Original: def waypoints(self) -> list[ModuleResource[UTW]]:
         /// <summary>
         /// Returns list of UTW resources from resources dict.
@@ -1250,7 +1255,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTW).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1419-1443
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1419-1443
         // Original: def model(self, resname: str) -> ModuleResource[MDL] | None:
         /// <summary>
         /// Returns a ModuleResource object for the given resource name if it exists in this module.
@@ -1264,7 +1269,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1445-1468
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1445-1468
         // Original: def model_ext(self, resname: str) -> ModuleResource | None:
         /// <summary>
         /// Finds a MDX module resource by name from this module.
@@ -1278,7 +1283,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1470-1488
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1470-1488
         // Original: def models(self) -> list[ModuleResource[MDL]]:
         /// <summary>
         /// Returns a list of MDL model resources.
@@ -1288,7 +1293,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.MDL).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1490-1508
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1490-1508
         // Original: def model_exts(self) -> list[ModuleResource]:
         /// <summary>
         /// Returns a list of MDX model resources.
@@ -1298,7 +1303,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.MDX).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1510-1536
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1510-1536
         // Original: def texture(self, resname: str) -> ModuleResource[TPC] | None:
         /// <summary>
         /// Looks up a texture resource by resname from this module.
@@ -1314,7 +1319,7 @@ namespace Andastra.Parsing.Common
                 resource.GetResName().ToLowerInvariant() == lowerResname);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1538-1558
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1538-1558
         // Original: def textures(self) -> list[ModuleResource[MDL]]:
         /// <summary>
         /// Generates a list of texture resources from this module.
@@ -1327,7 +1332,7 @@ namespace Andastra.Parsing.Common
                 textureTypes.Contains(resource.GetResType())).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1586-1606
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1586-1606
         // Original: def sounds(self) -> list[ModuleResource[UTS]]:
         /// <summary>
         /// Returns a list of UTS resources.
@@ -1337,7 +1342,7 @@ namespace Andastra.Parsing.Common
             return _resources.Values.Where(resource => resource.GetResType() == ResourceType.UTS).ToList();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1608-1706
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1608-1706
         // Original: def loadscreen(self) -> FileResource | None:
         /// <summary>
         /// Returns a FileResource object representing the loadscreen texture for this module.
@@ -1349,17 +1354,17 @@ namespace Andastra.Parsing.Common
             ModuleResource areResource = Are();
             if (areResource == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Module '{0}' has no ARE resource, cannot determine loadscreen", _root));
+                new RobustLogger().Warning(string.Format("Module '{0}' has no ARE resource, cannot determine loadscreen", _root));
                 return null;
             }
 
             // Read the ARE to get LoadScreenID
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1645-1649
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1645-1649
             // Original: are_data = are_resource.resource()
             object areData = areResource.Resource();
             if (areData == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Failed to read ARE resource for module '{0}'", _root));
+                new RobustLogger().Warning(string.Format("Failed to read ARE resource for module '{0}'", _root));
                 return null;
             }
 
@@ -1367,60 +1372,60 @@ namespace Andastra.Parsing.Common
             ARE are = areData as ARE;
             if (are == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("ARE resource for module '{0}' is not of type ARE", _root));
+                new RobustLogger().Warning(string.Format("ARE resource for module '{0}' is not of type ARE", _root));
                 return null;
             }
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1651-1654
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1651-1654
             // Original: loadscreen_id = are_data.loadscreen_id
             int loadscreenId = are.LoadScreenID;
             if (loadscreenId == 0)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Module '{0}' has LoadScreenID=0, no loadscreen specified", _root));
+                new RobustLogger().Debug(string.Format("Module '{0}' has LoadScreenID=0, no loadscreen specified", _root));
                 return null;
             }
 
             // Load loadscreens.2da from installation
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1656-1664
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1656-1664
             // Original: loadscreens_result = self._installation.resource("loadscreens", ResourceType.TwoDA, [SearchLocation.OVERRIDE, SearchLocation.CHITIN])
-            Installation.ResourceResult loadscreensResult = _installation.Resources.LookupResource(
+            ResourceResult loadscreensResult = _installation.Resources.LookupResource(
                 "loadscreens",
                 ResourceType.TwoDA,
                 new[] { SearchLocation.OVERRIDE, SearchLocation.CHITIN }
             );
             if (loadscreensResult == null || loadscreensResult.Data == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning("loadscreens.2da not found in installation");
+                new RobustLogger().Warning("loadscreens.2da not found in installation");
                 return null;
             }
 
             // Parse 2DA file
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1666
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1666
             // Original: loadscreens_2da = read_2da(loadscreens_result.data)
-            Formats.TwoDA.TwoDA loadscreens2da = new Formats.TwoDA.TwoDABinaryReader(loadscreensResult.Data).Load();
+            TwoDA loadscreens2da = new TwoDABinaryReader(loadscreensResult.Data).Load();
 
             // Get the bmpresref from loadscreens.2da using LoadScreenID as row index
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1668-1677
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1668-1677
             // Original: loadscreen_row = loadscreens_2da.get_row(loadscreen_id)
             string bmpresref = null;
             try
             {
-                Formats.TwoDA.TwoDARow loadscreenRow = loadscreens2da.GetRow(loadscreenId);
+                TwoDARow loadscreenRow = loadscreens2da.GetRow(loadscreenId);
                 bmpresref = loadscreenRow.GetString("bmpresref");
                 if (string.IsNullOrWhiteSpace(bmpresref) || bmpresref == "****")
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Module '{0}' loadscreen row {1} has no bmpresref", _root, loadscreenId));
+                    new RobustLogger().Debug(string.Format("Module '{0}' loadscreen row {1} has no bmpresref", _root, loadscreenId));
                     return null;
                 }
             }
             catch (Exception e)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Failed to get bmpresref from loadscreens.2da row {0}: {1}", loadscreenId, e.Message));
+                new RobustLogger().Warning(string.Format("Failed to get bmpresref from loadscreens.2da row {0}: {1}", loadscreenId, e.Message));
                 return null;
             }
 
             // Search for the texture (TGA or TPC) using installation.locations()
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1679-1703
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1679-1703
             // Original: texture_queries = [ResourceIdentifier(bmpresref, ResourceType.TPC), ResourceIdentifier(bmpresref, ResourceType.TGA)]
             var textureQueries = new List<ResourceIdentifier>
             {
@@ -1431,7 +1436,7 @@ namespace Andastra.Parsing.Common
             Dictionary<ResourceIdentifier, List<LocationResult>> textureLocations = _installation.Locations(textureQueries, searchOrder);
 
             // Return the FileResource from the first location found
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1689-1703
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1689-1703
             // Original: for query in texture_queries: if query in texture_locations and texture_locations[query]: location = texture_locations[query][0]; return location.as_file_resource()
             foreach (ResourceIdentifier query in textureQueries)
             {
@@ -1444,22 +1449,22 @@ namespace Andastra.Parsing.Common
                         return fileResource;
                     }
                     // If FileResource wasn't set, create one from the location
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1696-1702
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1696-1702
                     // Original: return FileResource(resname=bmpresref, restype=query.restype, size=location.size, offset=location.offset, filepath=location.filepath)
                     return new FileResource(bmpresref, query.ResType, location.Size, location.Offset, location.FilePath);
                 }
             }
 
-            new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Loadscreen texture '{0}' not found for module '{1}'", bmpresref, _root));
+            new RobustLogger().Debug(string.Format("Loadscreen texture '{0}' not found for module '{1}'", bmpresref, _root));
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:584-799
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:584-799
         // Original: def reload_resources(self):
         private void ReloadResources()
         {
             string displayName = (_dotMod ? $"{_root}.mod" : $"{_root}.rim");
-            new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Loading module resources needed for '{0}'", displayName));
+            new RobustLogger().Info(string.Format("Loading module resources needed for '{0}'", displayName));
 
             // Get main capsule for searching
             ModulePieceResource mainCapsule = LookupMainCapsule();
@@ -1472,7 +1477,7 @@ namespace Andastra.Parsing.Common
             ResRef linkResname = ModuleId();
             if (linkResname == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Module ID is null for module '{0}', cannot load resources", _root));
+                new RobustLogger().Warning(string.Format("Module ID is null for module '{0}', cannot load resources", _root));
                 return;
             }
 
@@ -1490,7 +1495,7 @@ namespace Andastra.Parsing.Common
                 {
                     FileResource resource = new FileResource(capsuleResource.ResName, capsuleResource.ResType,
                         capsuleResource.Size, capsuleResource.Offset, capsule.Path.ToString());
-                    new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
+                    new RobustLogger().Info(string.Format("Adding location '{0}' for resource '{1}' from erf/rim '{2}'",
                         capsule.Filename(), resource.Identifier, capsule.PieceInfo.ResIdent()));
                     AddLocations(resource.ResName, resource.ResType, new[] { capsule.Filename() });
                 }
@@ -1575,18 +1580,18 @@ namespace Andastra.Parsing.Common
                 object loadedResource = resourceWrapper.Resource();
 
                 // Only GIT/LYT have resource identifiers to collect
-                // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:688-690
+                // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:688-690
                 // Original: if not isinstance(loaded_resource, VIS): search_set.update(loaded_resource.iter_resource_identifiers())
                 if (query.ResType != ResourceType.VIS)
                 {
-                    if (loadedResource is Resource.Generics.GIT git)
+                    if (loadedResource is GIT git)
                     {
                         foreach (ResourceIdentifier ident in git.IterResourceIdentifiers())
                         {
                             searchSet.Add(ident);
                         }
                     }
-                    else if (loadedResource is Andastra.Parsing.Resource.Formats.LYT.LYT lyt)
+                    else if (loadedResource is LYT lyt)
                     {
                         foreach (ResourceIdentifier ident in lyt.IterResourceIdentifiers())
                         {
@@ -1603,31 +1608,53 @@ namespace Andastra.Parsing.Common
         }
 
 
+        private void ProcessCoreResources(string displayName)
+        {
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py
+            // Original: Process core resources (chitin + patch.erf) for module
+            List<FileResource> coreResources = _installation.CoreResources();
+            foreach (FileResource resource in coreResources)
+            {
+                AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
+            }
+        }
+
+        private void ProcessOverrideResources(string displayName)
+        {
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py
+            // Original: Process override directory resources for module
+            List<FileResource> overrideResources = _installation.OverrideResources();
+            foreach (FileResource resource in overrideResources)
+            {
+                AddLocations(resource.ResName, resource.ResType, new[] { resource.FilePath });
+            }
+        }
+
         private void ProcessModelTextures(string displayName)
         {
             HashSet<string> lookupTextureQueries = new HashSet<string>();
             HashSet<string> lookupLightmapQueries = new HashSet<string>();
 
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:760-763
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:760-763
             // Original: for model in self.models(): ... lookup_texture_queries.update(iterate_textures(model_data))
             foreach (ModuleResource model in Models())
             {
-                new Andastra.Parsing.Logger.RobustLogger().Info(string.Format("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier()));
+                new RobustLogger().Info(string.Format("Finding textures/lightmaps for model '{0}'...", model.GetIdentifier()));
                 try
                 {
                     byte[] modelData = model.Resource() as byte[];
                     if (modelData == null)
                     {
-                        new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName));
+                        new RobustLogger().Warning(string.Format("Missing model '{0}', needed by module '{1}'", model.GetIdentifier(), displayName));
                         continue;
                     }
 
-                    lookupTextureQueries.UnionWith(Andastra.Parsing.Tools.ModelTools.IterateTextures(modelData));
-                    lookupLightmapQueries.UnionWith(Andastra.Parsing.Tools.ModelTools.IterateLightmaps(modelData));
+                    lookupTextureQueries.UnionWith(ModelTools.IterateTextures(modelData));
+                    lookupLightmapQueries.UnionWith(ModelTools.IterateLightmaps(modelData));
                 }
                 catch (Exception ex)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning(string.Format("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message));
+                    new RobustLogger().Warning(string.Format("Suppressed exception while getting model data '{0}': {1}", model.GetIdentifier(), ex.Message));
                 }
             }
 
@@ -1658,7 +1685,7 @@ namespace Andastra.Parsing.Common
                     ? string.Join(", ", locationPaths)
                     : string.Join(", ", locationPaths.Take(3)) + $", ... and {locationPaths.Count - 3} more";
 
-                new Andastra.Parsing.Logger.RobustLogger().Debug(string.Format("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
+                new RobustLogger().Debug(string.Format("Adding {0} texture location(s) for '{1}' to '{2}': {3}",
                     kv.Value.Count, kv.Key, displayName, pathsStr));
 
                 AddLocations(kv.Key.ResName, kv.Key.ResType, kv.Value.Select(loc => loc.FilePath));
@@ -1711,14 +1738,14 @@ namespace Andastra.Parsing.Common
             ModuleRoot = moduleRoot;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
         // Original: def resname(self) -> str:
         public virtual string GetResName()
         {
             return ResName;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
         // Original: def restype(self) -> ResourceType:
         public virtual ResourceType GetResType()
         {
@@ -1736,7 +1763,7 @@ namespace Andastra.Parsing.Common
         public abstract void Save();
     }
 
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1709-2131
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1709-2131
     // Original: class ModuleResource(Generic[T]):
     /// <summary>
     /// Represents a single resource within a module with multiple possible locations.
@@ -1746,15 +1773,15 @@ namespace Andastra.Parsing.Common
     /// </summary>
     public sealed class ModuleResource<T> : ModuleResource
     {
-        // private readonly Installation.Installation _installation;
+        private readonly Installation _installation;
         private string _active;
         private T _resourceObj;
         private bool _resourceLoadAttempted; // Track if we've attempted to load (for caching when conversion not implemented)
         private readonly List<string> _locations = new List<string>();
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1756-1770
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1756-1770
         // Original: def __init__(self, resname: str, restype: ResourceType, installation: Installation, module_root: str | None = None):
-        public ModuleResource(string resname, ResourceType restype, Installation.Installation installation, string moduleRoot = null)
+        public ModuleResource(string resname, ResourceType restype, Installation installation, string moduleRoot = null)
             : base(resname, restype, moduleRoot)
         {
             if (resname == null)
@@ -1806,35 +1833,35 @@ namespace Andastra.Parsing.Common
             return Identifier.GetHashCode();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1787-1794
         // Original: def resname(self) -> str:
         public override string GetResName()
         {
             return ResName;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1796-1803
         // Original: def restype(self) -> ResourceType:
         public override ResourceType GetResType()
         {
             return ResType;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1805-1806
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1805-1806
         // Original: def filename(self) -> str:
         public override string Filename()
         {
             return base.Identifier.ToString();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1808-1809
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1808-1809
         // Original: def identifier(self) -> ResourceIdentifier:
         public override ResourceIdentifier GetIdentifier()
         {
             return Identifier;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1968-1977
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1968-1977
         // Original: def add_locations(self, filepaths: Iterable[Path]):
         public override void AddLocations(IEnumerable<string> filepaths)
         {
@@ -1852,14 +1879,14 @@ namespace Andastra.Parsing.Common
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1979-1980
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1979-1980
         // Original: def locations(self) -> list[Path]:
         public override List<string> Locations()
         {
             return new List<string>(_locations);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1982-2014
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1982-2014
         // Original: def activate(self, filepath: os.PathLike | str | None = None) -> Path | None:
         public override string Activate(string filepath = null)
         {
@@ -1884,7 +1911,7 @@ namespace Andastra.Parsing.Common
                 string locationsInfo = _locations.Count > 0
                     ? $"Searched locations: {string.Join(", ", _locations)}."
                     : "No locations were added to this resource.";
-                new Andastra.Parsing.Logger.RobustLogger().Warning(
+                new RobustLogger().Warning(
                     $"Cannot activate module resource '{Identifier}'{moduleInfo}: No locations found. " +
                     $"Installation: {installationPath}. {locationsInfo}"
                 );
@@ -1893,14 +1920,14 @@ namespace Andastra.Parsing.Common
             return _active;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2041-2042
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:2041-2042
         // Original: def isActive(self) -> bool:
         public override bool IsActive()
         {
             return !string.IsNullOrEmpty(_active);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2025-2039
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:2025-2039
         // Original: def active(self) -> Path | None:
         public string Active()
         {
@@ -1908,7 +1935,7 @@ namespace Andastra.Parsing.Common
             {
                 if (_locations.Count == 0)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Warning($"No resource found for '{Identifier}'");
+                    new RobustLogger().Warning($"No resource found for '{Identifier}'");
                     return null;
                 }
                 Activate();
@@ -1917,7 +1944,7 @@ namespace Andastra.Parsing.Common
         }
 
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2016-2018
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:2016-2018
         // Original: def unload(self):
         public void Unload()
         {
@@ -1925,7 +1952,7 @@ namespace Andastra.Parsing.Common
             _resourceLoadAttempted = false;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2020-2023
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:2020-2023
         // Original: def reload(self):
         public void Reload()
         {
@@ -1934,7 +1961,7 @@ namespace Andastra.Parsing.Common
             Resource(); // Trigger reload
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1840-1874
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1840-1874
         // Original: def data(self) -> bytes | None:
         public override byte[] Data()
         {
@@ -1946,7 +1973,7 @@ namespace Andastra.Parsing.Common
             }
 
             // Check if capsule file
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1856-1860
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1856-1860
             // Original: if is_capsule_file(active_path): data = Capsule(active_path).resource(self._resname, self._restype); if data is None: RobustLogger().error(...); return data
             if (FileHelpers.IsCapsuleFile(activePath))
             {
@@ -1954,13 +1981,13 @@ namespace Andastra.Parsing.Common
                 byte[] data = capsule.GetResource(ResName, ResType);
                 if (data == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Error($"Resource '{fileName}' not found in '{activePath}'");
+                    new RobustLogger().Error($"Resource '{fileName}' not found in '{activePath}'");
                 }
                 return data;
             }
 
             // Check if BIF file
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1862-1872
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1862-1872
             // Original: if is_bif_file(active_path): resource = self._installation.resource(...); if resource is None: RobustLogger().error(...); return resource.data
             if (FileHelpers.IsBifFile(activePath))
             {
@@ -1968,14 +1995,14 @@ namespace Andastra.Parsing.Common
                 if (resource == null)
                 {
                     string msg = $"Resource '{fileName}' not found in BIF '{activePath}' somehow?";
-                    new Andastra.Parsing.Logger.RobustLogger().Error(msg);
+                    new RobustLogger().Error(msg);
                     return null;
                 }
                 return resource.Data;
             }
 
             // Regular file
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1874
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1874
             // Original: return active_path.read_bytes()
             if (File.Exists(activePath))
             {
@@ -1985,7 +2012,7 @@ namespace Andastra.Parsing.Common
             return null;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:1876-1937
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:1876-1937
         // Original: def resource(self) -> T | None:
         public override object Resource()
         {
@@ -2035,11 +2062,11 @@ namespace Andastra.Parsing.Common
                 }
                 else if (ResType == ResourceType.LYT)
                 {
-                    loaded = Andastra.Parsing.Resource.Formats.LYT.LYTAuto.ReadLyt(data);
+                    loaded = LYTAuto.ReadLyt(data);
                 }
                 else if (ResType == ResourceType.VIS)
                 {
-                    loaded = Formats.VIS.VISAuto.ReadVis(data);
+                    loaded = VISAuto.ReadVis(data);
                 }
                 else if (ResType == ResourceType.NCS)
                 {
@@ -2053,7 +2080,7 @@ namespace Andastra.Parsing.Common
                     {
                         try
                         {
-                            var reader = new Formats.GFF.GFFBinaryReader(data);
+                            var reader = new GFFBinaryReader(data);
                             loaded = reader.Load();
                         }
                         catch
@@ -2076,7 +2103,7 @@ namespace Andastra.Parsing.Common
             return _resourceObj;
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2183-2254
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:2183-2254
         // Original: def save(self):
         /// <summary>
         /// Saves the resource to the active file.
@@ -2125,7 +2152,7 @@ namespace Andastra.Parsing.Common
             }
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/module.py:2256-2269
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module.py:2256-2269
         // Original: def _create_anew_in_override(self) -> Path:
         /// <summary>
         /// Creates a new file in the override folder if no active path exists.

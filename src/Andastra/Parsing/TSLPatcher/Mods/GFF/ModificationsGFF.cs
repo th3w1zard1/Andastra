@@ -1,12 +1,13 @@
+using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Memory;
+using Andastra.Parsing.Resource.Formats.GFF;
+using Andastra.Parsing.TSLPatcher.Logger;
+using Andastra.Parsing.TSLPatcher.Memory;
+using Andastra.Parsing.TSLPatcher.Mods;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Mods.GFF
+namespace Andastra.Parsing.TSLPatcher.Mods.GFF
 {
 
     /// <summary>
@@ -36,7 +37,7 @@ namespace Andastra.Parsing.Mods.GFF
             PatchLogger logger, BioWareGame game)
         {
             var reader = new GFFBinaryReader(source);
-            Formats.GFF.GFF gff = reader.Load();
+            Resource.Formats.GFF.GFF gff = reader.Load();
             Apply(gff, memory, logger, game);
             var writer = new GFFBinaryWriter(gff);
             return writer.Write();
@@ -48,7 +49,7 @@ namespace Andastra.Parsing.Mods.GFF
             PatchLogger logger, BioWareGame game)
         {
             // Python: for change_field in self.modifiers: change_field.apply(mutable_data.root, memory, logger)
-            if (mutableData is Formats.GFF.GFF gff)
+            if (mutableData is Resource.Formats.GFF.GFF gff)
             {
                 foreach (ModifyGFF changeField in Modifiers)
                 {

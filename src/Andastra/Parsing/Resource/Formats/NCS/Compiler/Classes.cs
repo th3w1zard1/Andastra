@@ -1,69 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.NCS.Compiler.NSS;
+using Andastra.Parsing.Resource.Formats.NCS.Compiler.NSS;
 using JetBrains.Annotations;
 
-namespace Andastra.Parsing.Formats.NCS.Compiler
+namespace Andastra.Parsing.Resource.Formats.NCS.Compiler
 {
 
     /// <summary>
-    /// Base exception for NSS compilation errors.
-    /// Provides detailed error messages to help debug script issues.
-    ///
-    /// References:
-    ///     vendor/HoloLSP/server/src/nwscript-parser.ts (NSS parser error handling)
-    ///     vendor/xoreos-tools/src/nwscript/compiler.cpp (NSS compiler error handling)
-    ///     vendor/KotOR.js/src/nwscript/NWScriptCompiler.ts (TypeScript compiler errors)
-    /// </summary>
-    public class CompileError : Exception
-    {
-        public int? LineNum { get; }
-        [CanBeNull]
-        public string Context { get; }
-
-        public CompileError(string message, int? lineNum = null, [CanBeNull] string context = null)
-            : base(FormatMessage(message, lineNum, context))
-        {
-            LineNum = lineNum;
-            Context = context;
-        }
-
-        private static string FormatMessage(string message, int? lineNum, [CanBeNull] string context)
-        {
-            string fullMessage = message;
-            if (!(lineNum is null) && lineNum.HasValue)
-            {
-                fullMessage = $"Line {lineNum}: {message}";
-            }
-            if (!(context is null))
-            {
-                fullMessage = $"{fullMessage}\n  Context: {context}";
-            }
-            return fullMessage;
-        }
-    }
-
-    /// <summary>Raised when script has no valid entry point (main or StartingConditional).</summary>
-    public class EntryPointError : CompileError
-    {
-        public EntryPointError(string message, int? lineNum = null, [CanBeNull] string context = null)
-            : base(message, lineNum, context)
-        {
-        }
-    }
-
-    /// <summary>Raised when a #include file cannot be found.</summary>
-    public class MissingIncludeError : CompileError
-    {
-        public MissingIncludeError(string message, int? lineNum = null, [CanBeNull] string context = null)
-            : base(message, lineNum, context)
-        {
-        }
-    }
-
-    /// <summary>
     /// Result of scoped variable lookup.
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:251-255
+    /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:251-255
     /// </summary>
     public class GetScopedResult
     {
@@ -99,7 +44,7 @@ namespace Andastra.Parsing.Formats.NCS.Compiler
 
     /// <summary>
     /// Scoped variable in a code block or global scope.
-    /// Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:677-680
+    /// Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/ncs/compiler/classes.py:677-680
     /// </summary>
     public class ScopedValue
     {

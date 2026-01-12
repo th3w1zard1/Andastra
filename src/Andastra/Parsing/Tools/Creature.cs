@@ -3,26 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using Andastra.Parsing;
 using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TwoDA;
-// Removed: using Andastra.Parsing.Installation; // Using fully qualified names to break circular dependency
+using Andastra.Parsing.Common.Logger;
+using Andastra.Parsing.Resource.Formats.TwoDA;
+using Andastra.Parsing.Extract.Installation;
 using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using Andastra.Parsing.Resource.Formats;
+using Andastra.Parsing.Resource.Formats.GFF.Generics;
 using JetBrains.Annotations;
 
 namespace Andastra.Parsing.Tools
 {
-    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py
     public static class Creature
     {
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
         // Original: def get_body_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string bodyModel, string bodyTexture) GetBodyModel(
-            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Andastra.Parsing.Installation.Installation installation,
+            Resource.Formats.GFF.Generics.UTC.UTC utc,
+            Installation installation,
             TwoDA appearance = null,
             TwoDA baseitems = null)
         {
-            var log = new Andastra.Parsing.Logger.RobustLogger();
+            var log = new RobustLogger();
 
             // Load appearance.2da if not provided
             if (appearance == null)
@@ -101,7 +103,7 @@ namespace Andastra.Parsing.Tools
                     else
                     {
                         // Process armor-specific model and texture
-                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
+                        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
                         // Original: armor_uti = read_uti(armor_res_lookup.data)
                         var armorUti = ResourceAutoHelpers.ReadUti(armorResLookup.Data);
                         log.Debug($"baseitems.2da: get body row {armorUti.BaseItem} for their armor");
@@ -131,7 +133,7 @@ namespace Andastra.Parsing.Tools
                 if (!string.IsNullOrWhiteSpace(overrideTexture) && overrideTexture != "****")
                 {
                     string fallbackOverrideTexture = overrideTexture + texAppend;
-                    // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
+                    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:22-151
                     // Original: if tex_append != "01" and installation.texture(fallback_override_texture) is None:
                     if (texAppend != "01" && installation.Texture(fallbackOverrideTexture) == null)
                     {
@@ -160,11 +162,11 @@ namespace Andastra.Parsing.Tools
             return (normalizedModel, normalizedTexture);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:154-194
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:154-194
         // Original: def get_weapon_models(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, baseitems: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string rightHandModel, string leftHandModel) GetWeaponModels(
-            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Andastra.Parsing.Installation.Installation installation,
+            Resource.Formats.GFF.Generics.UTC.UTC utc,
+            Installation installation,
             TwoDA appearance = null,
             TwoDA baseitems = null)
         {
@@ -173,7 +175,7 @@ namespace Andastra.Parsing.Tools
                 var appearanceLookup = installation.Resources.LookupResource("appearance", ResourceType.TwoDA);
                 if (appearanceLookup == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Error("appearance.2da missing from installation.");
+                    new RobustLogger().Error("appearance.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(appearanceLookup.Data);
@@ -184,7 +186,7 @@ namespace Andastra.Parsing.Tools
                 var baseitemsLookup = installation.Resources.LookupResource("baseitems", ResourceType.TwoDA);
                 if (baseitemsLookup == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Error("baseitems.2da missing from installation.");
+                    new RobustLogger().Error("baseitems.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(baseitemsLookup.Data);
@@ -206,31 +208,31 @@ namespace Andastra.Parsing.Tools
             return (rightHandModel, leftHandModel);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:197-211
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:197-211
         // Original: def _load_hand_uti(installation: Installation, hand_resref: str, baseitems: 2DA) -> str | None:
         private static string LoadHandUti(
-            Andastra.Parsing.Installation.Installation installation,
+            Installation installation,
             string handResref,
             TwoDA baseitems)
         {
             var handLookup = installation.Resources.LookupResource(handResref, ResourceType.UTI);
             if (handLookup == null)
             {
-                new Andastra.Parsing.Logger.RobustLogger().Error($"{handResref}.uti missing from installation.");
+                new RobustLogger().Error($"{handResref}.uti missing from installation.");
                 return null;
             }
-            // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:153-212
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:153-212
             // Original: hand_uti = read_uti(hand_lookup.data)
             var handUti = ResourceAutoHelpers.ReadUti(handLookup.Data);
             string defaultModel = baseitems.GetRow(handUti.BaseItem).GetString("defaultmodel");
             return defaultModel.Replace("001", handUti.ModelVariation.ToString().PadLeft(3, '0')).Trim();
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:214-289
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:214-289
         // Original: def get_head_model(utc: UTC, installation: Installation, *, appearance: 2DA | None = None, heads: 2DA | None = None) -> tuple[str | None, str | None]:
         public static (string model, string texture) GetHeadModel(
-            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Andastra.Parsing.Installation.Installation installation,
+            Resource.Formats.GFF.Generics.UTC.UTC utc,
+            Installation installation,
             TwoDA appearance = null,
             TwoDA heads = null)
         {
@@ -239,7 +241,7 @@ namespace Andastra.Parsing.Tools
                 var appearanceLookup = installation.Resources.LookupResource("appearance", ResourceType.TwoDA);
                 if (appearanceLookup == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Error("appearance.2da missing from installation.");
+                    new RobustLogger().Error("appearance.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(appearanceLookup.Data);
@@ -250,7 +252,7 @@ namespace Andastra.Parsing.Tools
                 var headsLookup = installation.Resources.LookupResource("heads", ResourceType.TwoDA);
                 if (headsLookup == null)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Error("heads.2da missing from installation.");
+                    new RobustLogger().Error("heads.2da missing from installation.");
                     return (null, null);
                 }
                 var reader = new TwoDABinaryReader(headsLookup.Data);
@@ -288,7 +290,7 @@ namespace Andastra.Parsing.Tools
                     {
                         if (!installation.Game.IsK2())
                         {
-                            new Andastra.Parsing.Logger.RobustLogger().Error("'alttexture' column in heads.2da should never exist in a K1 installation.");
+                            new RobustLogger().Error("'alttexture' column in heads.2da should never exist in a K1 installation.");
                         }
                         else
                         {
@@ -304,24 +306,24 @@ namespace Andastra.Parsing.Tools
                         }
                         catch (KeyNotFoundException)
                         {
-                            new Andastra.Parsing.Logger.RobustLogger().Error($"Cannot find {headColumnName} in heads.2da");
+                            new RobustLogger().Error($"Cannot find {headColumnName} in heads.2da");
                         }
                     }
                 }
                 catch (IndexOutOfRangeException)
                 {
-                    new Andastra.Parsing.Logger.RobustLogger().Error($"Row {headId} missing from heads.2da, defined in appearance.2da under the column 'normalhead' row {utc.AppearanceId}");
+                    new RobustLogger().Error($"Row {headId} missing from heads.2da, defined in appearance.2da under the column 'normalhead' row {utc.AppearanceId}");
                 }
             }
 
             return (model, texture);
         }
 
-        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:292-309
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:292-309
         // Original: def get_mask_model(utc: UTC, installation: Installation) -> str | None:
         public static string GetMaskModel(
-            Andastra.Parsing.Resource.Generics.UTC.UTC utc,
-            Andastra.Parsing.Installation.Installation installation)
+            Resource.Formats.GFF.Generics.UTC.UTC utc,
+            Installation installation)
         {
             string model = null;
 
@@ -334,7 +336,7 @@ namespace Andastra.Parsing.Tools
                     var resource = installation.Resources.LookupResource(resref.ToString(), ResourceType.UTI);
                     if (resource != null)
                     {
-                        // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/tools/creature.py:291-352
+                        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tools/creature.py:291-352
                         // Original: uti = read_uti(resource.data)
                         var uti = ResourceAutoHelpers.ReadUti(resource.Data);
                         model = "I_Mask_" + uti.ModelVariation.ToString().PadLeft(3, '0');
