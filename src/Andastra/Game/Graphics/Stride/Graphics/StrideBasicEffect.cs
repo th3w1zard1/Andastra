@@ -6,12 +6,11 @@ using Andastra.Runtime.Graphics.Common.Effects;
 using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Graphics;
+using Vector3Stride = Stride.Core.Mathematics.Vector3;
 using Stride.Rendering;
 using Stride.Rendering.Materials;
 using Stride.Rendering.Materials.ComputeColors;
 using Stride.Shaders;
-using MatrixStride = Stride.Core.Mathematics.Matrix;
-using Vector3Stride = Stride.Core.Mathematics.Vector3;
 
 namespace Andastra.Runtime.Stride.Graphics
 {
