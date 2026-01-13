@@ -11,7 +11,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
-using Logger = BioWare.NET.Logger;
+using Logger = BioWare.NET.Utility.Logger.RobustLogger;
 using Vector3 = System.Numerics.Vector3;
 
 namespace Andastra.Game.Games.Odyssey.Loading
@@ -194,7 +194,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Resource loading priority (matching original engine behavior):
         /// 1. Module archives (RIM/ERF files) - WOK files packaged with module
         /// 2. Installation (CHITIN/CUSTOM_MODULES) - Fallback to base game resources
-        /// 
+        ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module resources are searched first, then installation fallback
         /// </remarks>
         [CanBeNull]
@@ -224,7 +224,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                         catch (Exception ex)
                         {
                             // Log parsing error but continue to fallback
-                            new BioWare.NET.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
+                            Logger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
                         }
                     }
                 }
@@ -252,7 +252,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             catch (Exception ex)
             {
                 // Failed to load walkmesh - log and return null
-                new BioWare.NET.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
+                Logger.Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
                 return null;
             }
         }
