@@ -6,7 +6,7 @@ namespace Andastra.Runtime.Core.Video.Bink
     /// <summary>
     /// P/Invoke declarations for BINKW32.DLL (Bink Video decoder).
     /// Based on swkotor.exe/swkotor2.exe: Bink API usage
-    /// Located via Ghidra reverse engineering: FUN_00404c80 @ 0x00404c80, FUN_004053e0 @ 0x004053e0
+    /// Located via Ghidra reverse engineering: 0x00404c80 @ 0x00404c80, 0x004053e0 @ 0x004053e0
     /// Original implementation: Uses BINKW32.DLL for BIK format video playback
     /// </summary>
     internal static class BinkApi
@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// BINK structure - Main Bink video file handle.
         /// Based on BINKW32.DLL reverse engineering via Ghidra: _BinkGetSummary@8 analysis.
         /// Structure size: ~0x2b0 bytes (688 bytes) based on field offsets up to 0xc3 (195 dwords).
-        /// Matches original engine usage: swkotor.exe FUN_00404c80 @ 0x00404c80, FUN_004053e0 @ 0x004053e0.
+        /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80, 0x004053e0 @ 0x004053e0.
         /// </summary>
         /// <remarks>
         /// Field offsets determined from BinkGetSummary decompilation:
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// <summary>
         /// BINKBUFFER structure - Bink rendering buffer.
         /// Based on BINKW32.DLL reverse engineering via Ghidra: _BinkBufferOpen@16 analysis.
-        /// Matches original engine usage: swkotor.exe FUN_00404c80 @ 0x00404c80 accesses:
+        /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80 accesses:
         /// - +0x00 = BufferWidth
         /// - +0x04 = BufferHeight (accessed as *(iVar1 + 4))
         /// - +0x10 = Blit flags (accessed as *(iVar1 + 0x10))
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Core.Video.Bink
         /// BINKSUMMARY structure - Summary information about a BIK file.
         /// Based on BINKW32.DLL reverse engineering via Ghidra: _BinkGetSummary@8 analysis.
         /// Structure size: 31 int fields (0x1f * 4 = 124 bytes) based on initialization loop.
-        /// Matches original engine usage: swkotor.exe FUN_00404c80 @ 0x00404c80 line 44 calls BinkGetSummary.
+        /// Matches original engine usage: swkotor.exe 0x00404c80 @ 0x00404c80 line 44 calls BinkGetSummary.
         /// 
         /// Field mapping from BinkGetSummary decompilation:
         /// - [0] = Width (from param_1[0])
@@ -302,11 +302,11 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         // Bink API function declarations
         // Based on swkotor.exe: Import table shows these functions are used
-        // Located via Ghidra: FUN_00404c80 @ 0x00404c80 uses these functions
+        // Located via Ghidra: 0x00404c80 @ 0x00404c80 uses these functions
 
         /// <summary>
         /// Opens a BIK file for playback.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 124 calls BinkOpen
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 124 calls BinkOpen
         /// Parameters: path, flags (0x8000000)
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi, EntryPoint = "_BinkOpen@8")]
@@ -314,21 +314,21 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Closes a BIK file.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 cleanup, FUN_004053e0 @ 0x004053e0 line 172
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 cleanup, 0x004053e0 @ 0x004053e0 line 172
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkClose@4")]
         public static extern void BinkClose(IntPtr bink);
 
         /// <summary>
         /// Gets summary information about a BIK file.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 44 calls BinkGetSummary
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 44 calls BinkGetSummary
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkGetSummary@8")]
         public static extern void BinkGetSummary(IntPtr bink, ref BINKSUMMARY summary);
 
         /// <summary>
         /// Opens a Bink buffer for rendering.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 128 calls BinkBufferOpen
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 128 calls BinkBufferOpen
         /// Parameters: window handle, width, height, flags (0x5d000000)
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkBufferOpen@16")]
@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Locks the Bink buffer for writing.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 16 calls BinkBufferLock
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 16 calls BinkBufferLock
         /// Returns pointer to buffer memory (non-zero if successful).
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkBufferLock@4")]
@@ -350,14 +350,14 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Unlocks the Bink buffer.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 23 calls BinkBufferUnlock
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 23 calls BinkBufferUnlock
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkBufferUnlock@4")]
         public static extern void BinkBufferUnlock(IntPtr buffer);
 
         /// <summary>
         /// Copies decoded frame data to the buffer.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 19-22 calls BinkCopyToBuffer
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 19-22 calls BinkCopyToBuffer
         /// Parameters: bink, dest buffer pointer, dest pitch, dest height, dest x, dest y, flags
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkCopyToBuffer@28")]
@@ -365,35 +365,35 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Gets destination rectangles for blitting.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 25-26 calls BinkGetRects
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 25-26 calls BinkGetRects
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkGetRects@8")]
         public static extern IntPtr BinkGetRects(IntPtr bink, IntPtr rects);
 
         /// <summary>
         /// Blits the buffer to the screen.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkBufferBlit@12")]
         public static extern void BinkBufferBlit(IntPtr buffer, IntPtr rects, IntPtr destrect);
 
         /// <summary>
         /// Sets the buffer scale.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154 calls BinkBufferSetScale
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 154 calls BinkBufferSetScale
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkBufferSetScale@12")]
         public static extern void BinkBufferSetScale(IntPtr buffer, int width, int height);
 
         /// <summary>
         /// Sets the buffer offset.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 158-160 calls BinkBufferSetOffset
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 158-160 calls BinkBufferSetOffset
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkBufferSetOffset@12")]
         public static extern void BinkBufferSetOffset(IntPtr buffer, int x, int y);
 
         /// <summary>
         /// Decodes the current frame.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
         /// Returns 0 on success, non-zero on error.
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkDoFrame@4")]
@@ -401,28 +401,28 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Advances to the next frame.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 28 calls BinkNextFrame
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 28 calls BinkNextFrame
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkNextFrame@4")]
         public static extern void BinkNextFrame(IntPtr bink);
 
         /// <summary>
         /// Waits for frame timing (returns 1 if need to wait more, 0 if ready).
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 29-33 calls BinkWait with Sleep loop
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 29-33 calls BinkWait with Sleep loop
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkWait@4")]
         public static extern int BinkWait(IntPtr bink);
 
         /// <summary>
         /// Sets the sound system for audio playback.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 121 calls BinkSetSoundSystem
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 121 calls BinkSetSoundSystem
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkSetSoundSystem@8")]
         public static extern void BinkSetSoundSystem(IntPtr bink, IntPtr soundSystem);
 
         /// <summary>
         /// Sets the volume for audio playback.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 136 calls BinkSetVolume
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 136 calls BinkSetVolume
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkSetVolume@12")]
         public static extern void BinkSetVolume(IntPtr bink, int track, int volume);
@@ -435,7 +435,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Opens Miles sound system for audio.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 121 calls BinkOpenMiles
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 121 calls BinkOpenMiles
         /// </summary>
         [DllImport(BinkDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "_BinkOpenMiles@4")]
         public static extern IntPtr BinkOpenMiles(int sampleRate);

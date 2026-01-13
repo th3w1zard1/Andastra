@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Graphics.Common.Rendering
     /// Render Settings:
     /// - This is a configuration class for modern graphics rendering settings
     /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
-    /// - Graphics initialization: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
+    /// - Graphics initialization: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8, "2D3DBias" @ 0x007c612c
     /// - Original game settings: Read from swkotor2.ini @ 0x007b5740, configuration file for graphics options
     /// - Original game did not support modern features like raytracing, DLSS, FSR, or advanced post-processing

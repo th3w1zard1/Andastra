@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - When door HP <= 0, door is marked as bashed (IsBashed=true), unlocked, and opened
     /// - Door OpenState is set to 2 (destroyed state) when bashed open
     /// - Attack interval: ~2.0 seconds between bash attempts (similar to combat attack intervals)
-    /// - Based on swkotor.exe: Door bashing damage application (FUN_005226d0 @ 0x005226d0 references door bashing)
+    /// - Based on swkotor.exe: Door bashing damage application (0x005226d0 @ 0x005226d0 references door bashing)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door bashing system (door damage handling in door component)
     /// </remarks>
     public class ActionBashDoor : ActionBase
@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Core.Actions
             if (total >= doorComponent.LockDC)
             {
                 // Apply bash damage: STR modifier + 1d4 (base bash damage)
-                // Based on swkotor.exe: FUN_005226d0 @ 0x005226d0 (door bashing damage calculation)
+                // Based on swkotor.exe: 0x005226d0 @ 0x005226d0 (door bashing damage calculation)
                 // Original implementation: STR modifier + 1d4 base bash damage
                 int bashDamage = strengthModifier + random.Next(1, 5); // STR mod + 1d4
                 if (bashDamage < 1)

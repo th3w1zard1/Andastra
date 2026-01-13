@@ -12,7 +12,7 @@ namespace Andastra.Game.Games.Common.Components
     /// - Common functionality shared across all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Base classes MUST only contain functionality that is identical across ALL engines
     /// - Engine-specific details MUST be in subclasses:
-    ///   - Odyssey: PerceptionComponent (swkotor.exe: FUN_005afce0 @ 0x005afce0, swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0)
+    ///   - Odyssey: PerceptionComponent (swkotor.exe: 0x005afce0 @ 0x005afce0, swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0)
     ///   - Aurora: AuroraPerceptionComponent (nwmain.exe: DoPerceptionUpdateOnCreature @ 0x14038b0c0)
     ///   - Eclipse: EclipsePerceptionComponent (daorigins.exe: PerceptionClass found, different AI system)
     ///   - Infinity: InfinityPerceptionComponent (, : DisplayPerceptionList, squad-based)

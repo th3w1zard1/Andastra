@@ -1,4 +1,4 @@
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Scripting.VM;
 
 namespace Andastra.Game.Scripting.Interfaces
 {

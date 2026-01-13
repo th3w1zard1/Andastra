@@ -10,6 +10,7 @@ using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Odyssey
 {
@@ -18,12 +19,12 @@ namespace Andastra.Game.Games.Odyssey
     /// </summary>
     /// <remarks>
     /// Module Loading Process:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006caab0 @ 0x006caab0 (server command parser, handles module loading commands)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006caab0 @ 0x006caab0 (server command parser, handles module loading commands)
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngineModule (Runtime.Games.Common) implements common module loading/unloading
     ///   - Odyssey: OdysseyModuleLoader : BaseEngineModule (Runtime.Games.Odyssey) - Odyssey-specific module file formats (IFO, LYT, VIS, GIT, ARE)
-    /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
+    /// - Directory setup: 0x00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
     /// - Module loading order: IFO (module info) -> LYT (layout) -> VIS (visibility) -> GIT (instances) -> ARE (area properties)
     /// - Original engine uses "MODULES:" prefix for module directory access
     /// - Module resources loaded from: MODULES:\{moduleName}\module.ifo, MODULES:\{moduleName}\{moduleName}.lyt, etc.
@@ -135,4 +136,3 @@ namespace Andastra.Game.Games.Odyssey
         }
     }
 }
-

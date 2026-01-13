@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - "LoadScreenID" @ 0x007bd54c (swkotor2.exe), "LoadScreenID" @ 0x00747880 (swkotor.exe)
     /// - "LBL_LOADING" @ 0x007cbe10 (swkotor2.exe), "Loading" @ 0x007c7e40 (swkotor2.exe)
     /// - "PB_PROGRESS" @ 0x007cb33c (progress bar), "LBL_HINT" (loading hints), "LBL_LOGO" (logo label)
-    /// - Original implementation: FUN_006cff90 @ 0x006cff90 (swkotor2.exe) initializes loading screen GUI panel
+    /// - Original implementation: 0x006cff90 @ 0x006cff90 (swkotor2.exe) initializes loading screen GUI panel
     /// - Loading screen GUI: "loadscreen_p" GUI file contains panel with progress bar, hints, logo, and loading image
     /// - Loading screen image: Set via LoadScreenResRef from module IFO file (TPC format texture)
     /// - Loading screen display: Shown during module transitions, hidden after module load completes
@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Core.Interfaces
         /// </summary>
         /// <param name="imageResRef">Resource reference for the loading screen image (TPC format). If null or empty, uses default loading screen.</param>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006cff90 @ 0x006cff90 initializes loading screen GUI
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006cff90 @ 0x006cff90 initializes loading screen GUI
         /// - Loads "loadscreen_p" GUI panel
         /// - Sets loading screen image via LoadScreenResRef (TPC texture)
         /// - Displays progress bar, hints, and logo

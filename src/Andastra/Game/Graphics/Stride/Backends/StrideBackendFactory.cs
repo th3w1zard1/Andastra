@@ -1,9 +1,9 @@
 using System;
-using Andastra.Runtime.Graphics.Common.Backends;
+using Andastra.Game.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using Stride.Engine;
 using Stride.Graphics;
 

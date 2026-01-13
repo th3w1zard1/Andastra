@@ -3,7 +3,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Upscaling;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Game.Stride.Upscaling

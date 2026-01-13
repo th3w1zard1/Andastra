@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///
     /// Based on reverse engineering analysis of:
     /// - swkotor.exe: Animation system with MDL/MDX animation arrays
-    /// - swkotor2.exe: Enhanced animation system (FUN_005223a0 @ 0x005223a0 loads animation data, FUN_00589520 @ 0x00589520 handles animation state)
+    /// - swkotor2.exe: Enhanced animation system (0x005223a0 @ 0x005223a0 loads animation data, 0x00589520 @ 0x00589520 handles animation state)
     /// - nwmain.exe: Aurora animation system using Gob::PlayAnimation (0x140052580) with Animation class hierarchy
     /// - daorigins.exe: Eclipse animation system with animation tree support
     /// - DragonAge2.exe: Enhanced Eclipse animation system

@@ -1,6 +1,6 @@
 using System;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 
 namespace Andastra.Game.Stride.Graphics

@@ -20,7 +20,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - "placeable" @ 0x007ba030 (placeable tag prefix format)
     /// - Placeable effects: "fx_placeable01" @ 0x007c78b8 (placeable visual effects), "placeablelight" @ 0x007c78c8 (placeable lighting)
     /// - Error message: "CSWCAnimBasePlaceable::ServerToClientAnimation(): Failed to map server anim %i to client anim." @ 0x007d2330
-    /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
+    /// - Original implementation: 0x004e08e0 @ 0x004e08e0 (load placeable instances from GIT)
     /// - Placeables have appearance, useability, locks, inventory, HP, traps
     /// - Based on UTP file format (GFF with "UTP " signature)
     /// - Script events: OnUsed (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED @ 0x007bc7d8, 0x19), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
@@ -51,7 +51,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Appearance Type Property:
         /// - Odyssey-specific: Index into placeables.2da for placeable appearance
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Appearance" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Appearance" field in UTP template (0x00588010 @ 0x00588010)
         /// </remarks>
         public int AppearanceType { get; set; }
 
@@ -71,7 +71,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Fortitude Save Property:
         /// - Odyssey-specific: Fortitude save for placeable
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Fort" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Fort" field in UTP template (0x00589520 @ 0x00589520)
         /// </remarks>
         public int Fort { get; set; }
 
@@ -81,7 +81,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Reflex Save Property:
         /// - Odyssey-specific: Reflex save for placeable
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Ref" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Ref" field in UTP template (0x00589520 @ 0x00589520)
         /// </remarks>
         public int Reflex { get; set; }
 
@@ -91,7 +91,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Will Save Property:
         /// - Odyssey-specific: Will save for placeable
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Will" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Will" field in UTP template (0x00589520 @ 0x00589520)
         /// </remarks>
         public int Will { get; set; }
 
@@ -101,7 +101,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Key Required Property:
         /// - Odyssey-specific: Whether a key is required to unlock
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "KeyRequired" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "KeyRequired" field in UTP template (0x00588010 @ 0x00588010)
         /// </remarks>
         public bool KeyRequired { get; set; }
 
@@ -130,7 +130,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Faction ID Property:
         /// - Odyssey-specific: Faction ID for placeable
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Faction" field in UTP template (FUN_00588010 @ 0x00588010, line 77)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Faction" field in UTP template (0x00588010 @ 0x00588010, line 77)
         /// </remarks>
         public int FactionId { get; set; }
 
@@ -140,7 +140,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Body Bag Property:
         /// - Odyssey-specific: Body bag placeable to spawn on destruction
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "BodyBag" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "BodyBag" field in UTP template (0x00589520 @ 0x00589520)
         /// </remarks>
         public int BodyBag { get; set; }
 
@@ -150,7 +150,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <remarks>
         /// Plot Property:
         /// - Odyssey-specific: Whether placeable is plot-critical
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Plot" field in UTP template (FUN_00588010 @ 0x00588010, line 83)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Plot" field in UTP template (0x00588010 @ 0x00588010, line 83)
         /// </remarks>
         public bool Plot { get; set; }
 

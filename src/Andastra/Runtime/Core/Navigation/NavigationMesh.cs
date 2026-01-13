@@ -319,7 +319,7 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - Bytes 0-3: Magic string "BWM " (space-padded, identifies file type)
     ///    - Bytes 4-7: Version string "V1.0" (only version used in KotOR games)
     ///    - Located via string reference: "BWM V1.0" @ 0x007c061c in swkotor2.exe
-    ///    - Original implementation: FUN_0055aef0 @ 0x0055aef0 writes this header (line 58)
+    ///    - Original implementation: 0x0055aef0 @ 0x0055aef0 writes this header (line 58)
     /// 
     /// 2. WALKMESH PROPERTIES (52 bytes, offset 0x08):
     ///    - Walkmesh Type (4 bytes): 0 = PWK/DWK (placeable/door), 1 = WOK (area walkmesh)
@@ -328,7 +328,7 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - Absolute Use Position 1 (12 bytes): Hook point 1 in world coordinates
     ///    - Absolute Use Position 2 (12 bytes): Hook point 2 in world coordinates
     ///    - Position (12 bytes): Walkmesh origin offset in world space
-    ///    - Original implementation: FUN_0055aef0 writes these values (lines 59-71)
+    ///    - Original implementation: 0x0055aef0 writes these values (lines 59-71)
     /// 
     /// 3. DATA TABLE OFFSETS (64 bytes, offset 0x48):
     ///    - Vertex Count (4 bytes): Number of vertices in the mesh
@@ -347,57 +347,57 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - Edge Offset (4 bytes): File offset to edge array (WOK only)
     ///    - Perimeter Count (4 bytes): Number of perimeter markers (WOK only)
     ///    - Perimeter Offset (4 bytes): File offset to perimeter array (WOK only)
-    ///    - Original implementation: FUN_0055aef0 writes these offsets (lines 72-82)
+    ///    - Original implementation: 0x0055aef0 writes these offsets (lines 72-82)
     /// 
     /// 4. VERTICES ARRAY:
     ///    - Each vertex is 12 bytes (three float32 values: x, y, z)
     ///    - Vertices are stored in world coordinates for area walkmeshes (WOK)
     ///    - Vertices are stored in local coordinates for placeable/door walkmeshes (PWK/DWK)
-    ///    - Original implementation: FUN_0055aef0 writes vertices (line 74)
+    ///    - Original implementation: 0x0055aef0 writes vertices (line 74)
     /// 
     /// 5. FACE INDICES ARRAY:
     ///    - Each face is 12 bytes (three uint32 values pointing to vertex indices)
     ///    - Faces are ordered with walkable faces first, then non-walkable faces
-    ///    - Original implementation: FUN_0055aef0 writes face indices (line 76)
+    ///    - Original implementation: 0x0055aef0 writes face indices (line 76)
     /// 
     /// 6. SURFACE MATERIALS ARRAY:
     ///    - Each material is 4 bytes (uint32, material ID 0-30)
     ///    - Material determines if face is walkable and what surface type it is
-    ///    - Original implementation: FUN_0055aef0 writes materials (line 78)
+    ///    - Original implementation: 0x0055aef0 writes materials (line 78)
     /// 
     /// 7. NORMALS ARRAY (WOK only):
     ///    - Each normal is 12 bytes (three float32 values: x, y, z)
     ///    - Normal vector points perpendicular to the triangle's surface
     ///    - Used for lighting and collision calculations
-    ///    - Original implementation: FUN_0055aef0 writes normals (line 80)
+    ///    - Original implementation: 0x0055aef0 writes normals (line 80)
     /// 
     /// 8. PLANAR DISTANCES ARRAY (WOK only):
     ///    - Each distance is 4 bytes (float32)
     ///    - Distance from origin to plane defined by triangle
     ///    - Used for plane equation calculations
-    ///    - Original implementation: FUN_0055aef0 writes planar distances (line 78)
+    ///    - Original implementation: 0x0055aef0 writes planar distances (line 78)
     /// 
     /// 9. AABB TREE (WOK only):
     ///    - Binary tree structure for fast spatial queries
     ///    - Each node contains bounding box (min/max) and child pointers
     ///    - Leaf nodes contain face indices
-    ///    - Original implementation: FUN_0055aef0 writes AABB tree (line 80)
+    ///    - Original implementation: 0x0055aef0 writes AABB tree (line 80)
     /// 
     /// 10. ADJACENCY ARRAY (WOK only):
     ///     - Each adjacency entry is 4 bytes (int32)
     ///     - Encoding: face_index * 3 + edge_index, -1 = no neighbor
     ///     - Tells which triangles share edges (for pathfinding)
-    ///     - Original implementation: FUN_0055aef0 writes adjacency (line 82)
+    ///     - Original implementation: 0x0055aef0 writes adjacency (line 82)
     /// 
     /// 11. EDGES ARRAY (WOK only):
     ///     - Array of edge indices with transition information
     ///     - Used for area boundaries and door connections
-    ///     - Original implementation: FUN_0055aef0 writes edges (line 82)
+    ///     - Original implementation: 0x0055aef0 writes edges (line 82)
     /// 
     /// 12. PERIMETERS ARRAY (WOK only):
     ///     - Array of edge indices forming boundary loops
     ///     - Defines the outer edges of walkable areas
-    ///     - Original implementation: FUN_0055aef0 writes perimeters (line 82)
+    ///     - Original implementation: 0x0055aef0 writes perimeters (line 82)
     /// 
     /// The file format is documented in vendor/PyKotor/wiki/BWM-File-Format.md
     /// Reference implementations: vendor/reone/src/libs/graphics/format/bwmreader.cpp,
@@ -505,7 +505,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// HOW DOES FACEFINDING WORK?
     /// 
     /// When the game needs to find which triangle contains a specific point (like where a character is standing),
-    /// it uses the FindFaceAt function. This is based on swkotor2.exe: FUN_004f4260 @ 0x004f4260.
+    /// it uses the FindFaceAt function. This is based on swkotor2.exe: 0x004f4260 @ 0x004f4260.
     /// 
     /// The algorithm works in stages:
     /// 
@@ -515,16 +515,16 @@ namespace Andastra.Runtime.Core.Navigation
     ///   The tolerance value is _DAT_007b56f8 (typically a small value like 0.1 or 0.5 units)
     ///   This is needed because the point might not be exactly on the triangle surface due to
     ///   floating-point precision or character movement
-    /// - Original implementation: FUN_004f4260 lines 20-23 create this vertical range
+    /// - Original implementation: 0x004f4260 lines 20-23 create this vertical range
     /// 
     /// STAGE 2: Hint Face Optimization (if provided)
     /// - If a hint face index is provided (a guess about which triangle might contain the point),
     ///   it tests that triangle first
     /// - This is a major optimization because characters usually stay on the same triangle for
     ///   multiple frames (60+ frames per second), so the hint is correct most of the time
-    /// - Original implementation: FUN_004f4260 lines 31-42 test hint face first
-    /// - The hint face test uses FUN_0055b300 @ 0x0055b300 to test AABB intersection, then
-    ///   FUN_00575f60 @ 0x00575f60 to test actual triangle intersection
+    /// - Original implementation: 0x004f4260 lines 31-42 test hint face first
+    /// - The hint face test uses 0x0055b300 @ 0x0055b300 to test AABB intersection, then
+    ///   0x00575f60 @ 0x00575f60 to test actual triangle intersection
     /// 
     /// STAGE 3: AABB Tree Traversal (if available)
     /// - If an AABB tree exists, it uses that for fast spatial search
@@ -532,7 +532,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - If yes, it tests the two child boxes (left and right)
     /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
     /// - This is much faster than testing every triangle (O(log n) instead of O(n))
-    /// - Original implementation: FUN_004f4260 lines 45-63 iterate through faces using AABB tree
+    /// - Original implementation: 0x004f4260 lines 45-63 iterate through faces using AABB tree
     /// 
     /// STAGE 4: Triangle Point-in-Triangle Test
     /// - For each candidate triangle (from AABB tree or brute force), it tests if the point is inside
@@ -540,49 +540,49 @@ namespace Andastra.Runtime.Core.Navigation
     ///   is directly below or above the point
     /// - Uses the "same-side test": checks if the point is on the same side of all three edges
     /// - If the point is on the same side of all edges, it's inside the triangle
-    /// - Original implementation: FUN_0055b300 @ 0x0055b300 tests AABB first, then FUN_00575f60
+    /// - Original implementation: 0x0055b300 @ 0x0055b300 tests AABB first, then 0x00575f60
     ///   @ 0x00575f60 tests triangle intersection using AABB tree
     /// 
     /// STAGE 5: Return Result
     /// - If a triangle is found, returns its index (0 to faceCount-1)
     /// - If no triangle is found, returns -1
     /// 
-    /// Alternative Implementation (FUN_004f43c0 @ 0x004f43c0):
+    /// Alternative Implementation (0x004f43c0 @ 0x004f43c0):
     /// This is a variant that takes a parameter to control whether to use AABB tree or brute force.
-    /// - If param_2 == 0: Uses FUN_0055b300 (AABB tree traversal)
-    /// - If param_2 != 0: Uses FUN_0055b3c0 (brute force with AABB pre-filtering)
-    /// - Original implementation: FUN_004f43c0 lines 33-40 choose between methods
+    /// - If param_2 == 0: Uses 0x0055b300 (AABB tree traversal)
+    /// - If param_2 != 0: Uses 0x0055b3c0 (brute force with AABB pre-filtering)
+    /// - Original implementation: 0x004f43c0 lines 33-40 choose between methods
     /// 
-    /// The AABB Test (FUN_0055b300 @ 0x0055b300):
+    /// The AABB Test (0x0055b300 @ 0x0055b300):
     /// - First tests if the point is inside the triangle's AABB (Axis-Aligned Bounding Box)
     /// - An AABB is a box aligned with the X, Y, Z axes that contains the triangle
     /// - This is a fast rejection test - if the point isn't in the AABB, it can't be in the triangle
-    /// - Original implementation: FUN_0055b300 calls FUN_00575f60 @ 0x00575f60 for AABB test
+    /// - Original implementation: 0x0055b300 calls 0x00575f60 @ 0x00575f60 for AABB test
     /// 
-    /// The Triangle Intersection Test (FUN_00575f60 @ 0x00575f60):
+    /// The Triangle Intersection Test (0x00575f60 @ 0x00575f60):
     /// - Tests if a vertical line segment (from z+tolerance to z-tolerance) intersects the triangle
     /// - Uses the AABB tree to find candidate triangles
-    /// - Original implementation: FUN_00575f60 calls FUN_00575350 @ 0x00575350 for AABB tree traversal
+    /// - Original implementation: 0x00575f60 calls 0x00575350 @ 0x00575350 for AABB tree traversal
     /// </para>
     /// 
     /// <para>
     /// HOW DOES HEIGHT CALCULATION WORK?
     /// 
     /// When the game needs to know the height of the ground at a specific (x, y) position, it uses height
-    /// calculation functions. This is based on swkotor2.exe: FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
+    /// calculation functions. This is based on swkotor2.exe: 0x0055b1d0 @ 0x0055b1d0 and 0x0055b210 @ 0x0055b210.
     /// 
     /// The algorithm works in steps:
     /// 
     /// STEP 1: Find the Triangle
     /// - First, it finds which triangle contains the (x, y) point using FindFaceAt
-    /// - FindFaceAt uses FUN_004f4260 @ 0x004f4260 or FUN_004f43c0 @ 0x004f43c0
+    /// - FindFaceAt uses 0x004f4260 @ 0x004f4260 or 0x004f43c0 @ 0x004f43c0
     /// - The z coordinate of the input point is ignored - we only care about x and y
-    /// - Original implementation: FUN_0055b1d0 calls FUN_005761f0 @ 0x005761f0 to find face
+    /// - Original implementation: 0x0055b1d0 calls 0x005761f0 @ 0x005761f0 to find face
     /// 
     /// STEP 2: Get Triangle Vertices
     /// - Once we know which triangle, we get its three vertices from the vertex array
     /// - Each vertex has x, y, z coordinates
-    /// - Original implementation: FUN_0055b1d0 gets vertices from walkmesh structure
+    /// - Original implementation: 0x0055b1d0 gets vertices from walkmesh structure
     /// 
     /// STEP 3: Calculate the Normal Vector
     /// - The normal vector is a vector pointing perpendicular to the triangle's surface
@@ -590,7 +590,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Edge 1 = vertex2 - vertex1
     /// - Edge 2 = vertex3 - vertex1
     /// - Normal = cross(Edge1, Edge2)
-    /// - Original implementation: FUN_004d9030 @ 0x004d9030 calculates normal (lines 32-55)
+    /// - Original implementation: 0x004d9030 @ 0x004d9030 calculates normal (lines 32-55)
     /// 
     /// STEP 4: Create the Plane Equation
     /// - A triangle defines a flat plane in 3D space
@@ -598,41 +598,41 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Where (a, b, c) is the normal vector (normalized to length 1)
     /// - And d is calculated from a point on the plane (one of the triangle's vertices)
     /// - d = -(a * vertex1.x + b * vertex1.y + c * vertex1.z)
-    /// - Original implementation: FUN_004d9030 lines 57-63 create plane equation
+    /// - Original implementation: 0x004d9030 lines 57-63 create plane equation
     /// 
     /// STEP 5: Solve for Height (z coordinate)
     /// - Once we have the plane equation, we can solve for z when we know x and y
     /// - Rearranging the plane equation: z = (-d - ax - by) / c
     /// - This gives us the exact height of the plane at the given (x, y) position
-    /// - Original implementation: FUN_004d6b10 @ 0x004d6b10 calculates height from plane equation
+    /// - Original implementation: 0x004d6b10 @ 0x004d6b10 calculates height from plane equation
     /// 
     /// STEP 6: Handle Edge Cases
     /// - If the triangle is vertical (normal.Z is very close to 0), we can't divide by c
     /// - In this case, we return the average height of the three vertices
     /// - Average = (vertex1.z + vertex2.z + vertex3.z) / 3
-    /// - Original implementation: FUN_004d6b10 lines 7-8 check if normal.Z == _DAT_007b56fc
+    /// - Original implementation: 0x004d6b10 lines 7-8 check if normal.Z == _DAT_007b56fc
     /// 
     /// Two Variants of Height Calculation:
     /// 
-    /// FUN_0055b1d0 @ 0x0055b1d0 (3D point height):
+    /// 0x0055b1d0 @ 0x0055b1d0 (3D point height):
     /// - Takes a 3D point (x, y, z) and finds the height at that (x, y) position
-    /// - Uses FUN_005761f0 @ 0x005761f0 to find the face containing the point
-    /// - Then uses FUN_00576640 @ 0x00576640 to calculate height from plane equation
-    /// - Original implementation: FUN_0055b1d0 calls FUN_00576640 (line 12)
+    /// - Uses 0x005761f0 @ 0x005761f0 to find the face containing the point
+    /// - Then uses 0x00576640 @ 0x00576640 to calculate height from plane equation
+    /// - Original implementation: 0x0055b1d0 calls 0x00576640 (line 12)
     /// 
-    /// FUN_0055b210 @ 0x0055b210 (2D point height with face index):
+    /// 0x0055b210 @ 0x0055b210 (2D point height with face index):
     /// - Takes a 2D point (x, y) and a face index (already known)
     /// - Directly calculates height from the plane equation without finding the face
     /// - Faster when you already know which triangle contains the point
-    /// - Uses FUN_00575050 @ 0x00575050 to calculate height
-    /// - Original implementation: FUN_0055b210 calls FUN_00575050 (line 11)
+    /// - Uses 0x00575050 @ 0x00575050 to calculate height
+    /// - Original implementation: 0x0055b210 calls 0x00575050 (line 11)
     /// 
-    /// The Plane Equation Function (FUN_004d6b10 @ 0x004d6b10):
+    /// The Plane Equation Function (0x004d6b10 @ 0x004d6b10):
     /// - Input: normal vector (a, b, c), plane distance (d), point (x, y)
     /// - Output: height (z coordinate)
     /// - Formula: z = (-d - ax - by) / c
     /// - Special case: If c (normal.Z) is very close to 0, returns _DAT_007b56fc (special value)
-    /// - Original implementation: FUN_004d6b10 lines 7-11 calculate height
+    /// - Original implementation: 0x004d6b10 lines 7-11 calculate height
     /// </para>
     /// 
     /// <para>
@@ -657,18 +657,18 @@ namespace Andastra.Runtime.Core.Navigation
     /// - If it hits, it tests the two child boxes (left and right)
     /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
     /// - This is much faster than testing every triangle (O(log n) instead of O(n))
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 (AABB tree traversal)
     /// 
-    /// AABB Tree Traversal Details (FUN_00575350 @ 0x00575350):
-    /// - Tests ray against node's AABB using FUN_004d7400 @ 0x004d7400 (slab method)
+    /// AABB Tree Traversal Details (0x00575350 @ 0x00575350):
+    /// - Tests ray against node's AABB using 0x004d7400 @ 0x004d7400 (slab method)
     /// - If ray doesn't hit AABB, returns 0 (no intersection)
     /// - If node is a leaf (contains a face index), tests ray against that triangle
     /// - If node is internal, recursively tests left and right children
-    /// - Original implementation: FUN_00575350 lines 26-69 traverse tree recursively
+    /// - Original implementation: 0x00575350 lines 26-69 traverse tree recursively
     /// - Traversal order: Original uses flag-based ordering (param_4[1] & node flag),
     ///   this implementation uses distance-based ordering (test closer child first) as optimization
     /// 
-    /// STAGE 3: AABB-Ray Intersection Test (FUN_004d7400 @ 0x004d7400)
+    /// STAGE 3: AABB-Ray Intersection Test (0x004d7400 @ 0x004d7400)
     /// - Uses the "slab method" to test if a ray hits an AABB
     /// - A slab is a space between two parallel planes
     /// - The method tests the ray against each axis (X, Y, Z) separately
@@ -679,9 +679,9 @@ namespace Andastra.Runtime.Core.Navigation
     /// - The ray hits the AABB if:
     ///   - It enters all three slabs before exiting any
     ///   - The intersection is within maxDistance
-    /// - Original implementation: FUN_004d7400 lines 12-79 implement slab method
+    /// - Original implementation: 0x004d7400 lines 12-79 implement slab method
     /// 
-    /// STAGE 4: Ray-Triangle Intersection (FUN_004d9030 @ 0x004d9030)
+    /// STAGE 4: Ray-Triangle Intersection (0x004d9030 @ 0x004d9030)
     /// - For each triangle that might be hit (from AABB tree, or all triangles if no tree),
     ///   it tests if the ray actually hits the triangle
     /// - The algorithm uses a plane-based approach with edge containment tests:
@@ -691,26 +691,26 @@ namespace Andastra.Runtime.Core.Navigation
     ///   - Normal = cross(edge01, edge12) where edge01 = v1-v0, edge12 = v2-v1
     ///   - Normalize the normal (make it length 1)
     ///   - Check for degenerate triangles (normal length too small) - skip if degenerate
-    ///   - Original implementation: FUN_004d9030 lines 32-56 calculate normal
+    ///   - Original implementation: 0x004d9030 lines 32-56 calculate normal
     /// 
     ///   Step 4b: Create Plane Equation
     ///   - Create plane equation: ax + by + cz + d = 0
     ///   - Where (a, b, c) is the normalized normal vector
     ///   - d = -(a * v0.x + b * v0.y + c * v0.z)
-    ///   - Original implementation: FUN_004d9030 line 63 creates plane equation
+    ///   - Original implementation: 0x004d9030 line 63 creates plane equation
     /// 
     ///   Step 4c: Check if Ray Crosses Plane
     ///   - Calculate distance from ray start to plane: dist0 = a*origin.x + b*origin.y + c*origin.z + d
     ///   - Calculate distance from ray end to plane: dist1 = a*rayEnd.x + b*rayEnd.y + c*rayEnd.z + d
     ///   - Ray crosses plane if dist0 and dist1 have opposite signs (one positive, one negative)
     ///   - If both have same sign, ray doesn't cross plane - no intersection
-    ///   - Original implementation: FUN_004d9030 lines 65-67 check plane crossing
+    ///   - Original implementation: 0x004d9030 lines 65-67 check plane crossing
     /// 
     ///   Step 4d: Calculate Intersection Point
     ///   - Use interpolation: t = dist0 / (dist0 - dist1)
     ///   - Intersection = origin + direction * (t * maxDistance)
     ///   - This gives the exact point where the ray hits the plane
-    ///   - Original implementation: FUN_004d9030 lines 71-76 calculate intersection
+    ///   - Original implementation: 0x004d9030 lines 71-76 calculate intersection
     /// 
     ///   Step 4e: Test if Intersection Point is Inside Triangle
     ///   - Just because the ray hits the plane doesn't mean it hits the triangle
@@ -721,7 +721,7 @@ namespace Andastra.Runtime.Core.Navigation
     ///     * For edge v2->v0: Check if intersection is on correct side
     ///   - Use cross products to determine which side of each edge the point is on
     ///   - If point is on correct side of all three edges, it's inside the triangle
-    ///   - Original implementation: FUN_004d9030 lines 79-95 test edge containment
+    ///   - Original implementation: 0x004d9030 lines 79-95 test edge containment
     /// 
     /// STAGE 5: Return Closest Hit
     /// - If multiple triangles are hit, return the closest one (smallest distance)
@@ -818,7 +818,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Blocked faces are skipped during pathfinding
     /// - If pathfinding fails with obstacles, retry with 1.5x expanded obstacle radius
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FindPathAroundObstacle @ 0x0061c390
-    /// - Original implementation: FUN_0061c390 builds obstacle polygon and validates path
+    /// - Original implementation: 0x0061c390 builds obstacle polygon and validates path
     /// 
     /// GRID-BASED PATHFINDING FALLBACK:
     /// - If direct walkmesh pathfinding fails, the game uses grid-based pathfinding
@@ -896,7 +896,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// 2. Hint Face Index: When finding a face, if you provide a guess (hint), it tests that triangle
     ///    first. This is fast because characters usually stay on the same triangle for multiple frames
     ///    (60+ frames per second). The hint is correct most of the time, avoiding tree traversal.
-    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260 tests hint face first (lines 31-42)
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f4260 @ 0x004f4260 tests hint face first (lines 31-42)
     ///    - Optimization: O(1) best case (hint correct), O(log n) average case (hint wrong)
     /// 
     /// 3. Normalized Direction Caching: When raycasting, the direction vector is normalized once
@@ -912,7 +912,7 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Early termination when exact hit found
     /// 
     /// 5. Distance-Based AABB Traversal: When traversing the AABB tree, it tests the closer child
-    ///    first. This is an optimization over the original flag-based ordering (FUN_00575350 uses
+    ///    first. This is an optimization over the original flag-based ordering (0x00575350 uses
     ///    param_4[1] flag to determine order), but maintains correctness while improving performance.
     ///    - Calculates distance from ray origin to each child's AABB center
     ///    - Tests closer child first (more likely to contain closest hit)
@@ -924,7 +924,7 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - AABB test: O(1) per triangle (simple box test)
     ///    - Triangle test: O(1) per triangle (plane + edge tests)
     ///    - Rejection rate: High (most triangles are rejected by AABB test)
-    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055b300 @ 0x0055b300 tests AABB before triangle
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055b300 @ 0x0055b300 tests AABB before triangle
     /// 
     /// 7. Brute Force Fallback: If no AABB tree is available, falls back to brute force search.
     ///    While slower (O(n)), it still works correctly and handles edge cases properly.
@@ -949,7 +949,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Triangles where all three vertices are collinear (in a straight line)
     /// - Detected by checking if normal vector length < 1e-6
     /// - Skipped during intersection tests (can't determine which side is "front")
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 checks normal length (line 58)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d9030 @ 0x004d9030 checks normal length (line 58)
     /// 
     /// RAY STARTING INSIDE TRIANGLE:
     /// - If ray origin is inside a triangle, intersection distance is 0 or negative
@@ -971,13 +971,13 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Triangles that are standing straight up (normal.Z very close to 0)
     /// - Can't use plane equation (would divide by zero)
     /// - Uses average height of three vertices: (v1.z + v2.z + v3.z) / 3
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d6b10 @ 0x004d6b10 checks if normal.Z == _DAT_007b56fc
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d6b10 @ 0x004d6b10 checks if normal.Z == _DAT_007b56fc
     /// 
     /// RAY PARALLEL TO TRIANGLE PLANE:
     /// - If ray direction is parallel to triangle plane, ray never intersects
     /// - Detected by checking if ray crosses plane (dist0 and dist1 have opposite signs)
     /// - If both have same sign, ray is parallel - rejected
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 checks plane crossing (lines 65-67)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d9030 @ 0x004d9030 checks plane crossing (lines 65-67)
     /// 
     /// INVALID MAX DISTANCE:
     /// - Max distance <= 0 is rejected
@@ -998,8 +998,8 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Area walkmeshes (WOK): Vertices in world coordinates, no transformation needed
     /// - Placeable/Door walkmeshes (PWK/DWK): Vertices in local coordinates
     /// - Transformation applied when object is placed: local_to_world = position + rotation * local
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00557540 @ 0x00557540 applies coordinate transformations
-    /// - Original implementation: FUN_00557540 transforms points using rotation matrix
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00557540 @ 0x00557540 applies coordinate transformations
+    /// - Original implementation: 0x00557540 transforms points using rotation matrix
     /// 
     /// TOLERANCE VALUES:
     /// - Degenerate triangle epsilon: 1e-6 (normal length threshold)
@@ -1777,12 +1777,12 @@ namespace Andastra.Runtime.Core.Navigation
         ///   - blockingCreature: Blocking creature object pointer
         ///   - Returns: float* pointer to new path waypoints, or DAT_007c52ec (null) if no path found
         ///   - Implementation algorithm:
-        ///     1. Builds obstacle polygon from creature bounding box (FUN_0061a670)
-        ///     2. Checks if start/end points are within obstacle polygon (FUN_0061b7d0)
-        ///     3. Validates entire path against obstacles (FUN_0061bcb0)
-        ///     4. Gets waypoints from pathfinding context (FUN_0061c1e0)
-        ///     5. Checks each path segment for collisions (FUN_0061c2c0 -> FUN_0061b310)
-        ///     6. Inserts waypoints to route around obstacles (FUN_0061b520)
+        ///     1. Builds obstacle polygon from creature bounding box (0x0061a670)
+        ///     2. Checks if start/end points are within obstacle polygon (0x0061b7d0)
+        ///     3. Validates entire path against obstacles (0x0061bcb0)
+        ///     4. Gets waypoints from pathfinding context (0x0061c1e0)
+        ///     5. Checks each path segment for collisions (0x0061c2c0 -> 0x0061b310)
+        ///     6. Inserts waypoints to route around obstacles (0x0061b520)
         ///     7. Updates path array and adjusts path index if waypoints inserted
         ///   - If pathfinding fails, returns null and movement is aborted
         /// Equivalent functions in other engines:
@@ -2174,7 +2174,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Finds the triangle (face) that contains the given 2D position (x, y).
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f4260 @ 0x004f4260.
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
@@ -2193,7 +2193,7 @@ namespace Andastra.Runtime.Core.Navigation
         ///    - Continues until reaching a leaf node (single triangle)
         ///    - Tests if point is inside that triangle using 2D point-in-triangle test
         ///    - Performance: O(log n) average case, O(n) worst case
-        ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 uses AABB tree if available
+        ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f4260 uses AABB tree if available
         /// 
         /// 2. BRUTE FORCE SEARCH (if no AABB tree):
         ///    - Tests every triangle until it finds one that contains the point
@@ -2206,9 +2206,9 @@ namespace Andastra.Runtime.Core.Navigation
         ///    - For each edge of the triangle, checks which side of the edge the point is on
         ///    - If point is on the same side of all three edges, it's inside the triangle
         ///    - Uses cross products to determine which side of each edge the point is on
-        ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055b300 @ 0x0055b300 tests triangle intersection
+        ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055b300 @ 0x0055b300 tests triangle intersection
         /// 
-        /// ORIGINAL IMPLEMENTATION DETAILS (FUN_004f4260 @ 0x004f4260):
+        /// ORIGINAL IMPLEMENTATION DETAILS (0x004f4260 @ 0x004f4260):
         /// 
         /// - Takes a position (x, y, z) and creates a vertical range: z + tolerance to z - tolerance
         ///   The tolerance value is _DAT_007b56f8 (stored in memory, typically 0.1-0.5 units)
@@ -2216,12 +2216,12 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// - If a hint face index is provided, tests that triangle first (optimization)
         ///   Characters usually stay on the same triangle for multiple frames, so hint is often correct
-        ///   Original: Lines 31-42 test hint face first using FUN_0055b300
+        ///   Original: Lines 31-42 test hint face first using 0x0055b300
         /// 
-        /// - Tests each triangle using FUN_0055b300 which:
+        /// - Tests each triangle using 0x0055b300 which:
         ///   a. Tests if point is inside triangle's AABB (fast rejection)
-        ///   b. If yes, tests actual triangle intersection using FUN_00575f60
-        ///   Original: Lines 45-63 iterate through faces, calling FUN_0055b300 for each
+        ///   b. If yes, tests actual triangle intersection using 0x00575f60
+        ///   Original: Lines 45-63 iterate through faces, calling 0x0055b300 for each
         /// 
         /// - Returns the first triangle that contains the point, or -1 if none found
         /// 
@@ -2251,14 +2251,14 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// HOW IT WORKS:
         /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260 (FindFaceAt equivalent)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f4260 @ 0x004f4260 (FindFaceAt equivalent)
         /// 
         /// STAGE 1: Create Vertical Range
         /// - The original engine creates a vertical range around the point: z + tolerance to z - tolerance
         /// - The tolerance value is _DAT_007b56f8 (typically a small value like 0.1 or 0.5 units)
         /// - This is needed because the point might not be exactly on the triangle surface due to
         ///   floating-point precision or character movement
-        /// - Original implementation: FUN_004f4260 @ 0x004f4260 lines 20-23 create this vertical range
+        /// - Original implementation: 0x004f4260 @ 0x004f4260 lines 20-23 create this vertical range
         /// - Line 21: local_34 = param_1[1] (copy y coordinate)
         /// - Line 22: local_24 = param_1[2] + _DAT_007b56f8 (upper z bound = input z + tolerance)
         /// - Line 23: local_38 = param_1[0] (copy x coordinate)
@@ -2275,17 +2275,17 @@ namespace Andastra.Runtime.Core.Navigation
         ///   it tests that triangle first
         /// - This is a major optimization because characters usually stay on the same triangle for
         ///   multiple frames (60+ frames per second), so the hint is correct most of the time
-        /// - Original implementation: FUN_004f4260 @ 0x004f4260 lines 31-42 test hint face first
+        /// - Original implementation: 0x004f4260 @ 0x004f4260 lines 31-42 test hint face first
         /// - Line 30: iVar4 = -1 (initialize hint face index to invalid)
         /// - Line 31-32: If param_3 (hint pointer) is not null AND hint index is valid (>= 0 and < face count):
-        ///   - Line 33-34: Call FUN_0055b300 to test if the vertical line segment intersects the hint triangle's AABB
-        ///   - FUN_0055b300 @ 0x0055b300 takes: triangle data pointer, lower bound point (x,y,z-tolerance), 
+        ///   - Line 33-34: Call 0x0055b300 to test if the vertical line segment intersects the hint triangle's AABB
+        ///   - 0x0055b300 @ 0x0055b300 takes: triangle data pointer, lower bound point (x,y,z-tolerance), 
         ///     upper bound point (x,y,z+tolerance), and a result array
-        ///   - FUN_0055b300 internally calls FUN_00575f60 @ 0x00575f60 which tests AABB intersection
-        ///   - If FUN_0055b300 returns non-zero (triangle's AABB contains the vertical line segment):
+        ///   - 0x0055b300 internally calls 0x00575f60 @ 0x00575f60 which tests AABB intersection
+        ///   - If 0x0055b300 returns non-zero (triangle's AABB contains the vertical line segment):
         ///     - Line 36: Calculate the triangle data pointer: iVar4 = base + hint_index * 0x4c (76 bytes per triangle)
         ///     - Line 37-38: If param_2 (output face index pointer) is null, return the triangle data pointer
-        ///     - Line 40: Store the found face index in param_2 (local_14 contains the face index from FUN_0055b300)
+        ///     - Line 40: Store the found face index in param_2 (local_14 contains the face index from 0x0055b300)
         ///     - Line 41: Return the triangle data pointer
         /// - Why test hint first? Because in 99% of cases, a character is still on the same triangle as last frame
         /// - This optimization reduces average search time from O(log n) to O(1) when hint is correct
@@ -2296,16 +2296,16 @@ namespace Andastra.Runtime.Core.Navigation
         /// - If yes, it tests the two child boxes (left and right)
         /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
         /// - This is much faster than testing every triangle (O(log n) instead of O(n))
-        /// - Original implementation: FUN_004f4260 @ 0x004f4260 lines 45-63 iterate through faces
+        /// - Original implementation: 0x004f4260 @ 0x004f4260 lines 45-63 iterate through faces
         /// - Line 44: iVar1 = 0 (initialize face index counter)
         /// - Line 45: If face count > 0, enter loop
         /// - Line 46: iVar3 = 0 (initialize AABB tree node offset counter)
         /// - Line 47-63: Loop through all faces:
         ///   - Line 48: If current face index != hint face index (skip hint, already tested):
-        ///     - Line 49-50: Call FUN_0055b300 to test if vertical line segment intersects triangle's AABB
-        ///     - FUN_0055b300 tests: triangle at offset iVar3 (iVar3 = face_index * 0x4c), 
+        ///     - Line 49-50: Call 0x0055b300 to test if vertical line segment intersects triangle's AABB
+        ///     - 0x0055b300 tests: triangle at offset iVar3 (iVar3 = face_index * 0x4c), 
         ///       lower bound (local_2c, local_28, local_30), upper bound (local_38, local_34, local_24)
-        ///     - If FUN_0055b300 returns non-zero (AABB intersection found):
+        ///     - If 0x0055b300 returns non-zero (AABB intersection found):
         ///       - Line 51: Calculate triangle data pointer: iVar4 = face_index * 0x4c + base_address
         ///       - Line 52-53: If param_2 (output face index pointer) is not null, store face index in it
         ///       - Line 55: If param_3 (hint pointer) is null, return triangle data pointer immediately
@@ -2316,7 +2316,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - The loop continues until all faces are tested or a match is found
         /// - Line 65: Return 0 (no triangle found)
         /// - Note: This implementation tests faces sequentially, but the AABB tree structure
-        ///   (stored in the walkmesh) allows FUN_0055b300 to quickly reject triangles whose AABBs
+        ///   (stored in the walkmesh) allows 0x0055b300 to quickly reject triangles whose AABBs
         ///   don't contain the vertical line segment
         /// 
         /// STAGE 4: Triangle Point-in-Triangle Test
@@ -2325,43 +2325,43 @@ namespace Andastra.Runtime.Core.Navigation
         ///   is directly below or above the point
         /// - Uses the "same-side test": checks if the point is on the same side of all three edges
         /// - If the point is on the same side of all edges, it's inside the triangle
-        /// - Original implementation: FUN_0055b300 @ 0x0055b300 tests AABB first, then FUN_00575f60
+        /// - Original implementation: 0x0055b300 @ 0x0055b300 tests AABB first, then 0x00575f60
         ///   @ 0x00575f60 tests triangle intersection using AABB tree
         /// 
         /// STAGE 5: Return Result
         /// - If a triangle is found, returns its index (0 to faceCount-1)
         /// - If no triangle is found, returns -1
         /// 
-        /// THE AABB TEST (FUN_0055b300 @ 0x0055b300):
+        /// THE AABB TEST (0x0055b300 @ 0x0055b300):
         /// - First tests if the point is inside the triangle's AABB (Axis-Aligned Bounding Box)
         /// - An AABB is a box aligned with the X, Y, Z axes that contains the triangle
         /// - This is a fast rejection test - if the point isn't in the AABB, it can't be in the triangle
-        /// - Original implementation: FUN_0055b300 @ 0x0055b300 calls FUN_00575f60 @ 0x00575f60 for AABB test
-        /// - FUN_0055b300 takes 4 parameters:
+        /// - Original implementation: 0x0055b300 @ 0x0055b300 calls 0x00575f60 @ 0x00575f60 for AABB test
+        /// - 0x0055b300 takes 4 parameters:
         ///   - param_1 (this): Pointer to triangle data structure (76 bytes = 0x4c)
         ///   - param_2: Pointer to lower bound point (x, y, z-tolerance)
         ///   - param_3: Pointer to upper bound point (x, y, z+tolerance)
         ///   - param_4: Pointer to result array (8 uint32 values)
-        /// - Line 12-13: Calls FUN_00575f60 with triangle's AABB tree pointer (offset 0x3c in triangle data),
+        /// - Line 12-13: Calls 0x00575f60 with triangle's AABB tree pointer (offset 0x3c in triangle data),
         ///   lower bound coordinates, upper bound coordinates, and result array
-        /// - FUN_00575f60 tests if the vertical line segment (from lower to upper bound) intersects
+        /// - 0x00575f60 tests if the vertical line segment (from lower to upper bound) intersects
         ///   the triangle's AABB using the AABB tree
-        /// - If FUN_00575f60 returns non-zero (intersection found):
+        /// - If 0x00575f60 returns non-zero (intersection found):
         ///   - Line 15-19: Gets triangle vertex offsets from triangle data structure
         ///   - Line 20-22: Updates result array with intersection point coordinates:
         ///     - param_3[4] = intersection x coordinate
         ///     - param_3[5] = intersection y coordinate
         ///     - param_3[6] = intersection z coordinate
         ///   - Line 23: Returns 1 (intersection found)
-        /// - If FUN_00575f60 returns zero (no intersection):
+        /// - If 0x00575f60 returns zero (no intersection):
         ///   - Line 25: Returns 0 (no intersection)
         /// - The result array is used to store the intersection point for later use
         /// 
-        /// THE TRIANGLE INTERSECTION TEST (FUN_00575f60 @ 0x00575f60):
+        /// THE TRIANGLE INTERSECTION TEST (0x00575f60 @ 0x00575f60):
         /// - Tests if a vertical line segment (from z+tolerance to z-tolerance) intersects the triangle
         /// - Uses the AABB tree to find candidate triangles
-        /// - Original implementation: FUN_00575f60 @ 0x00575f60 calls FUN_00575350 @ 0x00575350 for AABB tree traversal
-        /// - FUN_00575f60 takes 8 parameters:
+        /// - Original implementation: 0x00575f60 @ 0x00575f60 calls 0x00575350 @ 0x00575350 for AABB tree traversal
+        /// - 0x00575f60 takes 8 parameters:
         ///   - param_1 (this): Pointer to AABB tree structure
         ///   - param_2-4: Lower bound point coordinates (x, y, z-tolerance)
         ///   - param_5-7: Upper bound point coordinates (x, y, z+tolerance)
@@ -2369,16 +2369,16 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Line 17: Checks if AABB tree exists (offset 0xb0 in tree structure)
         ///   - If tree doesn't exist, returns 0 (no intersection)
         /// - Line 20: Stores tree's root face index in result array (offset 0xe0 in tree structure)
-        /// - Line 21: Calls FUN_00575350 to traverse AABB tree and find intersection
-        ///   - FUN_00575350 tests if the vertical line segment intersects any triangle in the tree
+        /// - Line 21: Calls 0x00575350 to traverse AABB tree and find intersection
+        ///   - 0x00575350 tests if the vertical line segment intersects any triangle in the tree
         ///   - Returns number of intersections found
         /// - Line 22: If result array[3] == 0xffffffff (no intersection found):
         ///   - Lines 23-29: Calculates a small offset vector (1.0, 1.0, 0.0) normalized and scaled
         ///   - The offset is multiplied by _DAT_007b5704 (typically a small value like 0.01)
         ///   - This creates a small random offset to help with edge cases
         ///   - Lines 30-35: Adds offset to both lower and upper bound points
-        ///   - Line 36: Calls FUN_00575350 again with offset points (retry with slight offset)
-        /// - Line 38: If FUN_00575350 found intersections (return value > 0):
+        ///   - Line 36: Calls 0x00575350 again with offset points (retry with slight offset)
+        /// - Line 38: If 0x00575350 found intersections (return value > 0):
         ///   - Lines 39-42: Stores intersection point coordinates in result array:
         ///     - param_8[4] = intersection x coordinate
         ///     - param_8[5] = intersection y coordinate
@@ -2388,16 +2388,16 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Why the offset retry? Sometimes points exactly on triangle edges or vertices can be missed
         ///   due to floating-point precision. The small offset helps catch these edge cases.
         /// 
-        /// THE AABB TREE TRAVERSAL (FUN_00575350 @ 0x00575350):
-        /// - Tests ray against node's AABB using FUN_004d7400 @ 0x004d7400 (slab method)
+        /// THE AABB TREE TRAVERSAL (0x00575350 @ 0x00575350):
+        /// - Tests ray against node's AABB using 0x004d7400 @ 0x004d7400 (slab method)
         /// - If ray doesn't hit AABB, returns 0 (no intersection)
         /// - If node is a leaf (contains a face index), tests ray against that triangle
         /// - If node is internal, recursively tests left and right children
-        /// - Original implementation: FUN_00575350 lines 26-69 traverse tree recursively
+        /// - Original implementation: 0x00575350 lines 26-69 traverse tree recursively
         /// - Traversal order: Original uses flag-based ordering (param_4[1] & node flag),
         ///   this implementation uses distance-based ordering (test closer child first) as optimization
         /// 
-        /// THE SLAB METHOD (FUN_004d7400 @ 0x004d7400):
+        /// THE SLAB METHOD (0x004d7400 @ 0x004d7400):
         /// - Uses the "slab method" to test if a ray hits an AABB
         /// - A slab is a space between two parallel planes
         /// - The method tests the ray against each axis (X, Y, Z) separately
@@ -2408,14 +2408,14 @@ namespace Andastra.Runtime.Core.Navigation
         /// - The ray hits the AABB if:
         ///   - It enters all three slabs before exiting any
         ///   - The intersection is within maxDistance
-        /// - Original implementation: FUN_004d7400 lines 12-79 implement slab method
+        /// - Original implementation: 0x004d7400 lines 12-79 implement slab method
         /// 
         /// THE POINT-IN-TRIANGLE TEST (PointInFace2d):
         /// - Uses the "same-side test" to check if a point is inside a triangle
         /// - For each edge of the triangle, calculate which side of the edge the point is on
         /// - If the point is on the same side of all three edges, it's inside the triangle
         /// - The test uses the cross product to determine which side of an edge a point is on
-        /// - Original implementation: Similar to FUN_004d9030 @ 0x004d9030 edge containment tests
+        /// - Original implementation: Similar to 0x004d9030 @ 0x004d9030 edge containment tests
         /// 
         /// PERFORMANCE:
         /// - With AABB tree: O(log n) average case, O(n) worst case (degenerate tree)
@@ -2436,7 +2436,7 @@ namespace Andastra.Runtime.Core.Navigation
             // Use AABB tree if available for faster search
             // The AABB tree organizes triangles into a tree structure, making searches much faster
             // Instead of testing all triangles (O(n)), we test only a few (O(log n))
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260 uses AABB tree when available
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f4260 @ 0x004f4260 uses AABB tree when available
             if (_aabbRoot != null)
             {
                 return FindFaceAabb(_aabbRoot, position);
@@ -2445,7 +2445,7 @@ namespace Andastra.Runtime.Core.Navigation
             // Brute force fallback: test every triangle until we find one that contains the point
             // This is slower (O(n)) but works when no AABB tree is available
             // Used for: PWK/DWK walkmeshes (placeable/door walkmeshes don't have AABB trees)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 lines 45-63 iterate through all faces if no tree
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f4260 lines 45-63 iterate through all faces if no tree
             for (int i = 0; i < _faceCount; i++)
             {
                 if (PointInFace2d(position, i))
@@ -2496,7 +2496,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Without tree: O(n) (must test all triangles)
         /// - Speedup: 100x-1000x faster for large meshes (1000+ triangles)
         /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 (AABB tree traversal)
         /// Original implementation: Recursively traverses tree, tests AABB first, then triangle
         /// </remarks>
         /// <param name="node">The AABB tree node to search from</param>
@@ -2505,8 +2505,8 @@ namespace Andastra.Runtime.Core.Navigation
         private int FindFaceAabb(AabbNode node, Vector3 point)
         {
             // Test if point is within AABB bounds (2D)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 tests AABB first (line 26)
-            // Original implementation: FUN_004d7400 @ 0x004d7400 tests ray-AABB intersection
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 tests AABB first (line 26)
+            // Original implementation: 0x004d7400 @ 0x004d7400 tests ray-AABB intersection
             // This is a fast rejection test - if point isn't in the box, it can't be in any triangle
             if (point.X < node.BoundsMin.X || point.X > node.BoundsMax.X ||
                 point.Y < node.BoundsMin.Y || point.Y > node.BoundsMax.Y)
@@ -2515,7 +2515,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Leaf node - test point against face
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 checks if node is leaf (line 30)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 checks if node is leaf (line 30)
             // Leaf nodes have FaceIndex >= 0 (contains a single triangle)
             if (node.FaceIndex >= 0)
             {
@@ -2527,7 +2527,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Internal node - test children
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 recursively tests children (lines 32-38)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 recursively tests children (lines 32-38)
             // Original implementation: Uses flag-based ordering (param_4[1] & node flag)
             // This implementation tests left first, then right (order doesn't matter for correctness)
             if (node.Left != null)
@@ -2616,7 +2616,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Degenerate triangle (collinear vertices): May return incorrect result (should be handled
         ///   by checking for degenerate triangles before calling this function)
         /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Similar to FUN_004d9030 @ 0x004d9030 edge containment tests
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Similar to 0x004d9030 @ 0x004d9030 edge containment tests
         /// Original implementation: Uses cross products to test point containment in polygon
         /// </remarks>
         /// <param name="point">The 3D point to test</param>
@@ -2630,7 +2630,7 @@ namespace Andastra.Runtime.Core.Navigation
             Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
 
             // Same-side test (2D projection)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 uses edge containment tests (lines 79-95)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d9030 @ 0x004d9030 uses edge containment tests (lines 79-95)
             // Original implementation: Tests if point is on correct side of all three edges
             float d1 = Sign2d(point, v1, v2);
             float d2 = Sign2d(point, v2, v3);
@@ -2668,7 +2668,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Negative: Point p1 is on the right side of edge p3->p2
         /// - Zero: Point p1 is exactly on edge p3->p2 (within floating-point precision)
         /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Similar to cross product calculations in FUN_004d9030 @ 0x004d9030
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Similar to cross product calculations in 0x004d9030 @ 0x004d9030
         /// Original implementation: Uses cross products for edge containment tests
         /// </remarks>
         /// <param name="p1">The point to test</param>
@@ -2802,20 +2802,20 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// HOW PROJECTTOSURFACE WORKS ([TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address)):
         /// 
-        /// ProjectToSurface is based on FUN_0055b1d0 @ 0x0055b1d0 and FUN_005761f0 @ 0x005761f0.
+        /// ProjectToSurface is based on 0x0055b1d0 @ 0x0055b1d0 and 0x005761f0 @ 0x005761f0.
         /// 
-        /// FUN_0055b1d0 @ 0x0055b1d0 (Height Calculation Entry Point):
+        /// 0x0055b1d0 @ 0x0055b1d0 (Height Calculation Entry Point):
         /// - Takes a 3D point (x, y, z) and finds the height at that (x, y) position
         /// - Line 10: Checks if AABB tree exists (offset 0x3c in walkmesh structure)
         ///   - If tree doesn't exist, returns _DAT_007b56fc (special value indicating no height)
-        /// - Line 12: Calls FUN_00576640 with AABB tree pointer, point coordinates, and flag
-        /// - FUN_00576640 finds the triangle containing the point and calculates height
+        /// - Line 12: Calls 0x00576640 with AABB tree pointer, point coordinates, and flag
+        /// - 0x00576640 finds the triangle containing the point and calculates height
         /// 
-        /// FUN_005761f0 @ 0x005761f0 (Find Face for Height Calculation):
+        /// 0x005761f0 @ 0x005761f0 (Find Face for Height Calculation):
         /// - Finds which triangle contains a given (x, y) point
-        /// - This function is called by FUN_00576640 when calculating height at a point
-        /// - Line 14: Calls FUN_00557540 to transform point coordinates (if needed)
-        ///   - FUN_00557540 may apply coordinate system transformations or offsets
+        /// - This function is called by 0x00576640 when calculating height at a point
+        /// - Line 14: Calls 0x00557540 to transform point coordinates (if needed)
+        ///   - 0x00557540 may apply coordinate system transformations or offsets
         ///   - The transformed point is stored in local_2c (x) and local_28 (y)
         /// - Lines 15-25: Initializes result array (local_20) with default values:
         ///   - local_20[0] = 0xffffffff (special marker value, indicates no face found yet)
@@ -2827,15 +2827,15 @@ namespace Andastra.Runtime.Core.Navigation
         ///   - local_20[6] = 0 (intersection point z coordinate, set if intersection found)
         ///   - local_20[7] = 0 (additional data, used for face flags)
         /// - Line 26: If param_2 == 0 (use alternative traversal method):
-        ///   - Line 27: Calls FUN_00576090 with vertical line segment
+        ///   - Line 27: Calls 0x00576090 with vertical line segment
         ///   - Vertical line: from (x, y, 1000.0) to (x, y, -1000.0)
-        ///   - FUN_00576090 is similar to FUN_00575f60 but uses a different AABB tree traversal method
-        ///   - FUN_00576090 uses param_4[0] (e4 offset) instead of param_4[0] (e0 offset) for root node
+        ///   - 0x00576090 is similar to 0x00575f60 but uses a different AABB tree traversal method
+        ///   - 0x00576090 uses param_4[0] (e4 offset) instead of param_4[0] (e0 offset) for root node
         /// - Line 29: Else (use standard method, param_2 != 0):
-        ///   - Line 30: Calls FUN_00575f60 with vertical line segment
+        ///   - Line 30: Calls 0x00575f60 with vertical line segment
         ///   - Vertical line: from (x, y, 1000.0) to (x, y, -1000.0)
-        ///   - FUN_00575f60 uses AABB tree to find triangles intersecting the vertical line
-        ///   - FUN_00575f60 calls FUN_00575350 for AABB tree traversal
+        ///   - 0x00575f60 uses AABB tree to find triangles intersecting the vertical line
+        ///   - 0x00575f60 calls 0x00575350 for AABB tree traversal
         /// - Line 32: If no face found (local_20[3] == -1):
         ///   - This means the vertical line segment didn't intersect any triangle
         ///   - This can happen if the point is outside all triangles, or if there's a precision issue
@@ -2844,11 +2844,11 @@ namespace Andastra.Runtime.Core.Navigation
         ///     - Multiplies by _DAT_007b5704 (typically a small value like 0.01 or 0.1)
         ///     - This creates a small random offset in the X and Y directions
         ///   - Line 37: If param_2 != 0 (use standard method):
-        ///     - Line 38-39: Calls FUN_00575f60 again with offset point
+        ///     - Line 38-39: Calls 0x00575f60 again with offset point
         ///     - Offset point: (x + offset_x, y + offset_y, z + tolerance) to (x + offset_x, y + offset_y, z - tolerance)
         ///     - The offset helps catch edge cases where the point is exactly on a triangle boundary
         ///   - Line 42: Else (use alternative method):
-        ///     - Line 42-44: Calls FUN_00576090 again with offset point
+        ///     - Line 42-44: Calls 0x00576090 again with offset point
         /// - Line 46: Returns local_20[3] (face index, or -1 if not found)
         /// - Why the large z range (1000.0 to -1000.0)? 
         ///   - The input point's z coordinate might be far from the walkmesh surface
@@ -2860,34 +2860,34 @@ namespace Andastra.Runtime.Core.Navigation
         ///   - The small offset (typically 0.01 units) moves the point slightly, which helps catch these edge cases
         ///   - This is especially important for points on the boundary between two triangles
         /// 
-        /// FUN_00576640 @ 0x00576640 (Calculate Height from Face):
+        /// 0x00576640 @ 0x00576640 (Calculate Height from Face):
         /// - Calculates the height at a point after finding which triangle contains it
-        /// - Line 17: Calls FUN_005761f0 to find the face containing the point
+        /// - Line 17: Calls 0x005761f0 to find the face containing the point
         /// - Line 18: If face not found (iVar1 == -1):
         ///   - Line 19: Returns _DAT_007c14e4 (special value indicating no height found)
         /// - Lines 21-23: Prepares parameters for plane equation calculation:
         ///   - local_c = param_2 (x coordinate)
         ///   - local_8 = param_3 (y coordinate)
         ///   - local_4 = 0xc1100000 (special float value, likely -4.0)
-        /// - Line 24-25: Calls FUN_004d6b10 to calculate height from plane equation:
+        /// - Line 24-25: Calls 0x004d6b10 to calculate height from plane equation:
         ///   - Gets triangle normal from walkmesh structure (offset 0x68 + face_index * 12)
         ///   - Gets plane distance from walkmesh structure (offset 0x6c + face_index * 4)
         ///   - Calculates z = (-d - a*x - b*y) / c
         /// - Line 26: Returns calculated height
         /// 
-        /// FUN_00575050 @ 0x00575050 (Height Calculation with Known Face):
+        /// 0x00575050 @ 0x00575050 (Height Calculation with Known Face):
         /// - Faster version when you already know which triangle contains the point
         /// - Lines 9-11: Prepares parameters for plane equation:
         ///   - local_c = param_2 (x coordinate)
         ///   - local_8 = param_3 (y coordinate)
         ///   - local_4 = 0xc1100000 (special float value)
-        /// - Line 12-13: Calls FUN_004d6b10 to calculate height:
+        /// - Line 12-13: Calls 0x004d6b10 to calculate height:
         ///   - Gets triangle normal from walkmesh structure (offset 0x68 + face_index * 12)
         ///   - Gets plane distance from walkmesh structure (offset 0x6c + face_index * 4)
         ///   - Calculates z = (-d - a*x - b*y) / c
-        /// - This is faster than FUN_00576640 because it skips the face-finding step
+        /// - This is faster than 0x00576640 because it skips the face-finding step
         /// 
-        /// FUN_004d6b10 @ 0x004d6b10 (Plane Equation Height Calculation):
+        /// 0x004d6b10 @ 0x004d6b10 (Plane Equation Height Calculation):
         /// - The core function that calculates height from plane equation
         /// - Takes: triangle normal vector (3 floats), plane distance (1 float), point (x, y)
         /// - Line 7: Checks if normal.Z (c component) is very close to 0:
@@ -2985,7 +2985,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - If it hits, we test the two child boxes (left and right)
         /// - We keep going down the tree until we reach a leaf node (a single triangle)
         /// - This is much faster than testing every triangle
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 (AABB tree traversal)
         /// 
         /// STAGE 2: Ray-Triangle Intersection
         /// - For each triangle that might be hit, we test if the ray actually hits it
@@ -2995,13 +2995,13 @@ namespace Andastra.Runtime.Core.Navigation
         ///   c. Check if the ray crosses the plane (one endpoint on each side)
         ///   d. Calculate where the ray hits the plane
         ///   e. Test if that hit point is inside the triangle using edge tests
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d9030 @ 0x004d9030 (ray-triangle intersection)
         /// 
         /// The AABB-ray intersection test uses the "slab method":
         /// - We test the ray against each axis (X, Y, Z) separately
         /// - For each axis, we find where the ray enters and exits the box
         /// - If the ray enters all three axes before exiting any, it hits the box
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d7400 @ 0x004d7400 (AABB-ray intersection)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d7400 @ 0x004d7400 (AABB-ray intersection)
         /// 
         /// OPTIMIZATIONS:
         /// - Normalized direction caching: We normalize the direction once and reuse it
@@ -3127,7 +3127,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Internal node - test children with optimized traversal order
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00575350 @ 0x00575350 (AABB tree traversal)
             // Original implementation: Uses flag-based traversal order (param_4[1] & node flag)
             // Original: Lines 31-38 check param_4[1] flag to determine left/right traversal order
             // Optimization: This implementation uses distance-based ordering (test closer child first)
@@ -3353,7 +3353,7 @@ namespace Andastra.Runtime.Core.Navigation
             Vector3 v1 = _vertices[idx1];
             Vector3 v2 = _vertices[idx2];
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d9030 @ 0x004d9030 (ray-triangle intersection)
             // This algorithm uses a plane-based approach with edge containment tests.
             // 
             // STEP 1: Calculate the triangle's normal vector
@@ -3610,7 +3610,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Projects a point onto the walkmesh surface. Finds the height of the ground at a given (x, y) position.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055b1d0 @ 0x0055b1d0 and 0x0055b210 @ 0x0055b210.
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
@@ -3624,7 +3624,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// STEP 1: Find the Triangle
         /// - Uses FindFaceAt to find which triangle contains the (x, y) point
-        /// - FindFaceAt uses FUN_004f4260 @ 0x004f4260 or FUN_004f43c0 @ 0x004f43c0
+        /// - FindFaceAt uses 0x004f4260 @ 0x004f4260 or 0x004f43c0 @ 0x004f43c0
         /// - If no triangle is found, returns false (point is not on walkmesh)
         /// 
         /// STEP 2: Get Triangle Vertices
@@ -3634,7 +3634,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// STEP 3: Calculate Height Using Plane Equation
         /// - Uses DetermineZ function to calculate height from plane equation
-        /// - DetermineZ uses FUN_004d6b10 @ 0x004d6b10 algorithm
+        /// - DetermineZ uses 0x004d6b10 @ 0x004d6b10 algorithm
         /// - Returns the calculated height and projected point
         /// 
         /// THE PLANE EQUATION:
@@ -3664,25 +3664,25 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// FUN_0055b1d0 @ 0x0055b1d0 (3D point height):
+        /// 0x0055b1d0 @ 0x0055b1d0 (3D point height):
         /// - Takes a 3D point and finds height at that (x, y) position
-        /// - Uses FUN_005761f0 @ 0x005761f0 to find face containing point
-        /// - Then uses FUN_00576640 @ 0x00576640 to calculate height
-        /// - Original: FUN_0055b1d0 calls FUN_00576640 (line 12)
+        /// - Uses 0x005761f0 @ 0x005761f0 to find face containing point
+        /// - Then uses 0x00576640 @ 0x00576640 to calculate height
+        /// - Original: 0x0055b1d0 calls 0x00576640 (line 12)
         /// 
-        /// FUN_0055b210 @ 0x0055b210 (2D point height with known face):
+        /// 0x0055b210 @ 0x0055b210 (2D point height with known face):
         /// - Takes a 2D point (x, y) and a face index (already known)
         /// - Directly calculates height without finding face first
         /// - Faster when you already know which triangle contains the point
-        /// - Uses FUN_00575050 @ 0x00575050 to calculate height
-        /// - Original: FUN_0055b210 calls FUN_00575050 (line 11)
+        /// - Uses 0x00575050 @ 0x00575050 to calculate height
+        /// - Original: 0x0055b210 calls 0x00575050 (line 11)
         /// 
-        /// FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation):
+        /// 0x004d6b10 @ 0x004d6b10 (plane equation height calculation):
         /// - Input: normal vector (a, b, c), plane distance (d), point (x, y)
         /// - Output: height (z coordinate)
         /// - Formula: z = (-d - ax - by) / c
         /// - Special case: If c (normal.Z) is very close to 0, returns _DAT_007b56fc
-        /// - Original: FUN_004d6b10 lines 7-11 calculate height
+        /// - Original: 0x004d6b10 lines 7-11 calculate height
         /// </remarks>
         /// <param name="point">The point to project (x, y are used, z is ignored)</param>
         /// <param name="result">The projected point with correct z height</param>
@@ -3752,7 +3752,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Determines the Z (height) coordinate for a given (x, y) point on a triangle's plane.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation).
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004d6b10 @ 0x004d6b10 (plane equation height calculation).
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
@@ -3816,9 +3816,9 @@ namespace Andastra.Runtime.Core.Navigation
         /// This is a reasonable approximation because all three vertices are at roughly the same height
         /// (the triangle is vertical, so z doesn't change much across the triangle).
         /// 
-        /// ORIGINAL IMPLEMENTATION (FUN_004d6b10 @ 0x004d6b10):
+        /// ORIGINAL IMPLEMENTATION (0x004d6b10 @ 0x004d6b10):
         /// 
-        /// Function signature: float10 FUN_004d6b10(float* normal, float d, float* point)
+        /// Function signature: float10 0x004d6b10(float* normal, float d, float* point)
         /// 
         /// Input parameters:
         /// - normal: Pointer to normal vector (a, b, c) - 3 floats
@@ -3837,8 +3837,8 @@ namespace Andastra.Runtime.Core.Navigation
         /// 3. Return calculated height
         /// 
         /// Called from:
-        /// - FUN_00575050 @ 0x00575050 (height calculation with known face index)
-        /// - FUN_00576640 @ 0x00576640 (height calculation after finding face)
+        /// - 0x00575050 @ 0x00575050 (height calculation with known face index)
+        /// - 0x00576640 @ 0x00576640 (height calculation after finding face)
         /// 
         /// MATHEMATICAL DETAILS:
         /// 

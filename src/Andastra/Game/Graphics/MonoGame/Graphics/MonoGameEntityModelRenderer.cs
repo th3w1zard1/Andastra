@@ -35,7 +35,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             // EntityModelRenderer requires both GameDataManager and Installation for model loading
             // GameDataManager provides access to 2DA tables (appearance.2da, placeables.2da, etc.) for model resolution
             // Installation provides access to resource system (MDL files, textures, etc.)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005261b0 @ 0x005261b0 loads creature model from appearance.2da
             // Note: Using object types to avoid circular dependency - EntityModelRenderer accepts object for gameDataManager
             if (gameDataManager != null && installation != null)
             {

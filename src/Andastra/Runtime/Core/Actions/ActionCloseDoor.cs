@@ -12,8 +12,8 @@ namespace Andastra.Runtime.Core.Actions
     /// Close Door Action:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door closing system
     /// - Located via string references: "OnClosed" @ 0x007be1c8 (door closed script), "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (close object event, case 6)
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (close script event, 0x10), door loading: FUN_005838d0 @ 0x005838d0 (load door properties)
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT event (case 6, fires before script execution)
+    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (close script event, 0x10), door loading: 0x005838d0 @ 0x005838d0 (load door properties)
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT event (case 6, fires before script execution)
     /// - Original implementation: Closes door, fires OnClosed script event
     /// - Movement: Moves actor towards door if not in interaction range (InteractRange ~2.0 units)
     /// - Door interaction: Checks if actor is within InteractRange before closing door
@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Core.Actions
             // Close the door
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door closing implementation
             // Located via string references: "OnClosed" @ 0x007be1c8, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
-            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT (case 6)
+            // Original implementation: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT (case 6)
             // Door state: IsOpen flag set to false, fires OnClosed script event
             IDoorComponent doorState = door.GetComponent<IDoorComponent>();
             if (doorState != null)

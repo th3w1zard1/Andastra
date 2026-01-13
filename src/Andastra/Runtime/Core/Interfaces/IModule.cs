@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Interfaces
     ///   - Script hooks for module events
     ///   - Resource reference (ResRef) for module identification
     /// - Engine-specific details (file formats, loading functions, etc.) are in implementation classes:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): IFO file format, FUN_00708990 @ 0x00708990 (swkotor2.exe)
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): IFO file format, 0x00708990 @ 0x00708990 (swkotor2.exe)
     ///   - Aurora (nwmain.exe): Module.ifo format, CNWSModule::LoadModule
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, , ): UnrealScript-based module loading
     ///   - Infinity (.exe, .exe, .exe): ARE/WED/GAM file formats

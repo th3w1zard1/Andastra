@@ -406,8 +406,8 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// to upload texture data after creating the texture resource.
         ///
         /// Based on original engine texture upload pattern:
-        /// - swkotor.exe: FUN_00428380 @ 0x00428380 (texture upload with mipmap generation)
-        /// - swkotor2.exe: FUN_00428380 @ 0x00428380 (texture upload with mipmap generation)
+        /// - swkotor.exe: 0x00428380 @ 0x00428380 (texture upload with mipmap generation)
+        /// - swkotor2.exe: 0x00428380 @ 0x00428380 (texture upload with mipmap generation)
         /// - Original engine uses glTexImage2D for each mipmap level, Metal equivalent is replaceRegion
         /// - Both engines upload mipmaps sequentially, starting from base level (0)
         ///

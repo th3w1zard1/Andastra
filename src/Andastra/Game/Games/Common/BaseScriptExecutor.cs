@@ -96,7 +96,7 @@ namespace Andastra.Game.Games.Common
                 return;
 
             // Get script hooks component
-            var scriptHooks = entity.GetComponent<Andastra.Runtime.Core.Interfaces.Components.IScriptHooksComponent>();
+            var scriptHooks = entity.GetComponent<Runtime.Core.Interfaces.Components.IScriptHooksComponent>();
             if (scriptHooks == null)
                 return;
 
@@ -153,7 +153,7 @@ namespace Andastra.Game.Games.Common
             if (entity == null)
                 return;
 
-            var actionQueue = entity.GetComponent<Andastra.Runtime.Core.Interfaces.Components.IActionQueueComponent>();
+            var actionQueue = entity.GetComponent<Runtime.Core.Interfaces.Components.IActionQueueComponent>();
             if (actionQueue != null && instructionsExecuted > 0)
             {
                 // Accumulate instruction count for budget tracking
@@ -193,9 +193,9 @@ namespace Andastra.Game.Games.Common
         /// Maps event types to script hook fields (OnHeartbeat, OnSpawn, etc.).
         /// Common event mapping across all BioWare engines.
         /// </remarks>
-        protected virtual string GetScriptHookForEvent(Andastra.Runtime.Core.Interfaces.Components.IScriptHooksComponent scriptHooks, int eventType)
+        protected virtual string GetScriptHookForEvent(Runtime.Core.Interfaces.Components.IScriptHooksComponent scriptHooks, int eventType)
         {
-            var scriptEvent = (Andastra.Runtime.Core.Enums.ScriptEvent)eventType;
+            var scriptEvent = (Runtime.Core.Enums.ScriptEvent)eventType;
             return scriptHooks.GetScript(scriptEvent) ?? string.Empty;
         }
 

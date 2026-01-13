@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Odyssey.Profiles
 {
@@ -11,7 +12,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// <remarks>
     /// Game Profile Interface:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game profile system
-    /// - Located via string references: Game version detection, resource path resolution, FUN_00633270 @ 0x00633270 sets up resource directories
+    /// - Located via string references: Game version detection, resource path resolution, 0x00633270 @ 0x00633270 sets up resource directories
     /// - Original implementation: Provides game-specific configuration for resource loading, NWScript functions, and feature support
     /// - The engine is designed for extensibility to support:
     ///   - KOTOR 1 (Odyssey) - K1GameProfile

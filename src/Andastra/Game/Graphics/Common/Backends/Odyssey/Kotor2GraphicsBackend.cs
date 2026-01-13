@@ -28,9 +28,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// - Based on reverse engineering of swkotor2.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
     /// - Graphics initialization:
-    ///   - FUN_00461c50 @ 0x00461c50 (main OpenGL context creation)
-    ///   - FUN_0042a100 @ 0x0042a100 (texture initialization)
-    ///   - FUN_00462560 @ 0x00462560 (display mode handling)
+    ///   - 0x00461c50 @ 0x00461c50 (main OpenGL context creation)
+    ///   - 0x0042a100 @ 0x0042a100 (texture initialization)
+    ///   - 0x00462560 @ 0x00462560 (display mode handling)
     /// - Located via string references:
     ///   - "wglCreateContext" @ 0x007b52cc
     ///   - "wglChoosePixelFormatARB" @ 0x007b880c
@@ -40,9 +40,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     ///
     /// KOTOR2-Specific Details:
     /// - Uses global variables at different addresses than KOTOR1 (DAT_0080d39c vs DAT_0078e38c)
-    /// - Helper functions: FUN_00475760, FUN_0076dba0 (different addresses than KOTOR1)
+    /// - Helper functions: 0x00475760, 0x0076dba0 (different addresses than KOTOR1)
     /// - Texture setup: Similar pattern but with KOTOR2-specific global variable addresses
-    /// - Display mode handling: FUN_00462560 has floating-point comparison for refresh rate
+    /// - Display mode handling: 0x00462560 has floating-point comparison for refresh rate
     /// </remarks>
     public class Kotor2GraphicsBackend : OdysseyGraphicsBackend
     {
@@ -210,22 +210,22 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         // DAT_0082b328 - vertex program ID
         private static uint _kotor2VertexProgramId4 = 0;
 
-        // DAT_0080d39c related - additional setup flag (matching swkotor2.exe: FUN_00423b80)
+        // DAT_0080d39c related - additional setup flag (matching swkotor2.exe: 0x00423b80)
         private static int _kotor2AdditionalSetupFlag = 0;
 
-        // DAT_0082b2d4 - display list base (matching swkotor2.exe: FUN_00461200, FUN_00461220)
+        // DAT_0082b2d4 - display list base (matching swkotor2.exe: 0x00461200, 0x00461220)
         private static uint _kotor2DisplayListBase = 0;
 
-        // DAT_0080d398 related - function pointer (matching swkotor2.exe: FUN_00461220)
+        // DAT_0080d398 related - function pointer (matching swkotor2.exe: 0x00461220)
         private static IntPtr _kotor2FunctionPointer = IntPtr.Zero;
 
-        // DAT_0080c1e0 - display parameter (matching swkotor2.exe: FUN_004235b0)
+        // DAT_0080c1e0 - display parameter (matching swkotor2.exe: 0x004235b0)
         private static int _kotor2DisplayParameter = 0x1000000;
 
         // DAT_0082b2d8 - display list flag (matching swkotor2.exe)
         private static int _kotor2DisplayListFlag = 0;
 
-        // DAT_0080c994 related - bitmap data for font glyphs (matching swkotor2.exe: FUN_00461200)
+        // DAT_0080c994 related - bitmap data for font glyphs (matching swkotor2.exe: 0x00461200)
         // This is the same bitmap data used for font rendering in KOTOR2
         private static byte[] _kotor2BitmapData = new byte[95 * 13]; // 95 characters * 13 bytes per character
 
@@ -284,7 +284,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         // DAT_008401d4 - glProgramLocalParameter4dvARB function pointer (duplicate)
         private static GlProgramLocalParameter4dvArbDelegate _kotor2GlProgramLocalParameter4dvArb_dup = null;
 
-        // Random number generator state (matching swkotor2.exe: FUN_0076dba0)
+        // Random number generator state (matching swkotor2.exe: 0x0076dba0)
         // This maintains the floating-point seed state for the PRNG
         // Initialized to 1.0 to match typical PRNG initialization
         private static double _kotor2RandomSeed = 1.0;
@@ -318,11 +318,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             // KOTOR 2 uses OpenGL (not DirectX)
             // Based on reverse engineering: swkotor2.exe uses OPENGL32.DLL and wglCreateContext
-            // swkotor2.exe: FUN_00461c50 @ 0x00461c50 uses wglCreateContext
+            // swkotor2.exe: 0x00461c50 @ 0x00461c50 uses wglCreateContext
             _useDirectX9 = false;
             _useOpenGL = true;
             _adapterIndex = 0;
-            _fullscreen = true; // Default to fullscreen (swkotor2.exe: FUN_00461c50 @ 0x00461c50, param_7 != 0 = fullscreen)
+            _fullscreen = true; // Default to fullscreen (swkotor2.exe: 0x00461c50 @ 0x00461c50, param_7 != 0 = fullscreen)
             _refreshRate = 60; // Default refresh rate
 
             return true;
@@ -345,19 +345,19 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR 2-specific OpenGL context creation.
-        /// Matches swkotor2.exe: FUN_00461c50 @ 0x00461c50 exactly.
+        /// Matches swkotor2.exe: 0x00461c50 @ 0x00461c50 exactly.
         /// </summary>
         /// <remarks>
         /// KOTOR2-Specific Details (swkotor2.exe):
         /// - Uses global variables: DAT_0080d39c, DAT_0080d398, DAT_0080c994, DAT_0080cafc
-        /// - Helper functions: FUN_00430850, FUN_00428fb0, FUN_00427950, FUN_00463590
-        /// - Texture initialization: FUN_0042a100 @ 0x0042a100
-        /// - Display mode handling: FUN_00462560 @ 0x00462560 (has floating-point refresh rate comparison)
+        /// - Helper functions: 0x00430850, 0x00428fb0, 0x00427950, 0x00463590
+        /// - Texture initialization: 0x0042a100 @ 0x0042a100
+        /// - Display mode handling: 0x00462560 @ 0x00462560 (has floating-point refresh rate comparison)
         /// - Global texture IDs: DAT_0082b264, DAT_0082b258, DAT_0082b25c, DAT_0082b260
         /// </remarks>
         protected override bool CreateOdysseyOpenGLContext(IntPtr windowHandle, int width, int height, bool fullscreen, int refreshRate)
         {
-            // Matching swkotor2.exe: FUN_00461c50 @ 0x00461c50
+            // Matching swkotor2.exe: 0x00461c50 @ 0x00461c50
             // This function creates the OpenGL context and initializes graphics
 
             // KOTOR2-specific: Check cleanup flag (DAT_0080d39c)
@@ -544,16 +544,16 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 InitializeKotor2VertexPrograms();
             }
 
-            // Initialize context storage (FUN_00427950)
+            // Initialize context storage (0x00427950)
             InitializeKotor2ContextStorage();
 
-            // Initialize additional setup (FUN_00423b80)
+            // Initialize additional setup (0x00423b80)
             InitializeKotor2AdditionalSetup();
 
-            // Initialize secondary contexts (FUN_00428fb0)
+            // Initialize secondary contexts (0x00428fb0)
             InitializeKotor2SecondaryContexts();
 
-            // Initialize textures (FUN_0042a100)
+            // Initialize textures (0x0042a100)
             InitializeKotor2Textures();
 
             // Check vertex program support again
@@ -579,7 +579,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                     // Load vertex program string (matching swkotor2.exe line 231-299)
                     // NOTE: The exact vertex program string should be extracted from swkotor2.exe using Ghidra
                     // to ensure 1:1 parity. Current implementation uses a basic passthrough program.
-                    // Original swkotor2.exe: FUN_00404250 (main initialization) loads embedded vertex program strings.
+                    // Original swkotor2.exe: 0x00404250 (main initialization) loads embedded vertex program strings.
                     // Based on ARB vertex program syntax used elsewhere in KOTOR2 codebase (matching InitializeKotor2RenderTextureRectangleTextures pattern)
                     string vertexProgramString = "!!ARBvp1.0\n" +
                         "TEMP vReg0;\n" +
@@ -600,19 +600,19 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR 2-specific texture initialization.
-        /// Matches swkotor2.exe: FUN_0042a100 @ 0x0042a100 exactly.
+        /// Matches swkotor2.exe: 0x0042a100 @ 0x0042a100 exactly.
         /// </summary>
         /// <remarks>
-        /// KOTOR2 Texture Setup (swkotor2.exe: FUN_0042a100):
+        /// KOTOR2 Texture Setup (swkotor2.exe: 0x0042a100):
         /// - Checks DAT_0080c994 and DAT_0080cafc flags
-        /// - Uses FUN_00475760 for conditional setup
+        /// - Uses 0x00475760 for conditional setup
         /// - Creates textures: DAT_0082b264 (if zero), DAT_0082b258, DAT_0082b25c, DAT_0082b260
-        /// - Uses FUN_0076dba0 for random texture data generation
+        /// - Uses 0x0076dba0 for random texture data generation
         /// - Sets texture parameters: GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR
         /// </remarks>
         private void InitializeKotor2Textures()
         {
-            // Matching swkotor2.exe: FUN_0042a100 @ 0x0042a100
+            // Matching swkotor2.exe: 0x0042a100 @ 0x0042a100
             // This function initializes textures with random data
 
             if (_kotor2TextureInitFlag != 0 && _kotor2TextureInitFlag2 != 0)
@@ -882,7 +882,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         [DllImport("opengl32.dll", EntryPoint = "glDeleteTextures")]
         private static extern void glDeleteTextures(int n, ref uint textures);
 
-        // OpenGL display list functions (matching swkotor2.exe: FUN_00461200, FUN_00461220)
+        // OpenGL display list functions (matching swkotor2.exe: 0x00461200, 0x00461220)
         [DllImport("opengl32.dll", EntryPoint = "glDeleteLists")]
         private static extern void glDeleteLists(uint list, int range);
 
@@ -916,11 +916,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 cleanup initialization.
-        /// Matches swkotor2.exe: FUN_00430850 @ 0x00430850.
+        /// Matches swkotor2.exe: 0x00430850 @ 0x00430850.
         /// </summary>
         private void InitializeKotor2Cleanup()
         {
-            // Matching swkotor2.exe: FUN_00430850 @ 0x00430850
+            // Matching swkotor2.exe: 0x00430850 @ 0x00430850
             // This function creates a test window for OpenGL initialization
 
             WNDCLASSA wndClass = new WNDCLASSA();
@@ -960,11 +960,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 context storage initialization.
-        /// Matches swkotor2.exe: FUN_00427950 @ 0x00427950.
+        /// Matches swkotor2.exe: 0x00427950 @ 0x00427950.
         /// </summary>
         private void InitializeKotor2ContextStorage()
         {
-            // Matching swkotor2.exe: FUN_00427950 @ 0x00427950
+            // Matching swkotor2.exe: 0x00427950 @ 0x00427950
             _kotor2PrimaryContext = wglGetCurrentContext();
             _kotor2PrimaryDC = wglGetCurrentDC();
 
@@ -978,13 +978,13 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 additional setup initialization.
-        /// Matches swkotor2.exe: FUN_00423b80 @ 0x00423b80 exactly.
+        /// Matches swkotor2.exe: 0x00423b80 @ 0x00423b80 exactly.
         /// </summary>
         /// <remarks>
         /// This function performs additional OpenGL setup by calling three helper functions:
-        /// - FUN_00461220: Display list cleanup (conditional)
-        /// - FUN_00461200: Display list initialization (conditional)
-        /// - FUN_004235b0: Display setup/configuration
+        /// - 0x00461220: Display list cleanup (conditional)
+        /// - 0x00461200: Display list initialization (conditional)
+        /// - 0x004235b0: Display setup/configuration
         ///
         /// Based on reverse engineering of swkotor2.exe at address 0x00423b80.
         /// The function checks a flag and conditionally calls cleanup/init functions,
@@ -992,27 +992,27 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private void InitializeKotor2AdditionalSetup()
         {
-            // Matching swkotor2.exe: FUN_00423b80 @ 0x00423b80
+            // Matching swkotor2.exe: 0x00423b80 @ 0x00423b80
             // This function performs additional OpenGL setup
 
             // Check if additional setup flag is set (matching swkotor2.exe conditional check)
             // If flag is set, perform cleanup and reinitialization
             if (_kotor2AdditionalSetupFlag != 0)
             {
-                // Call cleanup function (matching swkotor2.exe: FUN_00461220 @ 0x00461220)
+                // Call cleanup function (matching swkotor2.exe: 0x00461220 @ 0x00461220)
                 InitializeKotor2DisplayListCleanup();
 
-                // Call initialization function (matching swkotor2.exe: FUN_00461200 @ 0x00461200)
+                // Call initialization function (matching swkotor2.exe: 0x00461200 @ 0x00461200)
                 InitializeKotor2DisplayListInit();
             }
 
-            // Call display setup function (matching swkotor2.exe: FUN_004235b0 @ 0x004235b0)
+            // Call display setup function (matching swkotor2.exe: 0x004235b0 @ 0x004235b0)
             InitializeKotor2DisplaySetup(_kotor2DisplayParameter);
         }
 
         /// <summary>
         /// KOTOR2 display list cleanup.
-        /// Matches swkotor2.exe: FUN_00461220 @ 0x00461220 exactly.
+        /// Matches swkotor2.exe: 0x00461220 @ 0x00461220 exactly.
         /// </summary>
         /// <remarks>
         /// This function cleans up existing display lists and calls a function pointer if set.
@@ -1020,7 +1020,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private void InitializeKotor2DisplayListCleanup()
         {
-            // Matching swkotor2.exe: FUN_00461220 @ 0x00461220
+            // Matching swkotor2.exe: 0x00461220 @ 0x00461220
             // This function cleans up display lists and calls a cleanup function pointer
 
             if (_kotor2AdditionalSetupFlag != 0)
@@ -1063,7 +1063,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 display list initialization.
-        /// Matches swkotor2.exe: FUN_00461200 @ 0x00461200 exactly.
+        /// Matches swkotor2.exe: 0x00461200 @ 0x00461200 exactly.
         /// </summary>
         /// <remarks>
         /// This function initializes display lists for font glyph rendering.
@@ -1072,7 +1072,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private void InitializeKotor2DisplayListInit()
         {
-            // Matching swkotor2.exe: FUN_00461200 @ 0x00461200
+            // Matching swkotor2.exe: 0x00461200 @ 0x00461200
             // This function initializes display lists for font glyphs
 
             _kotor2DisplayListFlag = 0;
@@ -1091,7 +1091,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
             // Initialize bitmap data for font glyphs
             // KOTOR2 uses 95 characters starting at 0x20 (space), each glyph is 8x13 pixels = 13 bytes per character
-            // Font data extracted from swkotor2.exe: DAT_0080c4a0 @ 0x0080c4a0 (FUN_00461180 @ 0x00461180)
+            // Font data extracted from swkotor2.exe: DAT_0080c4a0 @ 0x0080c4a0 (0x00461180 @ 0x00461180)
             InitializeKotor2FontGlyphBitmapData();
 
             // Create display lists for printable ASCII characters (0x20 to 0x7E, 95 characters)
@@ -1142,7 +1142,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// This function initializes the bitmap data for font glyphs.
         /// The bitmap data matches the embedded font data in swkotor2.exe.
         ///
-        /// Font data format (matching swkotor2.exe: FUN_00461200 @ 0x00461200):
+        /// Font data format (matching swkotor2.exe: 0x00461200 @ 0x00461200):
         /// - 95 characters (ASCII 0x20 ' ' to 0x7E '~')
         /// - Each character: 8x13 pixels = 13 bytes (1 byte per row, 8 bits for 8 pixels)
         /// - Total size: 95 * 13 = 1235 bytes
@@ -1150,7 +1150,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         ///
         /// Source: Extracted from swkotor2.exe using Ghidra reverse engineering.
         /// The font glyph bitmap data is embedded in the binary at the data section
-        /// referenced by FUN_00461200. This implementation uses the exact font data
+        /// referenced by 0x00461200. This implementation uses the exact font data
         /// extracted from the original game binary to ensure 1:1 parity.
         /// </remarks>
         private void InitializeKotor2FontGlyphBitmapData()
@@ -1164,7 +1164,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Font glyph bitmap data extracted from swkotor2.exe: DAT_0080c4a0 @ 0x0080c4a0
-            // Source: FUN_00461180 @ 0x00461180 (called by FUN_00461200 @ 0x00461200)
+            // Source: 0x00461180 @ 0x00461180 (called by 0x00461200 @ 0x00461200)
             // Format: 95 characters * 13 bytes per character = 1235 bytes total
             // Each byte represents one row of 8 pixels (MSB = leftmost pixel)
             // Characters: ASCII 0x20 (space) through 0x7E (~)
@@ -1381,7 +1381,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 display setup.
-        /// Matches swkotor2.exe: FUN_004235b0 @ 0x004235b0 exactly.
+        /// Matches swkotor2.exe: 0x004235b0 @ 0x004235b0 exactly.
         /// </summary>
         /// <remarks>
         /// This function configures display parameters and OpenGL state for rendering.
@@ -1390,7 +1390,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <param name="param1">Display parameter value (matching swkotor2.exe function parameter).</param>
         private void InitializeKotor2DisplaySetup(int param1)
         {
-            // Matching swkotor2.exe: FUN_004235b0 @ 0x004235b0
+            // Matching swkotor2.exe: 0x004235b0 @ 0x004235b0
             // This function sets up display parameters and OpenGL rendering state
 
             // Store display parameter (matching swkotor2.exe: DAT_0080c1e0 = param1)
@@ -1429,11 +1429,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 secondary context initialization.
-        /// Matches swkotor2.exe: FUN_00428fb0 @ 0x00428fb0.
+        /// Matches swkotor2.exe: 0x00428fb0 @ 0x00428fb0.
         /// </summary>
         private void InitializeKotor2SecondaryContexts()
         {
-            // Matching swkotor2.exe: FUN_00428fb0 @ 0x00428fb0
+            // Matching swkotor2.exe: 0x00428fb0 @ 0x00428fb0
             // This function creates secondary OpenGL contexts for multi-threaded rendering
 
             int conditionalResult = CheckKotor2ConditionalSetup();
@@ -1512,10 +1512,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 secondary window creation.
-        /// Matches swkotor2.exe: FUN_00428840 @ 0x00428840.
+        /// Matches swkotor2.exe: 0x00428840 @ 0x00428840.
         /// </summary>
         /// <remarks>
-        /// Secondary Window Creation (swkotor2.exe: FUN_00428840 @ 0x00428840):
+        /// Secondary Window Creation (swkotor2.exe: 0x00428840 @ 0x00428840):
         /// - Creates a hidden window (WS_POPUP style, 1x1 size, positioned off-screen)
         /// - Used for secondary OpenGL contexts for off-screen rendering
         /// - Window is never shown (SW_HIDE) and used only for context creation
@@ -1532,7 +1532,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private IntPtr CreateKotor2SecondaryWindow()
         {
-            // Matching swkotor2.exe: FUN_00428840 @ 0x00428840
+            // Matching swkotor2.exe: 0x00428840 @ 0x00428840
             // This function creates a hidden window for secondary OpenGL contexts
 
             const string className = "KOTOR2SecondaryWindow";
@@ -1710,7 +1710,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <param name="value">The floating-point value to round (matching ST0 register).</param>
         /// <returns>The rounded 64-bit integer value (matching FISTP output).</returns>
         /// <remarks>
-        /// Based on x87 FPU specification and swkotor2.exe: FUN_0076dba0 @ 0x0076dba0
+        /// Based on x87 FPU specification and swkotor2.exe: 0x0076dba0 @ 0x0076dba0
         /// x87 FPU FISTP behavior:
         /// - Uses current FPU rounding mode (default: round-to-nearest-even, also known as banker's rounding)
         /// - Operates on 80-bit extended precision internally (ST0 register)
@@ -1766,7 +1766,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 random value generation.
-        /// Matches swkotor2.exe: FUN_0076dba0 @ 0x0076dba0.
+        /// Matches swkotor2.exe: 0x0076dba0 @ 0x0076dba0.
         /// </summary>
         /// <remarks>
         /// This function implements a floating-point based PRNG matching the original x87 FPU implementation.
@@ -1776,7 +1776,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// 3. Updates the seed using floating-point operations for the next call
         /// 4. Returns the 64-bit result
         ///
-        /// Original implementation details (swkotor2.exe: FUN_0076dba0 @ 0x0076dba0):
+        /// Original implementation details (swkotor2.exe: 0x0076dba0 @ 0x0076dba0):
         /// - Uses x87 FPU stack (ST0) for seed storage
         /// - Performs FISTP (Float Integer Store and Pop) to round to int64
         /// - Uses 0x7fffffff (2^31 - 1) in manipulation operations
@@ -1786,7 +1786,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private ulong GenerateKotor2RandomValue()
         {
-            // Matching swkotor2.exe: FUN_0076dba0 @ 0x0076dba0
+            // Matching swkotor2.exe: 0x0076dba0 @ 0x0076dba0
             // This function generates a random value using floating-point operations
             // The actual implementation uses x87 FPU instructions, which we emulate accurately
 
@@ -1850,11 +1850,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 conditional setup check.
-        /// Matches swkotor2.exe: FUN_00475760 @ 0x00475760.
+        /// Matches swkotor2.exe: 0x00475760 @ 0x00475760.
         /// </summary>
         private int CheckKotor2ConditionalSetup()
         {
-            // Matching swkotor2.exe: FUN_00475760 @ 0x00475760
+            // Matching swkotor2.exe: 0x00475760 @ 0x00475760
             if (_kotor2CapabilityFlag3 == 0xffffffff)
             {
                 uint combinedFlags = _kotor2ExtensionFlag2 | _kotor2ExtensionFlag3 | _kotor2ExtensionFlag4;
@@ -1865,11 +1865,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 vertex program support check.
-        /// Matches swkotor2.exe: FUN_004756b0 @ 0x004756b0.
+        /// Matches swkotor2.exe: 0x004756b0 @ 0x004756b0.
         /// </summary>
         private int CheckKotor2VertexProgramSupport()
         {
-            // Matching swkotor2.exe: FUN_004756b0 @ 0x004756b0
+            // Matching swkotor2.exe: 0x004756b0 @ 0x004756b0
             if (_kotor2CapabilityFlag == 0xffffffff)
             {
                 _kotor2CapabilityFlag = ((_kotor2ExtensionFlags & _kotor2ExtensionFlag2) == _kotor2ExtensionFlag2) ? 1u : 0u;
@@ -1883,11 +1883,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 render texture rectangle support check.
-        /// Matches swkotor2.exe: FUN_004757a0 @ 0x004757a0.
+        /// Matches swkotor2.exe: 0x004757a0 @ 0x004757a0.
         /// </summary>
         private uint CheckKotor2RenderTextureRectangleSupport()
         {
-            // Matching swkotor2.exe: FUN_004757a0 @ 0x004757a0
+            // Matching swkotor2.exe: 0x004757a0 @ 0x004757a0
             uint result = _kotor2CapabilityFlag2;
             if (_kotor2CapabilityFlag2 == 0xffffffff)
             {
@@ -1895,7 +1895,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 result = ((_kotor2ExtensionFlags & combinedFlags) == combinedFlags) ? 1u : 0u;
                 _kotor2CapabilityFlag2 = result;
 
-                // swkotor2.exe: FUN_00475520 @ 0x00475520 - Additional validation check
+                // swkotor2.exe: 0x00475520 @ 0x00475520 - Additional validation check
                 // Performs extension flag validation beyond the basic capability check
                 // Ensures proper OpenGL extension support for render texture rectangle
                 result = (uint)PerformKotor2AdditionalValidationCheck();
@@ -1905,7 +1905,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 additional validation check for render texture rectangle support.
-        /// Matches swkotor2.exe: FUN_00475520 @ 0x00475520.
+        /// Matches swkotor2.exe: 0x00475520 @ 0x00475520.
         ///
         /// Performs complex extension flag validation beyond basic capability checks.
         /// This function implements additional runtime validation of OpenGL extension support.
@@ -1915,7 +1915,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// The result is stored in _kotor2CapabilityValidationFlag to avoid repeated computation.
         /// </returns>
         /// <remarks>
-        /// Based on reverse engineering of swkotor2.exe: FUN_00475520 @ 0x00475520
+        /// Based on reverse engineering of swkotor2.exe: 0x00475520 @ 0x00475520
         /// Algorithm:
         /// 1. Check if validation has been performed (_kotor2CapabilityValidationFlag == -1)
         /// 2. If not performed, validate extension flags:
@@ -1930,7 +1930,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private int PerformKotor2AdditionalValidationCheck()
         {
-            // swkotor2.exe: FUN_00475520 @ 0x00475520
+            // swkotor2.exe: 0x00475520 @ 0x00475520
             // Check if validation has already been performed
             if (_kotor2CapabilityValidationFlag == -1)
             {
@@ -1961,11 +1961,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 texture dimensions calculation.
-        /// Matches swkotor2.exe: FUN_00429740 @ 0x00429740.
+        /// Matches swkotor2.exe: 0x00429740 @ 0x00429740.
         /// </summary>
         private void CalculateKotor2TextureDimensions(int width, int height, out int textureWidth, out int textureHeight)
         {
-            // Matching swkotor2.exe: FUN_00429740 @ 0x00429740
+            // Matching swkotor2.exe: 0x00429740 @ 0x00429740
             // This function calculates power-of-two texture dimensions
 
             uint widthPower = (uint)width;
@@ -2062,11 +2062,11 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// KOTOR2 render texture rectangle textures initialization.
-        /// Matches swkotor2.exe: FUN_00429780 @ 0x00429780.
+        /// Matches swkotor2.exe: 0x00429780 @ 0x00429780.
         /// </summary>
         /// <remarks>
         /// This function initializes vertex programs for render texture rectangle operations.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00429780 @ 0x00429780
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00429780 @ 0x00429780
         /// - Generates and configures 5 vertex program objects for rectangle texture rendering
         /// - Vertex programs handle coordinate transformation for GL_TEXTURE_RECTANGLE_NV textures
         /// - Each program is bound and configured with specific shader code for rectangle texture operations
@@ -2077,7 +2077,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </remarks>
         private void InitializeKotor2RenderTextureRectangleTextures()
         {
-            // Matching swkotor2.exe: FUN_00429780 @ 0x00429780
+            // Matching swkotor2.exe: 0x00429780 @ 0x00429780
             // This function sets up vertex programs for render texture rectangle textures
 
             // Check if vertex program support is available
@@ -2098,7 +2098,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             glEnable(GL_VERTEX_PROGRAM_ARB);
 
             // Generate 5 vertex program IDs for rectangle texture operations
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00429780 - generates multiple vertex program objects
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00429780 - generates multiple vertex program objects
             // Each program is generated individually (matching pattern in KOTOR1 and KOTOR2 codebase)
             _kotor2GlGenProgramsArb(1, ref _kotor2VertexProgramId0);
             _kotor2GlGenProgramsArb(1, ref _kotor2VertexProgramId1);
@@ -2109,7 +2109,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             // Configure each vertex program with shader code
             // NOTE: The exact vertex program strings should be extracted from swkotor2.exe using Ghidra
             // to ensure 1:1 parity. These are minimal ARB vertex programs that pass through coordinates.
-            // Original swkotor2.exe: FUN_00429780 loads specific vertex program strings from embedded data.
+            // Original swkotor2.exe: 0x00429780 loads specific vertex program strings from embedded data.
 
             // Program 0: Basic passthrough for rectangle texture coordinate transformation
             // Passes through vertex position and texture coordinates without modification
@@ -2172,7 +2172,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
             // NOTE: These vertex program strings are functionally correct implementations based on ARB vertex program
             // specifications and the expected behavior for rectangle texture coordinate transformations.
-            // For exact 1:1 parity with swkotor2.exe FUN_00429780 @ 0x00429780, the exact strings should be
+            // For exact 1:1 parity with swkotor2.exe 0x00429780 @ 0x00429780, the exact strings should be
             // extracted from the binary using Ghidra MCP. However, these programs provide equivalent functionality
             // and match the expected behavior for rectangle texture rendering operations.
         }
@@ -2246,7 +2246,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// </summary>
         /// <remarks>
         /// KOTOR2 Texture Loading (swkotor2.exe):
-        /// - Texture loading: FUN_0042a100 @ 0x0042a100 (texture initialization)
+        /// - Texture loading: 0x0042a100 @ 0x0042a100 (texture initialization)
         /// - Resource loading: CExoResMan::GetResObject, CExoKeyTable lookup
         /// - File formats: TPC (primary), TGA (fallback), DDS (compressed)
         /// - OpenGL texture upload: glGenTextures, glBindTexture, glTexImage2D, glCompressedTexImage2D

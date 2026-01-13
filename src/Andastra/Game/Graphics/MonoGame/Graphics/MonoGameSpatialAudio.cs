@@ -69,10 +69,10 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             );
         }
 
-        public Andastra.Runtime.Graphics.Audio3DParameters Calculate3DParameters(uint emitterId)
+        public Runtime.Graphics.Audio3DParameters Calculate3DParameters(uint emitterId)
         {
             var parameters = _spatialAudio.Calculate3DParameters(emitterId);
-            return new Andastra.Runtime.Graphics.Audio3DParameters
+            return new Runtime.Graphics.Audio3DParameters
             {
                 Volume = parameters.Volume,
                 Pan = parameters.Pan,

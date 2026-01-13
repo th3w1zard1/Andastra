@@ -254,7 +254,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// Uploads texture pixel data to a previously created texture.
         /// Matches original engine behavior: swkotor.exe and swkotor2.exe use glTexImage2D/glCompressedTexImage2D
         /// to upload texture data after creating the texture object.
-        /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions.
+        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions.
         /// </summary>
         public bool UploadTextureData(IntPtr handle, TextureUploadData data)
         {
@@ -295,7 +295,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                 // 3. For each mipmap level: glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, format, type, data)
                 //    OR glCompressedTexImage2D for compressed formats
                 // 4. Set texture parameters: glTexParameteri
-                // Original engine: swkotor.exe: FUN_00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions
+                // Original engine: swkotor.exe: 0x00427c90 @ 0x00427c90 and swkotor2.exe equivalent functions
 
                 // Step 1: Generate texture if not already created
                 if (info.GLHandle == 0)
@@ -393,7 +393,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
                         else
                         {
                             // Upload uncompressed texture data
-                            // Matches original engine: swkotor.exe: FUN_00427c90 @ 0x00427c90 uses glTexImage2D
+                            // Matches original engine: swkotor.exe: 0x00427c90 @ 0x00427c90 uses glTexImage2D
                             glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
                         }
 
@@ -795,7 +795,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// <summary>
         /// Converts TextureFormat to OpenGL format constant.
         /// Matches original engine behavior: swkotor.exe and swkotor2.exe use these format mappings.
-        /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 texture format conversion.
+        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 texture format conversion.
         /// </summary>
         private uint ConvertTextureFormatToOpenGL(TextureFormat format)
         {
@@ -860,7 +860,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// <summary>
         /// Gets OpenGL internal format constant for a texture format.
         /// Matches original engine behavior: swkotor.exe and swkotor2.exe use these internal format mappings.
-        /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 internal format selection.
+        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 internal format selection.
         /// </summary>
         private uint GetOpenGLInternalFormat(TextureFormat format)
         {
@@ -1068,7 +1068,7 @@ namespace Andastra.Game.Graphics.MonoGame.Backends
         /// <summary>
         /// Converts BGRA pixel data to RGBA.
         /// Matches original engine behavior: swkotor.exe converts BGRA to RGBA for OpenGL.
-        /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 BGRA conversion.
+        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 BGRA conversion.
         ///
         /// BGRA format: [B, G, R, A] per pixel (4 bytes)
         /// RGBA format: [R, G, B, A] per pixel (4 bytes)

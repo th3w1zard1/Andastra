@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Andastra.Game.Games.Common;
+using IResourceConfig = Andastra.Game.Games.Common.IResourceConfig;
+using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Eclipse.Profiles
+namespace Andastra.Game.Games.Engines.Eclipse.Profiles
 {
     /// <summary>
     /// Base class for Eclipse engine resource configuration.

@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Core.Audio
     /// - Voice types: Character dialogue, narrator, ambient voice (background conversations)
     /// - Volume control: Separate from sound effects volume, controlled by VoiceVolume setting (0.0 to 1.0)
     /// - Original engine: DirectSound for voice playback, WAV file format support
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes VoiceVolume to INI file)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads VoiceVolume from INI file)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes VoiceVolume to INI file)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads VoiceVolume from INI file)
     /// </remarks>
     public interface IVoicePlayer
     {

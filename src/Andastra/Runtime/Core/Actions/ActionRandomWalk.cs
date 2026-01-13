@@ -15,12 +15,12 @@ namespace Andastra.Runtime.Core.Actions
     /// Random Walk Action:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionRandomWalk NWScript function
     /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionType" @ 0x007bf7f8
-    /// - Action loading: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
-    /// - Action saving: FUN_00505bc0 @ 0x00505bc0 (save ActionList to GFF)
-    /// - Action creation: FUN_00507fd0 @ 0x00507fd0 (create action from parameters)
-    /// - Action parameter setting: FUN_00504130 @ 0x00504130 (set action parameter by index/type)
+    /// - Action loading: 0x00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - Action saving: 0x00505bc0 @ 0x00505bc0 (save ActionList to GFF)
+    /// - Action creation: 0x00507fd0 @ 0x00507fd0 (create action from parameters)
+    /// - Action parameter setting: 0x00504130 @ 0x00504130 (set action parameter by index/type)
     /// - Walking collision: UpdateCreatureMovement @ 0x0054be70 (walk collision check with "aborted walking" @ 0x007c03c0)
-    /// - Walkmesh checking: FUN_005775d0 @ 0x005775d0 (load walkmesh properties, "WalkCheck" @ 0x007c1514)
+    /// - Walkmesh checking: 0x005775d0 @ 0x005775d0 (load walkmesh properties, "WalkCheck" @ 0x007c1514)
     /// - Original implementation: Entity randomly walks within max distance from start position using pathfinding
     /// - Used for idle NPC behavior, wandering creatures, ambient activity
     /// - Picks random direction and distance, uses pathfinding to reach target, then picks new target
@@ -144,7 +144,7 @@ namespace Andastra.Runtime.Core.Actions
 
             Vector3 newPosition = transform.Position + direction * moveDistance;
 
-            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             IArea area = actor.World?.CurrentArea;
             if (area != null && area.NavigationMesh != null)
@@ -192,7 +192,7 @@ namespace Andastra.Runtime.Core.Actions
 
             Vector3 newPosition = transform.Position + direction * moveDistance;
 
-            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             IArea area = actor.World?.CurrentArea;
             if (area != null && area.NavigationMesh != null)

@@ -28,24 +28,24 @@ namespace Andastra.Game.Games.Odyssey.Save
     ///
     /// Engine-Specific Details (Odyssey):
     /// - Save file format: ERF archive with "MOD V1.0" signature
-    /// - Save function: FUN_004eb750 @ 0x004eb750 (swkotor2.exe) creates save game ERF archive
-    /// - Load function: FUN_00708990 @ 0x00708990 (swkotor2.exe) loads ERF archive
+    /// - Save function: 0x004eb750 @ 0x004eb750 (swkotor2.exe) creates save game ERF archive
+    /// - Load function: 0x00708990 @ 0x00708990 (swkotor2.exe) loads ERF archive
     ///   - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
     ///   - "LoadSavegame" @ 0x007bdc90, "SavegameList" @ 0x007bdca0, "GetSavegameList" @ 0x007bdcb0
     ///   - "SAVEGAMENAME" @ 0x007be1a8, "Mod_IsSaveGame" @ 0x007bea48, "BTN_SAVEGAME" @ 0x007d0dbc
     ///   - Constructs save path: "SAVES:\{saveName}\SAVEGAME" using format string "%06d - %s" (save number and name)
-    ///   - Creates GAMEINPROGRESS: directory if missing (checks existence via FUN_004069c0, creates via FUN_00409670 if not found)
-    ///   - Loads savegame.sav ERF archive from constructed path (via FUN_00629d60, FUN_0062a2b0)
+    ///   - Creates GAMEINPROGRESS: directory if missing (checks existence via 0x004069c0, creates via 0x00409670 if not found)
+    ///   - Loads savegame.sav ERF archive from constructed path (via 0x00629d60, 0x0062a2b0)
     ///   - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature
     ///   - Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e), 35% (0x23), 40% (0x28), 45% (0x2d), 50% (0x32)
-    ///   - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
-    ///   - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
-    ///   - Reads AUTOSAVEPARAMS from NFO GFF if present (via FUN_00412b30, FUN_00708660)
-    ///   - Sets module state flags and initializes game session (via FUN_004dc470, FUN_004dc9e0, FUN_004dc9c0)
+    ///   - Loads PARTYTABLE via 0x0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
+    ///   - Loads GLOBALVARS via 0x005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
+    ///   - Reads AUTOSAVEPARAMS from NFO GFF if present (via 0x00412b30, 0x00708660)
+    ///   - Sets module state flags and initializes game session (via 0x004dc470, 0x004dc9e0, 0x004dc9c0)
     ///   - Module state: Sets flags at offset 0x48 in game session object (bit 0x200 = module loaded flag)
     ///   - Final progress: 50% (0x32) when savegame load completes
-    /// - FUN_004e28c0 @ 0x004e28c0 loads creature list from module state
-    ///   - Original implementation: Iterates through "Creature List" GFF list, loads each creature via FUN_005226d0
+    /// - 0x004e28c0 @ 0x004e28c0 loads creature list from module state
+    ///   - Original implementation: Iterates through "Creature List" GFF list, loads each creature via 0x005226d0
     ///   - Only loads creatures that are not PC (IsPC == 0) and not destroyed (IsDestroyed == 0)
     ///   - Creates creature entities from saved ObjectId and GFF data
     ///   - Saves creature state to GFF structure (position, stats, inventory, scripts, etc.)
@@ -78,7 +78,7 @@ namespace Andastra.Game.Games.Odyssey.Save
         /// <remarks>
         /// Odyssey-specific implementation:
         /// - Uses ERF archive format with "MOD V1.0" signature
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
         /// </remarks>
         public override async Task<bool> SaveGameAsync(SaveGameData saveData, string saveName, CancellationToken ct = default)
         {
@@ -103,7 +103,7 @@ namespace Andastra.Game.Games.Odyssey.Save
                 }
 
                 // Create save directory using common format (shared with Aurora)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
                 // Original implementation: Constructs path using format "%06d - %s" (save number and name)
                 // Path format: "SAVES:\{saveNumber:06d} - {saveName}\SAVEGAME"
                 // Located via string reference: "%06d - %s" @ 0x007be298
@@ -162,7 +162,7 @@ namespace Andastra.Game.Games.Odyssey.Save
         /// <remarks>
         /// Odyssey-specific implementation:
         /// - Loads ERF archive format with "MOD V1.0" signature
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
         /// - Original implementation: Accepts save name and constructs path using format "%06d - %s"
         /// - Supports both formatted names ("000001 - SaveName") and plain names (for backward compatibility)
         /// </remarks>
@@ -214,7 +214,7 @@ namespace Andastra.Game.Games.Odyssey.Save
                 byte[] erfData = await File.ReadAllBytesAsync(saveFilePath, ct);
                 ERF erf = DeserializeERF(erfData);
 
-                var saveData = new Andastra.Runtime.Core.Save.SaveGameData();
+                var saveData = new Runtime.Core.Save.SaveGameData();
 
                 // 1. Load metadata (savenfo.res)
                 byte[] nfoData = erf.Get("savenfo", ResourceType.GFF);
@@ -358,9 +358,9 @@ namespace Andastra.Game.Games.Odyssey.Save
             var gff = new GFF();
             var root = gff.Root;
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
             // Located via string reference: "savenfo" @ 0x007be1f0
-            // Original implementation (from decompiled FUN_004eb750):
+            // Original implementation (from decompiled 0x004eb750):
             // Creates GFF with "NFO " signature and "V2.0" version
             // Writes fields in this exact order (matching original):
             // 1. AREANAME (string): Current area name from module state
@@ -376,7 +376,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             // 11. LIVECONTENT (byte): Bitmask for live content (1 << (i-1) for each enabled entry)
             // 12. LIVE1-9 (strings): Live content entry strings (up to 9 entries)
 
-            // Field order must match FUN_004eb750 exactly
+            // Field order must match 0x004eb750 exactly
             SetStringField(root, "AREANAME", saveData.CurrentAreaName ?? "");
             SetStringField(root, "LASTMODULE", saveData.CurrentModule ?? "");
             SetIntField(root, "TIMEPLAYED", (int)saveData.PlayTime.TotalSeconds);
@@ -424,7 +424,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             SetIntField(root, "LIVECONTENT", liveContent);
 
             // LIVE1-9 - Live content entry strings (up to 9 entries)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
             // Original implementation stores LIVE1-9 as string fields in NFO GFF
             if (saveData.LiveContentStrings != null)
             {
@@ -452,7 +452,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             var gff = new GFF();
             var root = gff.Root;
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac670 @ 0x005ac670
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670
             // GLOB GFF structure: VariableList array with VariableName, VariableType, VariableValue
             var varList = new GFFList();
             root.SetList("VariableList", varList);
@@ -504,7 +504,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             var gff = new GFF();
             var root = gff.Root;
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057bd70 @ 0x0057bd70
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70
             // PT GFF structure: PartyList array with party member data
             var partyList = new GFFList();
             root.SetList("PartyList", partyList);
@@ -557,7 +557,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             var root = gff.Root;
 
             // Save area-specific state (entity positions, door states, etc.)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 saves entity states to GFF format
             // Located via string references: Entity state serialization in save system
             // Original implementation: Saves entity positions, door/placeable states, HP, local variables, etc.
             if (areaState != null)
@@ -783,7 +783,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             }
 
             // Load LIVE1-9 strings
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00707290 @ 0x00707290 loads LIVE1-9 from NFO GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00707290 @ 0x00707290 loads LIVE1-9 from NFO GFF
             if (saveData.LiveContentStrings == null)
             {
                 saveData.LiveContentStrings = new List<string>();
@@ -998,7 +998,7 @@ namespace Andastra.Game.Games.Odyssey.Save
                 foreach (GFFStruct creatureStruct in creatureList)
                 {
                     var entityState = LoadEntityStateFromGFF(creatureStruct);
-                    entityState.ObjectType = Andastra.Runtime.Core.Enums.ObjectType.Creature;
+                    entityState.ObjectType = Runtime.Core.Enums.ObjectType.Creature;
                     areaState.CreatureStates.Add(entityState);
                 }
             }
@@ -1010,7 +1010,7 @@ namespace Andastra.Game.Games.Odyssey.Save
                 foreach (GFFStruct doorStruct in doorList)
                 {
                     var entityState = LoadEntityStateFromGFF(doorStruct);
-                    entityState.ObjectType = Andastra.Runtime.Core.Enums.ObjectType.Door;
+                    entityState.ObjectType = Runtime.Core.Enums.ObjectType.Door;
                     areaState.DoorStates.Add(entityState);
                 }
             }
@@ -1022,7 +1022,7 @@ namespace Andastra.Game.Games.Odyssey.Save
                 foreach (GFFStruct placeableStruct in placeableList)
                 {
                     var entityState = LoadEntityStateFromGFF(placeableStruct);
-                    entityState.ObjectType = Andastra.Runtime.Core.Enums.ObjectType.Placeable;
+                    entityState.ObjectType = Runtime.Core.Enums.ObjectType.Placeable;
                     areaState.PlaceableStates.Add(entityState);
                 }
             }
@@ -1077,7 +1077,7 @@ namespace Andastra.Game.Games.Odyssey.Save
             entityState.ObjectId = (uint)GetIntField(entityStruct, "ObjectId", 0);
             entityState.Tag = GetStringField(entityStruct, "Tag", "");
             entityState.TemplateResRef = GetStringField(entityStruct, "TemplateResRef", "");
-            entityState.ObjectType = (Andastra.Runtime.Core.Enums.ObjectType)GetIntField(entityStruct, "ObjectType", 0);
+            entityState.ObjectType = (Runtime.Core.Enums.ObjectType)GetIntField(entityStruct, "ObjectType", 0);
 
             // Position and orientation
             entityState.Position = new System.Numerics.Vector3(

@@ -2,8 +2,8 @@ using System;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.VM;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Games.Common
@@ -209,9 +209,9 @@ namespace Andastra.Runtime.Games.Common
         /// Based on DelayCommand NWScript function.
         /// Uses STORE_STATE opcode to capture execution context.
         /// DelayScheduler manages timed execution.
-        /// 
+        ///
         /// Common across all engines: DelayCommand pattern for delayed script execution.
-        /// 
+        ///
         /// Implementation flow:
         /// 1. Create ActionDoCommand that executes the script with captured context
         /// 2. Schedule action with DelayScheduler for execution after delay

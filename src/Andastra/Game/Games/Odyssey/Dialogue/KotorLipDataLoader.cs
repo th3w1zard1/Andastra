@@ -106,7 +106,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                     return null;
                 }
 
-                // Convert BioWare.NET LIP to Andastra.Runtime.Core LipSyncData
+                // Convert BioWare.NET LIP to Runtime.Core LipSyncData
                 var lipSyncData = new LipSyncData();
                 lipSyncData.Duration = lipFile.Length;
 

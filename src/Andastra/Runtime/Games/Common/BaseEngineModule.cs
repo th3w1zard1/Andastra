@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Abstract base class for module management across all engines.
@@ -15,33 +15,33 @@ namespace Andastra.Runtime.Engines.Common
     /// - Common module loading and state management framework shared across all BioWare engines
     /// - Provides foundation for engine-specific module systems
     /// - Implements common patterns identified through cross-engine reverse engineering
-    /// 
+    ///
     /// Common Module Management Patterns (Implemented in Base Class):
     /// 1. Module State Tracking:
     ///    - Current module name, area, and navigation mesh (common across all engines)
     ///    - Module state validation and null checking
     ///    - State transitions: Idle -> Loading -> Loaded -> Running -> Unloading -> Idle
-    /// 
+    ///
     /// 2. Module Unloading:
     ///    - Common unloading sequence: Validate state -> Clean up -> Reset state
     ///    - Engine-specific cleanup handled by OnUnloadModule() override
     ///    - State reset: Clear module name, area, navigation mesh
-    /// 
+    ///
     /// 3. Resource Provider Integration:
     ///    - Common resource provider interface for all engines
     ///    - Resource loading abstraction (engine-specific implementations in subclasses)
-    /// 
+    ///
     /// 4. World Integration:
     ///    - Common world interface for entity management
     ///    - Module state synchronization with world state
-    /// 
+    ///
     /// Cross-Engine Analysis (Reverse Engineered Patterns):
     /// - Odyssey: IFO/LYT/VIS/GIT/ARE file formats, module state flags
     /// - Aurora: Module.ifo format, area files, entity spawning
     /// - Eclipse: UnrealScript-based module loading (message-based architecture)
     /// - Infinity: ARE/WED/GAM file formats
     /// Common patterns: Module state flags, loading sequences, entity spawning
-    /// 
+    ///
     /// Inheritance Structure:
     /// - BaseEngineModule (Runtime.Games.Common): Common module state management, unloading sequence, resource provider integration
     ///   - OdysseyModuleLoader : BaseEngineModule (Runtime.Games.Odyssey)
@@ -52,7 +52,7 @@ namespace Andastra.Runtime.Engines.Common
     ///     - Engine-specific: UnrealScript packages, .rim files, message-based loading
     ///   - InfinityModuleLoader : BaseEngineModule (Runtime.Games.Infinity)
     ///     - Engine-specific: ARE/WED/GAM file formats, BIF archives
-    /// 
+    ///
     /// Ghidra Reverse Engineering Requirements:
     /// - Verify module state flag addresses and bit patterns across all engines
     /// - Document module loading function addresses and calling conventions
@@ -156,7 +156,7 @@ namespace Andastra.Runtime.Engines.Common
         /// 7. Spawn entities from module data
         /// 8. Set current module/area/navigation mesh (via protected setters)
         /// 9. Trigger module load events/scripts
-        /// 
+        ///
         /// Progress reporting: Engines typically report progress at key milestones:
         /// - 0.0: Start loading
         /// - 0.1-0.3: Resource loading
@@ -174,13 +174,13 @@ namespace Andastra.Runtime.Engines.Common
         /// 1. Check if module is loaded (currentModuleName != null)
         /// 2. Call engine-specific cleanup (OnUnloadModule override)
         /// 3. Reset module state (clear module name, area, navigation mesh)
-        /// 
+        ///
         /// Engine-specific cleanup (OnUnloadModule) should handle:
         /// - Entity cleanup (NPCs, objects, triggers, waypoints)
         /// - Area unloading
         /// - Resource freeing
         /// - Module state flag clearing
-        /// 
+        ///
         /// No-op if no module is currently loaded.
         /// </remarks>
         public virtual void UnloadModule()
@@ -221,7 +221,7 @@ namespace Andastra.Runtime.Engines.Common
         /// - Resource freeing: Free module-specific resources
         /// - State flag clearing: Clear engine-specific module state flags
         /// - Event triggering: Trigger module unload events/scripts (if applicable)
-        /// 
+        ///
         /// Called by UnloadModule() before resetting common state.
         /// Base implementation does nothing - subclasses must override for engine-specific cleanup.
         /// </remarks>

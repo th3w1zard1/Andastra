@@ -20,32 +20,32 @@ namespace Andastra.Runtime.Core.Entities
     /// - Component system: Entities use component-based architecture for stats, transform, inventory, etc.
     /// - Script hooks: Entities store script ResRefs for various events (OnHeartbeat, OnAttacked, etc.)
     /// - Original entity structure includes: Position (Vector3), Orientation (Vector3), AreaId, ObjectId, Tag
-    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state to GFF
+    /// - Entity serialization: 0x005226d0 @ 0x005226d0 saves entity state to GFF
     ///   - Saves DetectMode (byte), StealthMode (byte), CreatureSize (float)
     ///   - Saves IsDestroyable (byte), IsRaiseable (byte), DeadSelectable (byte)
     ///   - Saves script hooks: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
     ///   - Saves Equip_ItemList (equipped items with ObjectId), ItemList (inventory items with ObjectId)
     ///   - Saves PerceptionList (perception data with ObjectId and PerceptionData byte)
-    ///   - Saves CombatRoundData (if in combat, via FUN_00529470)
+    ///   - Saves CombatRoundData (if in combat, via 0x00529470)
     ///   - Saves AreaId (int32), AmbientAnimState (byte), Animation (float), CreatnScrptFird (byte)
     ///   - Saves PM_IsDisguised (byte), PM_Appearance (int16 if disguised), Listening (byte), ForceAlwaysUpdate (byte)
     ///   - Saves Position: XPosition, YPosition, ZPosition (floats)
     ///   - Saves Orientation: XOrientation, YOrientation, ZOrientation (floats)
     ///   - Saves JoiningXP (float), BonusForcePoints (float), AssignedPup (float), PlayerCreated (float)
-    ///   - Saves FollowInfo (if following, via FUN_0050b920), ActionList (via FUN_00508200)
-    /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 (load creature data from GFF)
-    ///   - Loads AreaId from GFF at offset 0x90 (via FUN_00412d40 with "AreaId" field name)
-    ///   - Loads creature template data via FUN_005fb0f0 (creature template loading)
+    ///   - Saves FollowInfo (if following, via 0x0050b920), ActionList (via 0x00508200)
+    /// - Entity deserialization: 0x005223a0 @ 0x005223a0 (load creature data from GFF)
+    ///   - Loads AreaId from GFF at offset 0x90 (via 0x00412d40 with "AreaId" field name)
+    ///   - Loads creature template data via 0x005fb0f0 (creature template loading)
     ///   - Loads DetectMode, StealthMode, CreatureSize, IsDestroyable, IsRaiseable, DeadSelectable
     ///   - Loads BonusForcePoints, AssignedPup, PlayerCreated, AmbientAnimState, Animation, CreatnScrptFird
     ///   - Loads PM_IsDisguised, PM_Appearance, Listening, ForceAlwaysUpdate
-    ///   - Calls FUN_0050c510 (load creature stats/scripts), FUN_00521d40 (load creature equipment), FUN_005f9e00 (load creature inventory)
-    ///   - Calls FUN_00509bf0, FUN_00513440, FUN_0051d4d0, FUN_0050b650 for additional creature data loading
-    /// - Creature list serialization: FUN_004e28c0 @ 0x004e28c0 (save creature list to GFF)
+    ///   - Calls 0x0050c510 (load creature stats/scripts), 0x00521d40 (load creature equipment), 0x005f9e00 (load creature inventory)
+    ///   - Calls 0x00509bf0, 0x00513440, 0x0051d4d0, 0x0050b650 for additional creature data loading
+    /// - Creature list serialization: 0x004e28c0 @ 0x004e28c0 (save creature list to GFF)
     ///   - Iterates through creature list (Creature List GFF field), saves each creature's ObjectId and full creature data
-    ///   - For each creature: Creates GFF struct, writes ObjectId (via FUN_00413880 with "ObjectId" field name), calls FUN_005226d0 to save full creature data
+    ///   - For each creature: Creates GFF struct, writes ObjectId (via 0x00413880 with "ObjectId" field name), calls 0x005226d0 to save full creature data
     ///   - Only saves creatures that are not player-controlled (checks IsPC flag) and not destroyed
-    /// - Creature deserialization: FUN_005fb0f0 @ 0x005fb0f0 loads creature data from GFF format, reads ObjectId at offset +4 in structure
+    /// - Creature deserialization: 0x005fb0f0 @ 0x005fb0f0 loads creature data from GFF format, reads ObjectId at offset +4 in structure
     /// - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
     /// - Object events: "EVENT_DESTROY_OBJECT" @ 0x007bcd48, "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
     /// - Script hook fields: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0, plus ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the entity position in world space.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves XPosition, YPosition, ZPosition
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 saves XPosition, YPosition, ZPosition
         /// Synchronized with TransformComponent if present.
         /// </summary>
         public Vector3 Position
@@ -136,7 +136,7 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the entity facing angle in radians.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves XOrientation, YOrientation, ZOrientation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 saves XOrientation, YOrientation, ZOrientation
         /// Synchronized with TransformComponent if present.
         /// </summary>
         public float Facing
@@ -169,7 +169,7 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the area ID this entity belongs to.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </summary>
         public uint AreaId { get; set; }

@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Andastra.Game.Games.Common;
-using Andastra.Game.Games.Eclipse.EngineApi;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Games.Engines.Eclipse.EngineApi;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Eclipse.Profiles
+namespace Andastra.Game.Games.Engines.Eclipse.Profiles
 {
     /// <summary>
     /// Game profile for Dragon Age 2 (DA2).
@@ -150,4 +151,3 @@ namespace Andastra.Game.Engines.Eclipse.Profiles
         }
     }
 }
-

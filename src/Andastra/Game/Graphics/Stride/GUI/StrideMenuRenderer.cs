@@ -1,7 +1,7 @@
 using System;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.GUI;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using StrideGraphics = Stride.Graphics;
@@ -15,8 +15,8 @@ namespace Andastra.Game.Stride.GUI
     /// <remarks>
     /// Stride Menu Renderer:
     /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
-    /// - swkotor2.exe: FUN_006d2350 @ 0x006d2350 (menu constructor/initializer)
-    /// - swkotor.exe: FUN_0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+    /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+    /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
     ///
     /// Initialization Sequence (matching original engines):
     /// 1. Load "MAINMENU" GUI file first (swkotor2.exe: 0x006d2350:73, swkotor.exe: 0x0067c4c0:62)

@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - "ItemPropertyIndex" @ 0x007beb58 (item property index), "ItemProperty" @ 0x007cb2f8 (item property field)
     ///   - "StackSize" @ 0x007c0a88 (stack size field), "Charges" @ 0x007c0a94 (charges field)
     ///   - "Cost" @ 0x007c0aa0 (item cost field), "Identified" @ 0x007c0aac (identified flag)
-    ///   - Item loading: FUN_005226d0 @ 0x005226d0 (load item from UTI template), FUN_005fb0f0 @ 0x005fb0f0 (item creation)
+    ///   - Item loading: 0x005226d0 @ 0x005226d0 (load item from UTI template), 0x005fb0f0 @ 0x005fb0f0 (item creation)
     ///   - Item events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4, "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c
     ///   - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0, "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594
     ///   - Module item events: "Mod_OnAcquirItem" @ 0x007be7e0, "Mod_OnUnAqreItem" @ 0x007be7cc, "Mod_OnActvtItem" @ 0x007be7f4, "Mod_OnEquipItem" @ 0x007beac8

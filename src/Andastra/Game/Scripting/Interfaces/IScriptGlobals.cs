@@ -13,7 +13,7 @@ namespace Andastra.Game.Scripting.Interfaces
     /// - "Global" @ 0x007c29b0 (global constant), "GLOBAL" @ 0x007c7550 (global constant uppercase)
     /// - "RIMS:GLOBAL" @ 0x007c7544 (global RIM directory path), "globalcat" @ 0x007bddd0 (global catalog field)
     /// - "FactionGlobal" @ 0x007c28e0 (faction global variable field)
-    /// - Global variable save/load: FUN_005ac670 @ 0x005ac670 saves GLOBALVARS to save game GFF file
+    /// - Global variable save/load: 0x005ac670 @ 0x005ac670 saves GLOBALVARS to save game GFF file
     /// - Original implementation: Global variables persist across saves, local variables are per-entity
     /// - Global variables: Case-insensitive string keys, typed values (int, bool, string, location)
     /// - Global variable storage: Stored in save file GFF structure with "GLOBALVARS" field name

@@ -441,7 +441,7 @@ namespace Andastra.Runtime.Core.Movement
             // Check DoorComponent for conversation
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door system
             // Located via string references: "Conversation" @ 0x007c1abc
-            // Original implementation: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+            // Original implementation: 0x00580330 @ 0x00580330 saves door data including Conversation field
             // Conversation field in UTD template contains dialogue ResRef
             Interfaces.Components.IDoorComponent door = entity.GetComponent<Interfaces.Components.IDoorComponent>();
             if (door != null)
@@ -456,7 +456,7 @@ namespace Andastra.Runtime.Core.Movement
             // Check PlaceableComponent for conversation
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) placeable system
             // Located via string references: "Conversation" @ 0x007c1abc
-            // Original implementation: FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
+            // Original implementation: 0x00588010 @ 0x00588010 loads placeable data including Conversation field
             // Conversation field in UTP template contains dialogue ResRef
             Interfaces.Components.IPlaceableComponent placeable = entity.GetComponent<Interfaces.Components.IPlaceableComponent>();
             if (placeable != null)
@@ -471,7 +471,7 @@ namespace Andastra.Runtime.Core.Movement
             // Check for creature component conversation
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) creature system
             // Located via string references: "Conversation" @ 0x007c1abc, "ScriptDialogue" @ 0x007bee40
-            // Original implementation: FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
+            // Original implementation: 0x0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
             // ScriptDialogue field in UTC template contains dialogue ResRef (stored as Conversation property)
             if (entity.ObjectType == Enums.ObjectType.Creature)
             {

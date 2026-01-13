@@ -21,7 +21,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
     /// - Cursor position: Tracks mouse position for rendering
     /// - Cursor resources: Cursors are stored as Windows PE resources in EXE file (cursor groups 1, 2, 11, 12, etc.)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cursor groups are loaded from EXE PE resources, cursor resources are CUR format
-    /// - Original implementation: FUN_00633270 @ 0x00633270 sets up resource directories, cursor resources loaded from EXE
+    /// - Original implementation: 0x00633270 @ 0x00633270 sets up resource directories, cursor resources loaded from EXE
     /// - Cursor group format: 4 bytes reserved, 2 bytes resCount, then for each cursor: 12 bytes (width, height, planes, bitCount, bytesInRes), 2 bytes cursorId
     /// - Cursor resource format: CUR file format with hotspot information and bitmap data
     /// </remarks>
@@ -180,7 +180,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
             }
 
             // Try to load cursor group and extract cursor resources
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 loads cursor groups from EXE PE resources
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 loads cursor groups from EXE PE resources
             // Cursor groups are stored as Windows PE resources (type 0xC = kPEGroupCursor)
             // Cursor resources are stored as Windows PE resources (type 0x1 = kPECursor)
 

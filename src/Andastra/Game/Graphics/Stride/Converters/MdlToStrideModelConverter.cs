@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using BioWare.NET.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using Stride.Graphics;
@@ -18,7 +18,7 @@ namespace Andastra.Game.Stride.Converters
     /// MDL to Stride Model Converter:
     /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
     ///   - Odyssey (swkotor.exe, swkotor2.exe):
-    ///     - Model loading: FUN_005261b0 @ 0x005261b0 (swkotor2.exe) loads creature models
+    ///     - Model loading: 0x005261b0 @ 0x005261b0 (swkotor2.exe) loads creature models
     ///     - String references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c (swkotor2.exe)
     ///     - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
     ///     - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "refModel" @ 0x007babe8
@@ -35,7 +35,7 @@ namespace Andastra.Game.Stride.Converters
     ///       - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///       - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     ///     - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) to ensure spell visuals work correctly
-    ///     - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
+    ///     - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
     ///   - Aurora (nwmain.exe):
     ///     - LoadModel @ 0x1400a0130 - loads Model objects from file streams
     ///     - Uses MaxTree::AsModel for model conversion
@@ -213,7 +213,7 @@ namespace Andastra.Game.Stride.Converters
 
         private Matrix4x4 CreateNodeTransform(MDLNode node)
         {
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006f8590 @ 0x006f8590
             // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
             // Otherwise spell visuals will not be correct
             // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error
@@ -227,7 +227,7 @@ namespace Andastra.Game.Stride.Converters
                 {
                     // Force identity orientation for spell visual attachment points
                     // These dummy nodes should not have any rotation - they're just attachment points
-                    // swkotor2.exe: FUN_006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    // swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
                     rotation = System.Numerics.Quaternion.Identity;
                 }
                 else

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using Andastra.Runtime.Graphics.Common.Backends;
+using Andastra.Game.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
@@ -151,7 +151,7 @@ namespace Andastra.Game.Stride.Backends
             _fallbackCommandList = IntPtr.Zero;
         }
 
-        protected override ResourceInfo CreateTextureInternal(Andastra.Runtime.Graphics.Common.Structs.TextureDescription desc, IntPtr handle)
+        protected override ResourceInfo CreateTextureInternal(Runtime.Graphics.Common.Structs.TextureDescription desc, IntPtr handle)
         {
             var strideDesc = new global::Stride.Graphics.TextureDescription
             {
@@ -178,7 +178,7 @@ namespace Andastra.Game.Stride.Backends
             };
         }
 
-        protected override ResourceInfo CreateBufferInternal(Andastra.Runtime.Graphics.Common.Structs.BufferDescription desc, IntPtr handle)
+        protected override ResourceInfo CreateBufferInternal(Runtime.Graphics.Common.Structs.BufferDescription desc, IntPtr handle)
         {
             BufferFlags flags = BufferFlags.None;
             if ((desc.Usage & BufferUsage.Vertex) != 0) flags |= BufferFlags.VertexBuffer;
@@ -1128,7 +1128,7 @@ namespace Andastra.Game.Stride.Backends
         /// <param name="desc">Raytracing pipeline description containing shaders and configuration</param>
         /// <param name="handle">Resource handle for tracking</param>
         /// <returns>ResourceInfo containing the created PSO resource</returns>
-        protected override ResourceInfo CreateRaytracingPsoFallbackInternal(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc, IntPtr handle)
+        protected override ResourceInfo CreateRaytracingPsoFallbackInternal(Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc, IntPtr handle)
         {
             // Validate inputs
             if (!_useDxrFallbackLayer || _raytracingFallbackDevice == IntPtr.Zero)
@@ -1473,7 +1473,7 @@ namespace Andastra.Game.Stride.Backends
         /// <param name="exportInfo">Output shader export information for hit group references</param>
         /// <returns>Number of exports created</returns>
         private int CreateShaderExports(
-            Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc,
+            Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc,
             out D3D12_EXPORT_DESC[] exportDescs,
             out IntPtr exportDescsPtr,
             out System.Collections.Generic.List<IntPtr> exportNamePtrs,
@@ -1597,7 +1597,7 @@ namespace Andastra.Game.Stride.Backends
         /// </summary>
         /// <param name="desc">Raytracing pipeline description</param>
         /// <returns>D3D12_SHADER_BYTECODE structure containing the combined shader bytecode</returns>
-        private D3D12_SHADER_BYTECODE CreateDxilLibrary(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
+        private D3D12_SHADER_BYTECODE CreateDxilLibrary(Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
         {
             IntPtr shaderBytecodePtr = IntPtr.Zero;
             int shaderBytecodeSize = 0;
@@ -1645,7 +1645,7 @@ namespace Andastra.Game.Stride.Backends
         /// </summary>
         /// <param name="desc">Raytracing pipeline description containing shader bytecode</param>
         /// <returns>Combined DXIL library bytecode, or null if linking fails</returns>
-        private byte[] LinkDxilShaders(Andastra.Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
+        private byte[] LinkDxilShaders(Runtime.Graphics.Common.Interfaces.RaytracingPipelineDesc desc)
         {
             // Find DXC compiler
             string dxcPath = FindDXCPath();
@@ -2381,7 +2381,7 @@ namespace Andastra.Game.Stride.Backends
 
             // Create a buffer with acceleration structure build input usage
             // This buffer stores instance descriptors and needs to be accessible by the build process
-            var bufferDesc = new Andastra.Runtime.Graphics.Common.Structs.BufferDescription
+            var bufferDesc = new Runtime.Graphics.Common.Structs.BufferDescription
             {
                 SizeInBytes = sizeInBytes,
                 Usage = BufferUsage.AccelerationStructure, // Instance buffer for TLAS
@@ -2431,7 +2431,7 @@ namespace Andastra.Game.Stride.Backends
             // Create a buffer with acceleration structure usage flag
             // This buffer stores the final acceleration structure data and needs to be
             // accessible by raytracing shaders
-            var bufferDesc = new Andastra.Runtime.Graphics.Common.Structs.BufferDescription
+            var bufferDesc = new Runtime.Graphics.Common.Structs.BufferDescription
             {
                 SizeInBytes = (int)sizeInBytes,
                 Usage = BufferUsage.AccelerationStructure,

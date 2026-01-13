@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Templates
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) placeable system
     /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
     /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0
-    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references placeable templates)
+    /// - Template loading: 0x005226d0 @ 0x005226d0 (entity serialization references placeable templates)
     /// - Original implementation: UTP (Placeable) GFF templates define placeable properties
     /// - UTP file format: GFF with "UTP " signature containing placeable data
     /// - Placeables have appearance, useability, locks, inventory, HP, saves
@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Core.Templates
             // Apply script hooks
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable script hooks from UTP template
             // Located via string references: "ScriptOnUsed" @ 0x007beeb8, "ScriptOnOpen" @ 0x007c1a54, "ScriptOnClose" @ 0x007c1a8c
-            // Original implementation: FUN_00585ec0 @ 0x00585ec0 loads placeable script hooks from UTP template
+            // Original implementation: 0x00585ec0 @ 0x00585ec0 loads placeable script hooks from UTP template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {

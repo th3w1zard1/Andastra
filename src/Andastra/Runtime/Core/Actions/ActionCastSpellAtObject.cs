@@ -44,14 +44,14 @@ namespace Andastra.Runtime.Core.Actions
     ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     ///   - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) in model converters to ensure spell visuals work correctly
-    ///   - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
+    ///   - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
     /// - GUI: "LBL_FORCE" @ 0x007cfc30, "LBL_FORCE_STAT" @ 0x007cfc5c, "LBL_FORCEMASTERY" @ 0x007cfd20
     /// - "PB_FORCE%d" @ 0x007ccf6c (force progress bar format), "ForceDisplay" @ 0x007d2e70
     /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
     /// - Spell casting range: ~10.0 units (CastRange)
     /// - Checks Force points, spell knowledge, applies effects via EffectSystem
     /// - Spell effects applied to target based on spell ID (lookup via spells.2da)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (spell casting logic)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (spell casting logic)
     /// - Force point consumption: GetSpellBaseForcePointCost calculates cost from spell level
     /// </remarks>
     public class ActionCastSpellAtObject : ActionBase
@@ -114,7 +114,7 @@ namespace Andastra.Runtime.Core.Actions
 
                 Vector3 newPosition = transform.Position + direction * moveDistance;
 
-                // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+                // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
                 IArea area = actor.World?.CurrentArea;
                 if (area != null && area.NavigationMesh != null)
@@ -266,9 +266,9 @@ namespace Andastra.Runtime.Core.Actions
         /// - Impact scripts (impactscript column) contain primary spell effect logic
         /// - Visual effects (conjhandvfx, conjheadvfx, castgrndvisual) are applied directly from spells.2da
         /// - Full implementation resolves effects through impact scripts and visual effects from spell data
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (spell casting logic)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (spell casting logic)
         /// - swkotor2.exe: Spell effect application applies visual effects and executes impact scripts
-        /// - swkotor2.exe: FUN_006efe40 handles visual effect loading (castvisual, castgroundvisual)
+        /// - swkotor2.exe: 0x006efe40 handles visual effect loading (castvisual, castgroundvisual)
         /// - CastGrndVisual @ 0x007c3240, CastSound @ 0x007c3250, CastAnim @ 0x007c32dc
         /// </remarks>
         private void ApplySpellEffects(IEntity caster, IEntity target)
@@ -300,7 +300,7 @@ namespace Andastra.Runtime.Core.Actions
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Visual effects are applied from spells.2da columns
             // Located via string references: "CastHandVisual" @ 0x007c325c, "CastHeadVisual" @ 0x007c326c, "CastGrndVisual" @ 0x007c3240
             // Original implementation: Applies hand, head, and ground visual effects from spells.2da
-            // swkotor2.exe: FUN_006efe40 loads castvisual (hand/head) and castgroundvisual effects
+            // swkotor2.exe: 0x006efe40 loads castvisual (hand/head) and castgroundvisual effects
             if (spell != null)
             {
                 try

@@ -14,8 +14,8 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// <remarks>
     /// Odyssey Dialogue Camera Controller:
     /// - Based on swkotor.exe and swkotor2.exe dialogue camera system
-    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading FUN_005a2ae0 @ 0x005a2ae0
-    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading FUN_005ea880 @ 0x005ea880
+    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading 0x005a2ae0 @ 0x005a2ae0
+    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading 0x005ea880 @ 0x005ea880
     /// - Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940
     /// - Camera hooks: "camerahook" @ 0x007c7dac, "camerahookt" @ 0x007c7da0, "camerahookz" @ 0x007c7db8, "camerahookh" @ 0x007c7dc4
@@ -213,12 +213,12 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// Based on swkotor.exe and swkotor2.exe: Camera reset to chase mode after dialogue ends
         /// Reverse engineered from swkotor.exe:
         ///   - EndConversation script execution @ 0x0074a7c0 triggers camera reset
-        ///   - Dialogue loading function FUN_005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
+        ///   - Dialogue loading function 0x005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
         /// Reverse engineered from swkotor2.exe:
         ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
-        ///   - Dialogue loading function FUN_005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
+        ///   - Dialogue loading function 0x005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
         /// Located via string references: "EndConversation" @ 0x0074a7c0 (swkotor.exe), @ 0x007c38e0 (swkotor2.exe)

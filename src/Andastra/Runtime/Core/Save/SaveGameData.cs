@@ -13,11 +13,11 @@ namespace Andastra.Runtime.Core.Save
     /// Save Game Data Structure:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save game format
     /// - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
-    /// - Save function: FUN_004eb750 @ 0x004eb750 creates save game ERF archive
+    /// - Save function: 0x004eb750 @ 0x004eb750 creates save game ERF archive
     /// - Maps to KOTOR save structure:
     ///   - NFO.res (save metadata): GFF with "NFO " signature, contains AREANAME, TIMEPLAYED, SAVEGAMENAME, etc.
-    ///   - GLOBALVARS.res (global variables): GFF with "GLOB" signature, saved by FUN_005ac670 @ 0x005ac670
-    ///   - PARTYTABLE.res (party state): GFF with "PT  " signature, saved by FUN_0057bd70 @ 0x0057bd70
+    ///   - GLOBALVARS.res (global variables): GFF with "GLOB" signature, saved by 0x005ac670 @ 0x005ac670
+    ///   - PARTYTABLE.res (party state): GFF with "PT  " signature, saved by 0x0057bd70 @ 0x0057bd70
     ///   - [module]_s.rim (per-module states): ERF archive containing area state GFF files for visited areas
     ///   - Various GFF resources for entity states (creature positions, door states, etc.)
     /// - Save file location: "SAVES:\{saveName}\savegame.sav" (ERF archive)
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Core.Save
         /// Live content entry strings (up to 9 entries: LIVE1-9).
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
         /// Original implementation stores LIVE1-9 as string fields in NFO GFF
         /// These are live content entry strings that correspond to the LIVECONTENT bitmask
         /// </remarks>

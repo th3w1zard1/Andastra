@@ -31,8 +31,8 @@ namespace Andastra.Game.Games.Odyssey
     /// "EVENT_LOCK_OBJECT" @ (K1: 0x00744ae8, TSL: TODO)
     /// "EVENT_UNLOCK_OBJECT" @ (K1: 0x00744afc, TSL: TODO)
     /// ObjectId field at offset +4 in entity struct @ (K1: TODO, TSL: offset +4)
-    /// [FUN_004e28c0] @ (K1: TODO, TSL: 0x004e28c0) - entity serialization
-    /// [FUN_005fb0f0] @ (K1: TODO, TSL: 0x005fb0f0) - entity deserialization
+    /// [0x004e28c0] @ (K1: TODO, TSL: 0x004e28c0) - entity serialization
+    /// [0x005fb0f0] @ (K1: TODO, TSL: 0x005fb0f0) - entity deserialization
     /// "OID: %08x, Tag: %s, %s" (object logging format) @ (K1: TODO, TSL: 0x007c76b8)
     /// "ObjectList" @ (K1: TODO, TSL: 0x007bfdbc)
     /// "ObjectValue" @ (K1: TODO, TSL: 0x007bfd70)
@@ -142,7 +142,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Gets or sets the area ID this entity belongs to.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// AreaId identifies which area the entity is located in.
         /// Set when entity is registered to an area in the world.
@@ -219,7 +219,7 @@ namespace Andastra.Game.Games.Odyssey
         {
             // Attach transform component for all entities
             // Based on swkotor.exe and swkotor2.exe: All entities have transform data (position, orientation, scale)
-            // Transform data is loaded from GIT files (FUN_004e08e0 @ 0x004e08e0 loads placeable/door position from GIT)
+            // Transform data is loaded from GIT files (0x004e08e0 @ 0x004e08e0 loads placeable/door position from GIT)
             // Position stored as XPosition, YPosition, ZPosition in GFF structures
             // Orientation stored as XOrientation, YOrientation, ZOrientation in GFF structures
             if (!HasComponent<ITransformComponent>())
@@ -255,12 +255,12 @@ namespace Andastra.Game.Games.Odyssey
         /// - Component initialization: Properties loaded from entity template files (UTC) and can be modified at runtime
         ///
         /// Based on reverse engineering of:
-        /// - swkotor.exe: Creature initialization ([FUN_004af630] @ (K1: 0x004af630, TSL: TODO: Find this address) handles creature events)
-        /// - swkotor2.exe: [FUN_005261b0] @ (K1: TODO: Find this address, TSL: 0x005261b0) loads creature from UTC template
-        ///   - Calls [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) to load creature data from GFF
-        ///   - Calls [FUN_0050c510] @ (K1: TODO: Find this address, TSL: 0x0050c510) to load script hooks
-        ///   - Calls [FUN_00521d40] @ (K1: TODO: Find this address, TSL: 0x00521d40) to initialize equipment and items
-        /// - [FUN_004dfbb0] @ 0x004dfbb0 - loads creature instances from GIT "Creature List"
+        /// - swkotor.exe: Creature initialization ([0x004af630] @ (K1: 0x004af630, TSL: TODO: Find this address) handles creature events)
+        /// - swkotor2.exe: [0x005261b0] @ (K1: TODO: Find this address, TSL: 0x005261b0) loads creature from UTC template
+        ///   - Calls [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) to load creature data from GFF
+        ///   - Calls [0x0050c510] @ (K1: TODO: Find this address, TSL: 0x0050c510) to load script hooks
+        ///   - Calls [0x00521d40] @ (K1: TODO: Find this address, TSL: 0x00521d40) to initialize equipment and items
+        /// - [0x004dfbb0] @ 0x004dfbb0 - loads creature instances from GIT "Creature List"
         /// - Located via string references: "Creature List" @ (K1: TODO: Find this address, TSL: 0x007bd01c), "CreatureList" @ (K1: TODO: Find this address, TSL: 0x007c0c80)
         /// - Component attachment: Components are attached during entity creation from GIT instances and UTC templates
         /// - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
@@ -324,7 +324,7 @@ namespace Andastra.Game.Games.Odyssey
                 var factionComponent = new OdysseyFactionComponent();
                 factionComponent.Owner = this;
                 // Set FactionID from entity data if available (loaded from UTC template)
-                // [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) - loads FactionID from GFF at offset in creature structure
+                // [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) - loads FactionID from GFF at offset in creature structure
                 // Located via string references: "FactionID" @ (K1: 0x0074ae48, TSL: 0x007c40b4)
                 if (GetData("FactionID") is int factionId)
                 {
@@ -340,8 +340,8 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Doors have open/close state, lock state, transition logic.
         /// Based on door component structure in swkotor2.exe.
-        /// - [FUN_005838d0] @ (K1: TODO: Find this address, TSL: 0x005838d0): Door initialization from GIT/GFF
-        /// - [FUN_00580ed0] @ (K1: TODO: Find this address, TSL: 0x00580ed0): Door loading function that loads door properties
+        /// - [0x005838d0] @ (K1: TODO: Find this address, TSL: 0x005838d0): Door initialization from GIT/GFF
+        /// - [0x00580ed0] @ (K1: TODO: Find this address, TSL: 0x00580ed0): Door loading function that loads door properties
         /// - Door component attached during entity creation from UTD templates
         /// - Doors support: open/closed states, locks, traps, module/area transitions
         /// - Component provides: IsOpen, IsLocked, LockDC, KeyTag, LinkedTo, LinkedToModule
@@ -371,7 +371,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - [SavePlaceableToGFF] @ (K1: TODO: Find this address, TSL: 0x00589520) - Saves placeable data to GFF save data
         ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
         ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
-        /// - Original implementation: [FUN_004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - load placeable instances from GIT
+        /// - Original implementation: [0x004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - load placeable instances from GIT
         /// - Placeables have appearance, useability, locks, inventory, HP, traps
         /// - Based on UTP file format (GFF with "UTP " signature)
         /// - Script events: OnUsed ([CSWSSCRIPTEVENT_EVENTTYPE_ON_USED] @ (K1: TODO: Find this address, TSL: 0x007bc7d8), [0x19]), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
@@ -405,8 +405,8 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Triggers have enter/exit detection, script firing.
         /// Based on trigger component structure in swkotor.exe and swkotor2.exe.
-        /// - [FUN_004e5920] @ (K1: TODO: Find this address, TSL: 0x004e5920) - loads trigger instances from GIT TriggerList, reads UTT templates
-        ///   - Function signature: `undefined4 FUN_004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
+        /// - [0x004e5920] @ (K1: TODO: Find this address, TSL: 0x004e5920) - loads trigger instances from GIT TriggerList, reads UTT templates
+        ///   - Function signature: `undefined4 0x004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
         ///   - Reads "TriggerList" list from GFF structure
         ///   - For each trigger entry in TriggerList:
         ///     - Checks trigger type (must be type 1 = Trigger)
@@ -448,7 +448,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Waypoints have position data, pathfinding integration.
         /// Based on waypoint component structure in swkotor2.exe.
-        /// [FUN_004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads waypoint instances from GIT
+        /// [0x004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads waypoint instances from GIT
         /// </remarks>
         private void AttachWaypointComponents()
         {
@@ -465,7 +465,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
         /// Based on sound component structure in swkotor.exe and swkotor2.exe.
-        /// - [FUN_004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads sound instances from GIT SoundList
+        /// - [0x004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - loads sound instances from GIT SoundList
         ///   - Located via string reference: "SoundList" @ (K1: TODO: Find this address, TSL: 0x007bd080) (GIT sound list), "Sound" @ (K1: TODO: Find this address, TSL: 0x007bc500) (sound entity type)
         ///   - Reads ObjectId, Tag, TemplateResRef, position (XPosition, YPosition, ZPosition)
         ///   - Reads sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition
@@ -727,7 +727,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes entity data for save games.
         /// </summary>
         /// <remarks>
-        /// Based on [FUN_004e28c0] @ (K1: TODO: Find this address, TSL: 0x004e28c0) in swkotor2.exe.
+        /// Based on [0x004e28c0] @ (K1: TODO: Find this address, TSL: 0x004e28c0) in swkotor2.exe.
         /// Serializes ObjectId, Tag, components, and custom data.
         /// Uses GFF format for structured data storage.
         ///
@@ -744,7 +744,7 @@ namespace Andastra.Game.Games.Odyssey
         public override byte[] Serialize()
         {
             // Create GFF structure for entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - [FUN_005226d0] @ (K1: TODO: Find this address, TSL: 0x005226d0) saves entity to GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - [0x005226d0] @ (K1: TODO: Find this address, TSL: 0x005226d0) saves entity to GFF
             // Uses generic GFF format (GFFContent.GFF) for entity serialization
             var gff = new GFF(GFFContent.GFF);
             var root = gff.Root;
@@ -1056,7 +1056,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Deserializes entity data from save games.
         /// </summary>
         /// <remarks>
-        /// Based on [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0)
+        /// Based on [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0)
         /// Restores ObjectId, Tag, components, and custom data.
         /// Recreates component attachments and state.
         /// </remarks>
@@ -1068,7 +1068,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Parse GFF from byte array
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads entity from GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 loads entity from GFF
             GFF gff = GFF.FromBytes(data);
             if (gff == null || gff.Root == null)
             {
@@ -1106,7 +1106,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Deserialize Transform component
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Position stored as X, Y, Z in GFF
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) loads entity data from GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) loads entity data from GFF
             // Transform component is always present on all entities (created in Initialize() or AttachCommonComponents())
             // If missing (edge case during deserialization), create it to match original engine behavior
             if (root.Exists("X") && root.Exists("Y") && root.Exists("Z"))
@@ -1340,7 +1340,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Deserialize sound component
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): [FUN_005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) loads sound component data from GFF save data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): [0x005fb0f0] @ (K1: TODO: Find this address, TSL: 0x005fb0f0) loads sound component data from GFF save data
             // Located via string references: "SoundList" @ (K1: TODO: Find this address, TSL: 0x007bd080) (GIT sound list), "Sound" @ (K1: TODO: Find this address, TSL: 0x007bc500) (sound entity type)
             // Sound properties are loaded: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
             if (root.Exists("Active") || root.Exists("TemplateResRef"))

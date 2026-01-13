@@ -24,7 +24,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// DirectX 9 Backend:
     /// - This matches the original game's primary graphics API (DirectX 9)
     /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
-    /// - Graphics initialization: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
+    /// - Graphics initialization: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8, "2D3DBias" @ 0x007c612c
     /// - Original game graphics device: DirectX 9 device creation and management (D3D9CreateDevice, Present, etc.)
     /// - RTX Remix: This backend can be used with NVIDIA RTX Remix for path tracing injection (wraps DX9 calls)

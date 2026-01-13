@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
 namespace Andastra.Game.Games.Common
 {
@@ -16,13 +16,12 @@ namespace Andastra.Game.Games.Common
     /// - All engines use GUI files with panel/button/label definitions
     /// - Common operations: LoadGui, RenderControl, HandleInput, font loading
     /// - Engine-specific: GUI format (GUI/GFF/other), font format, rendering backend
-    /// 
+    ///
     /// Inheritance Structure:
     /// - BaseGuiManager (Runtime.Games.Common) - Common GUI operations
     ///   - Odyssey: KotorGuiManager : BaseGuiManager (swkotor.exe, swkotor2.exe)
     ///   - Aurora: AuroraGuiManager : BaseGuiManager (nwmain.exe)
     ///   - Eclipse: EclipseGuiManager : BaseGuiManager (daorigins.exe, DragonAge2.exe)
-    ///   - Infinity: InfinityGuiManager : BaseGuiManager (, )
     /// </remarks>
     public abstract class BaseGuiManager : IDisposable
     {
@@ -87,7 +86,7 @@ namespace Andastra.Game.Games.Common
         /// <param name="controlSize">The control size.</param>
         /// <param name="textSize">The text size.</param>
         /// <returns>The calculated text position.</returns>
-        protected virtual Graphics.Vector2 CalculateTextPosition(int alignment, Graphics.Vector2 controlPosition, Graphics.Vector2 controlSize, Graphics.Vector2 textSize)
+        protected virtual GraphicsVector2 CalculateTextPosition(int alignment, GraphicsVector2 controlPosition, GraphicsVector2 controlSize, GraphicsVector2 textSize)
         {
             float x = controlPosition.X;
             float y = controlPosition.Y;
@@ -124,7 +123,7 @@ namespace Andastra.Game.Games.Common
             }
             // else: top align (default)
 
-            return new Graphics.Vector2(x, y);
+            return new GraphicsVector2(x, y);
         }
 
         /// <summary>

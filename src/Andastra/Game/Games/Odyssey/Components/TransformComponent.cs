@@ -22,10 +22,10 @@ namespace Andastra.Game.Games.Odyssey.Components
     ///   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0 (walking collision error)
     ///   - "Bailed the desired position is unsafe." @ 0x007c0584 (unsafe position error)
     ///   - "PathFollowData requesting bad data position %d" @ 0x007ca414 (path follow data error)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save entity position/orientation to GFF), FUN_004e08e0 @ 0x004e08e0 (load placeable/door position from GIT)
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 (save entity position/orientation to GFF), 0x004e08e0 @ 0x004e08e0 (load placeable/door position from GIT)
     /// - Position stored at offsets 0x94 (X), 0x98 (Y), 0x9c (Z) in creature objects (in-memory layout)
     /// - Orientation stored at offsets 0xa0 (X), 0xa4 (Y), 0xa8 (Z) as normalized direction vector (in-memory layout)
-    /// - FUN_00506550 @ 0x00506550 sets orientation from vector, FUN_004d8390 @ 0x004d8390 normalizes orientation vector
+    /// - 0x00506550 @ 0x00506550 sets orientation from vector, 0x004d8390 @ 0x004d8390 normalizes orientation vector
     /// - KOTOR coordinate system:
     ///   - Y-up coordinate system (same as most game engines, Y is vertical)
     ///   - Positions in meters (world-space coordinates)

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using BioWare.NET.Common;
 using BioWare.NET.Common.Script;
 using BioWare.NET.Resource.Formats.NCS.Compiler;
+using BioWare.NET.Resource.Formats.NCS.Compiler.NSS;
 
 namespace Andastra.Script
 {

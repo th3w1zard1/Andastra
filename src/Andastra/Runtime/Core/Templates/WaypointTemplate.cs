@@ -14,8 +14,8 @@ namespace Andastra.Runtime.Core.Templates
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) waypoint system
     /// - Located via string references: "Waypoint" @ 0x007bc510 (waypoint entity type), "WaypointList" @ 0x007bd060 (GIT waypoint list)
     /// - "STARTWAYPOINT" @ 0x007be034 (start waypoint constant), "Waypoint template %s doesn't exist.\n" @ 0x007c0f24 (template not found error)
-    /// - Template loading: FUN_004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
-    /// - FUN_005226d0 @ 0x005226d0 (entity serialization references waypoint templates)
+    /// - Template loading: 0x004e08e0 @ 0x004e08e0 loads waypoint instances from GIT
+    /// - 0x005226d0 @ 0x005226d0 (entity serialization references waypoint templates)
     /// - Original implementation: UTW (Waypoint) GFF templates define waypoint properties
     /// - UTW file format: GFF with "UTW " signature containing waypoint data (Tag, XPosition, YPosition, ZPosition, MapNote, MapNoteEnabled)
     /// - Waypoints are invisible markers used for scripting and navigation (GetWaypointByTag NWScript function)

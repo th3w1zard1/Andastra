@@ -182,8 +182,8 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Creates StrideMenuRenderer with the extracted GraphicsDevice
         /// - Handles errors gracefully with detailed logging
         /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
-        /// - swkotor2.exe: FUN_006d2350 @ 0x006d2350 (menu constructor/initializer)
-        /// - swkotor.exe: FUN_0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+        /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+        /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// - All engines (Odyssey, Aurora, Eclipse, Infinity) use the same menu renderer interface
         /// </remarks>
         private static BaseMenuRenderer CreateStrideMenuRenderer(IGraphicsDevice graphicsDevice)
@@ -200,7 +200,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
                 Type graphicsDeviceType = graphicsDevice.GetType();
 
                 // Check if it's a StrideGraphicsDevice (using string comparison to avoid compile-time dependency)
-                if (graphicsDeviceType.FullName != "Andastra.Runtime.Stride.Graphics.StrideGraphicsDevice")
+                if (graphicsDeviceType.FullName != "Runtime.Stride.Graphics.StrideGraphicsDevice")
                 {
                     Console.WriteLine($"[MenuRendererFactory] ERROR: GraphicsDevice is not a StrideGraphicsDevice (type: {graphicsDeviceType.FullName})");
                     return null;
@@ -217,7 +217,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
 
                 // Load the StrideMenuRenderer type using reflection
                 Assembly strideAssembly = graphicsDeviceType.Assembly;
-                Type strideMenuRendererType = strideAssembly.GetType("Andastra.Runtime.Stride.GUI.StrideMenuRenderer");
+                Type strideMenuRendererType = strideAssembly.GetType("Runtime.Stride.GUI.StrideMenuRenderer");
 
                 if (strideMenuRendererType == null)
                 {
@@ -358,8 +358,8 @@ namespace Andastra.Runtime.Graphics.Common.GUI
         /// - Handles reflection errors gracefully with detailed logging
         /// - Returns null if the field cannot be accessed or is null
         /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
-        /// - swkotor2.exe: FUN_006d2350 @ 0x006d2350 (menu constructor/initializer)
-        /// - swkotor.exe: FUN_0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+        /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+        /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
         /// </remarks>
         private static object ExtractStrideGraphicsDevice(object wrapper)
         {

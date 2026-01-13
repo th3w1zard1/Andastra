@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base interface for game profiles across all engines.

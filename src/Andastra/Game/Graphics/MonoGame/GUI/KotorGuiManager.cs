@@ -11,7 +11,7 @@ using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using Andastra.Game.Graphics.MonoGame.Converters;
 using Andastra.Game.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
@@ -47,7 +47,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
     ///
     /// Ghidra Reverse Engineering Analysis Required:
     /// - swkotor.exe: GUI font loading and text rendering functions (needs Ghidra address verification)
-    /// - swkotor2.exe: FUN_0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
+    /// - swkotor2.exe: 0x0070a2e0 @ 0x0070a2e0 demonstrates GUI loading pattern with button initialization (needs verification)
     /// - nwmain.exe: Aurora engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - daorigins.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
     /// - DragonAge2.exe: Eclipse engine GUI system and font rendering (needs Ghidra analysis for equivalent implementation)
@@ -78,7 +78,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         private string _previousHighlightedButtonTag; // Track previous hover state for sound effects
         private int _selectedButtonIndex = -1; // For keyboard navigation
         private List<GUIButton> _buttonList; // Ordered list of buttons for keyboard navigation
-        private readonly Andastra.Runtime.Core.Audio.ISoundPlayer _soundPlayer; // For button click/hover sounds
+        private readonly Runtime.Core.Audio.ISoundPlayer _soundPlayer; // For button click/hover sounds
 
         /// <summary>
         /// Event fired when a GUI checkbox is clicked.
@@ -102,8 +102,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// - Used for playing hover sound effects ("gui_actscroll" or "gui_actscroll1")
         /// - Returns null if no button is currently highlighted
         /// - Original implementation: Button hover state tracked internally for rendering and sound effects
-        /// - Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Button hover state tracking
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790 @ 0x006d0790: Button hover state tracking
+        /// - Based on swkotor.exe 0x0067ace0 @ 0x0067ace0: Button hover state tracking
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790 @ 0x006d0790: Button hover state tracking
         /// </remarks>
         [CanBeNull]
         public string HighlightedButtonTag => _highlightedButtonTag;
@@ -119,7 +119,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// <param name="device">Graphics device for rendering.</param>
         /// <param name="installation">Game installation for loading GUI resources.</param>
         /// <param name="soundPlayer">Sound player for button click/hover sounds (optional).</param>
-        public KotorGuiManager([NotNull] GraphicsDevice device, [NotNull] Installation installation, [CanBeNull] Andastra.Runtime.Core.Audio.ISoundPlayer soundPlayer = null)
+        public KotorGuiManager([NotNull] GraphicsDevice device, [NotNull] Installation installation, [CanBeNull] Runtime.Core.Audio.ISoundPlayer soundPlayer = null)
         {
             if (device == null)
             {
@@ -151,7 +151,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// <returns>True if GUI was loaded successfully, false otherwise.</returns>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) GUI loading:
-        /// - FUN_0070a2e0 @ 0x0070a2e0: Demonstrates GUI loading pattern
+        /// - 0x0070a2e0 @ 0x0070a2e0: Demonstrates GUI loading pattern
         /// - Loads GUI files from installation using resource lookup
         /// - Parses GUI structure using GUIReader
         /// - Sets up button click handlers and control references
@@ -217,8 +217,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 _buttonList = null;
 
                 // Note: RIM file loading (e.g., "RIMS:MAINMENU") is handled automatically by InstallationResourceManager
-                // Based on swkotor.exe FUN_0067c4c0 @ 0x0067c4c0:65-69 and swkotor2.exe FUN_006d2350 @ 0x006d2350:76-80
-                // Original engines explicitly load "RIMS:MAINMENU" RIM file after GUI load (FUN_004087c0/FUN_004089f0)
+                // Based on swkotor.exe 0x0067c4c0 @ 0x0067c4c0:65-69 and swkotor2.exe 0x006d2350 @ 0x006d2350:76-80
+                // Original engines explicitly load "RIMS:MAINMENU" RIM file after GUI load (0x004087c0/0x004089f0)
                 // Our resource system automatically searches RIM files during resource lookup, so explicit loading is not required
                 // The RIM file contains additional resources (textures, etc.) needed for the menu, which are loaded on-demand
 
@@ -468,8 +468,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             UpdateHighlightedButton(currentMouseState.X, currentMouseState.Y);
 
             // Play hover sound when button highlight changes
-            // Based on swkotor.exe FUN_0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+            // Based on swkotor.exe 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
             if (_highlightedButtonTag != _previousHighlightedButtonTag && !string.IsNullOrEmpty(_highlightedButtonTag))
             {
                 // Button hover sound - play when entering a button
@@ -2041,7 +2041,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             BaseBitmapFont font = null;
             try
             {
-                System.Type odysseyFontType = System.Type.GetType("Andastra.Runtime.Games.Odyssey.Fonts.OdysseyBitmapFont, Andastra.Runtime.Games.Odyssey");
+                System.Type odysseyFontType = System.Type.GetType("Andastra.Runtime.Games.Odyssey.Fonts.OdysseyBitmapFont, Runtime.Games.Odyssey");
                 if (odysseyFontType != null)
                 {
                     System.Reflection.MethodInfo loadMethod = odysseyFontType.GetMethod("Load", new System.Type[] { typeof(string), typeof(Installation), typeof(GraphicsDevice) });
@@ -2217,7 +2217,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
         /// </summary>
         private class LoadedGui
         {
-            public GUI Gui { get; set; }
+            public BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }
@@ -2253,8 +2253,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Plays button hover sound effect.
-        /// Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790 @ 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+        /// Based on swkotor.exe 0x0067ace0 @ 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790 @ 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
         /// </summary>
         private void PlayButtonHoverSound()
         {
@@ -2285,8 +2285,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
         /// <summary>
         /// Plays button click sound effect.
-        /// Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Plays "gui_actclick" or "gui_actclick1" on button click
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790 @ 0x006d0790: Plays "gui_actclick" or "gui_actclick1" on button click
+        /// Based on swkotor.exe 0x0067ace0 @ 0x0067ace0: Plays "gui_actclick" or "gui_actclick1" on button click
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 0x006d0790 @ 0x006d0790: Plays "gui_actclick" or "gui_actclick1" on button click
         /// </summary>
         private void PlayButtonClickSound()
         {

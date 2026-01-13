@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// - TEXTUREPACKS: Texture pack ERF files (swpc_tex_tpa.erf, swpc_tex_tpb.erf, etc.)
     /// - CHITIN: Main game archive (chitin.key references BIF files)
     /// - HARDCODED: Built-in resources (lowest priority, fallback)
-    /// - Resource lookup: FUN_00633270 @ 0x00633270 sets up resource directories and precedence
+    /// - Resource lookup: 0x00633270 @ 0x00633270 sets up resource directories and precedence
     /// - Based on CExoKeyTable resource management system in original engine
     /// </remarks>
     public interface IResourceProvider

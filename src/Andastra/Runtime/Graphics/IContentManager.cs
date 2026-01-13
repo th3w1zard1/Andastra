@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Graphics
     /// Content Manager Interface:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
     /// - Located via string references: "Resource" @ 0x007c14d4, "Loading" @ 0x007c7e40
-    /// - CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270 (resource path resolution)
+    /// - CExoKeyTable @ 0x007b6078, 0x00633270 @ 0x00633270 (resource path resolution)
     /// - Original implementation: Loads game assets (textures, models, sounds) from ERF/BIF files via CExoKeyTable
     /// - Resource loading: Original game uses CExoKeyTable to resolve resource paths and load from ERF/BIF archives
     /// - This interface: Abstraction layer for modern content management (MonoGame ContentManager, Stride AssetManager)

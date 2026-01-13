@@ -17,7 +17,7 @@ namespace Andastra.Game.Stride.Graphics
             _description = description ?? RasterizerStateDescription.Default;
         }
 
-        public Andastra.Runtime.Graphics.CullMode CullMode
+        public Runtime.Graphics.CullMode CullMode
         {
             get { return ConvertCullMode(_description.CullMode); }
             set
@@ -28,7 +28,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.FillMode FillMode
+        public Runtime.Graphics.FillMode FillMode
         {
             get { return ConvertFillMode(_description.FillMode); }
             set
@@ -101,59 +101,59 @@ namespace Andastra.Game.Stride.Graphics
 
         internal RasterizerStateDescription Description => _description;
 
-        private static global::Stride.Graphics.CullMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
+        private static global::Stride.Graphics.CullMode ConvertCullMode(Runtime.Graphics.CullMode mode)
         {
             switch (mode)
             {
-                case Andastra.Runtime.Graphics.CullMode.None:
+                case Runtime.Graphics.CullMode.None:
                     return global::Stride.Graphics.CullMode.None;
-                case Andastra.Runtime.Graphics.CullMode.CullClockwiseFace:
+                case Runtime.Graphics.CullMode.CullClockwiseFace:
                     return global::Stride.Graphics.CullMode.Front;
-                case Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace:
+                case Runtime.Graphics.CullMode.CullCounterClockwiseFace:
                     return global::Stride.Graphics.CullMode.Back;
                 default:
                     return global::Stride.Graphics.CullMode.Back;
             }
         }
 
-        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(global::Stride.Graphics.CullMode mode)
+        private static Runtime.Graphics.CullMode ConvertCullMode(global::Stride.Graphics.CullMode mode)
         {
             switch (mode)
             {
                 case global::Stride.Graphics.CullMode.None:
-                    return Andastra.Runtime.Graphics.CullMode.None;
+                    return Runtime.Graphics.CullMode.None;
                 case global::Stride.Graphics.CullMode.Front:
-                    return Andastra.Runtime.Graphics.CullMode.CullClockwiseFace;
+                    return Runtime.Graphics.CullMode.CullClockwiseFace;
                 case global::Stride.Graphics.CullMode.Back:
-                    return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
+                    return Runtime.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
-                    return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
+                    return Runtime.Graphics.CullMode.CullCounterClockwiseFace;
             }
         }
 
-        private static StrideGraphics.FillMode ConvertFillMode(Andastra.Runtime.Graphics.FillMode mode)
+        private static StrideGraphics.FillMode ConvertFillMode(Runtime.Graphics.FillMode mode)
         {
             switch (mode)
             {
-                case Andastra.Runtime.Graphics.FillMode.Solid:
+                case Runtime.Graphics.FillMode.Solid:
                     return StrideGraphics.FillMode.Solid;
-                case Andastra.Runtime.Graphics.FillMode.WireFrame:
+                case Runtime.Graphics.FillMode.WireFrame:
                     return StrideGraphics.FillMode.Wireframe;
                 default:
                     return StrideGraphics.FillMode.Solid;
             }
         }
 
-        private static Andastra.Runtime.Graphics.FillMode ConvertFillMode(StrideGraphics.FillMode mode)
+        private static Runtime.Graphics.FillMode ConvertFillMode(StrideGraphics.FillMode mode)
         {
             switch (mode)
             {
                 case StrideGraphics.FillMode.Solid:
-                    return Andastra.Runtime.Graphics.FillMode.Solid;
+                    return Runtime.Graphics.FillMode.Solid;
                 case StrideGraphics.FillMode.Wireframe:
-                    return Andastra.Runtime.Graphics.FillMode.WireFrame;
+                    return Runtime.Graphics.FillMode.WireFrame;
                 default:
-                    return Andastra.Runtime.Graphics.FillMode.Solid;
+                    return Runtime.Graphics.FillMode.Solid;
             }
         }
     }
@@ -192,7 +192,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.CompareFunction DepthBufferFunction
+        public Runtime.Graphics.CompareFunction DepthBufferFunction
         {
             get { return ConvertCompareFunction(_description.DepthBufferFunction); }
             set
@@ -225,7 +225,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.StencilOperation StencilFail
+        public Runtime.Graphics.StencilOperation StencilFail
         {
             get { return ConvertStencilOperation(_description.FrontFace.StencilFail); }
             set
@@ -238,7 +238,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.StencilOperation StencilDepthFail
+        public Runtime.Graphics.StencilOperation StencilDepthFail
         {
             get { return ConvertStencilOperation(_description.FrontFace.StencilDepthFail); }
             set
@@ -251,7 +251,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.StencilOperation StencilPass
+        public Runtime.Graphics.StencilOperation StencilPass
         {
             get { return ConvertStencilOperation(_description.FrontFace.StencilPass); }
             set
@@ -264,7 +264,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.CompareFunction StencilFunction
+        public Runtime.Graphics.CompareFunction StencilFunction
         {
             get { return ConvertCompareFunction(_description.FrontFace.StencilFunction); }
             set
@@ -317,58 +317,58 @@ namespace Andastra.Game.Stride.Graphics
 
         internal DepthStencilStateDescription Description => _description;
 
-        private static StrideGraphics.CompareFunction ConvertCompareFunction(Andastra.Runtime.Graphics.CompareFunction func)
+        private static StrideGraphics.CompareFunction ConvertCompareFunction(Runtime.Graphics.CompareFunction func)
         {
             return (StrideGraphics.CompareFunction)(int)func;
         }
 
-        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(StrideGraphics.CompareFunction func)
+        private static Runtime.Graphics.CompareFunction ConvertCompareFunction(StrideGraphics.CompareFunction func)
         {
-            return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
+            return (Runtime.Graphics.CompareFunction)(int)func;
         }
 
         /// <summary>
-        /// Converts Andastra.Runtime.Stride.Graphics.CompareFunction to Andastra.Runtime.Graphics.CompareFunction.
+        /// Converts Andastra.Runtime.Stride.Graphics.CompareFunction to Runtime.Graphics.CompareFunction.
         /// Both enums have identical values, so a direct cast is appropriate.
         /// </summary>
-        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(CompareFunction func)
+        private static Runtime.Graphics.CompareFunction ConvertCompareFunction(CompareFunction func)
         {
-            return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
+            return (Runtime.Graphics.CompareFunction)(int)func;
         }
 
         /// <summary>
-        /// Converts Andastra.Runtime.Graphics.CompareFunction to Andastra.Runtime.Stride.Graphics.CompareFunction.
+        /// Converts Andastra.Runtime.Graphics.CompareFunction to Runtime.Stride.Graphics.CompareFunction.
         /// Both enums have identical values, so a direct cast is appropriate.
         /// </summary>
-        private static CompareFunction ConvertCompareFunctionToStride(Andastra.Runtime.Graphics.CompareFunction func)
+        private static CompareFunction ConvertCompareFunctionToStride(Runtime.Graphics.CompareFunction func)
         {
             return (CompareFunction)(int)func;
         }
 
-        private static StrideGraphics.StencilOperation ConvertStencilOperation(Andastra.Runtime.Graphics.StencilOperation op)
+        private static StrideGraphics.StencilOperation ConvertStencilOperation(Runtime.Graphics.StencilOperation op)
         {
             return (StrideGraphics.StencilOperation)(int)op;
         }
 
-        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(StrideGraphics.StencilOperation op)
+        private static Runtime.Graphics.StencilOperation ConvertStencilOperation(StrideGraphics.StencilOperation op)
         {
-            return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
+            return (Runtime.Graphics.StencilOperation)(int)op;
         }
 
         /// <summary>
-        /// Converts Andastra.Runtime.Stride.Graphics.StencilOperation to Andastra.Runtime.Graphics.StencilOperation.
+        /// Converts Andastra.Runtime.Stride.Graphics.StencilOperation to Runtime.Graphics.StencilOperation.
         /// Both enums have identical values, so a direct cast is appropriate.
         /// </summary>
-        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(StencilOperation op)
+        private static Runtime.Graphics.StencilOperation ConvertStencilOperation(StencilOperation op)
         {
-            return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
+            return (Runtime.Graphics.StencilOperation)(int)op;
         }
 
         /// <summary>
-        /// Converts Andastra.Runtime.Graphics.StencilOperation to Andastra.Runtime.Stride.Graphics.StencilOperation.
+        /// Converts Andastra.Runtime.Graphics.StencilOperation to Runtime.Stride.Graphics.StencilOperation.
         /// Both enums have identical values, so a direct cast is appropriate.
         /// </summary>
-        private static StencilOperation ConvertStencilOperationToStride(Andastra.Runtime.Graphics.StencilOperation op)
+        private static StencilOperation ConvertStencilOperationToStride(Runtime.Graphics.StencilOperation op)
         {
             return (StencilOperation)(int)op;
         }
@@ -386,7 +386,7 @@ namespace Andastra.Game.Stride.Graphics
             _description = description ?? BlendStateDescription.Default();
         }
 
-        public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction
+        public Runtime.Graphics.BlendFunction AlphaBlendFunction
         {
             get { return ConvertBlendFunction(_description.AlphaBlendFunction); }
             set
@@ -397,7 +397,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.Blend AlphaDestinationBlend
+        public Runtime.Graphics.Blend AlphaDestinationBlend
         {
             get { return ConvertBlend(_description.AlphaDestinationBlend); }
             set
@@ -408,7 +408,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.Blend AlphaSourceBlend
+        public Runtime.Graphics.Blend AlphaSourceBlend
         {
             get { return ConvertBlend(_description.AlphaSourceBlend); }
             set
@@ -419,7 +419,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.BlendFunction ColorBlendFunction
+        public Runtime.Graphics.BlendFunction ColorBlendFunction
         {
             get { return ConvertBlendFunction(_description.ColorBlendFunction); }
             set
@@ -430,7 +430,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.Blend ColorDestinationBlend
+        public Runtime.Graphics.Blend ColorDestinationBlend
         {
             get { return ConvertBlend(_description.ColorDestinationBlend); }
             set
@@ -441,7 +441,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.Blend ColorSourceBlend
+        public Runtime.Graphics.Blend ColorSourceBlend
         {
             get { return ConvertBlend(_description.ColorSourceBlend); }
             set
@@ -452,7 +452,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels
         {
             get { return ConvertColorWriteChannels(_description.RenderTargets[0].ColorWriteChannels); }
             set
@@ -465,7 +465,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
         {
             get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 1 ? _description.RenderTargets[1].ColorWriteChannels : StrideGraphics.ColorWriteChannels.None); }
             set
@@ -481,7 +481,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
         {
             get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 2 ? _description.RenderTargets[2].ColorWriteChannels : StrideGraphics.ColorWriteChannels.None); }
             set
@@ -497,7 +497,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
         {
             get { return ConvertColorWriteChannels(_description.RenderTargets.Length > 3 ? _description.RenderTargets[3].ColorWriteChannels : StrideGraphics.ColorWriteChannels.None); }
             set
@@ -526,7 +526,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.Color BlendFactor
+        public Runtime.Graphics.Color BlendFactor
         {
             get { return ConvertColor(_description.BlendFactor); }
             set
@@ -562,7 +562,7 @@ namespace Andastra.Game.Stride.Graphics
         /// </summary>
         /// <param name="func">Andastra blend function to convert.</param>
         /// <returns>Equivalent Stride blend function.</returns>
-        private static StrideGraphics.BlendFunction ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
+        private static StrideGraphics.BlendFunction ConvertBlendFunction(Runtime.Graphics.BlendFunction func)
         {
             // Stride's BlendFunction enum matches Andastra's BlendFunction enum exactly:
             // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
@@ -576,69 +576,69 @@ namespace Andastra.Game.Stride.Graphics
         /// </summary>
         /// <param name="func">Stride blend function to convert.</param>
         /// <returns>Equivalent Andastra blend function.</returns>
-        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(StrideGraphics.BlendFunction func)
+        private static Runtime.Graphics.BlendFunction ConvertBlendFunction(StrideGraphics.BlendFunction func)
         {
             // Andastra's BlendFunction enum matches Stride's BlendFunction enum exactly:
             // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
-            return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
+            return (Runtime.Graphics.BlendFunction)(int)func;
         }
 
         /// <summary>
-        /// Converts Andastra.Runtime.Stride.Graphics.BlendFunction to Andastra.Runtime.Graphics.BlendFunction.
+        /// Converts Andastra.Runtime.Stride.Graphics.BlendFunction to Runtime.Graphics.BlendFunction.
         /// Both enums have identical values (Add, Subtract, ReverseSubtract, Min, Max),
         /// so a direct cast is appropriate.
         /// </summary>
         /// <param name="func">Stride namespace blend function to convert.</param>
         /// <returns>Equivalent Andastra blend function.</returns>
-        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(BlendFunction func)
+        private static Runtime.Graphics.BlendFunction ConvertBlendFunction(BlendFunction func)
         {
             // Both are Andastra enums with identical values:
             // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
-            return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
+            return (Runtime.Graphics.BlendFunction)(int)func;
         }
 
         /// <summary>
-        /// Converts Andastra.Runtime.Graphics.BlendFunction to Andastra.Runtime.Stride.Graphics.BlendFunction.
+        /// Converts Andastra.Runtime.Graphics.BlendFunction to Runtime.Stride.Graphics.BlendFunction.
         /// Both enums have identical values (Add, Subtract, ReverseSubtract, Min, Max),
         /// so a direct cast is appropriate.
         /// </summary>
         /// <param name="func">Andastra blend function to convert.</param>
         /// <returns>Equivalent Stride namespace blend function.</returns>
-        private static BlendFunction ConvertBlendFunctionToStride(Andastra.Runtime.Graphics.BlendFunction func)
+        private static BlendFunction ConvertBlendFunctionToStride(Runtime.Graphics.BlendFunction func)
         {
             // Both are Andastra enums with identical values:
             // Add = 0, Subtract = 1, ReverseSubtract = 2, Min = 3, Max = 4
             return (BlendFunction)(int)func;
         }
 
-        private static StrideGraphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
+        private static StrideGraphics.Blend ConvertBlend(Runtime.Graphics.Blend blend)
         {
             return (StrideGraphics.Blend)(int)blend;
         }
 
-        private static Andastra.Runtime.Graphics.Blend ConvertBlend(StrideGraphics.Blend blend)
+        private static Runtime.Graphics.Blend ConvertBlend(StrideGraphics.Blend blend)
         {
-            return (Andastra.Runtime.Graphics.Blend)(int)blend;
+            return (Runtime.Graphics.Blend)(int)blend;
         }
 
-        private static StrideGraphics.ColorWriteChannels ConvertColorWriteChannels(Andastra.Runtime.Graphics.ColorWriteChannels channels)
+        private static StrideGraphics.ColorWriteChannels ConvertColorWriteChannels(Runtime.Graphics.ColorWriteChannels channels)
         {
             return (StrideGraphics.ColorWriteChannels)(int)channels;
         }
 
-        private static Andastra.Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(StrideGraphics.ColorWriteChannels channels)
+        private static Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(StrideGraphics.ColorWriteChannels channels)
         {
-            return (Andastra.Runtime.Graphics.ColorWriteChannels)(int)channels;
+            return (Runtime.Graphics.ColorWriteChannels)(int)channels;
         }
 
-        private static global::Stride.Core.Mathematics.Color4 ConvertColor(Andastra.Runtime.Graphics.Color color)
+        private static global::Stride.Core.Mathematics.Color4 ConvertColor(Runtime.Graphics.Color color)
         {
             return new global::Stride.Core.Mathematics.Color4(color.R / 255.0f, color.G / 255.0f, color.B / 255.0f, color.A / 255.0f);
         }
 
-        private static Andastra.Runtime.Graphics.Color ConvertColor(global::Stride.Core.Mathematics.Color4 color)
+        private static Runtime.Graphics.Color ConvertColor(global::Stride.Core.Mathematics.Color4 color)
         {
-            return new Andastra.Runtime.Graphics.Color((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
+            return new Runtime.Graphics.Color((byte)(color.R * 255), (byte)(color.G * 255), (byte)(color.B * 255), (byte)(color.A * 255));
         }
     }
 
@@ -654,7 +654,7 @@ namespace Andastra.Game.Stride.Graphics
             _description = description ?? SamplerStateDescription.Default;
         }
 
-        public Andastra.Runtime.Graphics.TextureAddressMode AddressU
+        public Runtime.Graphics.TextureAddressMode AddressU
         {
             get { return ConvertTextureAddressMode(_description.AddressU); }
             set
@@ -665,7 +665,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.TextureAddressMode AddressV
+        public Runtime.Graphics.TextureAddressMode AddressV
         {
             get { return ConvertTextureAddressMode(_description.AddressV); }
             set
@@ -676,7 +676,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.TextureAddressMode AddressW
+        public Runtime.Graphics.TextureAddressMode AddressW
         {
             get { return ConvertTextureAddressMode(_description.AddressW); }
             set
@@ -687,7 +687,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        public Andastra.Runtime.Graphics.TextureFilter Filter
+        public Runtime.Graphics.TextureFilter Filter
         {
             get { return ConvertTextureFilter(_description.Filter); }
             set
@@ -738,32 +738,32 @@ namespace Andastra.Game.Stride.Graphics
 
         internal SamplerStateDescription Description => _description;
 
-        // Conversion from Andastra.Runtime.Graphics to Andastra.Runtime.Stride.Graphics (for SamplerStateDescription)
-        private static TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
+        // Conversion from Andastra.Runtime.Graphics to Runtime.Stride.Graphics (for SamplerStateDescription)
+        private static TextureAddressMode ConvertTextureAddressMode(Runtime.Graphics.TextureAddressMode mode)
         {
             // Both Andastra enums have identical values, so we can cast directly
             return (TextureAddressMode)(int)mode;
         }
 
-        // Conversion from Andastra.Runtime.Stride.Graphics to Andastra.Runtime.Graphics (for public interface)
-        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(TextureAddressMode mode)
+        // Conversion from Andastra.Runtime.Stride.Graphics to Runtime.Graphics (for public interface)
+        private static Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(TextureAddressMode mode)
         {
             // Both Andastra enums have identical values, so we can cast directly
-            return (Andastra.Runtime.Graphics.TextureAddressMode)(int)mode;
+            return (Runtime.Graphics.TextureAddressMode)(int)mode;
         }
 
-        // Conversion from Andastra.Runtime.Graphics to Andastra.Runtime.Stride.Graphics (for SamplerStateDescription)
-        private static TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
+        // Conversion from Andastra.Runtime.Graphics to Runtime.Stride.Graphics (for SamplerStateDescription)
+        private static TextureFilter ConvertTextureFilter(Runtime.Graphics.TextureFilter filter)
         {
             // Both Andastra enums have identical values, so we can cast directly
             return (TextureFilter)(int)filter;
         }
 
-        // Conversion from Andastra.Runtime.Stride.Graphics to Andastra.Runtime.Graphics (for public interface)
-        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(TextureFilter filter)
+        // Conversion from Andastra.Runtime.Stride.Graphics to Runtime.Graphics (for public interface)
+        private static Runtime.Graphics.TextureFilter ConvertTextureFilter(TextureFilter filter)
         {
             // Both Andastra enums have identical values, so we can cast directly
-            return (Andastra.Runtime.Graphics.TextureFilter)(int)filter;
+            return (Runtime.Graphics.TextureFilter)(int)filter;
         }
     }
 }

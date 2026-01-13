@@ -8,7 +8,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// AI controller system for NPCs in Odyssey engine (KOTOR, KOTOR 2, Jade Empire).
@@ -41,7 +41,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
     /// - Party AI: Party members use AI controller when not player-controlled (PT_AISTATE from PARTYTABLE)
     /// - Based on KOTOR AI behavior from vendor/PyKotor/wiki/ and plan documentation
     /// </remarks>
-    public class AIController : BaseAIControllerSystem
+    public class AIController : Runtime.Games.Common.BaseAIControllerSystem
     {
         private readonly Action<IEntity, ScriptEvent, IEntity> _fireScriptEvent;
         private readonly Dictionary<IEntity, IdleState> _idleStates;

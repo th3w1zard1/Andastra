@@ -2304,7 +2304,7 @@ namespace Andastra.Game.Core
         /// <summary>
         /// Draws a filled rectangle using a 1x1 pixel texture.
         /// </summary>
-        private void DrawRectangle(ISpriteBatch spriteBatch, Rectangle rect, Andastra.Runtime.Graphics.Color color)
+        private void DrawRectangle(ISpriteBatch spriteBatch, Rectangle rect, Runtime.Graphics.Color color)
         {
             if (_pixelTexture == null)
             {
@@ -2316,7 +2316,7 @@ namespace Andastra.Game.Core
         /// <summary>
         /// Draws a rectangle outline using a 1x1 pixel texture.
         /// </summary>
-        private void DrawRectangleOutline(ISpriteBatch spriteBatch, Rectangle rect, Andastra.Runtime.Graphics.Color color, int thickness)
+        private void DrawRectangleOutline(ISpriteBatch spriteBatch, Rectangle rect, Runtime.Graphics.Color color, int thickness)
         {
             if (_pixelTexture == null)
             {

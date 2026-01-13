@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Core.Triggers
     /// - Event types: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_ENTER" @ 0x007bc9b8 (0xc), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OBJECT_EXIT" @ 0x007bc9cc (0xd)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc9e0 (0x1e), "EVENT_ENTERED_TRIGGER" @ 0x007bce08 (event type 2)
     /// - "EVENT_LEFT_TRIGGER" @ 0x007bcdf4 (event type 3), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles script event dispatching
     ///   - Case 2 = EVENT_ENTERED_TRIGGER (fires OnEnter scripts)
     ///   - Case 3 = EVENT_LEFT_TRIGGER (fires OnExit scripts)
     ///   - Case 0x1e (30) = CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED (fires OnClick scripts for doors/placeables/triggers)
@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Core.Triggers
         private readonly IWorld _world;
         private readonly Dictionary<ITriggerComponent, HashSet<IEntity>> _occupants;
 
-        public TriggerSystem(IWorld world)
+        public TriggerSystem(IWorld world, Action<IEntity, ScriptEvent, IEntity> fireScriptEvent)
         {
             _world = world ?? throw new ArgumentNullException("world");
             _occupants = new Dictionary<ITriggerComponent, HashSet<IEntity>>();
@@ -229,7 +229,7 @@ namespace Andastra.Runtime.Core.Triggers
                     // Execute script with trigger as owner and entering entity as triggerer
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Trigger OnEnter script execution
                     // Located via string references: "OnEnter" @ 0x007bee60
-                    // Original implementation: FUN_005226d0 @ 0x005226d0 executes trigger scripts with entity context
+                    // Original implementation: 0x005226d0 @ 0x005226d0 executes trigger scripts with entity context
                     if (_world.EventBus != null)
                     {
                         _world.EventBus.FireScriptEvent(triggerEntity, ScriptEvent.OnEnter, entity);
@@ -273,7 +273,7 @@ namespace Andastra.Runtime.Core.Triggers
                     // Execute script with trigger as owner and exiting entity as triggerer
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Trigger OnExit script execution
                     // Located via string references: "OnExit" @ 0x007bee70
-                    // Original implementation: FUN_005226d0 @ 0x005226d0 executes trigger scripts with entity context
+                    // Original implementation: 0x005226d0 @ 0x005226d0 executes trigger scripts with entity context
                     if (_world.EventBus != null)
                     {
                         _world.EventBus.FireScriptEvent(triggerEntity, ScriptEvent.OnExit, entity);

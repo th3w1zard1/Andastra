@@ -25,8 +25,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - "OnTrapTriggered" @ 0x007c1a34, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
     ///   - Transition fields: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
     ///   - "TransitionDestination" @ 0x007bd7a4 (waypoint tag for positioning after transition)
-    ///   - FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT TriggerList, reads UTT templates
-    ///   - FUN_004dcfb0 @ 0x004dcfb0 handles trigger events (EVENT_ENTERED_TRIGGER case 2, EVENT_LEFT_TRIGGER case 3)
+    ///   - 0x004e5920 @ 0x004e5920 loads trigger instances from GIT TriggerList, reads UTT templates
+    ///   - 0x004dcfb0 @ 0x004dcfb0 handles trigger events (EVENT_ENTERED_TRIGGER case 2, EVENT_LEFT_TRIGGER case 3)
     ///
     /// Aurora Engine (nwmain.exe):
     /// - Based on CNWSTrigger class

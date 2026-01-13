@@ -9,7 +9,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Stride.Converters;
+using Andastra.Game.Stride.Converters;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using Stride.Graphics;
@@ -24,18 +24,16 @@ namespace Andastra.Game.Stride.Graphics
     /// Entity Model Renderer:
     /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
     ///   - Odyssey (swkotor.exe, swkotor2.exe):
-    ///     - swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c (similar pattern)
-    ///     - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
-    ///     - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe)
-    ///     - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x0074f85c (swkotor.exe)
+    ///     - [CSWCCreature::LoadModel()] @ (K1: 0x0074f85c, TSL: 0x005261b0) - loads creature model from appearance.2da
+    ///     - CSWCCreature::LoadModel @ (K1: TODO: Find this address, TSL: 0x007c82fc) - "Failed to load creature model '%s'." error string
     ///     - Model loading: Loads UTC (creature template) from resources, resolves model from appearance.2da
-    ///     - Appearance resolution: FUN_005fb0f0 resolves appearance data, FUN_00521d40 loads model
+    ///     - Appearance resolution: 0x005fb0f0 resolves appearance data, 0x00521d40 loads model
     ///   - Aurora (nwmain.exe):
     ///     - LoadModel @ 0x1400a0130 - loads Model objects from file streams
     ///     - CNWCCreature::LoadModel() - loads creature models via CResRef
     ///     - CNWCItem::LoadModel, CNWCDoor::LoadModel, CNWCPlaceable::LoadModel - entity-specific loaders
     ///     - Model caching: Uses global _Models array to cache loaded models
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe):
+    ///   - Eclipse (daorigins.exe: (TODO: Find this address), DragonAge2.exe: (TODO: Find this address)):
     ///     - Model loading patterns differ (uses different file formats)
     ///     - Entity model rendering handled through different systems
     /// - Common Patterns (All Engines):
@@ -56,7 +54,7 @@ namespace Andastra.Game.Stride.Graphics
         private readonly GraphicsDevice _graphicsDevice;
         private readonly Dictionary<string, MdlToStrideModelConverter.ConversionResult> _modelCache;
         private readonly Dictionary<string, IBasicEffect> _materialCache;
-        private readonly Andastra.Runtime.Engines.Odyssey.Data.GameDataManager _gameDataManager;
+        private readonly Andastra.Game.Games.Odyssey.Data.GameDataManager _gameDataManager;
         private readonly Installation _installation;
         private readonly Func<string, IBasicEffect> _materialResolver;
 
@@ -71,7 +69,7 @@ namespace Andastra.Game.Stride.Graphics
             }
 
             _graphicsDevice = device;
-            _gameDataManager = gameDataManager as Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
+            _gameDataManager = gameDataManager as Andastra.Game.Games.Odyssey.Data.GameDataManager;
             _installation = installation as Installation;
             _modelCache = new Dictionary<string, MdlToStrideModelConverter.ConversionResult>(StringComparer.OrdinalIgnoreCase);
             _materialCache = new Dictionary<string, IBasicEffect>(StringComparer.OrdinalIgnoreCase);
@@ -219,17 +217,15 @@ namespace Andastra.Game.Stride.Graphics
                 Matrix strideWorld = ConvertToStrideMatrix(finalWorld);
 
                 // Get Stride buffers
-                StrideVertexBuffer strideVertexBuffer = mesh.VertexBuffer as StrideVertexBuffer;
-                StrideIndexBuffer strideIndexBuffer = mesh.IndexBuffer as StrideIndexBuffer;
 
-                if (strideVertexBuffer == null || strideIndexBuffer == null)
+                if (!(mesh.VertexBuffer is StrideVertexBuffer strideVertexBuffer) || !(mesh.IndexBuffer is StrideIndexBuffer strideIndexBuffer))
                 {
                     continue;
                 }
 
                 // Set vertex and index buffers
-                commandList.SetVertexBuffer(0, strideVertexBuffer.Buffer, 0, strideVertexBuffer.VertexStride);
-                commandList.SetIndexBuffer(strideIndexBuffer.Buffer, 0, strideIndexBuffer.IsShort);
+                commandList?.SetVertexBuffer(0, strideVertexBuffer.Buffer, 0, strideVertexBuffer.VertexStride);
+                commandList?.SetIndexBuffer(strideIndexBuffer.Buffer, 0, strideIndexBuffer.IsShort);
 
                 // Use mesh effect or default
                 IBasicEffect effect = mesh.Effect ?? CreateDefaultEffect();
@@ -244,7 +240,7 @@ namespace Andastra.Game.Stride.Graphics
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                     // Opacity is updated by AppearAnimationFadeSystem for appear animations
                     // Opacity is updated by ActionDestroyObject for destroy animations
-                    float opacity = renderable.Opacity;
+                    float opacity = renderable?.Opacity ?? 1.0f;
                     strideEffect.Alpha = opacity;
 
                     // Apply effect
@@ -261,7 +257,7 @@ namespace Andastra.Game.Stride.Graphics
 
                 if (primitiveCount > 0)
                 {
-                    commandList.DrawIndexed(
+                    commandList?.DrawIndexed(
                         primitiveCount,
                         indexCount
                     );
@@ -337,13 +333,15 @@ namespace Andastra.Game.Stride.Graphics
         {
             foreach (MdlToStrideModelConverter.ConversionResult result in _modelCache.Values)
             {
-                if (result != null && result.Meshes != null)
+                if (result == null || result.Meshes == null)
                 {
-                    foreach (MdlToStrideModelConverter.MeshData mesh in result.Meshes)
-                    {
-                        mesh.VertexBuffer?.Dispose();
-                        mesh.IndexBuffer?.Dispose();
-                    }
+                    continue;
+                }
+
+                foreach (MdlToStrideModelConverter.MeshData mesh in result.Meshes)
+                {
+                    mesh.VertexBuffer?.Dispose();
+                    mesh.IndexBuffer?.Dispose();
                 }
             }
             _modelCache.Clear();

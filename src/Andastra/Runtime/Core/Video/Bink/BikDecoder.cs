@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 {
     /// <summary>
     /// BIK video decoder using BINKW32.DLL.
-    /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (main playback loop)
+    /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 (main playback loop)
     /// </summary>
     internal class BikDecoder : IDisposable
     {
@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Opens the BIK file and initializes playback.
-        /// Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 (movie initialization)
+        /// Based on swkotor.exe: 0x004053e0 @ 0x004053e0 (movie initialization)
         /// </summary>
         public void Open()
         {
@@ -50,12 +50,12 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Initialize Miles sound system for audio
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 121 calls BinkOpenMiles
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 121 calls BinkOpenMiles
             // Line 121: _BinkOpenMiles_4_exref = _BinkOpenMiles_4(...)
             IntPtr milesHandle = BinkApi.BinkOpenMiles(22050); // Standard sample rate (can be adjusted)
 
             // Open BIK file
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 124 calls BinkOpen
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 124 calls BinkOpen
             // Parameters: path, flags (0x8000000)
             const uint BinkOpenFlags = 0x8000000; // Flags from decompilation
             _binkHandle = BinkApi.BinkOpen(_moviePath, BinkOpenFlags);
@@ -65,7 +65,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Set sound system for audio playback
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 121 calls BinkSetSoundSystem
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 121 calls BinkSetSoundSystem
             if (milesHandle != IntPtr.Zero)
             {
                 BinkApi.BinkSetSoundSystem(_binkHandle, milesHandle);
@@ -79,7 +79,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             _frameHeight = _summary.Height;
 
             // Create buffer for video frames
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 128 calls BinkBufferOpen
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 128 calls BinkBufferOpen
             // Parameters: window handle, width, height, flags (0x5d000000)
             // Line 128: _BinkBufferOpen_16(*(undefined4 *)((int)this + 0x50), *puVar8, puVar8[1], 0x5d000000)
             // windowHandle = this + 0x50 (window handle), width = *puVar8 (BINK width), height = puVar8[1] (BINK height)
@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Set buffer scale and offset for fullscreen rendering
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154-160
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 154-160
             // BinkBufferSetScale and BinkBufferSetOffset are called to position video
             MovieViewport viewport = _graphicsDevice.Viewport;
             int screenWidth = viewport.Width;
@@ -111,11 +111,11 @@ namespace Andastra.Runtime.Core.Video.Bink
             int offsetY = (screenHeight - scaledHeight) / 2;
 
             // Set buffer scale for fullscreen rendering
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 154 calls BinkBufferSetScale
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 154 calls BinkBufferSetScale
             BinkApi.BinkBufferSetScale(_bufferHandle, scaledWidth, scaledHeight);
 
             // Set buffer offset for centering
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 line 158-160 calls BinkBufferSetOffset
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 line 158-160 calls BinkBufferSetOffset
             BinkApi.BinkBufferSetOffset(_bufferHandle, offsetX, offsetY);
 
             // Allocate frame buffer for copying to texture (RGBA format)
@@ -151,7 +151,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Gets the current frame number.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 13 checks frame count
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 13 checks frame count
         /// </summary>
         public int CurrentFrame
         {
@@ -180,7 +180,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Gets whether playback is complete.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 13 checks frame count
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 13 checks frame count
         /// </summary>
         public bool IsComplete
         {
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Decodes and renders the current frame.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (main playback loop)
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 (main playback loop)
         /// </summary>
         /// <returns>True if frame was decoded, false if playback is complete.</returns>
         public bool DecodeFrame()
@@ -220,7 +220,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Decode current frame
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
             // BinkDoFrame returns 0 on success, non-zero on error
             int result = BinkApi.BinkDoFrame(_binkHandle);
             if (result != 0)
@@ -231,7 +231,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Lock buffer for writing
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 16 calls BinkBufferLock
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 16 calls BinkBufferLock
             // BinkBufferLock returns pointer to buffer memory (non-zero if successful)
             // Line 16: iVar1 = _BinkBufferLock_4(*(undefined4 *)(param_1 + 0x4c));
             // Returns buffer pointer directly
@@ -239,7 +239,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             if (bufferPtr != IntPtr.Zero)
             {
                 // Copy decoded frame to buffer
-                // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 19-22 calls BinkCopyToBuffer
+                // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 19-22 calls BinkCopyToBuffer
                 // Parameters from decompilation:
                 //   bink = *(undefined4 *)(param_1 + 0x48) - BINK handle
                 //   dest = *(undefined4 *)(iVar1 + 0x14) - buffer pointer from BinkBufferLock
@@ -260,12 +260,12 @@ namespace Andastra.Runtime.Core.Video.Bink
                 Marshal.Copy(bufferPtr, _frameBuffer, 0, bufferSize);
 
                 // Unlock buffer
-                // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 23 calls BinkBufferUnlock
+                // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 23 calls BinkBufferUnlock
                 BinkApi.BinkBufferUnlock(_bufferHandle);
             }
 
             // Update texture with frame data
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
             // Original: Blits buffer directly to screen, we update texture for rendering
             if (_frameTexture != null && _frameBuffer != null)
             {
@@ -274,17 +274,17 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Get destination rectangles for blitting
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 25-26 calls BinkGetRects
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 25-26 calls BinkGetRects
             // Note: BinkGetRects may not be needed if we're using texture rendering instead of direct blit
             // IntPtr rects = BinkApi.BinkGetRects(_binkHandle, IntPtr.Zero);
 
             // Blit to screen (optional - we're using texture rendering instead)
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
             // Original: Blits directly to screen, we use texture rendering for abstraction
             // BinkApi.BinkBufferBlit(_bufferHandle, rects, IntPtr.Zero);
 
             // Advance to next frame
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 28 calls BinkNextFrame
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 28 calls BinkNextFrame
             BinkApi.BinkNextFrame(_binkHandle);
 
             return true;
@@ -292,7 +292,7 @@ namespace Andastra.Runtime.Core.Video.Bink
 
         /// <summary>
         /// Waits for frame timing.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 29-33 (BinkWait with Sleep loop)
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 29-33 (BinkWait with Sleep loop)
         /// </summary>
         public void WaitForFrame()
         {
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Core.Video.Bink
             }
 
             // Wait for frame timing
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 29-33
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 29-33
             // BinkWait returns 1 if need to wait more, 0 if ready
             int waitResult = BinkApi.BinkWait(_binkHandle);
             while (waitResult == 1)

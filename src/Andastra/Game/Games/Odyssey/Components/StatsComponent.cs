@@ -24,8 +24,8 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Save fields: "FortSave" @ 0x007c4764, "RefSave" @ 0x007c4750, "WillSave" @ 0x007c4758 (save throw fields)
     /// - "FortSaveThrow" @ 0x007c42b4, "RefSaveThrow" @ 0x007c42c4, "WillSaveThrow" @ 0x007c42d4 (save throw calculation fields)
     /// - "Save_DC" @ 0x007c048c (save DC field), "DC_SAVE" @ 0x007c0160 (DC save constant)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature stats to GFF including abilities, HP, saves)
-    /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature stats from GIT including abilities, HP, saves, BAB)
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 (save creature stats to GFF including abilities, HP, saves)
+    /// - 0x004dfbb0 @ 0x004dfbb0 (load creature stats from GIT including abilities, HP, saves, BAB)
     /// - Ability scores, HP, BAB, saves stored in creature GFF structures at offsets in creature object
     /// - Ability scores: 1-30+ range, modifier = (score - 10) / 2 (D20 formula, rounded down)
     /// - Hit points: Based on class hit dice + Con modifier per level (from classes.2da HP column)
@@ -516,12 +516,12 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Loads stats from entity's stored data.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005223a0 @ 0x005223a0 loads creature data from GFF
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005223a0 @ 0x005223a0 loads creature data from GFF
         /// - Loads AreaId, creature template data, DetectMode, StealthMode, CreatureSize
         /// - Loads BonusForcePoints, AssignedPup, PlayerCreated, AmbientAnimState, Animation
-        /// - Calls FUN_0050c510 (load creature scripts), FUN_00521d40 (load creature equipment)
-        /// - Calls FUN_005f9e00 (load creature inventory), FUN_00509bf0, FUN_00513440, FUN_0051d4d0, FUN_0050b650
-        /// - FUN_005fb0f0 @ 0x005fb0f0 loads creature template data from UTC GFF including stats
+        /// - Calls 0x0050c510 (load creature scripts), 0x00521d40 (load creature equipment)
+        /// - Calls 0x005f9e00 (load creature inventory), 0x00509bf0, 0x00513440, 0x0051d4d0, 0x0050b650
+        /// - 0x005fb0f0 @ 0x005fb0f0 loads creature template data from UTC GFF including stats
         ///   - Loads CurrentHitPoints, MaxHitPoints, CurrentForce, ForcePoints
         ///   - Loads Str, Dex, Con, Int, Wis, Cha ability scores
         ///   - Loads NaturalAC, fortbonus, refbonus, willbonus
@@ -539,7 +539,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Load HP from entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads CurrentHitPoints and MaxHitPoints from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 loads CurrentHitPoints and MaxHitPoints from UTC template
             // EntityFactory stores "CurrentHP" and "HP" via SetData when loading from GIT
             if (Owner.HasData("CurrentHP"))
             {
@@ -574,7 +574,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Load Force Points from entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads CurrentForce and ForcePoints from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 loads CurrentForce and ForcePoints from UTC template
             if (Owner.HasData("CurrentFP"))
             {
                 int currentFP = Owner.GetData<int>("CurrentFP", 0);
@@ -594,7 +594,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Load ability scores from entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads Str, Dex, Con, Int, Wis, Cha from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 loads Str, Dex, Con, Int, Wis, Cha from UTC template
             // OdysseyEntity.Serialize() saves abilities in "Abilities" struct with keys "STR", "DEX", etc.
             if (Owner.HasData("Abilities"))
             {
@@ -687,7 +687,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Load base saving throws from entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads fortbonus, refbonus, willbonus from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 loads fortbonus, refbonus, willbonus from UTC template
             int fortitude = Owner.GetData<int>("FortitudeSave", Owner.GetData<int>("fortbonus", -1));
             int reflex = Owner.GetData<int>("ReflexSave", Owner.GetData<int>("refbonus", -1));
             int will = Owner.GetData<int>("WillSave", Owner.GetData<int>("willbonus", -1));
@@ -771,7 +771,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Load skills from entity data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads skills from SkillList in UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 loads skills from SkillList in UTC template
             // KOTOR has 8 skills: COMPUTER_USE (0), DEMOLITIONS (1), STEALTH (2), AWARENESS (3), PERSUADE (4), REPAIR (5), SECURITY (6), TREAT_INJURY (7)
             for (int skillId = 0; skillId < 8; skillId++)
             {

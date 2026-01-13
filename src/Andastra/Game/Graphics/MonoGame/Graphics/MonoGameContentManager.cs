@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -77,7 +77,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
         /// 
         /// Original game reference (swkotor2.exe):
         /// - CExoKeyTable @ 0x007b6078 - resource lookup table
-        /// - FUN_00633270 @ 0x00633270 - resource path resolution
+        /// - 0x00633270 @ 0x00633270 - resource path resolution
         /// - Original game checks ERF/BIF archives for resource existence
         /// - This implementation: Modern equivalent for MonoGame's file-based content system
         /// </remarks>

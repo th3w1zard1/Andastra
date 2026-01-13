@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Error messages:
     ///   - "Problem loading encounter with tag '%s'.  It has geometry, but no vertices.  Skipping." @ 0x007c0ae0 (encounter geometry error)
     ///   - "Encounter template %s doesn't exist.\n" @ 0x007c0df0 (encounter template not found error)
-    /// - Original implementation: FUN_004e01a0 @ 0x004e01a0 (load encounter instances from GIT)
+    /// - Original implementation: 0x004e01a0 @ 0x004e01a0 (load encounter instances from GIT)
     /// - Encounters spawn creatures when hostile creatures enter encounter polygon area (SpawnOption 0 = on enter)
     /// - UTE file format: GFF with "UTE " signature containing encounter data (Active, Geometry, SpawnPointList, MaxCreatures, RecCreatures, SpawnOption)
     /// - Encounters have polygon geometry defining spawn area (Geometry field), creature templates (SpawnPointList)
@@ -25,7 +25,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Reset: Whether encounter resets after creatures are defeated (Reset field, ResetTime for reset delay)
     /// - PlayerOnly: Whether encounter only spawns when player enters (PlayerOnly field)
     /// - Faction: Faction ID to assign to spawned creatures (Faction field)
-    /// - FUN_004e01a0 reads XPosition, YPosition, ZPosition, Geometry, SpawnPointList from GIT encounter instances
+    /// - 0x004e01a0 reads XPosition, YPosition, ZPosition, Geometry, SpawnPointList from GIT encounter instances
     /// - Encounter exhausted: Fires ON_ENCOUNTER_EXHAUSTED script event when max creatures spawned
     /// - Based on UTE file format documentation in vendor/PyKotor/wiki/
     /// </remarks>

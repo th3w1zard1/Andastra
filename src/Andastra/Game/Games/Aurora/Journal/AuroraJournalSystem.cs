@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Journal;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Aurora.Journal

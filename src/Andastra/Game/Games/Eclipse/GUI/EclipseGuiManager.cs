@@ -462,7 +462,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 if (fillTexture != null)
                 {
                     float alpha = panel.Alpha;
-                    var color = new Andastra.Runtime.Color(255, 255, 255, (byte)(255 * alpha));
+                    var color = new Runtime.Graphics.Color(255, 255, 255, (byte)(255 * alpha));
                     _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
@@ -492,7 +492,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 ITexture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    var color = new Color(255, 255, 255, 255);
+                    var color = new Runtime.Graphics.Color(255, 255, 255, 255);
                     _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
@@ -500,7 +500,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
             {
                 string text = button.GuiText.Text;
-                var textColor = new Color(
+                var textColor = new Runtime.Graphics.Color(
                     button.GuiText.Color.R, button.GuiText.Color.G, button.GuiText.Color.B, button.GuiText.Color.A);
 
                 BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
@@ -519,7 +519,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
                 string text = label.GuiText.Text;
-                var textColor = new Color(
+                var textColor = new Runtime.Graphics.Color(
                     label.GuiText.Color.R, label.GuiText.Color.G, label.GuiText.Color.B, label.GuiText.Color.A);
 
                 BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
@@ -540,13 +540,13 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 ITexture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    var color = new Color(255, 255, 255, 255);
+                    var color = new Runtime.Graphics.Color(255, 255, 255, 255);
                     _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
         }
 
-        private void RenderBitmapText(BaseBitmapFont font, string text, NumericsVector2 position, Microsoft.Xna.Framework.Color color)
+        private void RenderBitmapText(BaseBitmapFont font, string text, NumericsVector2 position, Runtime.Graphics.Color color)
         {
             if (font == null || string.IsNullOrEmpty(text)) return;
 
@@ -569,7 +569,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                     ITexture2D texture = font.Texture;
                     var sourceRect = new Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
                     var destRect = new Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
-                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, new Runtime.Graphics.Vector2(0, 0), SpriteEffects.None, 0.0f);
                     x += g.Width + font.SpacingR;
                 }
                 else
@@ -771,7 +771,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new ParsingColor(selected.Color) : null,
+                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color.R, selected.Color.G, selected.Color.B, selected.Color.A) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -787,7 +787,7 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new ParsingColor(hilightSelected.Color) : null,
+                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color.R, hilightSelected.Color.G, hilightSelected.Color.B, hilightSelected.Color.A) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }

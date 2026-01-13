@@ -17,7 +17,7 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// Base Graphics Backend:
     /// - This is an abstraction layer for modern graphics APIs (DirectX 11/12, Vulkan, OpenGL, Metal)
     /// - Original game graphics system: Primarily DirectX 9 (d3d9.dll @ 0x0080a6c0) or OpenGL (OPENGL32.dll @ 0x00809ce2)
-    /// - Graphics initialization: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
+    /// - Graphics initialization: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) handles graphics setup
     /// - Located via string references: "Render Window" @ 0x007b5680, "Graphics Options" @ 0x007b56a8, "2D3DBias" @ 0x007c612c
     /// - Original game graphics device: glClear @ 0x0080a9c0, glViewport @ 0x0080a9d8, glDrawArrays @ 0x0080aab6, glDrawElements @ 0x0080aafe
     /// - This abstraction: Provides unified interface for modern graphics APIs, not directly mapped to swkotor2.exe functions

@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Core
     /// - Original implementation: Game settings loaded from INI file (swkotor2.ini for K2, swkotor.ini for K1)
     /// - Settings include: BioWareGame path window size, fullscreen mode, graphics options, audio options
     /// - Command-line arguments override INI file settings
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads configuration from INI file)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads configuration from INI file)
     /// </remarks>
     public class GameSettings
     {
@@ -124,8 +124,8 @@ namespace Andastra.Runtime.Core
         /// - Located via string references: "MusicVolume" @ 0x007c2cdc, "SoundVolume" @ 0x007c2ce0, "VoiceVolume" @ 0x007c2ce4
         /// - Original implementation: Audio volumes stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
         /// - Volume range: 0.0 to 1.0 (0% to 100% in UI)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads audio settings from INI file)
         /// </remarks>
         public AudioSettings Audio { get; set; } = new AudioSettings();
 
@@ -138,8 +138,8 @@ namespace Andastra.Runtime.Core
         /// - Located via string references: "Width" @ 0x007c2cd0, "Height" @ 0x007c2cd4, "Fullscreen" @ 0x007c2cd8
         /// - Original implementation: Graphics settings stored in INI file (swkotor2.ini for K2, swkotor.ini for K1)
         /// - Settings include: Resolution, Fullscreen mode, Texture quality, Shadow quality, Anti-aliasing
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads graphics settings from INI file)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes graphics settings to INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads graphics settings from INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes graphics settings to INI file)
         /// </remarks>
         public GraphicsSettings Graphics { get; set; } = new GraphicsSettings();
 
@@ -326,8 +326,8 @@ namespace Andastra.Runtime.Core
         /// - Original implementation: Various visual/audio feedback options
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnFeedbackOpt @ 0x006e2df0 (feedback options handler)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes feedback settings to INI file)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads feedback settings from INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes feedback settings to INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads feedback settings from INI file)
         /// </remarks>
         public FeedbackSettings Feedback { get; set; } = new FeedbackSettings();
 
@@ -342,8 +342,8 @@ namespace Andastra.Runtime.Core
         /// - Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
         /// - Settings stored in INI file (swkotor.ini for K1, swkotor2.ini for K2)
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes controls settings to INI file)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads controls settings from INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes controls settings to INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads controls settings from INI file)
         /// - Key bindings: All game actions can be rebound (Pause, Cycle Party, Quick Slots, etc.)
         /// - Mouse settings: Sensitivity, invert Y axis, button configuration
         /// </remarks>

@@ -7,8 +7,8 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.VM;
 
 namespace Andastra.Game.Scripting
 {
@@ -26,13 +26,13 @@ namespace Andastra.Game.Scripting
     /// - Execution context: Creates ExecutionContext with entity as caller, triggerer as parameter
     /// - Heartbeat timing: OnHeartbeat fires every 6 seconds (heartbeat interval)
     /// - Original implementation:
-    ///   - swkotor2.exe: DispatchScriptEvent @ 0x004dd730 - Dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, calls FUN_004db870 to match event types, queues matching handlers
+    ///   - swkotor2.exe: DispatchScriptEvent @ 0x004dd730 - Dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, calls 0x004db870 to match event types, queues matching handlers
     ///   - swkotor2.exe: LoadScriptHooks @ 0x0050c510 - Loads script hook references from GFF templates (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue)
     ///   - swkotor2.exe: LogScriptEvent @ 0x004dcfb0 - Logs script events for debugging, maps event types to string names
-    ///   - swkotor.exe: DispatchScriptEvent (FUN_004af630 @ 0x004af630) - Equivalent to swkotor2.exe DispatchScriptEvent, dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, matches event types, queues matching handlers. Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x00744958, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x00744930, "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x00744904 (swkotor.exe). Event subtype mapping logic is identical to swkotor2.exe but uses different string constant addresses.
+    ///   - swkotor.exe: DispatchScriptEvent (0x004af630 @ 0x004af630) - Equivalent to swkotor2.exe DispatchScriptEvent, dispatches script events to registered handlers, creates event data structure, iterates through registered script handlers, matches event types, queues matching handlers. Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x00744958, "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x00744930, "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x00744904 (swkotor.exe). Event subtype mapping logic is identical to swkotor2.exe but uses different string constant addresses.
     ///   - swkotor.exe: LoadScriptHooks - Loads script hook references from GFF templates (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue). Function address needs verification via Ghidra analysis (expected in 0x004f-0x0050 address range based on swkotor.exe function address patterns).
-    ///   - swkotor.exe: LogScriptEvent - Logs script events for debugging, maps event types to string names. String constants located at 0x00744958 (ON_HEARTBEAT), 0x00744930 (ON_PERCEPTION), 0x00744904 (ON_SPELLCASTAT), 0x007448dc (ON_DAMAGED), 0x007448b4 (ON_DISTURBED), 0x0074488c (ON_DIALOGUE), 0x00744864 (ON_SPAWN_IN), 0x00744840 (ON_RESTED), 0x0074481c (ON_DEATH), 0x007447ec (ON_USER_DEFINED_EVENT). Function address needs verification via Ghidra analysis (may be integrated into FUN_004af630 or separate function).
-    ///   - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 - Executes script command in NCS VM, thunk that calls FUN_140c10370, part of CNWSVirtualMachineCommands class
+    ///   - swkotor.exe: LogScriptEvent - Logs script events for debugging, maps event types to string names. String constants located at 0x00744958 (ON_HEARTBEAT), 0x00744930 (ON_PERCEPTION), 0x00744904 (ON_SPELLCASTAT), 0x007448dc (ON_DAMAGED), 0x007448b4 (ON_DISTURBED), 0x0074488c (ON_DIALOGUE), 0x00744864 (ON_SPAWN_IN), 0x00744840 (ON_RESTED), 0x0074481c (ON_DEATH), 0x007447ec (ON_USER_DEFINED_EVENT). Function address needs verification via Ghidra analysis (may be integrated into 0x004af630 or separate function).
+    ///   - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 - Executes script command in NCS VM, thunk that calls 0x140c10370, part of CNWSVirtualMachineCommands class
     ///   - nwmain.exe: CScriptEvent @ 0x1404c6490 - Script event constructor, initializes event data structure
     ///   - daorigins.exe: Script event system (Eclipse/UnrealScript architecture) - Uses UnrealScript-based event system with different architecture than Odyssey/Aurora engines. Event scripts stored via "EventScripts" @ 0x00ae81bc (daorigins.exe), 0x00bf5464 (DragonAge2.exe). Event listeners via "EventListeners" @ 0x00ae8194 (daorigins.exe), 0x00bf543c (DragonAge2.exe). Script execution uses UnrealScript message passing system (ShowConversationGUIMessage @ 0x00ae8a50 for daorigins.exe, @ 0x00bfca24 for DragonAge2.exe). No direct NCS VM equivalent - Eclipse engine uses UnrealScript bytecode instead of NCS bytecode. Script hooks loaded from entity templates (UTC, UTP, etc.) similar to Odyssey engine but with UnrealScript integration.
     /// - Note: This is a standalone implementation in Scripting. Engine-specific implementations

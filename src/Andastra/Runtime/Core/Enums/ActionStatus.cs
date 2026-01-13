@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Enums
     /// - InProgress: Action continues execution (called again next frame)
     /// - Complete: Action finished successfully, next action dequeued
     /// - Failed: Action failed (e.g., pathfinding failed, target invalid), next action dequeued
-    /// - Action execution: FUN_00508260 @ 0x00508260 loads actions from GFF, FUN_00505bc0 @ 0x00505bc0 saves actions to GFF
+    /// - Action execution: 0x00508260 @ 0x00508260 loads actions from GFF, 0x00505bc0 @ 0x00505bc0 saves actions to GFF
     /// - Action queue processing: Actions updated each frame until status changes from InProgress
     /// </remarks>
     public enum ActionStatus

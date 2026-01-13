@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Core.Templates
     /// Store Template:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) store/merchant system
     /// - Located via string references: Store functions handle merchant interactions
-    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references store templates)
+    /// - Template loading: 0x005226d0 @ 0x005226d0 (entity serialization references store templates)
     /// - Original implementation: UTM (Store) GFF templates define store properties
     /// - UTM file format: GFF with "UTM " signature containing store data
     /// - Stores are merchants that sell items, buy items from player

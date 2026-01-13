@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Script events: Heartbeat, OnNotice, Attacked, Damaged, Death, Dialogue, etc.
     /// - Event system decouples components and allows script-driven behavior
     /// - Event routing: Engine-specific implementations route script events to entity handlers
-    ///   - Odyssey: FUN_004dcfb0 @ 0x004dcfb0 (swkotor2.exe) routes script events to entity handlers
+    ///   - Odyssey: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) routes script events to entity handlers
     /// </remarks>
     public interface IEventBus
     {

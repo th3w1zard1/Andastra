@@ -5,6 +5,7 @@ using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using JetBrains.Annotations;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Core
 {
@@ -13,7 +14,7 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Unified Game Launcher:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Original implementation: Determines game type, initializes engine, creates game session, runs game loop
     /// - This implementation: Unified launcher for all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Maps BioWareGame enum to appropriate engine instances via EngineFactory
@@ -223,4 +224,3 @@ namespace Andastra.Game.Core
         }
     }
 }
-

@@ -8,7 +8,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
+using Andastra.Game.Graphics.Common.Backends.Odyssey;
 
 namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
@@ -21,7 +21,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
     /// - Original game content system: CExoResMan, CExoKeyTable, ERF/BIF archives
     /// - Located via string references: "Resource" @ 0x007c14d4, "Loading" @ 0x007c7e40
-    /// - CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270 (resource path resolution)
+    /// - CExoKeyTable @ 0x007b6078, 0x00633270 @ 0x00633270 (resource path resolution)
     /// - This implementation: Wraps resource provider for IContentManager interface
     /// </remarks>
     public class OdysseyContentManager : IContentManager

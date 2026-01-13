@@ -12,7 +12,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
     /// Dialogue loader implementation using BioWare.NET DLG format.
-    /// Converts BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG to Andastra.Runtime.Core.Dialogue.RuntimeDialogue.
+    /// Converts BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG to Runtime.Core.Dialogue.RuntimeDialogue.
     /// </summary>
     /// <remarks>
     /// Dialogue Loader:

@@ -1,15 +1,13 @@
-extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Common.Logger;
+using BioWare.NET.Resource.Formats.NCS;
 using JetBrains.Annotations;
-using NCS = ResourceNCS::BioWare.NET.Resource.Formats.NCS.NCS;
+using NCS = BioWare.NET.Resource.Formats.NCS.NCS;
 
 namespace Andastra
 {

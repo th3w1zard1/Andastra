@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Core.Module
     /// - Area properties: "AreaProperties" @ 0x007bd228, "AreaEffectList" @ 0x007bd0d4
     /// - "AreaEffectId" @ 0x007c13f8 (area-wide effect identifier)
     /// - Events: "EVENT_AREA_TRANSITION" @ 0x007bcbdc, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles area events including EVENT_AREA_TRANSITION (case 0x1a) and EVENT_REMOVE_FROM_AREA (case 4)
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles area events including EVENT_AREA_TRANSITION (case 0x1a) and EVENT_REMOVE_FROM_AREA (case 4)
     /// - Error messages:
     ///   - "X co-ordinate outside of area, should be in [%f, %f]" @ 0x007c224c
     ///   - "Y co-ordinate outside of area, should be in [%f, %f]" @ 0x007c2284
@@ -37,14 +37,14 @@ namespace Andastra.Runtime.Core.Module
     /// - Pathfinding module: "?nwsareapathfind.cpp" @ 0x007be3ff indicates area pathfinding implementation
     /// - Pathfinding error: "we can not return a closest result if points are reversed." @ 0x007be478
     /// - Movement error: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
-    /// - Save game integration: FUN_004eb750 @ 0x004eb750 saves AREANAME to save game NFO file (local_78 variable holds area name)
+    /// - Save game integration: 0x004eb750 @ 0x004eb750 saves AREANAME to save game NFO file (local_78 variable holds area name)
     /// - Original implementation: Areas contain entities, rooms, walkmesh, visibility data
     /// - Based on ARE/GIT/LYT/VIS file formats documented in vendor/PyKotor/wiki/
     /// - ARE = Static area properties (lighting, fog, grass) - GFF with "ARE " signature
     /// - GIT = Dynamic object instances (creatures, doors, etc.) - GFF with "GIT " signature
     /// - LYT = Room layout and doorhooks - Binary format
     /// - VIS = Room visibility for culling - Binary format for frustum culling optimization
-    /// - Area serialization: FUN_005226d0 @ 0x005226d0 saves AreaId and area state
+    /// - Area serialization: 0x005226d0 @ 0x005226d0 saves AreaId and area state
     /// - Temporary area reference: "tmparea" @ 0x007be620 (used during area loading)
     /// </remarks>
     public class RuntimeArea : IArea
@@ -127,8 +127,8 @@ namespace Andastra.Runtime.Core.Module
         /// Gets or sets whether stealth XP is enabled for this area.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): StealthXPEnabled stored in AreaProperties GFF
         /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
-        /// Ghidra analysis: FUN_004e26d0 @ 0x004e26d0 reads from AreaProperties GFF at offset +0x2f4
-        /// FUN_004e11d0 @ 0x004e11d0 writes to AreaProperties GFF at offset +0x2f4
+        /// Ghidra analysis: 0x004e26d0 @ 0x004e26d0 reads from AreaProperties GFF at offset +0x2f4
+        /// 0x004e11d0 @ 0x004e11d0 writes to AreaProperties GFF at offset +0x2f4
         /// </summary>
         public bool StealthXPEnabled { get; set; }
 
@@ -460,7 +460,7 @@ namespace Andastra.Runtime.Core.Module
         {
             // Basic implementation - area effects, lighting, weather updates would go here
             // Engine-specific implementations should override this method
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404cf0 @ 0x00404cf0 updates area state
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404cf0 @ 0x00404cf0 updates area state
         }
 
         /// <summary>

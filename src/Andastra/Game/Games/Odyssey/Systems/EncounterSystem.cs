@@ -345,7 +345,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
                             // Override appearance if specified
                             if (template.Appearance > 0)
                             {
-                                if (creature is Andastra.Runtime.Core.Entities.Entity entity)
+                                if (creature is Runtime.Core.Entities.Entity entity)
                                 {
                                     entity.SetData("Appearance_Type", template.Appearance);
                                 }
@@ -355,7 +355,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
                             _world.RegisterEntity(creature);
 
                             // Add to area
-                            if (area is Andastra.Runtime.Core.Module.RuntimeArea runtimeArea)
+                            if (area is Runtime.Core.Module.RuntimeArea runtimeArea)
                             {
                                 runtimeArea.AddEntity(creature);
                             }

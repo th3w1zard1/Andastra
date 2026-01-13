@@ -8,12 +8,12 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Game Settings Extensions:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (initializes directory aliases and configuration)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (initializes directory aliases and configuration)
     /// - Located via string references: "swkotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644, "config.txt" @ 0x007b5750
-    /// - "DiffSettings" @ 0x007c2cdc (display settings, referenced by FUN_005d7ce0 @ 0x005d7ce0)
-    /// - INI loading: FUN_00630a90 @ 0x00630a90 (string constructor for INI values), FUN_00631ea0 @ 0x00631ea0 (calls FUN_00633270)
-    /// - INI reading: FUN_00631fe0 @ 0x00631fe0 (reads INI values via FUN_00635fb0), FUN_00631ff0 @ 0x00631ff0 (writes INI values)
-    /// - Directory aliases: FUN_00633270 sets up HD0, CD0, OVERRIDE, MODULES, SAVES, MUSIC, MOVIES, etc. (maps to .\ paths)
+    /// - "DiffSettings" @ 0x007c2cdc (display settings, referenced by 0x005d7ce0 @ 0x005d7ce0)
+    /// - INI loading: 0x00630a90 @ 0x00630a90 (string constructor for INI values), 0x00631ea0 @ 0x00631ea0 (calls 0x00633270)
+    /// - INI reading: 0x00631fe0 @ 0x00631fe0 (reads INI values via 0x00635fb0), 0x00631ff0 @ 0x00631ff0 (writes INI values)
+    /// - Directory aliases: 0x00633270 sets up HD0, CD0, OVERRIDE, MODULES, SAVES, MUSIC, MOVIES, etc. (maps to .\ paths)
     /// - Command-line: DAT_008ba024 = GetCommandLineA() stores command-line arguments (set in entry @ 0x0076e2dd)
     /// - Original implementation: Command-line arguments parsed to override INI file settings
     /// - Settings include: BioWareGame path window size, fullscreen mode, graphics options, audio options

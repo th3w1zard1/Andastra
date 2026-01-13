@@ -230,8 +230,8 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         
         /// <summary>
         /// Creates a texture from pixel data.
-        /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 (texture initialization)
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0042a100 @ 0x0042a100 (texture initialization)
+        /// Based on swkotor.exe: 0x00427c90 @ 0x00427c90 (texture initialization)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0042a100 @ 0x0042a100 (texture initialization)
         /// </summary>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>

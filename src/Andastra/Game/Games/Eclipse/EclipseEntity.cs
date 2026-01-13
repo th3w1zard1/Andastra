@@ -230,14 +230,14 @@ namespace Andastra.Game.Games.Eclipse
         /// Creatures have stats, inventory, combat capabilities, etc.
         /// Based on creature component structure in daorigins.exe and DragonAge2.exe.
         /// Uses talents/abilities system instead of feats.
-        /// 
+        ///
         /// Component attachment pattern:
         /// - Based on daorigins.exe and DragonAge2.exe: Creature components are attached during entity creation from templates
         /// - Component provides: Stats (HP, abilities, skills), Inventory (equipped items and inventory bag), Faction (hostility relationships),
         ///   Animation (model animations), Renderable (3D model rendering), Perception (sight/hearing detection)
         /// - Eclipse-specific: Uses talents/abilities system instead of feats (different from Odyssey/Aurora)
         /// - Component initialization: Properties loaded from entity template files and can be modified at runtime
-        /// 
+        ///
         /// Cross-engine analysis:
         /// - Odyssey (swkotor.exe, swkotor2.exe): Uses CreatureComponent, StatsComponent, InventoryComponent, QuickSlotComponent, OdysseyFactionComponent
         ///   - ComponentInitializer @ Odyssey/Systems/ComponentInitializer.cs attaches these components
@@ -245,7 +245,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Eclipse (daorigins.exe, DragonAge2.exe): Enhanced component system with StatsComponent, InventoryComponent, EclipseFactionComponent, EclipseAnimationComponent
         ///   - Eclipse-specific: Talents/abilities system, different property calculations, enhanced component interactions
         /// - Infinity (, ): Streamlined component system (to be reverse engineered)
-        /// 
+        ///
         /// Note: Uses EclipseStatsComponent and EclipseInventoryComponent for Eclipse-specific behavior.
         /// EclipseStatsComponent: Maps Health/Stamina to HP/FP for interface compatibility, uses Attributes terminology.
         /// EclipseInventoryComponent: Uses Equip_ItemList structure and EquipmentLayout system.
@@ -375,7 +375,7 @@ namespace Andastra.Game.Games.Eclipse
         /// - Containers (HasInventory=true) can store items, open/close states
         /// - Lock system: KeyRequired flag, KeyName tag, LockDC difficulty class
         /// - Eclipse-specific: Physics-based placeables, state-based system, different trap system, treasure categories
-        /// 
+        ///
         /// Component attachment pattern:
         /// - Based on daorigins.exe: Placeable components are attached during entity creation from area templates
         /// - Component provides: IsUseable, HasInventory, IsStatic, IsOpen, IsLocked, LockDC, KeyTag, HitPoints, MaxHitPoints, Hardness, AnimationState, Conversation
@@ -441,7 +441,7 @@ namespace Andastra.Game.Games.Eclipse
         /// <remarks>
         /// Sounds have audio playback, spatial positioning.
         /// Based on sound component structure in daorigins.exe and DragonAge2.exe.
-        /// 
+        ///
         /// Sound Component Attachment:
         /// - Based on daorigins.exe and DragonAge2.exe: Sound components are attached during entity creation from area templates (SAV files)
         /// - Component provides: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours, IsPlaying, TimeSinceLastPlay, GeneratedType
@@ -456,11 +456,11 @@ namespace Andastra.Game.Games.Eclipse
         /// - Hours: Bitmask for time-based activation (Hours field, 0-23 hour range)
         /// - Pitch variation: PitchVariation field for random pitch variation in sound playback
         /// - Uses UTS file format (GFF with "UTS " signature) for sound templates, same as Odyssey/Aurora
-        /// 
+        ///
         /// Cross-engine analysis:
         /// - Odyssey (swkotor.exe, swkotor2.exe): Uses SoundComponent with UTS GFF templates
         ///   - SoundList @ 0x007bd080 (GIT sound list), Sound @ 0x007bc500 (sound entity type)
-        ///   - FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
+        ///   - 0x004e08e0 @ 0x004e08e0 loads sound instances from GIT
         ///   - ComponentInitializer attaches sound component during entity creation
         /// - Aurora (nwmain.exe, nwn2main.exe): Uses AuroraSoundComponent with similar UTS format
         ///   - CNWSSoundObject class for sound entities
@@ -468,14 +468,14 @@ namespace Andastra.Game.Games.Eclipse
         ///   - Sound entities loaded from area files (SAV format) SoundList
         ///   - Sound properties stored in SAV area files, similar structure to Odyssey/Aurora
         ///   - Both games use identical sound system with same properties and behavior
-        /// 
+        ///
         /// Reverse Engineering Notes (Ghidra MCP verified):
         /// - daorigins.exe: Sound entity creation and loading functions
         ///   - String references found: "SoundList", "Sound", "Active", "Looping", "Volume", "MaxDistance", "MinDistance"
         ///   - Sound entities are loaded from GIT file "SoundList" (GFFList, StructID 6) during area loading
         ///   - Sound properties loaded from GIT sound instances: Position, ResRef, and from UTS templates
         ///   - Sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, Sounds list, Hours, GeneratedType
-        ///   - Implementation: Sound entities created in area loading code (similar to Odyssey pattern at FUN_004e08e0)
+        ///   - Implementation: Sound entities created in area loading code (similar to Odyssey pattern at 0x004e08e0)
         ///   - Function addresses: Sound loading is integrated into area GIT parsing, not a separate function
         /// - DragonAge2.exe: Enhanced sound system (compatible with daorigins.exe)
         ///   - String references found: "SoundList" @ 0x00bf1a48, "Sound" @ 0x00bf8abc, "Active" @ 0x00bf85b8, "Looping" @ 0x00c0c7b4
@@ -581,7 +581,7 @@ namespace Andastra.Game.Games.Eclipse
         /// Updates all attached components.
         /// Processes any pending script events.
         /// Handles component interactions.
-        /// 
+        ///
         /// Based on daorigins.exe and DragonAge2.exe: Entity update loop processes components in dependency order.
         /// Component update order:
         /// 1. TransformComponent (position, orientation updates)
@@ -589,7 +589,7 @@ namespace Andastra.Game.Games.Eclipse
         /// 3. StatsComponent (HP regeneration, stat updates)
         /// 4. PerceptionComponent (perception checks, uses transform position)
         /// 5. Other components (in arbitrary order)
-        /// 
+        ///
         /// Component interactions:
         /// - Transform changes trigger perception updates
         /// - HP changes trigger death state updates
@@ -663,14 +663,14 @@ namespace Andastra.Game.Games.Eclipse
         /// Removes from world and area systems.
         /// Cleans up all components and resources.
         /// Marks entity as invalid.
-        /// 
+        ///
         /// Entity Destruction Sequence (Eclipse):
         /// 1. Mark entity as invalid (prevents further use)
         /// 2. Remove from area collections (if area is available)
         /// 3. Unregister from world collections (ObjectId, Tag, ObjectType indices)
         /// 4. Dispose all components that implement IDisposable
         /// 5. Clear all component references
-        /// 
+        ///
         /// Based on daorigins.exe and DragonAge2.exe: Entity destruction pattern
         /// - Located via string references: Entity destruction removes entity from all lookup indices
         /// - Original implementation: Entities are removed from all lookup indices when destroyed
@@ -678,8 +678,8 @@ namespace Andastra.Game.Games.Eclipse
         /// - Areas maintain indices: Type-specific lists (Creatures, Placeables, Doors, etc.), physics system
         /// - Entity cleanup: Components are disposed, resources freed, entity marked invalid
         /// - Physics cleanup: Entity removed from physics system if it has physics components
-        /// 
-        /// Note: World.DestroyEntity calls UnregisterEntity before calling entity.Destroy(), 
+        ///
+        /// Note: World.DestroyEntity calls UnregisterEntity before calling entity.Destroy(),
         /// but this method handles unregistration directly for safety and completeness.
         /// </remarks>
         public override void Destroy()
@@ -1698,13 +1698,13 @@ namespace Andastra.Game.Games.Eclipse
         /// Based on daorigins.exe and DragonAge2.exe: Parent references are restored after all entities are loaded.
         /// This method should be called by the save system after all entities have been deserialized.
         /// Looks up parent entity by ObjectId stored in _ParentObjectId data field and sets transform component parent.
-        /// 
+        ///
         /// Parent Reference Restoration:
         /// - Reads _ParentObjectId from entity's data dictionary
         /// - Looks up parent entity using World.GetEntity(parentObjectId)
         /// - Sets transform component parent if parent entity is found and valid
         /// - Clears _ParentObjectId from data dictionary after restoration
-        /// 
+        ///
         /// This matches the pattern used by OdysseyEntity and AuroraEntity for parent reference restoration.
         /// </remarks>
         public void RestoreParentReference()

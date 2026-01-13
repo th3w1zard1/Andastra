@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Content.MDL
     /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
     /// - "Model %s nor the default model %s could be loaded." @ 0x007cad14 (model loading fallback error)
     /// - "DoubleMdlVar" @ 0x007d05d8, "ShortMdlVar" @ 0x007d05e8, "LongMdlVar" @ 0x007d05f4 (MDL variable types)
-    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models from appearance.2da
+    /// - Model loading: 0x005261b0 @ 0x005261b0 loads creature models from appearance.2da
     /// - Original implementation: Reads MDL (model definition) and MDX (geometry) binary files using direct memory access
     /// - Uses unsafe code and pointer arithmetic for maximum performance, matching original engine approach
     /// - MDL file structure: Header, geometry header, model header, names header, node tree, animations

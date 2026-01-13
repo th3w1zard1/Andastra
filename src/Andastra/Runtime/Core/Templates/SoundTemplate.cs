@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Core.Templates
     /// - Sound types: "SoundOneShot" @ 0x007c4aa4 (one-shot sound flag), "SoundDuration" @ 0x007c49c0 (sound duration field)
     /// - "AmbientSound" @ 0x007c4c68 (ambient sound flag), "SoundSet" @ 0x007cbd50 (sound set field)
     /// - Sound paths: "HD0:STREAMSOUNDS\%s" @ 0x007c61d4 (streaming sound path format), "guisounds" @ 0x007b5f7c (GUI sounds directory)
-    /// - Template loading: FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
-    /// - FUN_005226d0 @ 0x005226d0 (entity serialization references sound templates)
+    /// - Template loading: 0x004e08e0 @ 0x004e08e0 loads sound instances from GIT
+    /// - 0x005226d0 @ 0x005226d0 (entity serialization references sound templates)
     /// - Original implementation: UTS (Sound) GFF templates define sound properties
     /// - UTS file format: GFF with "UTS " signature containing sound data (Active, Looping, Positional, ResRef, Volume, MaxDistance, MinDistance)
     /// - Sound entities emit positional audio in the game world (Positional field for 3D audio)

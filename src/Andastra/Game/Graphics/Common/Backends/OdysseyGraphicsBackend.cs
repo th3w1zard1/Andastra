@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
+using Andastra.Game.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
@@ -26,8 +26,8 @@ namespace Andastra.Game.Graphics.Common.Backends
     /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
     /// - Original game graphics system: OpenGL (OPENGL32.DLL) with WGL extensions
     /// - Graphics initialization:
-    ///   - swkotor.exe: FUN_0044dab0 @ 0x0044dab0 (OpenGL context creation)
-    ///   - swkotor2.exe: FUN_00461c50 @ 0x00461c50 (OpenGL context creation)
+    ///   - swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation)
+    ///   - swkotor2.exe: 0x00461c50 @ 0x00461c50 (OpenGL context creation)
     /// - Common initialization pattern (both games):
     ///   1. Window setup (ShowWindow, SetWindowPos, AdjustWindowRect)
     ///   2. Display mode enumeration (EnumDisplaySettingsA, ChangeDisplaySettingsA)
@@ -114,12 +114,12 @@ namespace Andastra.Game.Graphics.Common.Backends
             // Odyssey engine uses OpenGL (not DirectX)
             // Both swkotor.exe and swkotor2.exe use OPENGL32.DLL
             // Based on reverse engineering:
-            // - swkotor.exe: FUN_0044dab0 @ 0x0044dab0 uses wglCreateContext
-            // - swkotor2.exe: FUN_00461c50 @ 0x00461c50 uses wglCreateContext
+            // - swkotor.exe: 0x0044dab0 @ 0x0044dab0 uses wglCreateContext
+            // - swkotor2.exe: 0x00461c50 @ 0x00461c50 uses wglCreateContext
             _useDirectX9 = false;
             _useOpenGL = true;
             _adapterIndex = 0;
-            _fullscreen = true; // Default to fullscreen (swkotor.exe: FUN_0044dab0 @ 0x0044dab0, param_7 != 0 = fullscreen)
+            _fullscreen = true; // Default to fullscreen (swkotor.exe: 0x0044dab0 @ 0x0044dab0, param_7 != 0 = fullscreen)
             _refreshRate = 60; // Default refresh rate
 
             return true;
@@ -534,8 +534,8 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// </summary>
         /// <remarks>
         /// Common Pattern (both games):
-        /// - swkotor.exe: FUN_0044dab0 @ 0x0044dab0 calls wglCreateContext
-        /// - swkotor2.exe: FUN_00461c50 @ 0x00461c50 calls wglCreateContext
+        /// - swkotor.exe: 0x0044dab0 @ 0x0044dab0 calls wglCreateContext
+        /// - swkotor2.exe: 0x00461c50 @ 0x00461c50 calls wglCreateContext
         /// - Both use: ChoosePixelFormat, SetPixelFormat, wglCreateContext, wglMakeCurrent
         /// - Both set up context sharing with wglShareLists for multi-threaded rendering
         /// </remarks>
@@ -575,8 +575,8 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// </summary>
         /// <remarks>
         /// Common Pattern (both games):
-        /// - swkotor.exe: FUN_00427c90 @ 0x00427c90 initializes textures
-        /// - swkotor2.exe: FUN_0042a100 @ 0x0042a100 initializes textures
+        /// - swkotor.exe: 0x00427c90 @ 0x00427c90 initializes textures
+        /// - swkotor2.exe: 0x0042a100 @ 0x0042a100 initializes textures
         /// - Both use: glGenTextures, glBindTexture, glTexImage2D, glTexParameteri
         /// - Both create multiple texture objects for rendering pipeline
         /// </remarks>
@@ -676,8 +676,8 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Initializes the graphics backend.
-        /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00461c50 @ 0x00461c50
+        /// Based on swkotor.exe: 0x0044dab0 @ 0x0044dab0
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00461c50 @ 0x00461c50
         /// </summary>
         /// <param name="width">Initial window width.</param>
         /// <param name="height">Initial window height.</param>
@@ -725,8 +725,8 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// <summary>
         /// Creates the Odyssey window and OpenGL context.
         /// Override in derived classes for game-specific initialization.
-        /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00461c50 @ 0x00461c50
+        /// Based on swkotor.exe: 0x0044dab0 @ 0x0044dab0
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00461c50 @ 0x00461c50
         /// </summary>
         protected virtual bool CreateOdysseyWindowAndContext()
         {

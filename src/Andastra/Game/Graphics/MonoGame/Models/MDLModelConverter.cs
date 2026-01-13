@@ -293,7 +293,7 @@ namespace Andastra.Game.Graphics.MonoGame.Models
 
         private Matrix CreateNodeTransform(MDLNodeData node)
         {
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006f8590 @ 0x006f8590
             // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
             // Otherwise spell visuals will not be correct
             // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error
@@ -310,7 +310,7 @@ namespace Andastra.Game.Graphics.MonoGame.Models
                 {
                     // Force identity orientation for spell visual attachment points
                     // These dummy nodes should not have any rotation - they're just attachment points
-                    // swkotor2.exe: FUN_006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    // swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
                     rotation = Quaternion.Identity;
                 }
                 else

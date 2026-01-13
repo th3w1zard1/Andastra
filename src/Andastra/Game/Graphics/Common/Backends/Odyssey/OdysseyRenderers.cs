@@ -126,7 +126,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             public Vector3 Position;
             public Vector3 Normal;
-            public Vector2 TexCoord;
+            public System.Numerics.Vector2 TexCoord;
         }
 
         // Cached model data
@@ -156,7 +156,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:103-141
         // Original: def paintGL(self): - entity rendering in OpenGL scene
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005261b0 @ 0x005261b0 (entity model rendering)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005261b0 @ 0x005261b0 (entity model rendering)
         public void RenderEntity([NotNull] IEntity entity, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
         {
             if (entity == null)
@@ -297,12 +297,12 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             }
 
             // Resolve model from appearance using reflection to avoid circular dependency
-            // ModelResolver is in Andastra.Runtime.Engines.Odyssey.Systems namespace
+            // ModelResolver is in Andastra.Game.Games.Odyssey.Systems namespace
             if (_gameDataManager != null)
             {
                 try
                 {
-                    Type modelResolverType = Type.GetType("Andastra.Runtime.Engines.Odyssey.Systems.ModelResolver, Andastra.Runtime.Games.Odyssey");
+                    Type modelResolverType = Type.GetType("Andastra.Game.Games.Odyssey.Systems.ModelResolver, Runtime.Games.Odyssey");
                     if (modelResolverType != null)
                     {
                         MethodInfo resolveMethod = modelResolverType.GetMethod("ResolveEntityModel", BindingFlags.Public | BindingFlags.Static);
@@ -494,7 +494,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
             {
                 Vector3 pos = new Vector3(mesh.Vertices[i].X, mesh.Vertices[i].Y, mesh.Vertices[i].Z);
                 Vector3 normal = Vector3.UnitY; // Default to up if no normal
-                Vector2 texCoord = Vector2.Zero;
+                System.Numerics.Vector2 texCoord = System.Numerics.Vector2.Zero;
 
                 if (mesh.Normals != null && i < mesh.Normals.Count)
                 {
@@ -503,7 +503,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
                 if (mesh.UV1 != null && i < mesh.UV1.Count)
                 {
-                    texCoord = new Vector2(mesh.UV1[i].X, mesh.UV1[i].Y);
+                    texCoord = new System.Numerics.Vector2(mesh.UV1[i].X, mesh.UV1[i].Y);
                 }
 
                 vertices[i] = new VertexPositionNormalTexture
@@ -1302,7 +1302,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// - Volume is applied immediately when playback starts
         /// - Original engine uses Miles Sound System (MSS) for streaming music
         /// - Music files are typically WAV format, stored in STREAMMUSIC directory
-        /// - Based on swkotor.exe FUN_005f9af0: Music playback function
+        /// - Based on swkotor.exe 0x005f9af0: Music playback function
         /// </remarks>
         public bool Play(string musicResRef, float volume = 1.0f)
         {

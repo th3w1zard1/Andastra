@@ -11,7 +11,7 @@ namespace Andastra.Game.Games.Odyssey.Journal
     /// </summary>
     /// <remarks>
     /// Odyssey Journal System:
-    /// - Based on swkotor.exe: Quest processing (FUN_0059f5f0 @ 0x0059f5f0, "Quest" @ 0x0074a5dc, "QuestEntry" @ 0x0074a5d0)
+    /// - Based on swkotor.exe: Quest processing (0x0059f5f0 @ 0x0059f5f0, "Quest" @ 0x0074a5dc, "QuestEntry" @ 0x0074a5d0)
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Journal system ("JOURNAL" @ 0x007bdf44, "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8)
     /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
     /// - Quest state storage: Quest states stored as global variables (e.g., "Q_QUESTNAME" = state value)

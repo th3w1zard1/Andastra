@@ -16,8 +16,8 @@ namespace Andastra.Runtime.Core.Interfaces
     ///
     /// Based on reverse engineering of entity template factory systems across multiple BioWare engines:
     /// - Odyssey (swkotor.exe, swkotor2.exe): UTC GFF templates, EntityFactory wrapper
-    ///   - swkotor.exe: FUN_0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
-    ///   - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature templates, FUN_005fb0f0 @ 0x005fb0f0 loads template data
+    ///   - swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
+    ///   - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
     ///   - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
     /// - Aurora (nwmain.exe): Similar template system, different GFF format
     ///   - Located via string references: "TemplateResRef" @ 0x140dddee8 (nwmain.exe)

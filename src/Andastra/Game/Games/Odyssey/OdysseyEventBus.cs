@@ -13,10 +13,10 @@ namespace Andastra.Game.Games.Odyssey
     /// <remarks>
     /// Odyssey Event Bus System:
     /// - Based on swkotor.exe and swkotor2.exe event systems
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles all object event dispatching
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles all object event dispatching
     /// - Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
     /// - Debug output: "DRF Event Added: %s(%s) %s(%s) %s %s\n" @ 0x007bc55c (event logging format)
-    /// - Original implementation (from decompiled FUN_004dcfb0 in swkotor2.exe):
+    /// - Original implementation (from decompiled 0x004dcfb0 in swkotor2.exe):
     ///   1. Switch on event type (param_2) to map to EVENT_* string constants:
     ///      - Case 1: "EVENT_TIMED_EVENT"
     ///      - Case 2: "EVENT_ENTERED_TRIGGER"
@@ -93,12 +93,12 @@ namespace Andastra.Game.Games.Odyssey
     ///   "EVENT_TIMED_EVENT" @ 0x007bce20 (case 1), "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf),
     ///   "EVENT_REMOVE_EFFECT" @ 0x007bcd0c (case 0xe), "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (case 0x19),
     ///   "EVENT_AREA_TRANSITION" @ 0x007bcbdc (case 0x1a), "EVENT_CONTROLLER_RUMBLE" @ 0x007bcbc4 (case 0x1b)
-    /// - Original implementation: FUN_004dcfb0 @ 0x004dcfb0 (swkotor2.exe) dispatches events via switch statement based on event type
-    ///   - Function signature: `void FUN_004dcfb0(uint param_1, uint param_2, undefined2 *param_3)`
+    /// - Original implementation: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) dispatches events via switch statement based on event type
+    ///   - Function signature: `void 0x004dcfb0(uint param_1, uint param_2, undefined2 *param_3)`
     ///   - param_1: Target entity ID (OBJECT_SELF)
     ///   - param_2: Event type (1-27, maps to EVENT_* constants)
     ///   - param_3: Script event type (for EVENT_SIGNAL_EVENT, maps to CSWSSCRIPTEVENT_EVENTTYPE_ON_*)
-    ///   - Calls FUN_004dcd90 to resolve entity IDs to entity names/strings
+    ///   - Calls 0x004dcd90 to resolve entity IDs to entity names/strings
     ///   - Switch on param_2 to map event type to EVENT_* string constant
     ///   - If param_2 == 10 (EVENT_SIGNAL_EVENT), switch on *param_3 to map to CSWSSCRIPTEVENT_EVENTTYPE_ON_* string constant
     ///   - Formats debug log: "DRF Event Added: %s(%s) %s(%s) %s %s\n" with event name, entity names, and event data
@@ -107,7 +107,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Event routing: Events fire for various game state changes (damage, death, perception, etc.)
     /// - Script execution: FireScriptEvent method triggers script execution on entities with matching event hooks
     /// - Event structure: Events contain Entity (OBJECT_SELF), EventType, and Triggerer (entity that triggered event)
-    /// - FUN_004dcfb0 formats event name from type, constructs event data, and routes to script execution system
+    /// - 0x004dcfb0 formats event name from type, constructs event data, and routes to script execution system
     /// - Inheritance: Inherits from BaseEventBus (Runtime.Games.Common) with Odyssey-specific event handling
     /// </remarks>
     [PublicAPI]
@@ -128,9 +128,9 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="triggerer">The triggering entity (optional).</param>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script event firing implementation
-        /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles all script event dispatching
+        /// Event dispatching: 0x004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles all script event dispatching
         /// Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
-        /// Original implementation: FUN_004dcfb0 formats event name from type (e.g., "EVENT_OPEN_OBJECT" for case 7),
+        /// Original implementation: 0x004dcfb0 formats event name from type (e.g., "EVENT_OPEN_OBJECT" for case 7),
         /// constructs event data structure with source entity, target entity, event type, routes to script execution system
         /// Script events fire on entities with matching event hooks (ScriptHeartbeat, ScriptOnNotice, ScriptOnOpen, etc.)
         /// Events are queued ("EventQueue" @ 0x007bce74) and dispatched each frame

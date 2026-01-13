@@ -21,7 +21,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - "InventorySound" @ 0x007c7164 (inventory sound), "inventorysnds" @ 0x007c7174 (inventory sounds directory)
     /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (inventory disturbed event, 0x1b)
     /// - Original implementation: Inventory stored in GFF format (UTC creature templates, save files)
-    /// - FUN_005226d0 @ 0x005226d0 saves inventory data including equipped items and inventory bag
+    /// - 0x005226d0 @ 0x005226d0 saves inventory data including equipped items and inventory bag
     /// - Inventory slots: Equipped items (weapon, armor, shield, etc.) and inventory bag (array of slots)
     /// - Slot indices: INVENTORY_SLOT_* constants from NWScript (0-17 for equipped, 18+ for inventory bag)
     /// - Equipped slots: INVENTORY_SLOT_HEAD (0), INVENTORY_SLOT_ARMS (1), INVENTORY_SLOT_IMPLANT (2), INVENTORY_SLOT_LEFTWEAPON (4),

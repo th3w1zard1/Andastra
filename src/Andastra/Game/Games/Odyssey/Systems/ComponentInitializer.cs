@@ -7,7 +7,7 @@ using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// Initializes default components for entities based on their object type.
@@ -132,7 +132,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
                     }
                     if (!entity.HasComponent<IFactionComponent>())
                     {
-                        var factionComponent = new Andastra.Runtime.Engines.Odyssey.Components.OdysseyFactionComponent();
+                        var factionComponent = new Andastra.Game.Games.Odyssey.Components.OdysseyFactionComponent();
                         // Set FactionID from entity data if available (loaded from UTC template)
                         if (entity.GetData("FactionID") is int factionId)
                         {

@@ -105,9 +105,9 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }, ct);
         }
 
-        public async Task<IReadOnlyList<Andastra.Runtime.Content.Interfaces.LocationResult>> LocateAsync(
+        public async Task<IReadOnlyList<Runtime.Content.Interfaces.LocationResult>> LocateAsync(
             ResourceIdentifier id,
-            Andastra.Runtime.Content.Interfaces.SearchLocation[] order,
+            Runtime.Content.Interfaces.SearchLocation[] order,
             CancellationToken ct)
         {
             return await Task.Run(() =>
@@ -125,10 +125,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     _currentModule
                 );
 
-                var converted = new List<Andastra.Runtime.Content.Interfaces.LocationResult>();
+                var converted = new List<Runtime.Content.Interfaces.LocationResult>();
                 foreach (BioWare.NET.Extract.LocationResult r in results)
                 {
-                    converted.Add(new Andastra.Runtime.Content.Interfaces.LocationResult
+                    converted.Add(new Runtime.Content.Interfaces.LocationResult
                     {
                         Location = ConvertBackSearchLocation(r.FilePath),
                         Path = r.FilePath,
@@ -137,7 +137,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                     });
                 }
 
-                return (IReadOnlyList<Andastra.Runtime.Content.Interfaces.LocationResult>)converted;
+                return (IReadOnlyList<Runtime.Content.Interfaces.LocationResult>)converted;
             }, ct);
         }
 
@@ -476,40 +476,40 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         #region Type Conversion
 
-        private static BioWare.NET.Extract.SearchLocation? ConvertSearchLocation(Andastra.Runtime.Content.Interfaces.SearchLocation location)
+        private static BioWare.NET.Extract.SearchLocation? ConvertSearchLocation(Runtime.Content.Interfaces.SearchLocation location)
         {
             switch (location)
             {
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Override: return BioWare.NET.Extract.SearchLocation.OVERRIDE;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Module: return BioWare.NET.Extract.SearchLocation.MODULES;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin: return BioWare.NET.Extract.SearchLocation.CHITIN;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks: return BioWare.NET.Extract.SearchLocation.TEXTURES_TPA;
+                case Runtime.Content.Interfaces.SearchLocation.Override: return BioWare.NET.Extract.SearchLocation.OVERRIDE;
+                case Runtime.Content.Interfaces.SearchLocation.Module: return BioWare.NET.Extract.SearchLocation.MODULES;
+                case Runtime.Content.Interfaces.SearchLocation.Chitin: return BioWare.NET.Extract.SearchLocation.CHITIN;
+                case Runtime.Content.Interfaces.SearchLocation.TexturePacks: return BioWare.NET.Extract.SearchLocation.TEXTURES_TPA;
                 default: return null;
             }
         }
 
-        private static Andastra.Runtime.Content.Interfaces.SearchLocation ConvertBackSearchLocation(string path)
+        private static Runtime.Content.Interfaces.SearchLocation ConvertBackSearchLocation(string path)
         {
             if (string.IsNullOrEmpty(path))
             {
-                return Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin;
+                return Runtime.Content.Interfaces.SearchLocation.Chitin;
             }
 
             string lower = path.ToLowerInvariant();
             if (lower.Contains("override"))
             {
-                return Andastra.Runtime.Content.Interfaces.SearchLocation.Override;
+                return Runtime.Content.Interfaces.SearchLocation.Override;
             }
             if (lower.Contains("modules"))
             {
-                return Andastra.Runtime.Content.Interfaces.SearchLocation.Module;
+                return Runtime.Content.Interfaces.SearchLocation.Module;
             }
             if (lower.Contains("texturepacks"))
             {
-                return Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks;
+                return Runtime.Content.Interfaces.SearchLocation.TexturePacks;
             }
 
-            return Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin;
+            return Runtime.Content.Interfaces.SearchLocation.Chitin;
         }
 
         #endregion

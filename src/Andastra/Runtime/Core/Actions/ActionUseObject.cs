@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - Located via string references: "OnUsed" @ 0x007c1f70 (placeable script event)
     /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
     /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles object events
     ///   - EVENT_OPEN_OBJECT (case 7): Used for container opening and non-container placeable usage
     ///   - EVENT_CLOSE_OBJECT (case 6): Used for container closing
     ///   - EVENT_LOCK_OBJECT (case 0xd): Fires OnLocked script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Core.Actions
             // Use the placeable
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable interaction implementation
             // Located via string references: "OnUsed" @ 0x007c1f70, "EVENT_OPEN_OBJECT" @ 0x007bcda0
-            // Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+            // Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles object events
             // Original implementation: Checks Useable flag (from UTP template), Locked state, HasInventory flag to determine behavior
             // Non-container placeables: Fires EVENT_OPEN_OBJECT, executes OnUsed script (CSWSSCRIPTEVENT_EVENTTYPE_ON_USED = 0x19)
             // Container placeables: Toggles open/close, fires EVENT_OPEN_OBJECT or EVENT_CLOSE_OBJECT, executes OnOpen or OnClosed script

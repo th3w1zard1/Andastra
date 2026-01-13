@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using Andastra.Runtime.Graphics.Common.Backends;
+using Andastra.Game.Graphics.Common.Backends;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
@@ -67,7 +67,7 @@ namespace Andastra.Game.Stride.Backends
             _commandList = null;
         }
 
-        protected override ResourceInfo CreateTextureInternal(Andastra.Runtime.Graphics.Common.Structs.TextureDescription desc, IntPtr handle)
+        protected override ResourceInfo CreateTextureInternal(Runtime.Graphics.Common.Structs.TextureDescription desc, IntPtr handle)
         {
             var strideDesc = new global::Stride.Graphics.TextureDescription
             {
@@ -93,7 +93,7 @@ namespace Andastra.Game.Stride.Backends
             };
         }
 
-        protected override ResourceInfo CreateBufferInternal(Andastra.Runtime.Graphics.Common.Structs.BufferDescription desc, IntPtr handle)
+        protected override ResourceInfo CreateBufferInternal(Runtime.Graphics.Common.Structs.BufferDescription desc, IntPtr handle)
         {
             BufferFlags flags = BufferFlags.None;
             if ((desc.Usage & BufferUsage.Vertex) != 0) flags |= BufferFlags.VertexBuffer;

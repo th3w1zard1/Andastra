@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Games.Common.Components
     ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Item component system with UTI template loading
-    /// - swkotor2.exe: Enhanced item system with upgrade support (FUN_005fb0f0 @ 0x005fb0f0 loads item templates)
+    /// - swkotor2.exe: Enhanced item system with upgrade support (0x005fb0f0 @ 0x005fb0f0 loads item templates)
     /// - nwmain.exe: Aurora item system using identical UTI format to Odyssey
     /// - daorigins.exe: Eclipse item system with enhanced property system
     /// - DragonAge2.exe: Enhanced Eclipse item system

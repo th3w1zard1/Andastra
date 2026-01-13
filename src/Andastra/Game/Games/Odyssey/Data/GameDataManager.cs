@@ -11,7 +11,7 @@ namespace Andastra.Game.Games.Odyssey.Data
     /// </summary>
     /// <remarks>
     /// Game Data Manager (Odyssey-specific):
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005edd20 @ 0x005edd20 (2DA table loading)
     /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
     /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
     /// - Cross-engine analysis:
@@ -247,7 +247,7 @@ namespace Andastra.Game.Games.Odyssey.Data
         /// <returns>Feat data if found, null otherwise.</returns>
         /// <remarks>
         /// Feat Lookup by Label:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005edd20 @ 0x005edd20 (2DA table loading)
         /// - Located via string references: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
         /// - Original implementation: Looks up feat by row label in feat.2da table
         /// - Row labels in feat.2da match feat constant names (e.g., "FEAT_SEE_INVISIBILITY")
@@ -310,7 +310,7 @@ namespace Andastra.Game.Games.Odyssey.Data
         /// <returns>Feat ID (row index) if found, -1 otherwise.</returns>
         /// <remarks>
         /// Feat ID Lookup by Label:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005edd20 @ 0x005edd20 (2DA table loading)
         /// - Original implementation: Looks up feat ID by row label in feat.2da table
         /// - Returns the row index as the feat ID, or -1 if not found
         /// - More efficient than GetFeatByLabel when only the ID is needed
@@ -329,8 +329,8 @@ namespace Andastra.Game.Games.Odyssey.Data
         /// <returns>List of feat IDs granted at the specified level, or empty list if not found.</returns>
         /// <remarks>
         /// Starting Feats from featgain.2da:
-        /// - Based on swkotor.exe: FUN_005bcf70 @ 0x005bcf70 (LoadFeatGain)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
+        /// - Based on swkotor.exe: 0x005bcf70 @ 0x005bcf70 (LoadFeatGain)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
         /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
         /// - Original implementation: Loads featgain.2da table, looks up class-specific columns with "_REG" and "_BON" suffixes
         /// - featgain.2da structure (based on Ghidra analysis):
@@ -475,14 +475,14 @@ namespace Andastra.Game.Games.Odyssey.Data
         /// <returns>List of feat IDs that should be granted at level 1 for this class, or empty list if not found.</returns>
         /// <remarks>
         /// Starting Feats from featgain.2da:
-        /// - Based on swkotor.exe and swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
+        /// - Based on swkotor.exe and swkotor2.exe: 0x0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
         /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "featgain" @ 0x007c46ec
-        /// - Original implementation: FUN_005d63d0 reads "FeatGain" column from classes.2da for each class, then calls LoadFeatGain
+        /// - Original implementation: 0x005d63d0 reads "FeatGain" column from classes.2da for each class, then calls LoadFeatGain
         /// - LoadFeatGain loads featgain.2da table, finds row by label (from FeatGain column), reads "_REG" and "_BON" columns
         /// - _REG column contains regular starting feats, _BON column contains bonus starting feats
         /// - Each column can contain up to 50 feat IDs (loop iterates 0 to 0x32 = 50 times)
         /// - Feat IDs are stored as integers in the 2DA cells
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads feat IDs from featgain.2da _REG and _BON columns and stores them in class data structure
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 reads feat IDs from featgain.2da _REG and _BON columns and stores them in class data structure
         /// </remarks>
         public List<int> GetStartingFeats(int classId)
         {
@@ -503,7 +503,7 @@ namespace Andastra.Game.Games.Odyssey.Data
             }
 
             // Get FeatGain row label from classes.2da (stored in a column we need to read)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads "FeatGain" column from classes.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 reads "FeatGain" column from classes.2da
             TwoDA classesTable = GetTable("classes");
             if (classesTable == null || classId < 0 || classId >= classesTable.GetHeight())
             {
@@ -540,7 +540,7 @@ namespace Andastra.Game.Games.Odyssey.Data
             }
 
             // Read feat IDs from _REG column (regular starting feats)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads from "_REG" column (loop 0 to 0x32 = 50)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 reads from "_REG" column (loop 0 to 0x32 = 50)
             // The columns might be _REG0, _REG1, ..., _REG49, or a single _REG column with comma-separated values
             // Try both patterns: indexed columns first, then single column with comma-separated values
             bool foundIndexedColumns = false;
@@ -586,7 +586,7 @@ namespace Andastra.Game.Games.Odyssey.Data
             }
 
             // Read feat IDs from _BON column (bonus starting feats)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads from "_BON" column (loop 0 to 0x32 = 50)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 reads from "_BON" column (loop 0 to 0x32 = 50)
             foundIndexedColumns = false;
             for (int i = 0; i < 50; i++)
             {

@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Upscaling;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using Stride.Graphics;
 
 namespace Andastra.Game.Stride.Upscaling

@@ -23,7 +23,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     ///   - "ItemValue" @ 0x007c4f24 (item value field), "ItemCreate" @ 0x007c4f84 (item create function)
     ///   - "BaseItemStatRef" @ 0x007c4428 (base item stat reference), "ItemComponent" @ 0x007c41e4 (item component name)
     ///   - "PROTOITEM" @ 0x007b6c0c (prototype item constant), "BASEITEMS" @ 0x007c4594 (base items table name)
-    ///   - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads item templates from UTI GFF files
+    ///   - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads item templates from UTI GFF files
     ///   - Error messages: "Item template %s doesn't exist.\n" @ 0x007c2028 (template not found error), "Error: Invalid item" @ 0x007d110c (invalid item error)
     ///   - "CreateItem::CreateItemEntry() -- Could not find a row for an item. Major error: " @ 0x007d07c8 (create item error)
     /// - Item events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594 (equip item script event), "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (acquire item event)

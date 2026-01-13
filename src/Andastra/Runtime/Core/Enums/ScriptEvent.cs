@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Enums
     /// Script Event Types:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script event system
     /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_*" constants throughout executable
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching (switch on event type)
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles script event dispatching (switch on event type)
     /// - Original implementation: Script events trigger NWScript execution when game events occur
     /// - Events stored in GFF structures as script ResRef fields (e.g., ScriptHeartbeat @ 0x007beeb0, ScriptOnNotice @ 0x007beea0)
     /// - Module events:

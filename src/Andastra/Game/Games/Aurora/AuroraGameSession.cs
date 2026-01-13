@@ -6,8 +6,9 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;
 using JetBrains.Annotations;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora Engine game session implementation for Neverwinter Nights and Neverwinter Nights 2.
@@ -18,7 +19,7 @@ namespace Andastra.Game.Engines.Aurora
     /// - Based on nwmain.exe: CServerExoAppInternal::UnloadModule @ 0x14056df00 (unloads current module, VERIFIED)
     /// - Located via string references: Module loading/unloading functions in CServerExoAppInternal
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): FUN_006caab0 @ 0x006caab0 (swkotor2.exe) - server command parser, manages module state flags
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): 0x006caab0 @ 0x006caab0 (swkotor2.exe) - server command parser, manages module state flags
     ///   - Aurora (nwmain.exe, nwn2main.exe): CServerExoAppInternal::LoadModule/UnloadModule - similar module state management, different file formats
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): UnrealScript-based module loading, different architecture
     /// - Inheritance: BaseEngineGame (Runtime.Games.Common) implements common module state management
@@ -27,7 +28,7 @@ namespace Andastra.Game.Engines.Aurora
     ///   - Validates module name, stores advertisement data (NWSync module synchronization)
     ///   - Clears module state flags (sets to 0xffffffffffffffff for invalid state)
     ///   - Gets current module object from CGameObjectArray if one exists
-    ///   - Calls FUN_140c10370() for actual async module loading (doesn't return, async operation)
+    ///   - Calls 0x140c10370() for actual async module loading (doesn't return, async operation)
     /// - Original implementation: CServerExoAppInternal::UnloadModule handles module unloading:
     ///   - Gets current module object from CGameObjectArray
     ///   - Sets pause state (SetPauseState with flags 0x02 and 0x01)
@@ -40,7 +41,7 @@ namespace Andastra.Game.Engines.Aurora
     ///   - Clears AI event queue (CServerAIMaster::ClearEventQueue)
     ///   - Clears walkmeshes (CNWPlaceMeshManager::ClearWalkMeshes)
     ///   - Clears tilesets (CNWTileSetManager::ClearTileSets with empty CResRef)
-    ///   - Calls FUN_140c10370() for final cleanup (doesn't return, async operation)
+    ///   - Calls 0x140c10370() for final cleanup (doesn't return, async operation)
     /// - Module state: CServerExoAppInternal maintains module state in internal structures
     /// - Coordinates: Module loading, entity management, script execution, combat, AI, triggers, dialogue
     /// - Game loop integration: Update() called every frame to update all systems (60 Hz fixed timestep)
@@ -97,7 +98,7 @@ namespace Andastra.Game.Engines.Aurora
         /// - Uses AuroraModuleLoader to load module (handles Module.ifo, HAK files, ARE, GIT, entity spawning)
         /// - Updates game session state with current module name
         /// - Original implementation: CServerExoAppInternal::LoadModule stores advertisement data, clears module state flags,
-        ///   gets current module object, then calls FUN_140c10370() for async loading
+        ///   gets current module object, then calls 0x140c10370() for async loading
         /// - This implementation uses AuroraModuleLoader which encapsulates the complete module loading sequence
         /// </remarks>
         public override async Task LoadModuleAsync(string moduleName, [CanBeNull] Action<float> progressCallback = null)
@@ -140,7 +141,7 @@ namespace Andastra.Game.Engines.Aurora
         ///   - Clears AI event queue
         ///   - Clears walkmeshes
         ///   - Clears tilesets
-        ///   - Calls FUN_140c10370() for final cleanup
+        ///   - Calls 0x140c10370() for final cleanup
         /// - This implementation delegates cleanup to AuroraModuleLoader which handles module-specific resource cleanup
         /// </remarks>
         protected override void OnUnloadModule()
@@ -158,4 +159,3 @@ namespace Andastra.Game.Engines.Aurora
         }
     }
 }
-

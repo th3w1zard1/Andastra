@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Andastra.Game.Games.Common.Combat;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Data;
+using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Party;
-using Andastra.Game.Games.Odyssey.Components;
-using Andastra.Game.Games.Odyssey.Data;
-using Andastra.Game.Games.Odyssey.Systems;
-using Andastra.Game.Games.Common.Combat;
-using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
+using BaseItemData = Andastra.Game.Games.Odyssey.Data.GameDataManager.BaseItemData;
 
-namespace Andastra.Game.Engines.Odyssey.Combat
+namespace Andastra.Game.Games.Odyssey.Combat
 {
     /// <summary>
     /// Combat state for an entity.
@@ -42,7 +42,7 @@ namespace Andastra.Game.Engines.Odyssey.Combat
     /// <summary>
     /// Combat event arguments (Odyssey-specific: uses AttackRollResult).
     /// </summary>
-    public class OdysseyCombatEventArgs : Andastra.Runtime.Games.Common.Combat.CombatEventArgs
+    public class OdysseyCombatEventArgs : Runtime.Games.Common.Combat.CombatEventArgs
     {
         public new AttackRollResult AttackResult
         {
@@ -73,8 +73,8 @@ namespace Andastra.Game.Engines.Odyssey.Combat
     ///   - "CSWSCombatRound::DecrementPauseTimer - %s Master cannot be found expire the round; Resetting" @ 0x007bfcf0
     /// - GUI references: "BTN_COMBAT" @ 0x007c9044, "LB_COMBAT" @ 0x007c9104
     /// - "combatreticle" @ 0x007ccfb0, "LBL_COMBATBG3" @ 0x007cd2c0, "LBL_COMBATBG2" @ 0x007cd2d0
-    /// - Combat round functions: FUN_005226d0 @ 0x005226d0 (combat round management)
-    /// - Combat info functions: FUN_005d9670 @ 0x005d9670, FUN_005d7fc0 @ 0x005d7fc0
+    /// - Combat round functions: 0x005226d0 @ 0x005226d0 (combat round management)
+    /// - Combat info functions: 0x005d9670 @ 0x005d9670, 0x005d7fc0 @ 0x005d7fc0
     /// - Attack event: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "ScriptAttacked" @ 0x007bee80
     /// - Original implementation: CSWSCombatRound class manages 3-second combat rounds
     ///
@@ -222,7 +222,7 @@ namespace Andastra.Game.Engines.Odyssey.Combat
         /// Checks if an entity is in "real" combat (has an active combat round).
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetIsInCombat with bOnlyCountReal=TRUE checks for active CombatRoundData
         /// Located via string reference: "CombatRoundData" @ 0x007bf6b4
-        /// Original implementation: FUN_005226d0 @ 0x005226d0 checks if CombatRoundData is active
+        /// Original implementation: 0x005226d0 @ 0x005226d0 checks if CombatRoundData is active
         /// (*(int *)(*(void **)((int)this + 0x10dc) + 0xa84) == 1) where 0xa84 is RoundStarted offset
         /// "Real" combat means actively fighting (has active combat round), vs "fake" combat (just targeted, no active round)
         /// </summary>

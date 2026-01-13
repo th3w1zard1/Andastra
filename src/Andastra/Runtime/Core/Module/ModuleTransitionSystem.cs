@@ -31,7 +31,7 @@ namespace Andastra.Runtime.Core.Module
     /// - Module save: "modulesave" @ 0x007bde20 (module save directory), "Module: %s" @ 0x007c79c8 (module debug output)
     /// - "module000" @ 0x007cb9cc (default module name), ":: Module savegame list: %s.\n" @ 0x007cbbb4 (module save list debug)
     /// - ":: Server mode: Module Running.\n" @ 0x007cbc44, ":: Server mode: Module Loaded.\n" @ 0x007cbc68 (module state debug)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves module state including creature positions, door states, placeable states
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 saves module state including creature positions, door states, placeable states
     /// - Module loading sequence:
     ///   1. Play movies sequentially (if provided) - BIK format, blocking playback
     ///   2. Show loading screen (LoadScreenResRef from IFO)
@@ -101,10 +101,10 @@ namespace Andastra.Runtime.Core.Module
                 else
                 {
                     // Try to adapt from Content layer
-                    Type contentProviderType = Type.GetType("Andastra.Runtime.Content.Interfaces.IGameResourceProvider, Andastra.Runtime.Content");
+                    Type contentProviderType = Type.GetType("Andastra.Runtime.Content.Interfaces.IGameResourceProvider, Runtime.Content");
                     if (contentProviderType != null && contentProviderType.IsAssignableFrom(resourceProvider.GetType()))
                     {
-                        Type adapterType = Type.GetType("Andastra.Runtime.Content.Adapters.MovieResourceProviderAdapter, Andastra.Runtime.Content");
+                        Type adapterType = Type.GetType("Andastra.Runtime.Content.Adapters.MovieResourceProviderAdapter, Runtime.Content");
                         if (adapterType != null)
                         {
                             movieResourceProvider = (IMovieResourceProvider)Activator.CreateInstance(adapterType, resourceProvider);
@@ -123,10 +123,10 @@ namespace Andastra.Runtime.Core.Module
                 else
                 {
                     // Try to adapt from Graphics layer
-                    Type graphicsDeviceType = Type.GetType("Andastra.Runtime.Graphics.IGraphicsDevice, Andastra.Runtime.Graphics.Common");
+                    Type graphicsDeviceType = Type.GetType("Andastra.Runtime.Graphics.IGraphicsDevice, Runtime.Graphics.Common");
                     if (graphicsDeviceType != null && graphicsDeviceType.IsAssignableFrom(graphicsDevice.GetType()))
                     {
-                        Type adapterType = Type.GetType("Andastra.Runtime.Graphics.Adapters.MovieGraphicsDeviceAdapter, Andastra.Runtime.Graphics.Common");
+                        Type adapterType = Type.GetType("Andastra.Runtime.Graphics.Adapters.MovieGraphicsDeviceAdapter, Runtime.Graphics.Common");
                         if (adapterType != null)
                         {
                             movieGraphicsDevice = (IMovieGraphicsDevice)Activator.CreateInstance(adapterType, graphicsDevice);
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Core.Module
                     // 4.5. Fire OnModuleLeave script
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module leave script execution
                     // Located via string references: "OnModuleLeave" @ 0x007bee50, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
-                    // Original implementation: FUN_005226d0 @ 0x005226d0 executes module leave scripts before unloading
+                    // Original implementation: 0x005226d0 @ 0x005226d0 executes module leave scripts before unloading
                     string leaveScript = _world.CurrentModule.GetScript(ScriptEvent.OnModuleLeave);
                     if (!string.IsNullOrEmpty(leaveScript) && _world.EventBus != null)
                     {
@@ -277,7 +277,7 @@ namespace Andastra.Runtime.Core.Module
                 // 9. Fire OnModuleLoad script
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module load script execution
                 // Located via string references: "OnModuleLoad" @ 0x007bee40, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
-                // Original implementation: FUN_005226d0 @ 0x005226d0 executes module load scripts after loading
+                // Original implementation: 0x005226d0 @ 0x005226d0 executes module load scripts after loading
                 string loadScript = newModule.GetScript(ScriptEvent.OnModuleLoad);
                 if (!string.IsNullOrEmpty(loadScript) && _world.EventBus != null)
                 {
@@ -335,7 +335,7 @@ namespace Andastra.Runtime.Core.Module
                 // 11. Fire OnEnter for area
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area enter script execution
                 // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
-                // Original implementation: FUN_005226d0 @ 0x005226d0 executes area enter scripts for each party member
+                // Original implementation: 0x005226d0 @ 0x005226d0 executes area enter scripts for each party member
                 if (_world.CurrentArea != null && _world.EventBus != null)
                 {
                     string enterScript = null;
@@ -376,7 +376,7 @@ namespace Andastra.Runtime.Core.Module
                 // 12. Fire OnSpawn for any new creatures
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Creature spawn script execution
                 // Located via string references: "OnSpawn" @ 0x007beec0 (spawn script field)
-                // Original implementation: FUN_005226d0 @ 0x005226d0 executes spawn scripts when creatures are created
+                // Original implementation: 0x005226d0 @ 0x005226d0 executes spawn scripts when creatures are created
                 IEnumerable<IEntity> creatures = _world.GetEntitiesOfType(ObjectType.Creature);
                 foreach (IEntity creature in creatures)
                 {
@@ -574,7 +574,7 @@ namespace Andastra.Runtime.Core.Module
         /// Positions party at specified location.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Party positioning at waypoints
         /// Located via string references: "Waypoint" @ 0x007c1a90, "PositionParty" @ 0x007c1a94
-        /// Original implementation: FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
+        /// Original implementation: 0x005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
         /// </summary>
         private void PositionPartyAt(Vector3 position, float facing)
         {
@@ -642,7 +642,7 @@ namespace Andastra.Runtime.Core.Module
         /// Gets loadscreen image for module.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loadscreen lookup
         /// Located via string references: "LoadScreen" @ 0x007c1a98, "LoadScreenResRef" @ IFO structure
-        /// Original implementation: FUN_005226d0 @ 0x005226d0 reads loadscreen from module IFO file
+        /// Original implementation: 0x005226d0 @ 0x005226d0 reads loadscreen from module IFO file
         /// </summary>
         private string GetLoadscreenForModule(string moduleResRef)
         {
@@ -669,7 +669,7 @@ namespace Andastra.Runtime.Core.Module
         /// Shows loading screen.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen display during module transitions
         /// Located via string references: "loadscreen_p" @ 0x007cbe40 (loading screen GUI panel)
-        /// Original implementation: FUN_006cff90 @ 0x006cff90 initializes and shows loading screen GUI
+        /// Original implementation: 0x006cff90 @ 0x006cff90 initializes and shows loading screen GUI
         /// - Loads "loadscreen_p" GUI panel with progress bar, hints, and logo
         /// - Sets loading screen image via LoadScreenResRef (TPC texture)
         /// - Displays loading screen during module transitions
@@ -722,7 +722,7 @@ namespace Andastra.Runtime.Core.Module
             }
 
             // Play movies sequentially, blocking until each completes
-            // Based on swkotor.exe/swkotor2.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
+            // Based on swkotor.exe/swkotor2.exe: 0x00404c80 @ 0x00404c80 (playback loop)
             // Original implementation: Movies play sequentially, blocking (waits for each to finish before playing next)
             // If movie playback fails, continues with module transition (graceful error handling)
             CancellationToken cancellationToken = CancellationToken.None;

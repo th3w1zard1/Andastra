@@ -9,8 +9,8 @@ namespace Andastra.Runtime.Core.Interfaces
     /// <remarks>
     /// Movie Graphics Device Interface:
     /// - Based on swkotor.exe/swkotor2.exe: Movie rendering system
-    /// - Movie playback function: FUN_00404c80 @ 0x00404c80 (main playback loop)
-    /// - Movie initialization: FUN_004053e0 @ 0x004053e0 (creates movie window, opens BIK file)
+    /// - Movie playback function: 0x00404c80 @ 0x00404c80 (main playback loop)
+    /// - Movie initialization: 0x004053e0 @ 0x004053e0 (creates movie window, opens BIK file)
     /// - Bink API usage: BinkBufferBlit @ 0x00404cc5 (blits buffer to screen)
     /// - Original implementation: Movies render fullscreen using DirectX device
     /// - This interface: Minimal contract for Core to render movie frames

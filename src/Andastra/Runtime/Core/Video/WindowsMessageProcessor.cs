@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Video
 {
     /// <summary>
     /// Windows message processing for movie playback.
-    /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 35-40 (PeekMessage, GetMessage, TranslateMessage, DispatchMessage)
+    /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 35-40 (PeekMessage, GetMessage, TranslateMessage, DispatchMessage)
     /// </summary>
     internal static class WindowsMessageProcessor
     {
@@ -56,13 +56,13 @@ namespace Andastra.Runtime.Core.Video
 
         /// <summary>
         /// Processes Windows messages during movie playback.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 35-40
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 35-40
         /// </summary>
         /// <param name="cancellationToken">Cancellation token to check for exit.</param>
         public static void ProcessMessages(CancellationToken cancellationToken)
         {
             // Process all pending messages
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 35-40
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 35-40
             // PeekMessage -> GetMessage -> TranslateMessage -> DispatchMessage loop
             MSG msg;
             while (PeekMessage(out msg, IntPtr.Zero, 0, 0, PM_REMOVE))

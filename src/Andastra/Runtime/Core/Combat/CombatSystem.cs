@@ -627,7 +627,7 @@ namespace Andastra.Runtime.Core.Combat
         /// Damage Reduction System:
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) damage reduction system
         /// - Located via string references: EffectList @ 0x007bebe8, damage calculation routines
-        /// - Original implementation: FUN_0050b540 loads EffectList, effects are checked during damage calculation
+        /// - Original implementation: 0x0050b540 loads EffectList, effects are checked during damage calculation
         /// - Damage immunity: Completely negates damage of matching type (or Universal)
         /// - Damage resistance: Reduces damage by flat amount, stacks, type-specific (SubType = damage type or Universal)
         /// - Damage reduction: Reduces damage by flat amount, stacks, may be universal or type-specific
@@ -748,7 +748,7 @@ namespace Andastra.Runtime.Core.Combat
             // Try to get weapon damage calculator from world (engine-specific)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Weapon damage calculation uses baseitems.2da
             // Located via string references: "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30
-            // Original implementation: FUN_005d7fc0 @ 0x005d7fc0 saves DamageDice/DamageDie to GFF
+            // Original implementation: 0x005d7fc0 @ 0x005d7fc0 saves DamageDice/DamageDie to GFF
             // Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
             var calculator = GetWeaponDamageCalculator();
             if (calculator != null)

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 
-namespace Andastra.Game.Engines.Eclipse.EngineApi
+namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
 {
     /// <summary>
     /// Dragon Age: Origins specific engine API implementation (daorigins.exe).

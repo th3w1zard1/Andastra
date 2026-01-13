@@ -3,7 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Effects;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
+using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
 namespace Andastra.Game.Graphics.MonoGame.Graphics
 {

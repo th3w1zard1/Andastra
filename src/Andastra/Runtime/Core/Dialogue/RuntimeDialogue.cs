@@ -248,7 +248,7 @@ namespace Andastra.Runtime.Core.Dialogue
 
         /// <summary>
         /// Delay before advancing (in milliseconds, -1 = auto).
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6ac0 @ 0x005e6ac0 reads Delay field from DLG node
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005e6ac0 @ 0x005e6ac0 reads Delay field from DLG node
         /// Located via string reference: "Delay" @ 0x007c35b0
         /// Original implementation: If Delay == -1 and voiceover exists, uses voiceover duration
         /// If Delay == -1 and no voiceover, uses default delay from WaitFlags

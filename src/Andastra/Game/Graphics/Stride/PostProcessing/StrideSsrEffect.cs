@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Numerics;
 using Andastra.Runtime.Graphics.Common.PostProcessing;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using Stride.Core.Mathematics;
 using Stride.Core.Serialization.Contents;
 using Stride.Rendering;

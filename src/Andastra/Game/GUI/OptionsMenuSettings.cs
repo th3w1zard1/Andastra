@@ -14,9 +14,9 @@ namespace Andastra.Game.GUI
     /// - Based on swkotor.exe and swkotor2.exe options menu system
     /// - Settings stored in INI format (swkotor.ini for K1, swkotor2.ini for K2)
     /// - Located via string references: "swkotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644
-    /// - "DiffSettings" @ 0x007c2cdc (display settings, referenced by FUN_005d7ce0 @ 0x005d7ce0)
-    /// - INI reading: FUN_00631fe0 @ 0x00631fe0 (reads INI values via FUN_00635fb0)
-    /// - INI writing: FUN_00631ff0 @ 0x00631ff0 (writes INI values)
+    /// - "DiffSettings" @ 0x007c2cdc (display settings, referenced by 0x005d7ce0 @ 0x005d7ce0)
+    /// - INI reading: 0x00631fe0 @ 0x00631fe0 (reads INI values via 0x00635fb0)
+    /// - INI writing: 0x00631ff0 @ 0x00631ff0 (writes INI values)
     /// - Original implementation: Options menu saves settings to INI file, game loads settings on startup
     /// - Settings categories: Graphics, Sound, Gameplay, Controls
     /// </remarks>

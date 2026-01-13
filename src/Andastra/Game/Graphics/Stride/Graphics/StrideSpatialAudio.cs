@@ -14,8 +14,8 @@ namespace Andastra.Game.Stride.Graphics
     /// (swkotor.exe, swkotor2.exe) which uses Miles Sound System (MSS32.DLL) for 3D audio.
     /// 
     /// Based on original engine analysis:
-    /// - swkotor.exe: FUN_005d6540 (0x005d6540) - Listener orientation setup using _AIL_set_3D_orientation@28
-    /// - swkotor.exe: FUN_005d71c0 (0x005d71c0) - Emitter position setup using _AIL_set_3D_position@16 and _AIL_set_3D_sample_distances@12
+    /// - swkotor.exe: 0x005d6540 (0x005d6540) - Listener orientation setup using _AIL_set_3D_orientation@28
+    /// - swkotor.exe: 0x005d71c0 (0x005d71c0) - Emitter position setup using _AIL_set_3D_position@16 and _AIL_set_3D_sample_distances@12
     /// - swkotor2.exe: Similar audio system implementation
     /// 
     /// The original engine uses inverse distance attenuation with min/max distance constraints,
@@ -87,7 +87,7 @@ namespace Andastra.Game.Stride.Graphics
         /// <summary>
         /// Sets the audio listener (camera position and orientation).
         /// 
-        /// Based on original engine: swkotor.exe FUN_005d6540 (0x005d6540)
+        /// Based on original engine: swkotor.exe 0x005d6540 (0x005d6540)
         /// Updates the Stride AudioListener's orientation to match the provided vectors.
         /// </summary>
         public void SetListener(Vector3 position, Vector3 forward, Vector3 up, Vector3 velocity)
@@ -109,7 +109,7 @@ namespace Andastra.Game.Stride.Graphics
         /// <summary>
         /// Creates a new audio emitter and returns its ID.
         /// 
-        /// Based on original engine: swkotor.exe FUN_005d71c0 (0x005d71c0)
+        /// Based on original engine: swkotor.exe 0x005d71c0 (0x005d71c0)
         /// Creates a Stride AudioEmitter instance for 3D spatial audio calculations.
         /// </summary>
         public uint CreateEmitter(Vector3 position, Vector3 velocity, float volume, float minDistance, float maxDistance)
@@ -137,7 +137,7 @@ namespace Andastra.Game.Stride.Graphics
         /// <summary>
         /// Updates an audio emitter's position, velocity, volume, and distance parameters.
         /// 
-        /// Based on original engine: swkotor.exe FUN_005d71c0 (0x005d71c0)
+        /// Based on original engine: swkotor.exe 0x005d71c0 (0x005d71c0)
         /// Updates the Stride AudioEmitter instance with new position and parameters.
         /// </summary>
         public void UpdateEmitter(uint emitterId, Vector3 position, Vector3 velocity, float volume, float minDistance, float maxDistance)
@@ -168,7 +168,7 @@ namespace Andastra.Game.Stride.Graphics
         /// Calculates 3D audio parameters for an emitter based on listener position and orientation.
         /// 
         /// Based on original engine audio calculation logic:
-        /// - Distance-based attenuation using inverse distance model (swkotor.exe: FUN_005d71c0)
+        /// - Distance-based attenuation using inverse distance model (swkotor.exe: 0x005d71c0)
         /// - Pan calculation based on listener orientation and emitter position
         /// - Doppler shift calculation based on relative velocities
         /// 
@@ -249,7 +249,7 @@ namespace Andastra.Game.Stride.Graphics
         /// <summary>
         /// Calculates distance-based attenuation using inverse distance model.
         /// 
-        /// Based on original engine: swkotor.exe FUN_005d71c0 uses _AIL_set_3D_sample_distances@12
+        /// Based on original engine: swkotor.exe 0x005d71c0 uses _AIL_set_3D_sample_distances@12
         /// to set min/max distances for attenuation. The engine uses inverse distance attenuation:
         /// - At distance <= minDistance: full volume (1.0)
         /// - At distance >= maxDistance: zero volume (0.0)

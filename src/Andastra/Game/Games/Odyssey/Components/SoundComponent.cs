@@ -26,7 +26,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Error messages: "CExoSoundSource %s not freed" @ 0x007c6090 (sound source leak warning)
     /// - GUI: "Sound Options" @ 0x007b5720, "Disable Sound" @ 0x007b5730, "Sound Effects Volume" @ 0x007c83e0
     /// - "BTN_SOUND" @ 0x007d0d80 (sound button), "optsound_p" @ 0x007d2134, "optsoundadv_p" @ 0x007d1eb4 (sound option panels)
-    /// - Template loading: FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
+    /// - Template loading: 0x004e08e0 @ 0x004e08e0 loads sound instances from GIT
     /// - Original implementation: Sound entities emit positional audio in the game world
     /// - UTS file format: GFF with "UTS " signature containing sound data (Active, Looping, Positional, ResRef, Volume, MaxDistance, MinDistance)
     /// - Sound entities can be active/inactive (Active field), looping (Looping field), positional (Positional field for 3D audio)

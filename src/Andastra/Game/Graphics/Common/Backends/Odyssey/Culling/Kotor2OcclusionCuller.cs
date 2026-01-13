@@ -13,22 +13,22 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
     /// The original engine uses VIS files for room-to-room visibility (portal-based culling).
     /// 
     /// Matches swkotor2.exe OpenGL usage patterns exactly:
-    /// - Uses glCopyTexImage2D for framebuffer-to-texture copy (swkotor2.exe: FUN_0042a100 @ 0x0042a100, line 29)
+    /// - Uses glCopyTexImage2D for framebuffer-to-texture copy (swkotor2.exe: 0x0042a100 @ 0x0042a100, line 29)
     /// - Uses glDepthFunc, glDepthMask for depth testing (swkotor2.exe: glDepthFunc @ 0x0080ad96, glDepthMask @ 0x0080aa38)
-    /// - OpenGL context: Created via wglCreateContext (swkotor2.exe: FUN_00461c50 @ 0x00461c50)
-    /// - Texture operations: glGenTextures, glBindTexture, glTexImage2D (swkotor2.exe: FUN_0042a100 @ 0x0042a100)
+    /// - OpenGL context: Created via wglCreateContext (swkotor2.exe: 0x00461c50 @ 0x00461c50)
+    /// - Texture operations: glGenTextures, glBindTexture, glTexImage2D (swkotor2.exe: 0x0042a100 @ 0x0042a100)
     /// - NOTE: glReadPixels exists in swkotor2.exe @ 0x0080a978 but is NEVER CALLED (no cross-references found)
     /// </summary>
     /// <remarks>
     /// KOTOR2-Specific OpenGL Implementation (swkotor2.exe):
     /// - OpenGL context: HGLRC created via wglCreateContext
     /// - Device context: HDC from GetDC(windowHandle)
-    /// - Depth buffer: Copied via glCopyTexImage2D (matches swkotor2.exe: FUN_0042a100 line 29 pattern)
+    /// - Depth buffer: Copied via glCopyTexImage2D (matches swkotor2.exe: 0x0042a100 line 29 pattern)
     /// - Hi-Z buffer: GL_TEXTURE_2D with GL_R32F format (single-channel float for depth)
     /// - Mipmap generation: CPU-side max depth calculation (OpenGL 1.x/2.x doesn't support compute shaders)
     /// - Global variables: DAT_0080c994, DAT_0080cafc (KOTOR2-specific texture flags)
-    /// - Helper functions: FUN_00475760, FUN_0076dba0 (KOTOR2-specific texture setup)
-    /// - Display mode handling: FUN_00462560 @ 0x00462560 (has floating-point refresh rate comparison)
+    /// - Helper functions: 0x00475760, 0x0076dba0 (KOTOR2-specific texture setup)
+    /// - Display mode handling: 0x00462560 @ 0x00462560 (has floating-point refresh rate comparison)
     /// - Original engine occlusion: VIS files for room visibility, NOT Hi-Z buffers
     /// 
     /// Original Engine Behavior (swkotor2.exe):
@@ -81,13 +81,13 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
         /// <param name="depthBuffer">Depth buffer object (not used directly, reads from current OpenGL framebuffer).</param>
         /// <remarks>
         /// KOTOR2 Implementation (swkotor2.exe):
-        /// - Copies depth buffer using glCopyTexImage2D (swkotor2.exe: FUN_0042a100 @ 0x0042a100, line 29)
+        /// - Copies depth buffer using glCopyTexImage2D (swkotor2.exe: 0x0042a100 @ 0x0042a100, line 29)
         /// - Pattern: glCopyTexImage2D(0x84f5, 0, 0x8058, 0, 0, width, height, 0) - matches original exactly
         /// - 0x84f5 = GL_TEXTURE_RECTANGLE_NV, 0x8058 = GL_RGBA8 (original engine uses RGBA, we use depth)
         /// - Then reads back via glGetTexImage for CPU-side processing
         /// - Generates subsequent mip levels using CPU-side max depth calculation
-        /// - Matches FUN_0042a100 @ 0x0042a100 texture initialization pattern
-        /// - Display mode handling: FUN_00462560 @ 0x00462560 (floating-point refresh rate comparison)
+        /// - Matches 0x0042a100 @ 0x0042a100 texture initialization pattern
+        /// - Display mode handling: 0x00462560 @ 0x00462560 (floating-point refresh rate comparison)
         /// - NOTE: Original engine does NOT implement this - this is a modern enhancement
         /// </remarks>
         private void GenerateHiZBufferInternal(object depthBuffer)
@@ -98,7 +98,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
             }
 
             // Make OpenGL context current (required for glCopyTexImage2D)
-            // Matches swkotor2.exe: wglMakeCurrent(hdc, hglrc) pattern from FUN_00461c50
+            // Matches swkotor2.exe: wglMakeCurrent(hdc, hglrc) pattern from 0x00461c50
             if (!wglMakeCurrent(_glDevice, _glContext))
             {
                 return; // Failed to make context current
@@ -107,7 +107,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
             try
             {
                 // Copy depth buffer from framebuffer to texture using glCopyTexImage2D
-                // Matches swkotor2.exe: glCopyTexImage2D pattern from FUN_0042a100 line 29
+                // Matches swkotor2.exe: glCopyTexImage2D pattern from 0x0042a100 line 29
                 // Original: glCopyTexImage2D(0x84f5, 0, 0x8058, 0, 0, width, height, 0)
                 // We use GL_TEXTURE_2D and GL_DEPTH_COMPONENT for depth buffer
                 glBindTexture(GL_TEXTURE_2D, _hiZBufferTexture);
@@ -173,7 +173,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
         /// KOTOR2 Implementation (swkotor2.exe):
         /// - Uses CPU-side cache for accurate max depth values (primary method)
         /// - Falls back to glGetTexImage if cache is invalid (slower, but accurate)
-        /// - Matches FUN_0042a100 @ 0x0042a100 texture access pattern
+        /// - Matches 0x0042a100 @ 0x0042a100 texture access pattern
         /// - NOTE: Original engine does NOT implement this - this is a modern enhancement
         /// </remarks>
         private float SampleHiZBufferMaxDepthInternal(int minX, int minY, int maxX, int maxY, int mipLevel)
@@ -315,14 +315,14 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
 
         /// <summary>
         /// Creates Hi-Z buffer texture using OpenGL.
-        /// Matches swkotor2.exe texture creation pattern from FUN_0042a100 @ 0x0042a100.
+        /// Matches swkotor2.exe texture creation pattern from 0x0042a100 @ 0x0042a100.
         /// </summary>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>
         /// <param name="mipLevels">Number of mip levels.</param>
         /// <remarks>
         /// KOTOR2 Implementation (swkotor2.exe):
-        /// - Uses glGenTextures to generate texture ID (swkotor2.exe: FUN_0042a100 pattern)
+        /// - Uses glGenTextures to generate texture ID (swkotor2.exe: 0x0042a100 pattern)
         /// - Uses glBindTexture to bind texture (swkotor2.exe: GL_TEXTURE_2D binding)
         /// - Sets texture parameters: GL_TEXTURE_MIN_FILTER, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR
         /// - Format: GL_R32F (single-channel float for depth values)
@@ -339,7 +339,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
             try
             {
                 // Generate texture ID
-                // Matches swkotor2.exe: glGenTextures(1, &textureId) pattern from FUN_0042a100
+                // Matches swkotor2.exe: glGenTextures(1, &textureId) pattern from 0x0042a100
                 uint[] textureIds = new uint[1];
                 glGenTextures(1, textureIds);
                 _hiZBufferTexture = textureIds[0];
@@ -353,7 +353,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
 
                 // Allocate texture storage (mip level 0 will be filled when GenerateHiZBuffer is called)
-                // Matches swkotor2.exe: glTexImage2D pattern from FUN_0042a100
+                // Matches swkotor2.exe: glTexImage2D pattern from 0x0042a100
                 glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_R32F, width, height, 0, GL_RED, GL_FLOAT, IntPtr.Zero);
             }
             finally
@@ -517,9 +517,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
         private const string OPENGL32_DLL = "opengl32.dll";
         private const string GDI32_DLL = "gdi32.dll";
 
-        // OpenGL Function Declarations (matches swkotor2.exe: FUN_0042a100 @ 0x0042a100)
+        // OpenGL Function Declarations (matches swkotor2.exe: 0x0042a100 @ 0x0042a100)
         // NOTE: glReadPixels exists @ 0x0080a978 but is NEVER CALLED in original engine (no cross-references)
-        // Original engine uses glCopyTexImage2D instead (FUN_0042a100 line 29)
+        // Original engine uses glCopyTexImage2D instead (0x0042a100 line 29)
         [DllImport(OPENGL32_DLL, EntryPoint = "glCopyTexImage2D", CallingConvention = CallingConvention.Cdecl)]
         private static extern void glCopyTexImage2D(uint target, int level, uint internalFormat, int x, int y, int width, int height, int border);
 

@@ -13,7 +13,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// - Both K1 and K2 use: "chitin.key", "dialog.tlk", "modules", "override", "saves"
     /// - Only TexturePackFiles differs between K1 and K2
     /// </remarks>
-    public abstract class OdysseyResourceConfigBase : Andastra.Runtime.Engines.Common.IResourceConfig
+    public abstract class OdysseyResourceConfigBase : Andastra.Game.Games.Common.IResourceConfig
     {
         public string ChitinKeyFile
         {

@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Core.Enums
     /// - Flags enum allows combination (e.g., ObjectType.All = all types)
     /// - Used for: Entity filtering, type checking, GFF template loading (UTC, UTD, UTP, etc.)
     /// - Object types correspond to GFF template types: UTC (Creature), UTD (Door), UTP (Placeable), etc.
-    /// - Object type checking: FUN_005226d0 @ 0x005226d0 uses object type for entity serialization
-    /// - Entity creation: FUN_004e10b0 @ 0x004e10b0 creates entities by type from GIT instances
+    /// - Object type checking: 0x005226d0 @ 0x005226d0 uses object type for entity serialization
+    /// - Entity creation: 0x004e10b0 @ 0x004e10b0 creates entities by type from GIT instances
     /// </remarks>
     [Flags]
     public enum ObjectType

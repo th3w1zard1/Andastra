@@ -1290,7 +1290,7 @@ namespace Andastra.Game.Games.Aurora
         /// When start and goal are on the same tile but an obstacle blocks the direct path,
         /// we try to route through adjacent tiles.
         /// </remarks>
-        private IList<Vector3> FindPathAroundObstacleOnSameTile(Vector3 start, Vector3 goal, int tileX, int tileY, IList<Andastra.Runtime.Core.Interfaces.ObstacleInfo> obstacles)
+        private IList<Vector3> FindPathAroundObstacleOnSameTile(Vector3 start, Vector3 goal, int tileX, int tileY, IList<Runtime.Core.Interfaces.ObstacleInfo> obstacles)
         {
             var candidateTiles = new List<(int x, int y)>();
             foreach ((int x, int y) neighbor in GetTileNeighbors(tileX, tileY))
@@ -1344,7 +1344,7 @@ namespace Andastra.Game.Games.Aurora
         /// Based on nwmain.exe: CPathfindInformation obstacle blocking logic.
         /// Checks all tiles and marks those that contain or are too close to obstacles.
         /// </remarks>
-        private HashSet<(int x, int y)> BuildBlockedTilesSet(IList<Andastra.Runtime.Core.Interfaces.ObstacleInfo> obstacles)
+        private HashSet<(int x, int y)> BuildBlockedTilesSet(IList<Runtime.Core.Interfaces.ObstacleInfo> obstacles)
         {
             var blockedTiles = new HashSet<(int x, int y)>();
 

@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Game.Games.Common.Components;
 using Andastra.Game.Games.Common.Systems;
+using Andastra.Game.Games.Common.Components;
 
 namespace Andastra.Game.Games.Eclipse.Components
 {
@@ -17,18 +17,28 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// Eclipse-specific details:
     /// - daorigins.exe: Eclipse faction system with IsHostile/IsFriendly checks
     /// - DragonAge2.exe: Enhanced Eclipse faction system with similar structure
-    /// - Located via string references: "IsHostile" @ 0x00af7904 (daorigins.exe) / 0x00bf4e84 (DragonAge2.exe)
-    /// - "IsConsideredHostile" @ 0x00af6fca (daorigins.exe) / 0x00bf2728 (DragonAge2.exe)
-    /// - "GroupHostile" @ 0x00aedc68 (daorigins.exe) / 0x00bf8370 (DragonAge2.exe)
-    /// - "ShowAsAllyOnMap" @ 0x00af75c8 (daorigins.exe) / 0x00bf4b1c (DragonAge2.exe)
-    /// - "CursorOverHostileNPC" @ 0x00af97d4 (daorigins.exe) / 0x00be9f04 (DragonAge2.exe)
-    /// - "CursorOverFriendlyNPC" @ 0x00af9828 (daorigins.exe) / 0x00be9f30 (DragonAge2.exe)
+    /// - Located via string references:
+    ///   - ["IsHostile"] @ (daorigin.exe: 0x00af7904, dragonage2.exe: 0x00bf4e84)
+    ///   - ["IsConsideredHostile"] @ (daorigins.exe: 0x00af6fca, dragonage2.exe: 0x00bf2728)
+    ///   - ["GroupHostile"] @ (daorigins.exe: 0x00aedc68, dragonage2.exe: 0x00bf8370)
+    ///   - ["ShowAsAllyOnMap"] @ (daorigins.exe: 0x00af75c8, dragonage2.exe: 0x00bf4b1c)
+    ///   - ["CursorOverHostileNPC"] @ (daorigins.exe: 0x00af97d4, dragonage2.exe: 0x00be9f04)
+    ///   - ["CursorOverFriendlyNPC"] @ (daorigins.exe: 0x00af9828, dragonage2.exe: 0x00be9f30)
     /// - Original implementation: Eclipse engines use IsHostile/IsConsideredHostile checks for faction relationships
-    /// - EclipseFactionManager handles complex faction relationships and reputation lookups
-    /// - Faction relationships: Similar to Odyssey/Aurora but Eclipse-specific implementation
-    /// - Personal reputation: Individual entity overrides (stored per entity pair, overrides faction reputation)
-    /// - Temporary hostility tracked per-entity (stored in TemporaryHostileTargets HashSet from base class)
-    /// - Eclipse-specific: Uses reputation-based hostility calculation (0-10 = hostile, 11-89 = neutral, 90-100 = friendly)
+    ///   - **EclipseFactionManager**: handles complex faction relationships and reputation lookups
+    ///   - **Faction relationships**: Similar to Odyssey/Aurora but Eclipse-specific implementation
+    ///   - **Personal reputation**: Individual entity overrides (stored per entity pair, overrides faction reputation)
+    ///   - **Temporary hostility** tracked per-entity (stored in TemporaryHostileTargets HashSet from base class)
+    ///   - **Eclipse-specific**: Uses reputation-based hostility calculation
+    ///     - 0-10 = hostile
+    ///     - 11-89 = neutral
+    ///     - 90-100 = friendly
+    /// - **Combat triggers**:
+    ///   - Attacking a creature makes attacker hostile to target's faction
+    ///   - Temporary hostility set immediately on attack (SetTemporaryHostile)
+    ///   - Faction-wide hostility: All members of target's faction become hostile to attacker
+    ///   - Hostility can be permanent (persists after combat) or temporary (cleared on combat end)
+    ///   - Personal reputation can override faction reputation for specific entity pairs
     /// </remarks>
     public class EclipseFactionComponent : BaseFactionComponent
     {
@@ -66,8 +76,9 @@ namespace Andastra.Game.Games.Eclipse.Components
         /// <param name="other">The other entity to check hostility against.</param>
         /// <returns>True if hostile, false otherwise.</returns>
         /// <remarks>
-        /// Based on Eclipse engine: IsHostile check (daorigins.exe: 0x00af7904, DragonAge2.exe: 0x00bf4e84)
         /// Uses EclipseFactionManager for reputation-based hostility determination.
+        /// Based on Eclipse engine:
+        ///   - ["CheckHostility"] @ (daorigins.exe: 0x00af7904, dragonage2.exe: 0x00bf4e84)
         /// </remarks>
         public override bool IsHostile(IEntity other)
         {
@@ -111,7 +122,8 @@ namespace Andastra.Game.Games.Eclipse.Components
         /// <param name="other">The other entity to check friendliness against.</param>
         /// <returns>True if friendly, false otherwise.</returns>
         /// <remarks>
-        /// Based on Eclipse engine: Friendliness determination (daorigins.exe, DragonAge2.exe)
+        /// Based on Eclipse engine:
+        ///   - [CheckFriendliness] @ (daorigins.exe: TODO: Find this address, dragonage2.exe: TODO: Find this address)
         /// Uses EclipseFactionManager for reputation-based friendliness determination.
         /// </remarks>
         public override bool IsFriendly(IEntity other)

@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
-using Stride.Core.Mathematics;
 using Stride.Graphics;
 
 namespace Andastra.Game.Stride.Graphics
@@ -17,7 +15,7 @@ namespace Andastra.Game.Stride.Graphics
     [StructLayout(LayoutKind.Sequential)]
     public struct VertexPositionColor
     {
-        public System.Numerics.Vector3 Position;
+        public Vector3 Position;
         public uint Color; // Packed color as uint
     }
 

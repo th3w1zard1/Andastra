@@ -38,7 +38,7 @@ using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Runtime.Core.Module;
+using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using JetBrains.Annotations;
@@ -234,7 +234,7 @@ namespace Andastra.Game.Games.Eclipse
         private struct ParticleVertexData
         {
             public Vector3 Position;
-            public Andastra.Runtime.Graphics.Color Color;
+            public Runtime.Graphics.Color Color;
             public GraphicsVector2 TextureCoordinate;
         }
 
@@ -4402,7 +4402,7 @@ namespace Andastra.Game.Games.Eclipse
             // Check for Eclipse engine (Dragon Age games)
             if (worldNamespace.Contains("Eclipse"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Eclipse.Collision";
+                detectorNamespace = "Runtime.Games.Eclipse.Collision";
                 detectorTypeName = "EclipseCreatureCollisionDetector";
             }
 
@@ -9276,25 +9276,25 @@ namespace Andastra.Game.Games.Eclipse
                     vertices[vertexIndex + 0] = new ParticleVertexData
                     {
                         Position = corner0,
-                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
+                        Color = new Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(0.0f, 1.0f) // Bottom-left
                     };
                     vertices[vertexIndex + 1] = new ParticleVertexData
                     {
                         Position = corner1,
-                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
+                        Color = new Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(1.0f, 1.0f) // Bottom-right
                     };
                     vertices[vertexIndex + 2] = new ParticleVertexData
                     {
                         Position = corner2,
-                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
+                        Color = new Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(1.0f, 0.0f) // Top-right
                     };
                     vertices[vertexIndex + 3] = new ParticleVertexData
                     {
                         Position = corner3,
-                        Color = new Andastra.Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
+                        Color = new Runtime.Graphics.Color(particleColor.R, particleColor.G, particleColor.B, particleColor.A),
                         TextureCoordinate = new GraphicsVector2(0.0f, 0.0f) // Top-left
                     };
 
@@ -10331,14 +10331,14 @@ namespace Andastra.Game.Games.Eclipse
                         // Our implementation: Uses sprite batch abstraction for cross-platform compatibility
                         using (ISpriteBatch spriteBatch = graphicsDevice.CreateSpriteBatch())
                         {
-                            spriteBatch.Begin(Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Andastra.Runtime.Graphics.BlendState.Opaque);
+                            spriteBatch.Begin(Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Runtime.Graphics.BlendState.Opaque);
 
                             // Draw final texture fullscreen to back buffer
                             // daorigins.exe: Final texture matches viewport dimensions, blitted 1:1 to back buffer
                             // Destination rectangle covers entire viewport for fullscreen output
-                            Andastra.Runtime.Graphics.Rectangle destinationRect = new Andastra.Runtime.Graphics.Rectangle(0, 0, viewportWidth, viewportHeight);
+                            Andastra.Runtime.Graphics.Rectangle destinationRect = new Runtime.Graphics.Rectangle(0, 0, viewportWidth, viewportHeight);
                             Microsoft.Xna.Framework.Color whiteColor = Microsoft.Xna.Framework.Color.White;
-                            spriteBatch.Draw(finalTarget.ColorTexture, new Andastra.Runtime.Graphics.Vector2(destinationRect.X, destinationRect.Y), new Andastra.Runtime.Graphics.Color(whiteColor.R, whiteColor.G, whiteColor.B, whiteColor.A));
+                            spriteBatch.Draw(finalTarget.ColorTexture, new Andastra.Runtime.Graphics.Vector2(destinationRect.X, destinationRect.Y), new Runtime.Graphics.Color(whiteColor.R, whiteColor.G, whiteColor.B, whiteColor.A));
 
                             spriteBatch.End();
                         }
@@ -11823,7 +11823,7 @@ technique ColorGrading
                     {
                         // Entity not registered with world - destroy directly
                         // Based on Entity.Destroy() implementation
-                        if (entity is Andastra.Runtime.Core.Entities.Entity concreteEntity)
+                        if (entity is Runtime.Core.Entities.Entity concreteEntity)
                         {
                             concreteEntity.Destroy();
                         }
@@ -12388,7 +12388,7 @@ technique ColorGrading
                 return;
             }
 
-            _dialogueHistory.Add(new Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry(speakerName, messageText, timestamp));
+            _dialogueHistory.Add(new Runtime.Core.Interfaces.DialogueHistoryEntry(speakerName, messageText, timestamp));
         }
 
         /// <summary>
@@ -12402,7 +12402,7 @@ technique ColorGrading
         /// - Used by dialogue rendering system to display history panel
         /// - History entries contain speaker names and message text
         /// </remarks>
-        public IReadOnlyList<Andastra.Runtime.Core.Interfaces.DialogueHistoryEntry> GetDialogueHistory()
+        public IReadOnlyList<Runtime.Core.Interfaces.DialogueHistoryEntry> GetDialogueHistory()
         {
             // Sort by timestamp to ensure chronological order
             return _dialogueHistory.OrderBy(entry => entry.Timestamp).ToList();

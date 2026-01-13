@@ -458,9 +458,9 @@ namespace Andastra.Game.Games.Common
 
             // Fire OnEnter script for target area
             // Common across all engines: Fires when entity enters an area
-            if (targetArea is Andastra.Runtime.Core.Module.RuntimeArea targetRuntimeArea)
+            if (targetArea is Runtime.Core.Module.RuntimeArea targetRuntimeArea)
             {
-                string enterScript = targetRuntimeArea.GetScript(Andastra.Runtime.Core.Enums.ScriptEvent.OnEnter);
+                string enterScript = targetRuntimeArea.GetScript(Runtime.Core.Enums.ScriptEvent.OnEnter);
                 if (!string.IsNullOrEmpty(enterScript))
                 {
                     IEntity areaEntity = world.GetEntityByTag(targetArea.ResRef, 0);
@@ -470,7 +470,7 @@ namespace Andastra.Game.Games.Common
                     }
                     if (areaEntity != null)
                     {
-                        world.EventBus.FireScriptEvent(areaEntity, Andastra.Runtime.Core.Enums.ScriptEvent.OnEnter, entity);
+                        world.EventBus.FireScriptEvent(areaEntity, Runtime.Core.Enums.ScriptEvent.OnEnter, entity);
                     }
                 }
             }

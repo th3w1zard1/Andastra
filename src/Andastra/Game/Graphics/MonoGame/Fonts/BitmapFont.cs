@@ -8,7 +8,7 @@ using Andastra.Game.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
+using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
 namespace Andastra.Game.Graphics.MonoGame.Fonts
 {
@@ -111,7 +111,7 @@ namespace Andastra.Game.Graphics.MonoGame.Fonts
             try
             {
                 // Use reflection to call OdysseyBitmapFont.Load to avoid circular dependency
-                System.Type odysseyFontType = System.Type.GetType("Andastra.Runtime.Games.Odyssey.Fonts.OdysseyBitmapFont, Andastra.Runtime.Games.Odyssey");
+                System.Type odysseyFontType = System.Type.GetType("Andastra.Runtime.Games.Odyssey.Fonts.OdysseyBitmapFont, Runtime.Games.Odyssey");
                 if (odysseyFontType == null)
                 {
                     Console.WriteLine("[BitmapFont] ERROR: Could not find OdysseyBitmapFont type. Please use OdysseyBitmapFont directly.");

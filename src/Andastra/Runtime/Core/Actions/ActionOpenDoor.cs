@@ -12,17 +12,17 @@ namespace Andastra.Runtime.Core.Actions
     /// <remarks>
     /// Open Door Action:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door interaction system
-    /// - Door loading: FUN_00580ed0 @ 0x00580ed0 (load door from UTD GFF template)
-    /// - Door loading with transitions: FUN_005838d0 @ 0x005838d0 (load door with LinkedToModule/LinkedToFlags)
+    /// - Door loading: 0x00580ed0 @ 0x00580ed0 (load door from UTD GFF template)
+    /// - Door loading with transitions: 0x005838d0 @ 0x005838d0 (load door with LinkedToModule/LinkedToFlags)
     /// - Located via string references: "OnOpen" @ 0x007be1b0 (door script event), "ScriptOnOpen" @ 0x007beeb8
     /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
     /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles object events
     ///   - EVENT_OPEN_OBJECT (case 7): Fires OnOpen script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN = 0x16)
     ///   - EVENT_CLOSE_OBJECT (case 6): Fires OnClose script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE = 0x17)
     ///   - EVENT_LOCK_OBJECT (case 0xd): Fires OnLocked script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED = 0x1c)
     ///   - EVENT_UNLOCK_OBJECT (case 0xc): Fires OnUnlocked script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED = 0x1d)
-    /// - Door fields from UTD template (FUN_00580ed0): OpenState (0=closed, 1=open, 2=destroyed, 3=locked),
+    /// - Door fields from UTD template (0x00580ed0): OpenState (0=closed, 1=open, 2=destroyed, 3=locked),
     ///   LinkedTo (waypoint/trigger tag), LinkedToModule (module ResRef), LinkedToFlags (bit 1=module transition, bit 2=area transition),
     ///   TransitionDestination (waypoint tag for positioning), Locked, Lockable, KeyRequired, KeyName
     /// - Original implementation: Moves actor to door within InteractRange (~2.0 units), checks lock state
@@ -136,7 +136,7 @@ namespace Andastra.Runtime.Core.Actions
 
                 // Check for module/area transition
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door transition system
-                // Door loading with transitions: FUN_005838d0 @ 0x005838d0 (reads LinkedToModule, LinkedToFlags, TransitionDestination from UTD)
+                // Door loading with transitions: 0x005838d0 @ 0x005838d0 (reads LinkedToModule, LinkedToFlags, TransitionDestination from UTD)
                 // Located via string references: "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788, "TransitionDestination" @ 0x007bd7a4
                 // Original implementation: Doors with LinkedToModule trigger module transitions when opened
                 // Module transitions: LinkedToFlags bit 1 = module transition (if LinkedToModule non-empty)

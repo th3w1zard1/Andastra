@@ -9,16 +9,16 @@ namespace Andastra.Runtime.Core.Collision
     /// </summary>
     /// <remarks>
     /// Creature Bounding Box:
-    /// - Based on swkotor.exe and swkotor2.exe reverse engineering via Ghidra MCP
+    /// - Based on swkotor.exe and swkotor2.exe further analysis
     /// - K1 (swkotor.exe): Bounding box pointer at offset 0x340, radius at +8, width at +4
-    ///   - FUN_004ed6e0 @ 0x004ed6e0: `*(float *)(*(int *)(param_1 + 0x340) + 8)` (radius)
-    ///   - FUN_004f1310 @ 0x004f1310: Adds two radii for collision distance
+    ///   - 0x004ed6e0 @ 0x004ed6e0: `*(float *)(*(int *)(param_1 + 0x340) + 8)` (radius)
+    ///   - 0x004f1310 @ 0x004f1310: Adds two radii for collision distance
     /// - K2 (swkotor2.exe): Bounding box pointer at offset 0x380, width at +0x14, height at +0xbc
-    ///   - FUN_005479f0 @ 0x005479f0: `*(float *)(iVar1 + 0x14)` (width), `*(undefined4 *)(iVar1 + 0xbc)` (height)
+    ///   - 0x005479f0 @ 0x005479f0: `*(float *)(iVar1 + 0x14)` (width), `*(undefined4 *)(iVar1 + 0xbc)` (height)
     /// - Width and height are half-extents (radius-like values)
     /// - Bounding box is axis-aligned and centered at entity position
     /// - Used for collision detection in movement actions (ActionMoveToLocation, ActionMoveToObject)
-    /// - Original implementation: FUN_004e17a0 @ 0x004e17a0 (spatial query), FUN_004f5290 @ 0x004f5290 (detailed collision)
+    /// - Original implementation: 0x004e17a0 @ 0x004e17a0 (spatial query), 0x004f5290 @ 0x004f5290 (detailed collision)
     /// </remarks>
     public struct CreatureBoundingBox
     {

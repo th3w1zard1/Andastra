@@ -18,8 +18,8 @@ namespace Andastra.Game
     /// - Settings categories: Graphics (resolution, fullscreen), Audio (volume), Game (skip intro, debug)
     /// - Original implementation: Options menu allows configuration of game settings
     /// - Settings persistence: Settings saved to swkotor.ini (K1) or swkotor2.ini (K2)
-    /// - Function: FUN_00633270 @ 0x00633270 (loads configuration from INI file in swkotor2.exe)
-    /// - Function: FUN_00631ff0 @ 0x00631ff0 (writes INI values in swkotor2.exe)
+    /// - Function: 0x00633270 @ 0x00633270 (loads configuration from INI file in swkotor2.exe)
+    /// - Function: 0x00631ff0 @ 0x00631ff0 (writes INI values in swkotor2.exe)
     /// </remarks>
     public static class OptionsMenu
     {
@@ -343,10 +343,10 @@ namespace Andastra.Game
         /// - Music Volume: Stored in GameSettings.Audio.MusicVolume (applied when music is played)
         /// - Effects Volume: Stored in GameSettings.Audio.SfxVolume (applied when sounds are played)
         /// - Voice Volume: Stored in GameSettings.Audio.VoiceVolume (applied when voice-overs are played)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00633270 @ 0x00633270 (loads audio settings from INI file)
         /// </remarks>
-        public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, ISoundPlayer soundPlayer = null, IMusicPlayer musicPlayer = null, Andastra.Runtime.Core.Audio.IVoicePlayer voicePlayer = null)
+        public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, ISoundPlayer soundPlayer = null, IMusicPlayer musicPlayer = null, Runtime.Core.Audio.IVoicePlayer voicePlayer = null)
         {
             var options = new Dictionary<OptionsCategory, List<OptionItem>>();
 

@@ -16,13 +16,13 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _state = state ?? new RasterizerState();
         }
 
-        public Andastra.Runtime.Graphics.CullMode CullMode
+        public Runtime.Graphics.CullMode CullMode
         {
             get { return ConvertCullMode(_state.CullMode); }
             set { _state.CullMode = ConvertCullMode(value); }
         }
 
-        public Andastra.Runtime.Graphics.FillMode FillMode
+        public Runtime.Graphics.FillMode FillMode
         {
             get { return ConvertFillMode(_state.FillMode); }
             set { _state.FillMode = ConvertFillMode(value); }
@@ -65,59 +65,59 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         internal RasterizerState State => _state;
 
-        private static Microsoft.Xna.Framework.Graphics.CullMode ConvertCullMode(Andastra.Runtime.Graphics.CullMode mode)
+        private static Microsoft.Xna.Framework.Graphics.CullMode ConvertCullMode(Runtime.Graphics.CullMode mode)
         {
             switch (mode)
             {
-                case Andastra.Runtime.Graphics.CullMode.None:
+                case Runtime.Graphics.CullMode.None:
                     return Microsoft.Xna.Framework.Graphics.CullMode.None;
-                case Andastra.Runtime.Graphics.CullMode.CullClockwiseFace:
+                case Runtime.Graphics.CullMode.CullClockwiseFace:
                     return Microsoft.Xna.Framework.Graphics.CullMode.CullClockwiseFace;
-                case Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace:
+                case Runtime.Graphics.CullMode.CullCounterClockwiseFace:
                     return Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
                     return Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace;
             }
         }
 
-        private static Andastra.Runtime.Graphics.CullMode ConvertCullMode(Microsoft.Xna.Framework.Graphics.CullMode mode)
+        private static Runtime.Graphics.CullMode ConvertCullMode(Microsoft.Xna.Framework.Graphics.CullMode mode)
         {
             switch (mode)
             {
                 case Microsoft.Xna.Framework.Graphics.CullMode.None:
-                    return Andastra.Runtime.Graphics.CullMode.None;
+                    return Runtime.Graphics.CullMode.None;
                 case Microsoft.Xna.Framework.Graphics.CullMode.CullClockwiseFace:
-                    return Andastra.Runtime.Graphics.CullMode.CullClockwiseFace;
+                    return Runtime.Graphics.CullMode.CullClockwiseFace;
                 case Microsoft.Xna.Framework.Graphics.CullMode.CullCounterClockwiseFace:
-                    return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
+                    return Runtime.Graphics.CullMode.CullCounterClockwiseFace;
                 default:
-                    return Andastra.Runtime.Graphics.CullMode.CullCounterClockwiseFace;
+                    return Runtime.Graphics.CullMode.CullCounterClockwiseFace;
             }
         }
 
-        private static Microsoft.Xna.Framework.Graphics.FillMode ConvertFillMode(Andastra.Runtime.Graphics.FillMode mode)
+        private static Microsoft.Xna.Framework.Graphics.FillMode ConvertFillMode(Runtime.Graphics.FillMode mode)
         {
             switch (mode)
             {
-                case Andastra.Runtime.Graphics.FillMode.Solid:
+                case Runtime.Graphics.FillMode.Solid:
                     return Microsoft.Xna.Framework.Graphics.FillMode.Solid;
-                case Andastra.Runtime.Graphics.FillMode.WireFrame:
+                case Runtime.Graphics.FillMode.WireFrame:
                     return Microsoft.Xna.Framework.Graphics.FillMode.WireFrame;
                 default:
                     return Microsoft.Xna.Framework.Graphics.FillMode.Solid;
             }
         }
 
-        private static Andastra.Runtime.Graphics.FillMode ConvertFillMode(Microsoft.Xna.Framework.Graphics.FillMode mode)
+        private static Runtime.Graphics.FillMode ConvertFillMode(Microsoft.Xna.Framework.Graphics.FillMode mode)
         {
             switch (mode)
             {
                 case Microsoft.Xna.Framework.Graphics.FillMode.Solid:
-                    return Andastra.Runtime.Graphics.FillMode.Solid;
+                    return Runtime.Graphics.FillMode.Solid;
                 case Microsoft.Xna.Framework.Graphics.FillMode.WireFrame:
-                    return Andastra.Runtime.Graphics.FillMode.WireFrame;
+                    return Runtime.Graphics.FillMode.WireFrame;
                 default:
-                    return Andastra.Runtime.Graphics.FillMode.Solid;
+                    return Runtime.Graphics.FillMode.Solid;
             }
         }
     }
@@ -146,7 +146,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             set { _state.DepthBufferWriteEnable = value; }
         }
 
-        public Andastra.Runtime.Graphics.CompareFunction DepthBufferFunction
+        public Runtime.Graphics.CompareFunction DepthBufferFunction
         {
             get { return ConvertCompareFunction(_state.DepthBufferFunction); }
             set { _state.DepthBufferFunction = ConvertCompareFunction(value); }
@@ -164,26 +164,26 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             set { _state.TwoSidedStencilMode = value; }
         }
 
-        public Andastra.Runtime.Graphics.StencilOperation StencilFail
+        public Runtime.Graphics.StencilOperation StencilFail
         {
             get { return ConvertStencilOperation(_state.StencilFail); }
             set { _state.StencilFail = ConvertStencilOperation(value); }
         }
 
-        public Andastra.Runtime.Graphics.StencilOperation StencilDepthFail
+        public Runtime.Graphics.StencilOperation StencilDepthFail
         {
             // MonoGame DepthStencilState does not have StencilDepthFail - use StencilFail as fallback
             get { return ConvertStencilOperation(_state.StencilFail); }
             set { /* Not supported in MonoGame */ }
         }
 
-        public Andastra.Runtime.Graphics.StencilOperation StencilPass
+        public Runtime.Graphics.StencilOperation StencilPass
         {
             get { return ConvertStencilOperation(_state.StencilPass); }
             set { _state.StencilPass = ConvertStencilOperation(value); }
         }
 
-        public Andastra.Runtime.Graphics.CompareFunction StencilFunction
+        public Runtime.Graphics.CompareFunction StencilFunction
         {
             get { return ConvertCompareFunction(_state.StencilFunction); }
             set { _state.StencilFunction = ConvertCompareFunction(value); }
@@ -214,24 +214,24 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         internal DepthStencilState State => _state;
 
-        private static Microsoft.Xna.Framework.Graphics.CompareFunction ConvertCompareFunction(Andastra.Runtime.Graphics.CompareFunction func)
+        private static Microsoft.Xna.Framework.Graphics.CompareFunction ConvertCompareFunction(Runtime.Graphics.CompareFunction func)
         {
             return (Microsoft.Xna.Framework.Graphics.CompareFunction)(int)func;
         }
 
-        private static Andastra.Runtime.Graphics.CompareFunction ConvertCompareFunction(Microsoft.Xna.Framework.Graphics.CompareFunction func)
+        private static Runtime.Graphics.CompareFunction ConvertCompareFunction(Microsoft.Xna.Framework.Graphics.CompareFunction func)
         {
-            return (Andastra.Runtime.Graphics.CompareFunction)(int)func;
+            return (Runtime.Graphics.CompareFunction)(int)func;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.StencilOperation ConvertStencilOperation(Andastra.Runtime.Graphics.StencilOperation op)
+        private static Microsoft.Xna.Framework.Graphics.StencilOperation ConvertStencilOperation(Runtime.Graphics.StencilOperation op)
         {
             return (Microsoft.Xna.Framework.Graphics.StencilOperation)(int)op;
         }
 
-        private static Andastra.Runtime.Graphics.StencilOperation ConvertStencilOperation(Microsoft.Xna.Framework.Graphics.StencilOperation op)
+        private static Runtime.Graphics.StencilOperation ConvertStencilOperation(Microsoft.Xna.Framework.Graphics.StencilOperation op)
         {
-            return (Andastra.Runtime.Graphics.StencilOperation)(int)op;
+            return (Runtime.Graphics.StencilOperation)(int)op;
         }
     }
 
@@ -247,61 +247,61 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _state = state ?? new Microsoft.Xna.Framework.Graphics.BlendState();
         }
 
-        public Andastra.Runtime.Graphics.BlendFunction AlphaBlendFunction
+        public Runtime.Graphics.BlendFunction AlphaBlendFunction
         {
             get { return ConvertBlendFunction(_state.AlphaBlendFunction); }
             set { _state.AlphaBlendFunction = ConvertBlendFunction(value); }
         }
 
-        public Andastra.Runtime.Graphics.Blend AlphaDestinationBlend
+        public Runtime.Graphics.Blend AlphaDestinationBlend
         {
             get { return ConvertBlend(_state.AlphaDestinationBlend); }
             set { _state.AlphaDestinationBlend = ConvertBlend(value); }
         }
 
-        public Andastra.Runtime.Graphics.Blend AlphaSourceBlend
+        public Runtime.Graphics.Blend AlphaSourceBlend
         {
             get { return ConvertBlend(_state.AlphaSourceBlend); }
             set { _state.AlphaSourceBlend = ConvertBlend(value); }
         }
 
-        public Andastra.Runtime.Graphics.BlendFunction ColorBlendFunction
+        public Runtime.Graphics.BlendFunction ColorBlendFunction
         {
             get { return ConvertBlendFunction(_state.ColorBlendFunction); }
             set { _state.ColorBlendFunction = ConvertBlendFunction(value); }
         }
 
-        public Andastra.Runtime.Graphics.Blend ColorDestinationBlend
+        public Runtime.Graphics.Blend ColorDestinationBlend
         {
             get { return ConvertBlend(_state.ColorDestinationBlend); }
             set { _state.ColorDestinationBlend = ConvertBlend(value); }
         }
 
-        public Andastra.Runtime.Graphics.Blend ColorSourceBlend
+        public Runtime.Graphics.Blend ColorSourceBlend
         {
             get { return ConvertBlend(_state.ColorSourceBlend); }
             set { _state.ColorSourceBlend = ConvertBlend(value); }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels); }
             set { _state.ColorWriteChannels = ConvertColorWriteChannels(value); }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels1
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels1); }
             set { _state.ColorWriteChannels1 = ConvertColorWriteChannels(value); }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels2
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels2); }
             set { _state.ColorWriteChannels2 = ConvertColorWriteChannels(value); }
         }
 
-        public Andastra.Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
+        public Runtime.Graphics.ColorWriteChannels ColorWriteChannels3
         {
             get { return ConvertColorWriteChannels(_state.ColorWriteChannels3); }
             set { _state.ColorWriteChannels3 = ConvertColorWriteChannels(value); }
@@ -350,34 +350,34 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         internal Microsoft.Xna.Framework.Graphics.BlendState State => _state;
 
-        private static Microsoft.Xna.Framework.Graphics.BlendFunction ConvertBlendFunction(Andastra.Runtime.Graphics.BlendFunction func)
+        private static Microsoft.Xna.Framework.Graphics.BlendFunction ConvertBlendFunction(Runtime.Graphics.BlendFunction func)
         {
             return (Microsoft.Xna.Framework.Graphics.BlendFunction)(int)func;
         }
 
-        private static Andastra.Runtime.Graphics.BlendFunction ConvertBlendFunction(Microsoft.Xna.Framework.Graphics.BlendFunction func)
+        private static Runtime.Graphics.BlendFunction ConvertBlendFunction(Microsoft.Xna.Framework.Graphics.BlendFunction func)
         {
-            return (Andastra.Runtime.Graphics.BlendFunction)(int)func;
+            return (Runtime.Graphics.BlendFunction)(int)func;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.Blend ConvertBlend(Andastra.Runtime.Graphics.Blend blend)
+        private static Microsoft.Xna.Framework.Graphics.Blend ConvertBlend(Runtime.Graphics.Blend blend)
         {
             return (Microsoft.Xna.Framework.Graphics.Blend)(int)blend;
         }
 
-        private static Andastra.Runtime.Graphics.Blend ConvertBlend(Microsoft.Xna.Framework.Graphics.Blend blend)
+        private static Runtime.Graphics.Blend ConvertBlend(Microsoft.Xna.Framework.Graphics.Blend blend)
         {
-            return (Andastra.Runtime.Graphics.Blend)(int)blend;
+            return (Runtime.Graphics.Blend)(int)blend;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.ColorWriteChannels ConvertColorWriteChannels(Andastra.Runtime.Graphics.ColorWriteChannels channels)
+        private static Microsoft.Xna.Framework.Graphics.ColorWriteChannels ConvertColorWriteChannels(Runtime.Graphics.ColorWriteChannels channels)
         {
             return (Microsoft.Xna.Framework.Graphics.ColorWriteChannels)(int)channels;
         }
 
-        private static Andastra.Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(Microsoft.Xna.Framework.Graphics.ColorWriteChannels channels)
+        private static Runtime.Graphics.ColorWriteChannels ConvertColorWriteChannels(Microsoft.Xna.Framework.Graphics.ColorWriteChannels channels)
         {
-            return (Andastra.Runtime.Graphics.ColorWriteChannels)(int)channels;
+            return (Runtime.Graphics.ColorWriteChannels)(int)channels;
         }
 
         private static Microsoft.Xna.Framework.Color ConvertColor(Color color)
@@ -403,25 +403,25 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _state = state ?? new SamplerState();
         }
 
-        public Andastra.Runtime.Graphics.TextureAddressMode AddressU
+        public Runtime.Graphics.TextureAddressMode AddressU
         {
             get { return ConvertTextureAddressMode(_state.AddressU); }
             set { _state.AddressU = ConvertTextureAddressMode(value); }
         }
 
-        public Andastra.Runtime.Graphics.TextureAddressMode AddressV
+        public Runtime.Graphics.TextureAddressMode AddressV
         {
             get { return ConvertTextureAddressMode(_state.AddressV); }
             set { _state.AddressV = ConvertTextureAddressMode(value); }
         }
 
-        public Andastra.Runtime.Graphics.TextureAddressMode AddressW
+        public Runtime.Graphics.TextureAddressMode AddressW
         {
             get { return ConvertTextureAddressMode(_state.AddressW); }
             set { _state.AddressW = ConvertTextureAddressMode(value); }
         }
 
-        public Andastra.Runtime.Graphics.TextureFilter Filter
+        public Runtime.Graphics.TextureFilter Filter
         {
             get { return ConvertTextureFilter(_state.Filter); }
             set { _state.Filter = ConvertTextureFilter(value); }
@@ -452,24 +452,24 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
 
         internal SamplerState State => _state;
 
-        private static Microsoft.Xna.Framework.Graphics.TextureAddressMode ConvertTextureAddressMode(Andastra.Runtime.Graphics.TextureAddressMode mode)
+        private static Microsoft.Xna.Framework.Graphics.TextureAddressMode ConvertTextureAddressMode(Runtime.Graphics.TextureAddressMode mode)
         {
             return (Microsoft.Xna.Framework.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static Andastra.Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(Microsoft.Xna.Framework.Graphics.TextureAddressMode mode)
+        private static Runtime.Graphics.TextureAddressMode ConvertTextureAddressMode(Microsoft.Xna.Framework.Graphics.TextureAddressMode mode)
         {
-            return (Andastra.Runtime.Graphics.TextureAddressMode)(int)mode;
+            return (Runtime.Graphics.TextureAddressMode)(int)mode;
         }
 
-        private static Microsoft.Xna.Framework.Graphics.TextureFilter ConvertTextureFilter(Andastra.Runtime.Graphics.TextureFilter filter)
+        private static Microsoft.Xna.Framework.Graphics.TextureFilter ConvertTextureFilter(Runtime.Graphics.TextureFilter filter)
         {
             return (Microsoft.Xna.Framework.Graphics.TextureFilter)(int)filter;
         }
 
-        private static Andastra.Runtime.Graphics.TextureFilter ConvertTextureFilter(Microsoft.Xna.Framework.Graphics.TextureFilter filter)
+        private static Runtime.Graphics.TextureFilter ConvertTextureFilter(Microsoft.Xna.Framework.Graphics.TextureFilter filter)
         {
-            return (Andastra.Runtime.Graphics.TextureFilter)(int)filter;
+            return (Runtime.Graphics.TextureFilter)(int)filter;
         }
     }
 }

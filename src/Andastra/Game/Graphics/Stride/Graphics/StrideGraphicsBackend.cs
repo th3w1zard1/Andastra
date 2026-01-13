@@ -208,38 +208,38 @@ namespace Andastra.Game.Stride.Graphics
 
         public object CreateDialogueCameraController(object cameraController)
         {
-            if (cameraController is Andastra.Runtime.Core.Camera.CameraController coreCameraController)
+            if (cameraController is Runtime.Core.Camera.CameraController coreCameraController)
             {
-                return new Andastra.Runtime.Stride.Camera.StrideDialogueCameraController(coreCameraController);
+                return new Runtime.Stride.Camera.StrideDialogueCameraController(coreCameraController);
             }
             throw new ArgumentException("Camera controller must be a CameraController instance", nameof(cameraController));
         }
 
         public object CreateSoundPlayer(object resourceProvider)
         {
-            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
-                return new Andastra.Runtime.Stride.Audio.StrideSoundPlayer(provider, spatialAudio);
+                return new Runtime.Stride.Audio.StrideSoundPlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
         public object CreateMusicPlayer(object resourceProvider)
         {
-            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
-                return new Andastra.Runtime.Stride.Audio.StrideMusicPlayer(provider);
+                return new Runtime.Stride.Audio.StrideMusicPlayer(provider);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }
 
         public object CreateVoicePlayer(object resourceProvider)
         {
-            if (resourceProvider is Andastra.Runtime.Content.Interfaces.IGameResourceProvider provider)
+            if (resourceProvider is Runtime.Content.Interfaces.IGameResourceProvider provider)
             {
                 var spatialAudio = CreateSpatialAudio();
-                return new Andastra.Runtime.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
+                return new Runtime.Stride.Audio.StrideVoicePlayer(provider, spatialAudio);
             }
             throw new ArgumentException("Resource provider must be an IGameResourceProvider instance", nameof(resourceProvider));
         }

@@ -196,7 +196,7 @@ namespace Andastra.Runtime.Core.Dialogue
             // Original implementation: OnConversation script fires on owner entity (NPC) when conversation starts
             if (_world != null && _world.EventBus != null)
             {
-                _world.EventBus.FireScriptEvent(owner, Andastra.Runtime.Core.Enums.ScriptEvent.OnConversation, initiator);
+                _world.EventBus.FireScriptEvent(owner, Runtime.Core.Enums.ScriptEvent.OnConversation, initiator);
             }
 
             // Find first valid entry point
@@ -416,7 +416,7 @@ namespace Andastra.Runtime.Core.Dialogue
             // Original implementation: OnEndDialogue script fires on owner entity (NPC) when conversation ends
             if (_world != null && _world.EventBus != null && _owner != null)
             {
-                _world.EventBus.FireScriptEvent(_owner, Andastra.Runtime.Core.Enums.ScriptEvent.OnEndDialogue, _pc);
+                _world.EventBus.FireScriptEvent(_owner, Runtime.Core.Enums.ScriptEvent.OnEndDialogue, _pc);
             }
 
             // Execute OnEnd script

@@ -17,7 +17,7 @@ namespace Andastra.Game.Games.Aurora
     /// - Common event types: OnHeartbeat, OnPerception, OnDamaged, OnDeath, OnDialogue, etc.
     /// - Event routing: Events are queued and dispatched at frame boundaries
     /// - Script execution: FireScriptEvent triggers NWScript execution on entities with matching event hooks
-    /// - Inheritance: Inherits from BaseEventBus (Runtime.Games.Common) with Aurora-specific event handling
+    /// - Inheritance: Inherits from BaseEventBus (Andastra.Runtime.Games.Common) with Aurora-specific event handling
     ///
     /// Reverse Engineered Function Addresses (nwmain.exe):
     /// - CServerAIMaster::AddEventDeltaTime @ 0x1405570b0: Main function for adding events to the event queue

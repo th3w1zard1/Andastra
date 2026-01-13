@@ -605,7 +605,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Creates OpenGL device using original engine's method.
-        /// Matches swkotor.exe: FUN_0044dab0 @ 0x0044dab0 exactly.
+        /// Matches swkotor.exe: 0x0044dab0 @ 0x0044dab0 exactly.
         ///
         /// This function implements the exact OpenGL initialization sequence:
         /// 1. Get device context (GetDC) - if hdc is not provided
@@ -615,7 +615,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Make context current (wglMakeCurrent)
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of swkotor.exe: FUN_0044dab0:
+        /// Based on reverse engineering of swkotor.exe: 0x0044dab0:
         /// - Line 117: hdc = GetDC(param_2)
         /// - Line 153: iStack_19c = ChoosePixelFormat(hdc,&PStack_188)
         /// - Line 155: SetPixelFormat(hdc,iStack_19c,...)
@@ -758,7 +758,7 @@ namespace Andastra.Game.Graphics.Common.Backends
 
         /// <summary>
         /// Creates an OpenGL texture using original engine's method.
-        /// Matches swkotor.exe: FUN_00427c90 @ 0x00427c90 texture creation pattern.
+        /// Matches swkotor.exe: 0x00427c90 @ 0x00427c90 texture creation pattern.
         ///
         /// This function implements the exact OpenGL texture creation sequence:
         /// 1. Generate texture name (glGenTextures)
@@ -768,7 +768,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Data loading is done separately via UploadOpenGLTextureData
         /// </summary>
         /// <remarks>
-        /// Based on reverse engineering of swkotor.exe: FUN_00427c90:
+        /// Based on reverse engineering of swkotor.exe: 0x00427c90:
         /// - Uses glGenTextures(1, &textureId) to generate texture names
         /// - Uses glBindTexture(GL_TEXTURE_2D, textureId) to bind textures
         /// - Uses glTexParameteri for texture filtering and wrapping
@@ -805,7 +805,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                 }
             }
 
-            // Step 1: Generate texture name (matching swkotor.exe: FUN_00427c90)
+            // Step 1: Generate texture name (matching swkotor.exe: 0x00427c90)
             uint textureId = 0;
             glGenTextures(1, ref textureId);
             if (textureId == 0)
@@ -820,16 +820,16 @@ namespace Andastra.Game.Graphics.Common.Backends
                 };
             }
 
-            // Step 2: Bind texture (matching swkotor.exe: FUN_00427c90)
+            // Step 2: Bind texture (matching swkotor.exe: 0x00427c90)
             glBindTexture(GL_TEXTURE_2D, textureId);
 
-            // Step 3: Set texture parameters (matching swkotor.exe: FUN_00427c90)
+            // Step 3: Set texture parameters (matching swkotor.exe: 0x00427c90)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
 
-            // Step 4: Allocate texture storage (matching swkotor.exe: FUN_00427c90)
+            // Step 4: Allocate texture storage (matching swkotor.exe: 0x00427c90)
             // Allocate storage without data - data loading is done separately via UploadOpenGLTextureData
             uint format = ConvertTextureFormatToOpenGL(desc.Format);
             uint dataFormat = ConvertTextureFormatToOpenGLDataFormat(desc.Format);
@@ -924,7 +924,7 @@ namespace Andastra.Game.Graphics.Common.Backends
             // Step 3: Allocate buffer storage
             // Create empty buffer - data upload is done separately via UploadOpenGLBufferData method.
             // This matches the original engine pattern: create buffer, then upload data separately.
-            // Matches swkotor.exe: FUN_00427c90 buffer creation pattern (glGenBuffers + glBufferData with NULL data).
+            // Matches swkotor.exe: 0x00427c90 buffer creation pattern (glGenBuffers + glBufferData with NULL data).
             glBufferData(target, (IntPtr)desc.SizeInBytes, IntPtr.Zero, GL_STATIC_DRAW);
 
             // Unbind buffer
@@ -965,7 +965,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 4. Upload data using glBufferData (full buffer) or glBufferSubData (partial update)
         /// 5. Unbind buffer
         ///
-        /// Matches swkotor.exe: FUN_00427c90 buffer upload pattern (glBufferData with actual data pointer).
+        /// Matches swkotor.exe: 0x00427c90 buffer upload pattern (glBufferData with actual data pointer).
         /// Based on original engine behavior: buffers are created empty, then data is uploaded separately.
         /// </summary>
         /// <param name="handle">Buffer handle returned from CreateBuffer.</param>
@@ -1068,7 +1068,7 @@ namespace Andastra.Game.Graphics.Common.Backends
         /// 5. Handle BGRA to RGBA conversion for OpenGL compatibility
         /// 6. Unbind texture
         ///
-        /// Matches swkotor.exe: FUN_00427c90 texture upload pattern (glTexImage2D with actual data pointer).
+        /// Matches swkotor.exe: 0x00427c90 texture upload pattern (glTexImage2D with actual data pointer).
         /// Based on original engine behavior: textures are created empty, then data is uploaded separately.
         /// </summary>
         /// <param name="handle">Texture handle returned from CreateTexture.</param>
@@ -1163,7 +1163,7 @@ namespace Andastra.Game.Graphics.Common.Backends
                         IntPtr dataPtr = pinnedData.AddrOfPinnedObject();
 
                         // Upload texture data using glTexImage2D
-                        // Matches swkotor.exe: FUN_00427c90 @ 0x00427c90 texture upload pattern
+                        // Matches swkotor.exe: 0x00427c90 @ 0x00427c90 texture upload pattern
                         glTexImage2D(GL_TEXTURE_2D, mipmap.Level, (int)internalFormat, mipmap.Width, mipmap.Height, 0, uploadFormat, dataType, dataPtr);
 
                         // Check for OpenGL errors

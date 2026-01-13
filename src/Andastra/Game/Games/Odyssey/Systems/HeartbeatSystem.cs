@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// System that fires OnHeartbeat script events at regular intervals.
@@ -19,8 +19,8 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
     /// - "HEARTBEAT" @ 0x007c1348 (heartbeat constant), "HeartbeatTime" @ 0x007c0c30 (heartbeat timer field)
     /// - "HeartbeatDay" @ 0x007c0c40 (heartbeat day field), "Mod_OnHeartbeat" @ 0x007be840 (module heartbeat script)
     /// - "HeartbeatInterval" @ 0x007c38e8 (heartbeat interval field, default 6.0 seconds)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
-    ///   - Saves ScriptHeartbeat script ResRef field to GFF structure (via FUN_004139e0)
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 (save creature data to GFF)
+    ///   - Saves ScriptHeartbeat script ResRef field to GFF structure (via 0x004139e0)
     ///   - ScriptHeartbeat stored at offset 0x270 in creature object structure
     ///   - Also saves other script hooks: ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
     ///   - Saves creature position (XPosition, YPosition, ZPosition), orientation (XOrientation, YOrientation, ZOrientation)

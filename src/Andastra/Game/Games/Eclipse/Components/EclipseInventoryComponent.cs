@@ -301,7 +301,7 @@ namespace Andastra.Game.Games.Eclipse.Components
                                         // Look up entity by ObjectId using world reference
                                         // Based on daorigins.exe: Entity lookup by ObjectId for equipped items
                                         // Located via string references: "ObjectId" @ 0x00af4e74 (daorigins.exe)
-                                        // Original implementation: FUN_004e9de0 @ 0x004e9de0 (GetObject wrapper)
+                                        // Original implementation: 0x004e9de0 @ 0x004e9de0 (GetObject wrapper)
                                         // O(1) dictionary lookup by ObjectId (uint32)
                                         if (Owner.World != null)
                                         {
@@ -467,7 +467,7 @@ namespace Andastra.Game.Games.Eclipse.Components
                                         // Look up entity by ObjectId using world reference
                                         // Based on daorigins.exe: Entity lookup by ObjectId for equipped items
                                         // Located via string references: "ObjectId" @ 0x00af4e74 (daorigins.exe)
-                                        // Original implementation: FUN_004e9de0 @ 0x004e9de0 (GetObject wrapper)
+                                        // Original implementation: 0x004e9de0 @ 0x004e9de0 (GetObject wrapper)
                                         // O(1) dictionary lookup by ObjectId (uint32)
                                         item = Owner.World.GetEntity(objectId);
                                     }
@@ -506,7 +506,7 @@ namespace Andastra.Game.Games.Eclipse.Components
                                 // Look up entity by ObjectId using world reference
                                 // Based on daorigins.exe: Entity lookup by ObjectId for inventory bag items
                                 // Located via string references: "ObjectId" @ 0x00af4e74 (daorigins.exe)
-                                // Original implementation: FUN_004e9de0 @ 0x004e9de0 (GetObject wrapper)
+                                // Original implementation: 0x004e9de0 @ 0x004e9de0 (GetObject wrapper)
                                 // O(1) dictionary lookup by ObjectId (uint32)
                                 if (Owner.World != null)
                                 {

@@ -8,7 +8,7 @@ namespace Andastra.Game.Games.Eclipse.Collision
     /// </summary>
     /// <remarks>
     /// DAO Creature Collision Detection:
-    /// - Based on daorigins.exe reverse engineering via Ghidra MCP
+    /// - Based on daorigins.exe further analysis
     /// - Eclipse engine uses PhysX-based collision detection (different from older engines)
     /// - Collision masks: TAG_COLLISIONMASK_CREATURES @ 0x00b14c40, TAG_COLLISIONMASK_TERRAIN_WALL @ 0x00b14a38, etc.
     /// - Located via string references:
@@ -35,7 +35,7 @@ namespace Andastra.Game.Games.Eclipse.Collision
         /// <param name="entity">The creature entity.</param>
         /// <returns>The creature's bounding box.</returns>
         /// <remarks>
-        /// Based on daorigins.exe reverse engineering via Ghidra MCP:
+        /// Based on daorigins.exe further analysis:
         /// - Eclipse engine uses PhysX physics engine for collision detection
         /// - Collision masks: TAG_COLLISIONMASK_CREATURES, TAG_COLLISIONMASK_TERRAIN_WALL, etc.
         /// - Located via string references: "BoundingBox" @ 0x00b13674, "CollisionGroup" @ 0x00b13aa8

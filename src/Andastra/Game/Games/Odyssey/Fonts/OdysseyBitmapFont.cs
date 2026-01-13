@@ -8,7 +8,7 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;

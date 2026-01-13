@@ -23,7 +23,7 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// - swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0 creates upgrade selection screen ("upgradesel_p") and upgrade items screen ("upgradeitems_p")
     /// - swkotor.exe: Similar upgrade screen functionality with K1-specific GUI panels
     /// - Original creates two GUI panels: upgrade selection screen for item type filtering, upgrade items screen for item modification
-    /// - GUI manager functions: FUN_0040bf90 adds to GUI manager, FUN_00638bb0 sets screen mode
+    /// - GUI manager functions: 0x0040bf90 adds to GUI manager, 0x00638bb0 sets screen mode
     /// </remarks>
     public class OdysseyUISystem : BaseUISystem
     {
@@ -73,7 +73,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// - Creates upgrade selection screen GUI ("upgradesel_p") with item type filters
         /// - Creates upgrade items screen GUI ("upgradeitems_p") with item list and upgrade buttons
         /// - Sets flags in GUI object: item ID (offset 0x629), character ID (offset 0x18a8), disableItemCreation (offset 0x18c8), disableUpgrade (offset 0x18cc)
-        /// - Shows screen via GUI manager (FUN_0040bf90 adds to GUI manager, FUN_00638bb0 sets screen mode)
+        /// - Shows screen via GUI manager (0x0040bf90 adds to GUI manager, 0x00638bb0 sets screen mode)
         /// </remarks>
         protected override void ShowUpgradeScreenImpl(uint item, uint character, bool disableItemCreation, bool disableUpgrade, string override2DA)
         {
@@ -103,7 +103,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             _upgradeScreen.Override2DA = override2DA;
 
             // Show upgrade screen
-            // Original shows screen via GUI manager (FUN_0040bf90 adds to GUI manager, FUN_00638bb0 sets screen mode)
+            // Original shows screen via GUI manager (0x0040bf90 adds to GUI manager, 0x00638bb0 sets screen mode)
             _upgradeScreen.Show();
         }
 

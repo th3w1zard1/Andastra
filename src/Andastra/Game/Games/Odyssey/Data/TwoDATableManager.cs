@@ -8,10 +8,10 @@ using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Games.Odyssey.Profiles;
-using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
-using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
-using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
-using SpellData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.SpellData;
+using AppearanceData = Andastra.Game.Games.Odyssey.Data.GameDataManager.AppearanceData;
+using BaseItemData = Andastra.Game.Games.Odyssey.Data.GameDataManager.BaseItemData;
+using FeatData = Andastra.Game.Games.Odyssey.Data.GameDataManager.FeatData;
+using SpellData = Andastra.Game.Games.Odyssey.Data.GameDataManager.SpellData;
 
 namespace Andastra.Game.Games.Odyssey.Data
 {
@@ -20,7 +20,7 @@ namespace Andastra.Game.Games.Odyssey.Data
     /// </summary>
     /// <remarks>
     /// 2DA Table Manager (Odyssey-specific):
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005edd20 @ 0x005edd20 (2DA table loading)
     /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
     /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
     /// - Cross-engine analysis:

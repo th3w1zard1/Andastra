@@ -15,15 +15,15 @@ namespace Andastra.Game.Games.Odyssey.UI
     /// </summary>
     /// <remarks>
     /// K2 Upgrade Screen Implementation:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 (constructor loads "upgradeitems_p")
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00730970 @ 0x00730970 (constructor loads "upcrystals" @ 0x00730c40)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 (upgrade button click handler)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 (ApplyUpgrade implementation)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 (constructor loads "upgradeitems_p")
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00730970 @ 0x00730970 (constructor loads "upcrystals" @ 0x00730c40)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 (upgrade button click handler)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 (ApplyUpgrade implementation)
     /// - Located via string references: "upgradeitems_p" @ 0x007d09e4, "upcrystals" @ 0x007d09c8
     /// - Uses "upgradeitems_p" for regular items (not "upgradeitems" like K1)
     /// - Uses "upcrystals" for lightsabers (same as K1)
     /// - Has 6 upgrade slots for lightsabers (K1 has 4)
-    /// - Inventory checking: FUN_0055f2a0 @ 0x0055f2a0
+    /// - Inventory checking: 0x0055f2a0 @ 0x0055f2a0
     /// - Stack count check: param_1[0xb3] - item stack size
     /// - Upgrade storage offset: 0x3d54
     /// - Upgrade list offset: 0x3d3c
@@ -46,7 +46,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>Table name for regular item upgrades.</returns>
         /// <remarks>
         /// K2 uses "upgradeitems_p" (not "upgradeitems" like K1).
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
         /// </remarks>
         protected override string GetRegularUpgradeTableName()
         {
@@ -58,7 +58,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// </summary>
         /// <returns>GUI name "upgradeitems_p".</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
         /// </remarks>
         protected override string GetUpgradeGuiName()
         {
@@ -74,15 +74,15 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if upgrade was successful.</returns>
         /// <remarks>
         /// Apply Upgrade Logic (K2):
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 (ApplyUpgrade implementation)
-        /// - Called from: FUN_0072e260 @ 0x0072e260 line 215
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 (ApplyUpgrade implementation)
+        /// - Called from: 0x0072e260 @ 0x0072e260 line 215
         /// - Original implementation:
         ///   1. Checks if upgrade item is already in upgrade list (offset 0x3d3c)
         ///   2. If found in list, removes from list and uses that item
-        ///   3. If stack count < 2, removes from inventory (FUN_0055f3a0 @ 0x0055f3a0)
-        ///   4. If stack count >= 2, decrements stack (FUN_00569d60 @ 0x00569d60)
+        ///   3. If stack count < 2, removes from inventory (0x0055f3a0 @ 0x0055f3a0)
+        ///   4. If stack count >= 2, decrements stack (0x00569d60 @ 0x00569d60)
         ///   5. Adds upgrade to slot array (offset 0x3d54)
-        ///   6. Applies upgrade properties to item (FUN_0055e160 @ 0x0055e160)
+        ///   6. Applies upgrade properties to item (0x0055e160 @ 0x0055e160)
         /// - Stack count check: param_1[0xb3] - item stack size
         /// - Character from: DAT_008283d4 @ 0x008283d4 (global structure storing current player character pointer)
         /// </remarks>
@@ -105,7 +105,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Check if slot is already occupied
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 12 - checks upgrade list at offset 0x3d3c
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 line 12 - checks upgrade list at offset 0x3d3c
             var existingUpgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (existingUpgrade != null)
             {
@@ -125,7 +125,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
             // Skills are used to ensure character can successfully apply the upgrade
             // Higher skills improve success rate and may unlock additional upgrade options
-            // swkotor2.exe: FUN_00729640 @ 0x00729640 - ApplyUpgrade implementation (no skill checks in original)
+            // swkotor2.exe: 0x00729640 @ 0x00729640 - ApplyUpgrade implementation (no skill checks in original)
             // This enhancement adds comprehensive skill-based success rate calculation for item creation/upgrading
             if (_characterSkills.Count > 0)
             {
@@ -164,7 +164,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get character inventory to find and remove upgrade item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 24 - gets character from DAT_008283d4
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 line 24 - gets character from DAT_008283d4
             // DAT_008283d4 is a global structure that stores the current player character pointer
             // The function accesses the character at offset 0x18a8 within the upgrade screen object structure
             // Character retrieval uses common base class method
@@ -182,7 +182,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Find upgrade item in inventory
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
             IEntity upgradeItem = null;
             foreach (IEntity inventoryItem in characterInventory.GetAllItems())
             {
@@ -209,10 +209,10 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Check stack count and remove from inventory
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 18 - checks stack count at offset 0xb3
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 line 18 - checks stack count at offset 0xb3
             // Get stack count from item component
-            // If stack count < 2, remove from inventory (FUN_0055f3a0)
-            // If stack count >= 2, decrement stack (FUN_00569d60)
+            // If stack count < 2, remove from inventory (0x0055f3a0)
+            // If stack count >= 2, decrement stack (0x00569d60)
             IItemComponent upgradeItemComponent = upgradeItem.GetComponent<IItemComponent>();
             if (upgradeItemComponent != null)
             {
@@ -220,13 +220,13 @@ namespace Andastra.Game.Games.Odyssey.UI
                 if (stackSize < 2)
                 {
                     // Stack count is 1 or less - remove item completely from inventory
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055f3a0 @ 0x0055f3a0 - removes item from inventory
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055f3a0 @ 0x0055f3a0 - removes item from inventory
                     characterInventory.RemoveItem(upgradeItem);
                 }
                 else
                 {
                     // Stack count is 2 or more - decrement stack count by 1
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00569d60 @ 0x00569d60 - decrements item stack
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00569d60 @ 0x00569d60 - decrements item stack
                     upgradeItemComponent.StackSize = stackSize - 1;
                 }
             }
@@ -237,8 +237,8 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Load upgrade item UTI template and apply properties
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 - loads UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
             if (upgradeUTI == null)
             {
@@ -247,7 +247,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Apply upgrade to item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 57 - stores upgrade at offset 0x3d54
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00729640 @ 0x00729640 line 57 - stores upgrade at offset 0x3d54
             ItemUpgrade upgrade = new ItemUpgrade
             {
                 UpgradeType = upgradeSlot, // UpgradeType corresponds to slot index
@@ -262,7 +262,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             _upgradeResRefMap[upgradeKey] = upgradeResRef;
 
             // Apply upgrade properties to item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055e160 @ 0x0055e160 - applies upgrade stats to item
             // Properties from upgrade UTI modify item stats (damage bonuses, AC bonuses, etc.)
             if (!ApplyUpgradeProperties(item, upgradeUTI))
             {
@@ -288,14 +288,14 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <returns>True if upgrade was removed.</returns>
         /// <remarks>
         /// Remove Upgrade Logic (K2):
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 lines 217-230 (removal logic)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 lines 217-230 (removal logic)
         /// - Original implementation:
         ///   1. Gets upgrade item from slot array (offset 0x3d54)
         ///   2. Removes upgrade from slot array (sets to 0)
-        ///   3. Returns upgrade item to inventory (FUN_00567ce0 @ 0x00567ce0)
-        ///   4. Updates item stats (removes upgrade bonuses via FUN_0055e160)
+        ///   3. Returns upgrade item to inventory (0x00567ce0 @ 0x00567ce0)
+        ///   4. Updates item stats (removes upgrade bonuses via 0x0055e160)
         ///   5. Recalculates item stats
-        /// - Removal: FUN_00431ec0 @ 0x00431ec0 - removes from array
+        /// - Removal: 0x00431ec0 @ 0x00431ec0 - removes from array
         /// - Character from: DAT_008283d4 @ 0x008283d4 (global structure storing current player character pointer)
         /// </remarks>
         public override bool RemoveUpgrade(IEntity item, int upgradeSlot)
@@ -317,7 +317,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Find upgrade in slot
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
             {
@@ -326,7 +326,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Get upgrade item ResRef from tracked upgrade data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 218 - gets item from slot array
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 218 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             string upgradeResRef = null;
@@ -339,19 +339,19 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Load upgrade UTI template to remove properties
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 - loads UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 219 - removes from array using 0x00431ec0
             itemComponent.RemoveUpgrade(upgrade);
 
             // Remove upgrade ResRef from tracking map
             _upgradeResRefMap.Remove(upgradeKey);
 
             // Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055e160 @ 0x0055e160 - removes upgrade stats from item
             // Properties from upgrade UTI are removed to restore original item stats
             if (upgradeUTI != null)
             {
@@ -364,10 +364,10 @@ namespace Andastra.Game.Games.Odyssey.UI
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 221 - returns to inventory using FUN_00567ce0
-            // Original implementation: FUN_00567ce0 @ 0x00567ce0 creates item entity from UTI template and adds to inventory
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using 0x00567ce0
+            // Original implementation: 0x00567ce0 @ 0x00567ce0 creates item entity from UTI template and adds to inventory
             // Located via string references: "CreateItem" @ 0x007d07c8, "ItemComponent" @ 0x007c41e4
-            // Function signature: FUN_00567ce0(void *param_1, void *param_2, int param_3)
+            // Function signature: 0x00567ce0(void *param_1, void *param_2, int param_3)
             // - param_1: Character entity pointer
             // - param_2: UTI template data pointer
             // - param_3: Stack size (default 1)
@@ -381,11 +381,11 @@ namespace Andastra.Game.Games.Odyssey.UI
             if (!string.IsNullOrEmpty(upgradeResRef))
             {
                 // Get character entity using common base class method
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - gets character from upgrade screen object
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 - gets character from upgrade screen object
                 IEntity character = base.GetCharacterEntity();
 
                 // Create upgrade item entity and add to inventory
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - creates item and adds to inventory
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - creates item and adds to inventory
                 // Uses base class method which implements the full creation and inventory addition logic
                 if (character != null)
                 {

@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Core.Video
     /// - Based on swkotor.exe/swkotor2.exe: CExoMoviePlayerInternal implementation
     /// - Located via string references: "CExoMoviePlayerInternal" @ 0x0073d773, "Oexomovieplayerinternal.cpp"
     /// - "SWMovieWindow" @ 0x0073d7fc (window class), "SW Movie Player Window" @ 0x0073d7e4 (window title)
-    /// - Movie playback function: FUN_00404c80 @ 0x00404c80 (main playback loop)
-    /// - Movie initialization: FUN_004053e0 @ 0x004053e0 (creates movie window, opens BIK file)
+    /// - Movie playback function: 0x00404c80 @ 0x00404c80 (main playback loop)
+    /// - Movie initialization: 0x004053e0 @ 0x004053e0 (creates movie window, opens BIK file)
     /// - Bink API usage:
     ///   - BinkOpen @ 0x00405671 (opens BIK file)
     ///   - BinkBufferOpen @ 0x00405671 (creates buffer for video frames)
@@ -64,7 +64,7 @@ namespace Andastra.Runtime.Core.Video
 
         /// <summary>
         /// Plays a BIK movie file, blocking until playback completes.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (main playback loop)
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 (main playback loop)
         /// </summary>
         /// <param name="movieResRef">Movie resource reference (without .bik extension).</param>
         /// <param name="cancellationToken">Cancellation token to stop playback.</param>
@@ -87,7 +87,7 @@ namespace Andastra.Runtime.Core.Video
             try
             {
                 // Load movie file from resources
-                // Based on swkotor.exe: Movie file loading (FUN_005fbbf0 @ 0x005fbbf0)
+                // Based on swkotor.exe: Movie file loading (0x005fbbf0 @ 0x005fbbf0)
                 // Path format: "MOVIES:%s" or "LIVE%d:movies\\%s"
                 byte[] movieData = await LoadMovieFile(movieResRef, cancellationToken);
                 if (movieData == null || movieData.Length == 0)
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Core.Video
                 }
 
                 // Play movie using BIK decoder
-                // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
+                // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 (playback loop)
                 bool success = await PlayBikMovie(movieData, cancellationToken);
 
                 return success;
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Core.Video
 
         /// <summary>
         /// Loads movie file data from resources.
-        /// Based on swkotor.exe: Movie file loading (FUN_005fbbf0 @ 0x005fbbf0)
+        /// Based on swkotor.exe: Movie file loading (0x005fbbf0 @ 0x005fbbf0)
         /// </summary>
         /// <param name="movieResRef">Movie resource reference.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Core.Video
 
         /// <summary>
         /// Plays BIK movie data using Bink decoder.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (main playback loop)
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 (main playback loop)
         /// </summary>
         /// <param name="movieData">BIK movie file data.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
@@ -180,7 +180,7 @@ namespace Andastra.Runtime.Core.Video
             }
 
             // Write movie data to temporary file (BinkOpen requires a file path, not memory)
-            // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 opens BIK file from path
+            // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 opens BIK file from path
             string tempMoviePath = null;
             try
             {
@@ -189,7 +189,7 @@ namespace Andastra.Runtime.Core.Video
                 await File.WriteAllBytesAsync(tempMoviePath, movieData);
 
                 // Create BIK decoder
-                // Based on swkotor.exe: FUN_004053e0 @ 0x004053e0 (movie initialization)
+                // Based on swkotor.exe: 0x004053e0 @ 0x004053e0 (movie initialization)
                 BikDecoder decoder = null;
                 try
                 {
@@ -197,12 +197,12 @@ namespace Andastra.Runtime.Core.Video
                     decoder.Open();
 
                     // Main playback loop
-                    // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 (playback loop)
+                    // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 (playback loop)
                     // Loop until movie complete or cancelled
                     while (!decoder.IsComplete && !cancellationToken.IsCancellationRequested)
                     {
                         // Decode current frame
-                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
+                        // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 15 calls BinkDoFrame
                         bool frameDecoded = decoder.DecodeFrame();
                         if (!frameDecoded)
                         {
@@ -211,16 +211,16 @@ namespace Andastra.Runtime.Core.Video
                         }
 
                         // Wait for frame timing
-                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 29-33 (BinkWait with Sleep loop)
+                        // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 29-33 (BinkWait with Sleep loop)
                         decoder.WaitForFrame();
 
                         // Process Windows messages
-                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 35-40
+                        // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 35-40
                         // PeekMessage -> GetMessage -> TranslateMessage -> DispatchMessage
                         WindowsMessageProcessor.ProcessMessages(cancellationToken);
 
                         // Render frame to screen
-                        // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+                        // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
                         // The BinkBufferBlit is handled internally by BikDecoder, but we need to present to screen
                         RenderFrame(decoder);
 
@@ -267,7 +267,7 @@ namespace Andastra.Runtime.Core.Video
 
         /// <summary>
         /// Renders the current frame to the screen.
-        /// Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
+        /// Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
         /// </summary>
         /// <param name="decoder">BIK decoder with current frame.</param>
         private void RenderFrame(BikDecoder decoder)
@@ -287,7 +287,7 @@ namespace Andastra.Runtime.Core.Video
             _graphicsDevice.Clear(clearColor);
 
             // Render frame texture fullscreen
-            // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
+            // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 calls BinkBufferBlit
             // Original implementation: Blits buffer directly to screen using BinkBufferBlit
             // Our implementation: Uses sprite batch to render texture fullscreen
             using (IMovieSpriteBatch spriteBatch = _graphicsDevice.CreateSpriteBatch())
@@ -305,7 +305,7 @@ namespace Andastra.Runtime.Core.Video
                 int offsetY = (screenHeight - scaledHeight) / 2;
 
                 // Draw frame texture centered and scaled
-                // Based on swkotor.exe: FUN_00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
+                // Based on swkotor.exe: 0x00404c80 @ 0x00404c80 line 27 (BinkBufferBlit)
                 // Original: Blits directly to screen, we use sprite batch for abstraction
                 MovieRectangle destinationRect = new MovieRectangle(offsetX, offsetY, scaledWidth, scaledHeight);
                 MovieColor whiteColor = new MovieColor(255, 255, 255, 255);

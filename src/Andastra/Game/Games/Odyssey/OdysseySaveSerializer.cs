@@ -19,13 +19,12 @@ using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Odyssey.Data;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Systems;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.Types;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.Types;
 using JetBrains.Annotations;
 using Loading = Andastra.Game.Games.Odyssey.Loading;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
-using Andastra.Game.Scripting.Types;
 
 namespace Andastra.Game.Games.Odyssey
 {
@@ -41,7 +40,7 @@ namespace Andastra.Game.Games.Odyssey
     /// Based on reverse engineering of:
     /// - swkotor2.exe: SerializeSaveNfo @ 0x004eb750 for metadata creation
     /// - swkotor2.exe: Global variable save/load functions
-    /// - Entity serialization: FUN_004e28c0 save, FUN_005fb0f0 load
+    /// - Entity serialization: 0x004e28c0 save, 0x005fb0f0 load
     /// - Party management and companion state saving
     ///
     /// Save file structure:
@@ -130,19 +129,19 @@ namespace Andastra.Game.Games.Odyssey
         /// 3. File path: Constructs "SAVES:\{saveName}\savenfo" path
         /// Note: GFF signature is "NFO " (4 bytes), version string is "V2.0"
         /// </remarks>
-        public override byte[] SerializeSaveNfo(Andastra.Runtime.Games.Common.SaveGameData saveData)
+        public override byte[] SerializeSaveNfo(Common.SaveGameData saveData)
         {
             if (saveData == null)
             {
                 return new byte[0];
             }
 
-            // Note: Andastra.Runtime.Games.Common.SaveGameData and Andastra.Runtime.Core.Save.SaveGameData
+            // Note: Andastra.Runtime.Games.Common.SaveGameData and Runtime.Core.Save.SaveGameData
             // are unrelated types, so we use reflection to check and access Core-specific properties
             object coreSaveData = null;
             Type coreSaveDataType = null;
             var saveDataType = saveData.GetType();
-            var coreSaveDataTypeName = "Andastra.Runtime.Core.Save.SaveGameData";
+            var coreSaveDataTypeName = "Runtime.Core.Save.SaveGameData";
             if (saveDataType.FullName == coreSaveDataTypeName)
             {
                 coreSaveData = saveData;
@@ -519,8 +518,8 @@ namespace Andastra.Game.Games.Odyssey
         /// Validates NFO signature and version compatibility.
         /// Returns structured metadata for save game display.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00707290 @ 0x00707290 (NFO loading)
-        /// Based on swkotor.exe: FUN_006c8e50 @ 0x006c8e50 (NFO loading)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00707290 @ 0x00707290 (NFO loading)
+        /// Based on swkotor.exe: 0x006c8e50 @ 0x006c8e50 (NFO loading)
         /// Located via string reference: "savenfo" @ 0x007be1f0
         ///
         /// Original implementation:
@@ -590,7 +589,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Read NFO data using NFOAuto.ReadNfo
             // This internally uses GFFAuto.ReadGff and NFOHelpers.ConstructNfo
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00707290 @ 0x00707290 reads GFF and constructs NFO data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00707290 @ 0x00707290 reads GFF and constructs NFO data
             // Located via string reference: "savenfo" @ 0x007be1f0
             NFOData nfo;
             try
@@ -685,7 +684,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Saves quest states, player choices, persistent variables.
         /// Uses GFF format with variable categories.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac670 @ 0x005ac670 (calls FUN_005ab310 @ 0x005ab310 internally)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670 (calls 0x005ab310 @ 0x005ab310 internally)
         /// Located via string reference: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Creates GFF with "GLOB" signature (for save games) containing VariableList array
         /// GFF structure: VariableList array with VariableName, VariableType, VariableValue fields
@@ -713,7 +712,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Create GFF with VariableList structure
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac670 @ 0x005ac670
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670
             // GLOB GFF structure: VariableList array with VariableName, VariableType, VariableValue
             var gff = new GFF();
             var root = gff.Root;
@@ -722,7 +721,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Get all global variable names from game state
             // Based on IGameState interface: GetGlobalNames() returns all variable names
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac670 @ 0x005ac670 - no explicit error handling in original,
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670 - no explicit error handling in original,
             // but we handle cases where GetGlobalNames is not implemented or fails gracefully
             IEnumerable<string> globalNames;
             try
@@ -878,7 +877,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Updates quest states and player choice consequences.
         /// Validates variable integrity and types.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac740 @ 0x005ac740 (global variables deserialization)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac740 @ 0x005ac740 (global variables deserialization)
         /// Located via string reference: "GLOBALVARS" @ 0x007c27bc
         /// Original implementation: Reads GFF file from save game ERF archive, restores all global int/bool/string variables
         /// GFF structure: VariableList array with VariableName, VariableType, VariableValue fields
@@ -898,7 +897,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Parse GFF from byte array
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac540 @ 0x005ac540 loads GFF with "GVT " signature
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac540 @ 0x005ac540 loads GFF with "GVT " signature
             // However, save game GLOBALVARS uses "GLOB" signature with VariableList format
             GFF gff;
             try
@@ -928,7 +927,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Iterate through each variable in the list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005abbe0 @ 0x005abbe0 processes each variable type
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005abbe0 @ 0x005abbe0 processes each variable type
             foreach (GFFStruct varStruct in varList)
             {
                 if (varStruct == null)
@@ -1162,7 +1161,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Saves companion approval, equipment, position, quest involvement.
         /// Includes party formation and leadership information.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057bd70 @ 0x0057bd70
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70
         /// Located via string reference: "PARTYTABLE" @ 0x007c1910
         /// Original implementation creates GFF with "PT  " signature and "V2.0" version.
         ///
@@ -1183,7 +1182,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Use BioWare.NET GFF writer
             // Original creates GFF with "PT  " signature and "V2.0" version
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057bd70 @ 0x0057bd70 creates GFF with "PT  " signature
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057bd70 @ 0x0057bd70 creates GFF with "PT  " signature
             // Located via string reference: "PARTYTABLE" @ 0x007c1910
             // Note: BioWare.NET GFFBinaryWriter always writes "V3.2" version, but signature is correct
             var gff = new GFF(GFFContent.PT);
@@ -1569,7 +1568,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Original implementation: partytable.2da maps NPC ResRefs to member IDs (row index = member ID)
         /// partytable.2da structure: Row label is ResRef, row index is member ID (0-11 for K2, 0-8 for K1)
         /// Reverse mapping: member ID -> ResRef by reading row label at index = member ID
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function) reads PT_MEMBER_ID and converts to ResRef
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0 (LoadPartyTable function) reads PT_MEMBER_ID and converts to ResRef
         /// Original implementation reads PT_MEMBER_ID (float) and converts to ResRef using partytable.2da lookup
         ///
         /// CRITICAL: This method REQUIRES partytable.2da to be available via GameDataManager.
@@ -1624,7 +1623,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Restores companion states, relationships, equipment.
         /// Reestablishes party formation and leadership.
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 (LoadPartyTable function)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0 (LoadPartyTable function)
         /// Located via string reference: "PARTYTABLE" @ 0x007c1910
         /// Original implementation: Loads PARTYTABLE.res GFF file and deserializes all party state fields
         /// GFF structure: "PT  " signature with "V2.0" version (K2) or "V1.0" (K1)
@@ -1674,7 +1673,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Parse GFF from byte array
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 loads GFF with "PT  " signature
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0 loads GFF with "PT  " signature
             // Located via string reference: "PARTYTABLE" @ 0x007c1910
             GFF gff;
             try
@@ -1767,7 +1766,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 1. PT_PCNAME - Player character name
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 66-68 reads PT_PCNAME
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 66-68 reads PT_PCNAME
             string pcName = GetStringField(root, "PT_PCNAME", "");
             if (hasRichState && !string.IsNullOrEmpty(pcName))
             {
@@ -1781,7 +1780,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 2. PT_GOLD - Gold/credits
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 71 reads PT_GOLD
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 71 reads PT_GOLD
             int gold = GetIntField(root, "PT_GOLD", 0);
             if (hasRichState)
             {
@@ -1789,7 +1788,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 3. PT_ITEM_COMPONENT - Item component count
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 73 reads PT_ITEM_COMPONENT
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 73 reads PT_ITEM_COMPONENT
             int itemComponent = GetIntField(root, "PT_ITEM_COMPONENT", 0);
             if (hasRichState)
             {
@@ -1797,7 +1796,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 4. PT_ITEM_CHEMICAL - Item chemical count
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 75 reads PT_ITEM_CHEMICAL
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 75 reads PT_ITEM_CHEMICAL
             int itemChemical = GetIntField(root, "PT_ITEM_CHEMICAL", 0);
             if (hasRichState)
             {
@@ -1805,7 +1804,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 5. PT_SWOOP1-3 - Swoop race times
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 77-82 read PT_SWOOP1-3
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 77-82 read PT_SWOOP1-3
             int swoop1 = GetIntField(root, "PT_SWOOP1", 0);
             int swoop2 = GetIntField(root, "PT_SWOOP2", 0);
             int swoop3 = GetIntField(root, "PT_SWOOP3", 0);
@@ -1817,7 +1816,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 6. PT_XP_POOL - Experience point pool (float)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 83 reads PT_XP_POOL as float
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 83 reads PT_XP_POOL as float
             float xpPool = GetSingleField(root, "PT_XP_POOL", 0.0f);
             if (hasRichState)
             {
@@ -1825,7 +1824,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 7. PT_PLAYEDSECONDS - Total seconds played
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 86-91 read PT_PLAYEDSECONDS (with fallback to PT_PLAYEDMINUTES)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 86-91 read PT_PLAYEDSECONDS (with fallback to PT_PLAYEDMINUTES)
             int timePlayedSeconds = GetIntField(root, "PT_PLAYEDSECONDS", -1);
             if (timePlayedSeconds < 0)
             {
@@ -1839,7 +1838,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 8. PT_CONTROLLED_NPC - Currently controlled NPC ID (float, -1 if none)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 92 reads PT_CONTROLLED_NPC
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 92 reads PT_CONTROLLED_NPC
             float controlledNpc = GetSingleField(root, "PT_CONTROLLED_NPC", -1.0f);
             if (hasRichState)
             {
@@ -1847,7 +1846,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 9. PT_SOLOMODE - Solo mode flag (byte)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 94-98 read PT_SOLOMODE
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 94-98 read PT_SOLOMODE
             byte soloMode = GetUInt8Field(root, "PT_SOLOMODE", 0);
             bool soloModeBool = soloMode != 0;
             if (hasRichState)
@@ -1856,7 +1855,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 10. PT_CHEAT_USED - Cheat used flag (byte)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 99 reads PT_CHEAT_USED
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 99 reads PT_CHEAT_USED
             byte cheatUsed = GetUInt8Field(root, "PT_CHEAT_USED", 0);
             bool cheatUsedBool = cheatUsed != 0;
             if (hasRichState)
@@ -1865,12 +1864,12 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 11. PT_NUM_MEMBERS - Number of party members (byte)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 101-107 read PT_NUM_MEMBERS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 101-107 read PT_NUM_MEMBERS
             // Original implementation: Uses list length if PT_NUM_MEMBERS is less than actual list size
             byte numMembers = GetUInt8Field(root, "PT_NUM_MEMBERS", 0);
 
             // 12. PT_MEMBERS - List of party members
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 108-122 read PT_MEMBERS list
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 108-122 read PT_MEMBERS list
             // Each member has PT_MEMBER_ID (float) and PT_IS_LEADER (byte)
             var membersList = root.GetList("PT_MEMBERS");
             if (membersList != null)
@@ -1895,7 +1894,7 @@ namespace Andastra.Game.Games.Odyssey
                     }
 
                     // PT_MEMBER_ID - Member ID (float, -1 = PC, 0-11 = NPC slots)
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 113 reads PT_MEMBER_ID
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 113 reads PT_MEMBER_ID
                     float memberId = GetSingleField(memberStruct, "PT_MEMBER_ID", -1.0f);
 
                     // Convert member ID to ResRef
@@ -1907,7 +1906,7 @@ namespace Andastra.Game.Games.Odyssey
                         selectedPartyResRefs.Add(memberResRef);
 
                         // PT_IS_LEADER - Whether this member is the leader (byte)
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 115-118 check PT_IS_LEADER
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 115-118 check PT_IS_LEADER
                         byte isLeader = GetUInt8Field(memberStruct, "PT_IS_LEADER", 0);
                         if (isLeader != 0)
                         {
@@ -1940,7 +1939,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 13. PT_PUPPETS - List of puppets
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 123-146 read PT_PUPPETS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 123-146 read PT_PUPPETS
             byte numPuppets = GetUInt8Field(root, "PT_NUM_PUPPETS", 0);
             var puppetsList = root.GetList("PT_PUPPETS");
             if (puppetsList != null)
@@ -1974,7 +1973,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 14. PT_AVAIL_PUPS - Available puppets list (3 entries)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 147-167 read PT_AVAIL_PUPS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 147-167 read PT_AVAIL_PUPS
             var availPupsList = root.GetList("PT_AVAIL_PUPS");
             if (availPupsList != null)
             {
@@ -2008,7 +2007,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 15. PT_AVAIL_NPCS - Available NPCs list (12 entries)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 168-188 read PT_AVAIL_NPCS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 168-188 read PT_AVAIL_NPCS
             var availNpcsList = root.GetList("PT_AVAIL_NPCS");
             if (availNpcsList != null)
             {
@@ -2056,7 +2055,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 16. PT_INFLUENCE - Influence values list (12 entries, K2 only)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 189-207 read PT_INFLUENCE
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 189-207 read PT_INFLUENCE
             var influenceList = root.GetList("PT_INFLUENCE");
             if (influenceList != null)
             {
@@ -2086,7 +2085,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 17. PT_AISTATE - AI state (float)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 208 reads PT_AISTATE
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 208 reads PT_AISTATE
             float aiState = GetSingleField(root, "PT_AISTATE", 0.0f);
             if (hasRichState)
             {
@@ -2094,7 +2093,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 18. PT_FOLLOWSTATE - Follow state (float)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 210 reads PT_FOLLOWSTATE
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 210 reads PT_FOLLOWSTATE
             float followState = GetSingleField(root, "PT_FOLLOWSTATE", 0.0f);
             if (hasRichState)
             {
@@ -2102,7 +2101,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 19. GlxyMap - Galaxy map data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 212-232 read GlxyMap struct
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 212-232 read GlxyMap struct
             GFFStruct glxyMapStruct = root.GetStruct("GlxyMap");
             if (glxyMapStruct != null)
             {
@@ -2118,7 +2117,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 20. PT_PAZAAKCARDS - Pazaak cards list (23 entries)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 233-242 read PT_PAZAAKCARDS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 233-242 read PT_PAZAAKCARDS
             var pazaakCardsList = root.GetList("PT_PAZAAKCARDS");
             if (pazaakCardsList != null)
             {
@@ -2142,7 +2141,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 21. PT_PAZSIDELIST - Pazaak side list (10 entries)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 243-252 read PT_PAZSIDELIST
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 243-252 read PT_PAZSIDELIST
             var pazaakSideList = root.GetList("PT_PAZSIDELIST");
             if (pazaakSideList != null)
             {
@@ -2166,7 +2165,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 22. PT_TUT_WND_SHOWN - Tutorial windows shown (array of 33 bytes)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 260 reads PT_TUT_WND_SHOWN
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 260 reads PT_TUT_WND_SHOWN
             byte[] tutWndShown = root.GetBinary("PT_TUT_WND_SHOWN");
             if (tutWndShown != null && tutWndShown.Length > 0)
             {
@@ -2181,7 +2180,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 23. PT_LAST_GUI_PNL - Last GUI panel (float)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 263-265 read PT_LAST_GUI_PNL
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 263-265 read PT_LAST_GUI_PNL
             float lastGuiPanel = GetSingleField(root, "PT_LAST_GUI_PNL", 0.0f);
             if (hasRichState)
             {
@@ -2189,7 +2188,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 24. PT_FB_MSG_LIST - Feedback message list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 272-297 read PT_FB_MSG_LIST
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 272-297 read PT_FB_MSG_LIST
             var fbMsgList = root.GetList("PT_FB_MSG_LIST");
             if (fbMsgList != null)
             {
@@ -2218,7 +2217,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 25. PT_DLG_MSG_LIST - Dialogue message list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 300-331 read PT_DLG_MSG_LIST
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 300-331 read PT_DLG_MSG_LIST
             var dlgMsgList = root.GetList("PT_DLG_MSG_LIST");
             if (dlgMsgList != null)
             {
@@ -2245,7 +2244,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 26. PT_COM_MSG_LIST - Combat message list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 332-357 read PT_COM_MSG_LIST
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 332-357 read PT_COM_MSG_LIST
             var comMsgList = root.GetList("PT_COM_MSG_LIST");
             if (comMsgList != null)
             {
@@ -2274,7 +2273,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 27. PT_COST_MULT_LIST - Cost multiplier list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 lines 358-368 read PT_COST_MULT_LIST
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 358-368 read PT_COST_MULT_LIST
             var costMultList = root.GetList("PT_COST_MULT_LIST");
             if (costMultList != null)
             {
@@ -2293,7 +2292,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 28. PT_DISABLEMAP - Disable map flag (float)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 369 reads PT_DISABLEMAP
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 369 reads PT_DISABLEMAP
             float disableMap = GetSingleField(root, "PT_DISABLEMAP", 0.0f);
             if (hasRichState)
             {
@@ -2301,7 +2300,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 29. PT_DISABLEREGEN - Disable regen flag (float)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 line 371 reads PT_DISABLEREGEN
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 line 371 reads PT_DISABLEREGEN
             float disableRegen = GetSingleField(root, "PT_DISABLEREGEN", 0.0f);
             if (hasRichState)
             {
@@ -2325,7 +2324,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Dynamic lighting changes
         ///
         /// Based on reverse engineering of:
-        /// - swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+        /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves entity states to GFF format
         /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
         /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
         /// - Original implementation: Saves entity positions, door/placeable states, HP, local variables, etc.
@@ -2354,7 +2353,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Extract AreaState from IArea
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 extracts entity states from area
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 extracts entity states from area
             AreaState areaState = ExtractAreaStateFromArea(area);
 
             // Serialize AreaState to GFF format
@@ -2369,7 +2368,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Extracts AreaState from IArea by collecting all entity states.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 extracts entity states from area
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 extracts entity states from area
         /// Collects all entities of each type and extracts their state information.
         /// </remarks>
         private AreaState ExtractAreaStateFromArea(IArea area)
@@ -2505,7 +2504,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Extract store entities from world by filtering for entities with StoreComponent in this area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 extracts store entity states from area
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 extracts store entity states from area
             // Original implementation: Stores are stored in area's store collection and extracted during save
             // Stores have StoreComponent and ObjectType.Store, similar to how encounters have EncounterComponent
             if (world != null && areaId != 0)
@@ -2539,7 +2538,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Extract encounter entities from world by filtering for entities with EncounterComponent in this area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 extracts encounter entity states from area
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 extracts encounter entity states from area
             // Original implementation: Encounters are stored in area's encounter collection and extracted during save
             if (world != null && areaId != 0)
             {
@@ -2592,7 +2591,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Extract area-level local variables
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variables are extracted from area's variable storage
-            // Original implementation: FUN_005226d0 @ 0x005226d0 extracts area variables when saving
+            // Original implementation: 0x005226d0 @ 0x005226d0 extracts area variables when saving
             if (area is OdysseyArea odysseyArea)
             {
                 LocalVariableSet areaVars = odysseyArea.GetLocalVariables();
@@ -2652,7 +2651,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Extracts EntityState from IEntity by collecting all component data.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 extracts entity state from entity
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 extracts entity state from entity
         /// Collects position, HP, door/placeable states, local variables, effects, etc.
         /// </remarks>
         private EntityState ExtractEntityState(IEntity entity)
@@ -2795,7 +2794,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Extract effects component (active effects/buffs/debuffs)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 saves active effects on entities
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 saves active effects on entities
             // Extract active effects from entity using world's EffectSystem
             if (entity.World != null && entity.World.EffectSystem != null)
             {
@@ -2939,7 +2938,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Serializes EntityState to GFF struct.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves entity state to GFF struct
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 saves entity state to GFF struct
         /// Matches SaveGameManager.SaveEntityStateToGFF pattern.
         /// </remarks>
         private void SerializeEntityStateToGFF(GFFStruct entityStruct, EntityState entityState)
@@ -3180,7 +3179,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Applies area effects and transition states.
         ///
         /// Based on reverse engineering of:
-        /// - swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads area state from save game
+        /// - swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 loads area state from save game
         /// - swkotor2.exe: Area state stored in [module]_s.rim ERF archive as ARE resources
         /// - Located via string references: "Creature List" @ 0x007c0c80, "DoorList" @ 0x007c0c90
         /// - Original implementation: Loads entity states, door/placeable states, destroyed entities, spawned entities
@@ -3220,7 +3219,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Parse GFF area data into AreaState structure
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads area state from GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 loads area state from GFF
             AreaState areaState = DeserializeAreaStateFromGFF(areaData);
             if (areaState == null)
             {
@@ -3773,7 +3772,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Applies a single entity state to an entity.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 applies entity state
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 applies entity state
         /// Updates position, HP, door/placeable states, local variables
         /// </remarks>
         private void ApplyEntityState(IEntity entity, EntityState entityState)
@@ -3912,7 +3911,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Object reference variables (SetLocalObject)
         /// - Location variables (SetLocalLocation)
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 applies entity local variables during save game load
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 applies entity local variables during save game load
         /// Located via string references: "LocalVariables" @ entity state structure
         /// Original implementation: Reads local variables from GFF structure and applies them to entity's variable storage
         /// </remarks>
@@ -4236,7 +4235,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Located via string references: "CreateObject" @ 0x007bd0e0
         /// Spawns entities from BlueprintResRef that were not in original GIT
         ///
-        /// Original implementation (swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0):
+        /// Original implementation (swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0):
         /// - Loads SpawnedList from area state GFF
         /// - For each spawned entity:
         ///   1. Creates entity from BlueprintResRef template (UTC, UTP, UTD, etc.)
@@ -4291,7 +4290,7 @@ namespace Andastra.Game.Games.Odyssey
             // Create EntityFactory for loading templates
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory loads GFF templates (UTC, UTP, UTD, etc.) and creates entities
             // Located via string references: "TemplateResRef" @ 0x007bd00c, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
-            // Original implementation: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
+            // Original implementation: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
             var entityFactory = new Loading.EntityFactory();
 
             // Spawn each dynamically created entity
@@ -4320,7 +4319,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Create entity from template
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 creates entity from template ResRef
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 creates entity from template ResRef
                 IEntity entity = null;
                 System.Numerics.Vector3 position = spawnedState.Position;
                 float facing = spawnedState.Facing;
@@ -4356,7 +4355,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Apply saved entity state (position, HP, components, local variables, etc.)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 applies entity state after template loading
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 applies entity state after template loading
                 ApplyEntityState(entity, spawnedState);
 
                 // Set Tag from entity state if not already set from template
@@ -4501,7 +4500,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template resource types determine ObjectType
         /// UTC = Creature, UTP = Placeable, UTD = Door, UTT = Trigger, UTW = Waypoint, UTS = Sound
         /// </remarks>
-        private Andastra.Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, BioWare.NET.Common.Module module)
+        private Runtime.Core.Enums.ObjectType InferObjectTypeFromBlueprint(string blueprintResRef, BioWare.NET.Common.Module module)
         {
             if (string.IsNullOrEmpty(blueprintResRef) || module == null)
             {
@@ -4559,7 +4558,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities can be created with specific ObjectId to preserve save game references
         /// </remarks>
-        private IEntity CreateEntityWithObjectId(Runtime.Core.Enums.ObjectType objectType, uint objectId, Vector3 position, float facing)
+        private IEntity CreateEntityWithObjectId(Runtime.Core.Enums.ObjectType objectType, uint objectId, System.Numerics.Vector3 position, float facing)
         {
             // Create entity using Core.Entities.Entity constructor with specific ObjectId
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity constructor accepts ObjectId parameter
@@ -4575,7 +4574,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory creates entities from templates
         /// </remarks>
-        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, BioWare.NET.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
+        private IEntity CreateEntityFromTemplate(Loading.EntityFactory entityFactory, BioWare.NET.Common.Module module, string templateResRef, Runtime.Core.Enums.ObjectType objectType, System.Numerics.Vector3 position, float facing)
         {
             if (entityFactory == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4611,7 +4610,7 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Template data is loaded into entity after creation
         /// Used when entity is created with specific ObjectId (not via EntityFactory)
         /// </remarks>
-        private void LoadTemplateIntoEntity(IEntity entity, BioWare.NET.Common.Module module, string templateResRef, Andastra.Runtime.Core.Enums.ObjectType objectType)
+        private void LoadTemplateIntoEntity(IEntity entity, BioWare.NET.Common.Module module, string templateResRef, Runtime.Core.Enums.ObjectType objectType)
         {
             if (entity == null || module == null || string.IsNullOrEmpty(templateResRef))
             {
@@ -4663,7 +4662,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variable storage
         /// Area variables are stored separately from entity variables
-        /// Original implementation: FUN_005226d0 @ 0x005226d0 applies area variables from save file
+        /// Original implementation: 0x005226d0 @ 0x005226d0 applies area variables from save file
         /// Variables are restored to area's variable storage system when area is loaded from save
         /// </remarks>
         private void ApplyAreaLocalVariables(LocalVariableSet localVariables, OdysseyArea odysseyArea)
@@ -4754,8 +4753,8 @@ namespace Andastra.Game.Games.Odyssey
         /// - Creates GFF with "Creature List" list ([TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x007c0c80))
         /// - For each entity, serializes to GFF and adds root struct to list
         /// - Each list entry contains ObjectId and all entity component data
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004e28c0): FUN_004e28c0 creates "Creature List" structure
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005226d0): FUN_005226d0 serializes individual entity data into struct
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004e28c0): 0x004e28c0 creates "Creature List" structure
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005226d0): 0x005226d0 serializes individual entity data into struct
         /// </remarks>
         public override byte[] SerializeEntities(IEnumerable<IEntity> entities)
         {
@@ -4768,7 +4767,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Create GFF structure for entity collection
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e28c0 @ 0x004e28c0 creates "Creature List" structure
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e28c0 @ 0x004e28c0 creates "Creature List" structure
             // Located via string reference: "Creature List" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c0c80))
             var gff = new GFF();
             var root = gff.Root;
@@ -4796,7 +4795,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Serialize entity to GFF
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 serializes entity to GFF struct
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 serializes entity to GFF struct
                 byte[] entityData = baseEntity.Serialize();
                 if (entityData == null || entityData.Length == 0)
                 {
@@ -4808,7 +4807,7 @@ namespace Andastra.Game.Games.Odyssey
                 GFFStruct entityRoot = entityGff.Root;
 
                 // Create struct entry in CreatureList
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00413600 creates struct entry, FUN_00413880 sets ObjectId
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00413600 creates struct entry, 0x00413880 sets ObjectId
                 var listEntry = creatureList.Add();
 
                 // Copy all fields from entity's root struct to list entry
@@ -4938,7 +4937,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Implementation details:
         /// - Parses GFF with "Creature List" list ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c0c80))
         /// - For each entity struct, creates OdysseyEntity and deserializes data
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005fb0f0): FUN_005fb0f0 loads entities from "Creature List" structure
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005fb0f0): 0x005fb0f0 loads entities from "Creature List" structure
         /// - Each list entry contains ObjectId and all entity component data
         /// - Note: Full deserialization requires OdysseyEntity.Deserialize() to be implemented
         /// </remarks>
@@ -4995,7 +4994,7 @@ namespace Andastra.Game.Games.Odyssey
                 string tag = entityStruct.Exists("Tag") ? (entityStruct.GetString("Tag") ?? "") : null;
 
                 // Create entity with ObjectId, ObjectType, and Tag
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 creates entities from save data
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 creates entities from save data
                 // Entity creation: ObjectId, ObjectType, Tag are required for entity creation
                 // Located via string references:
                 // - "ObjectId"   ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bce5c))
@@ -5039,7 +5038,7 @@ namespace Andastra.Game.Games.Odyssey
                 byte[] entityData = entityGff.ToBytes();
 
                 // Deserialize entity to restore all component state
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 deserializes entity component data
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 deserializes entity component data
                 // OdysseyEntity.Deserialize() restores:
                 // - TransformComponent (position, facing)
                 // - StatsComponent (HP, abilities, skills, saves, known spells)
@@ -5107,7 +5106,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Original implementation: Creates save directory with format "%06d - %s" (save number and name)
         /// Path format: "SAVES:\{saveNumber:06d} - {saveName}\"
         /// </remarks>
-        public override void CreateSaveDirectory(string saveName, SaveGameData saveData)
+        public override void CreateSaveDirectory(string saveName, Common.SaveGameData saveData)
         {
             if (string.IsNullOrEmpty(saveName))
             {
@@ -5180,7 +5179,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Write NFO file (save metadata)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): FUN_004eb750 @ 0x004eb750 creates NFO GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): 0x004eb750 @ 0x004eb750 creates NFO GFF
             // Located via string reference: "savenfo" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be1f0))
             byte[] nfoData = SerializeSaveNfo(saveData);
             if (nfoData != null && nfoData.Length > 0)
@@ -5190,7 +5189,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Write SAV file (ERF archive with save data)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): FUN_004eb750 @ 0x004eb750 creates ERF archive
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750): 0x004eb750 @ 0x004eb750 creates ERF archive
             // Located via string reference: "SAVEGAME" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be28c)), "MOD V1.0" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be0d4))
             // Original implementation: Creates ERF archive with "MOD V1.0" signature
             byte[] savData = SerializeSaveArchive(saveData);
@@ -5219,11 +5218,11 @@ namespace Andastra.Game.Games.Odyssey
         /// - PARTYTABLE.res: Party state (GFF with "PT  " signature)
         /// - [module]_s.rim: Per-module state ERF archive (area states, entity positions, etc.)
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750) 
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750)
         /// Located via string reference: "MOD V1.0" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be0d4))
         /// Original implementation: Creates ERF archive with "MOD V1.0" signature
         /// </remarks>
-        private byte[] SerializeSaveArchive(SaveGameData saveData)
+        private byte[] SerializeSaveArchive(Common.SaveGameData saveData)
         {
             if (saveData == null)
             {
@@ -5242,7 +5241,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Add GLOBALVARS.res (global variable state)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac670 @ 0x005ac670 saves global variables
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac670 @ 0x005ac670 saves global variables
             if (saveData.GameState != null)
             {
                 try
@@ -5261,7 +5260,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Add PARTYTABLE.res (party state)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x0057bd70): FUN_0057bd70 @ 0x0057bd70 saves party state
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x0057bd70): 0x0057bd70 @ 0x0057bd70 saves party state
             // Located via string reference: "PARTYTABLE" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007c1910))
             if (saveData.PartyState != null)
             {
@@ -5442,8 +5441,8 @@ namespace Andastra.Game.Games.Odyssey
         /// Returns compatibility status with details.
         ///
         /// Based on reverse engineering of:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): FUN_00707290 @ 0x00707290 loads save and checks for corruption
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00708990): FUN_00708990 @ 0x00708990 validates save structure during load
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): 0x00707290 @ 0x00707290 loads save and checks for corruption
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00708990): 0x00708990 @ 0x00708990 validates save structure during load
         /// - Located via string references: "savenfo" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be1f0)), "SAVEGAME" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007be28c)), "CORRUPT" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x00707602))
         ///
         /// Compatibility checks performed:
@@ -5470,7 +5469,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 2. Check for corruption marker (CORRUPT file)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): FUN_00707290 @ 0x00707290 checks for "CORRUPT" file
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00707290): 0x00707290 @ 0x00707290 checks for "CORRUPT" file
             // Located via string reference: "CORRUPT" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x00707602))
             string corruptPath = System.IO.Path.Combine(savePath, "CORRUPT");
             if (System.IO.File.Exists(corruptPath))

@@ -5,6 +5,7 @@ using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Extract;
 using BioWare.NET.Common;
+using XnaColor = Microsoft.Xna.Framework.Color;
 using BioWare.NET.Resource;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
@@ -39,7 +40,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             public Vector3 Position;
             public Vector3 Normal;
             public Vector2 TexCoord;
-            public Color Color;
+            public Microsoft.Xna.Framework.Color Color;
 
             public static readonly VertexDeclaration VertexDeclaration = new VertexDeclaration(
                 new VertexElement(0, VertexElementFormat.Vector3, VertexElementUsage.Position, 0),
@@ -53,7 +54,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                 get { return VertexDeclaration; }
             }
 
-            public RoomVertex(Vector3 position, Vector3 normal, Vector2 texCoord, Color color)
+            public RoomVertex(Vector3 position, Vector3 normal, Vector2 texCoord, XnaColor color)
             {
                 Position = position;
                 Normal = normal;
@@ -257,13 +258,13 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             {
                 Texture1 = mesh.Texture1 ?? "NULL",
                 Texture2 = mesh.Texture2 ?? "NULL",
-                DiffuseColor = new Color(
+                DiffuseColor = new XnaColor(
                     MathHelper.Clamp(mesh.Diffuse.X, 0.0f, 1.0f),
                     MathHelper.Clamp(mesh.Diffuse.Y, 0.0f, 1.0f),
                     MathHelper.Clamp(mesh.Diffuse.Z, 0.0f, 1.0f),
                     1.0f
                 ),
-                AmbientColor = new Color(
+                AmbientColor = new XnaColor(
                     MathHelper.Clamp(mesh.Ambient.X, 0.0f, 1.0f),
                     MathHelper.Clamp(mesh.Ambient.Y, 0.0f, 1.0f),
                     MathHelper.Clamp(mesh.Ambient.Z, 0.0f, 1.0f),
@@ -317,10 +318,10 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                 }
 
                 // Calculate vertex color from material properties
-                Color vertexColor = material.DiffuseColor;
+                XnaColor vertexColor = material.DiffuseColor;
                 if (mesh.Alpha < 1.0f)
                 {
-                    vertexColor = new Color(vertexColor.R, vertexColor.G, vertexColor.B, (byte)(mesh.Alpha * 255));
+                    vertexColor = new XnaColor(vertexColor.R, vertexColor.G, vertexColor.B, (byte)(mesh.Alpha * 255));
                 }
 
                 vertices.Add(new RoomVertex(transformedPos, normal, texCoord, vertexColor));
@@ -394,7 +395,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
             }
 
             int baseVertexIndex = vertices.Count;
-            Color walkmeshColor = new Color(128, 128, 255, 128); // Semi-transparent blue for walkmesh
+            XnaColor walkmeshColor = new XnaColor(128, 128, 255, 128); // Semi-transparent blue for walkmesh
 
             // Transform and add vertices
             foreach (System.Numerics.Vector3 vertex in walkmesh.Vertices)
@@ -525,7 +526,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
 
         /// <summary>
         /// Loads a referenced MDL model from the installation.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model loading (swkotor2.exe: FUN_005261b0 @ 0x005261b0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model loading (swkotor2.exe: 0x005261b0 @ 0x005261b0)
         /// Reference: vendor/reone/src/libs/resource/provider/models.cpp:38-76 - Model loading
         /// </summary>
         private MDL LoadReferencedMDL(string modelResRef)
@@ -617,7 +618,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
         private void CreatePlaceholderBox(List<RoomVertex> vertices, List<int> indices)
         {
             float size = 5f;
-            Color color = Color.Gray;
+            XnaColor color = XnaColor.Gray;
             Vector3 normal = Vector3.Up;
             Vector2 texCoord = Vector2.Zero;
 
@@ -689,8 +690,8 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
     {
         public string Texture1 { get; set; }
         public string Texture2 { get; set; }
-        public Color DiffuseColor { get; set; }
-        public Color AmbientColor { get; set; }
+        public XnaColor DiffuseColor { get; set; }
+        public XnaColor AmbientColor { get; set; }
         public float Alpha { get; set; }
         public int StartIndex { get; set; }
         public int IndexCount { get; set; }

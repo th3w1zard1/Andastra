@@ -183,7 +183,7 @@ namespace Andastra.Runtime.Core.Actions
             // For consumable items, apply effects based on baseitems.2da item class if no properties found
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage checks baseitems.2da for item class and chargesstarting
             // Located via string references: "baseitems" @ 0x007c4594, "BASEITEMS" @ 0x007c4594
-            // Original implementation: FUN_005fb0f0 loads base item data from baseitems.2da
+            // Original implementation: 0x005fb0f0 loads base item data from baseitems.2da
             // Items with chargesstarting > 0 in baseitems.2da are consumables that apply effects when used
             if (itemComponent.Properties.Count == 0 && itemComponent.Charges > 0)
             {

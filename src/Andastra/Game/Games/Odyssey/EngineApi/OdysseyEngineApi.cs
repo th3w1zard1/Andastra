@@ -147,7 +147,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         protected class EffectIteration
         {
-            public List<Andastra.Runtime.Core.Combat.ActiveEffect> Effects { get; set; }
+            public List<Runtime.Core.Combat.ActiveEffect> Effects { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -1012,7 +1012,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get from entity's custom data (stored by TriggerSystem)
-            if (ctx.Caller is Andastra.Runtime.Core.Entities.Entity callerEntity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity callerEntity)
             {
                 uint enteringId = callerEntity.GetData<uint>("LastEnteringObjectId", 0);
                 if (enteringId != 0)
@@ -1046,7 +1046,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Get from entity's custom data (stored by TriggerSystem)
-            if (ctx.Caller is Andastra.Runtime.Core.Entities.Entity callerEntity)
+            if (ctx.Caller is Runtime.Core.Entities.Entity callerEntity)
             {
                 uint exitingId = callerEntity.GetData<uint>("LastExitingObjectId", 0);
                 if (exitingId != 0)
@@ -2661,7 +2661,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     // Convert UTI properties to ItemProperty
                     foreach (var utiProp in utiTemplate.Properties)
                     {
-                        var prop = new Andastra.Runtime.Core.Interfaces.Components.ItemProperty
+                        var prop = new Runtime.Core.Interfaces.Components.ItemProperty
                         {
                             PropertyType = utiProp.PropertyName,
                             Subtype = utiProp.Subtype,
@@ -2677,7 +2677,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     for (int i = 0; i < utiTemplate.Upgrades.Count; i++)
                     {
                         var utiUpgrade = utiTemplate.Upgrades[i];
-                        var upgrade = new Andastra.Runtime.Core.Interfaces.Components.ItemUpgrade
+                        var upgrade = new Runtime.Core.Interfaces.Components.ItemUpgrade
                         {
                             UpgradeType = i, // Index-based upgrade type
                             Index = i
@@ -5065,7 +5065,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                     // Wisdom for Jedi, Charisma for Sith
                     int casterLevel = Func_GetCasterLevel(new List<Variable> { Variable.FromObject(caster.ObjectId) }, ctx).AsInt();
                     // Default to Wisdom modifier (Jedi), but could check class to determine if Sith (Charisma)
-                    int abilityMod = stats.GetAbilityModifier(Andastra.Runtime.Core.Enums.Ability.Wisdom);
+                    int abilityMod = stats.GetAbilityModifier(Runtime.Core.Enums.Ability.Wisdom);
                     int saveDC = 10 + casterLevel + abilityMod;
                     return Variable.FromInt(saveDC);
                 }
@@ -5774,7 +5774,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
             // Try to get name from entity data (set by EntityFactory from UTC/UTP/etc.)
             // Cast to Entity to access GetData method
-            if (entity is Andastra.Runtime.Core.Entities.Entity concreteEntity)
+            if (entity is Runtime.Core.Entities.Entity concreteEntity)
             {
                 string firstName = concreteEntity.GetData<string>("FirstName", null);
                 string lastName = concreteEntity.GetData<string>("LastName", null);
@@ -5840,7 +5840,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe)
                 // Function: 0x005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
                 // Component initialization: Faction component should be initialized with FactionManager for proper reputation lookups
-                if (objectToChange is Andastra.Runtime.Core.Entities.Entity concreteEntity)
+                if (objectToChange is Runtime.Core.Entities.Entity concreteEntity)
                 {
                     // Get FactionManager from GameServicesContext if available
                     // FactionManager enables proper faction reputation calculations and hostility checks
@@ -6158,9 +6158,9 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
                 // Access ModuleTransitionSystem directly from World
                 // Cast to concrete World type to access ModuleTransitionSystem property
-                if (ctx.World is Andastra.Runtime.Core.Entities.World world)
+                if (ctx.World is Runtime.Core.Entities.World world)
                 {
-                    Andastra.Runtime.Core.Module.ModuleTransitionSystem moduleTransitionSystem = world.ModuleTransitionSystem;
+                    Runtime.Core.Module.ModuleTransitionSystem moduleTransitionSystem = world.ModuleTransitionSystem;
                     if (moduleTransitionSystem != null)
                     {
                         // TransitionToModule is async, but we're in a synchronous NWScript context
@@ -6292,7 +6292,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             }
 
             // Create destroy action with delay and fade support
-            var destroyAction = new Andastra.Runtime.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
+            var destroyAction = new Runtime.Core.Actions.ActionDestroyObject(entity.ObjectId, delay, noFade != 0, delayUntilFade);
 
             // If delay > 0, schedule via DelayCommand
             if (delay > 0f)
@@ -7150,7 +7150,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
             int stackSize = args[1].AsInt();
             IEntity item = ResolveObject(itemId, ctx);
 
-            if (item == null || item.ObjectType != Andastra.Runtime.Core.Enums.ObjectType.Item)
+            if (item == null || item.ObjectType != Runtime.Core.Enums.ObjectType.Item)
             {
                 return Variable.Void();
             }

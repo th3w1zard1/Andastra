@@ -16,8 +16,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///   - Infinity: InfinityScriptHooksComponent (inherits from base, no differences)
     /// - Cross-engine analysis completed via Ghidra reverse engineering:
     ///   - Odyssey: swkotor.exe, swkotor2.exe
-    ///     - swkotor.exe: FUN_004ebf20, FUN_00500610, FUN_0058e660, FUN_0058da80 (script hooks save/load)
-    ///     - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures), FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables), FUN_00584f40 @ 0x00584f40 (save script hooks for doors), FUN_0050c510 @ 0x0050c510 (load script hooks from UTC template)
+    ///     - swkotor.exe: 0x004ebf20, 0x00500610, 0x0058e660, 0x0058da80 (script hooks save/load)
+    ///     - swkotor2.exe: 0x005226d0 @ 0x005226d0 (save script hooks for creatures), 0x00585ec0 @ 0x00585ec0 (save script hooks for placeables), 0x00584f40 @ 0x00584f40 (save script hooks for doors), 0x0050c510 @ 0x0050c510 (load script hooks from UTC template)
     ///     - String references: "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0, "ScriptAttacked" @ 0x007bee80
     ///   - Aurora: nwmain.exe
     ///     - SaveCreature @ 0x1403a0a60, LoadFromTemplate @ 0x140501c90, SaveTrigger @ 0x140504290

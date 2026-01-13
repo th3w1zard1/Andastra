@@ -9,9 +9,15 @@
     <StartupObject>KotorDiff.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\BioWare.NET\BioWare.NET.csproj" />
+    <ProjectReference Include="..\..\..\BioWare.NET\BioWare.NET.csproj" />
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
+    <PackageReference Include="Avalonia" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.0.0" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Themes.Default" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Themes.Default.Accents" Version="12.0.0" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
   </ItemGroup>

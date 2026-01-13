@@ -15,8 +15,8 @@ namespace Andastra.Runtime.Core.Camera
     /// <remarks>
     /// KOTOR Camera System:
     /// - Based on swkotor.exe and swkotor2.exe camera system
-    /// - swkotor.exe (KOTOR 1): Camera system @ FUN_004af630 (chase camera update), FUN_004b0a20 (camera collision)
-    /// - swkotor2.exe (KOTOR 2): Camera system @ FUN_004dcfb0 (chase camera update), FUN_004dd1a0 (camera collision)
+    /// - swkotor.exe (KOTOR 1): Camera system @ 0x004af630 (chase camera update), 0x004b0a20 (camera collision)
+    /// - swkotor2.exe (KOTOR 2): Camera system @ 0x004dcfb0 (chase camera update), 0x004dd1a0 (camera collision)
     /// - Located via string references: "camera" @ 0x007b63fc, "CameraID" @ 0x007bd160, "CameraList" @ 0x007bd16c
     /// - "CameraStyle" @ 0x007bd6e0, "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940, "Camera" @ 0x007cb350
@@ -746,12 +746,12 @@ namespace Andastra.Runtime.Core.Camera
                 return false;
             }
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
             // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
             // Original implementation:
             //   - Searches MDL model node tree recursively for nodes named "camerahook{N}" (e.g., "camerahook1", "camerahook2")
             //   - Uses format string "camerahook%d" to construct node name from hookIndex
-            //   - Queries model via FUN_006c21c0 @ 0x006c21c0 to get node by index
+            //   - Queries model via 0x006c21c0 @ 0x006c21c0 to get node by index
             //   - Calls virtual function at offset 0x10c with "camerahook" string to find node by name
             //   - Verifies node is a dummy node (NodeType = 1, NODE_HAS_HEADER flag only)
             //   - Transforms node's local position to world space using entity's transform matrix
@@ -903,7 +903,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Recursively searches for a node by name in the MDL node tree.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006c6020 searches MDL node tree recursively
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 searches MDL node tree recursively
         /// Original implementation: Calls virtual function at offset 0x10c with node name string
         /// </summary>
         private MDLNodeData FindNodeByName(MDLNodeData rootNode, string nodeName)

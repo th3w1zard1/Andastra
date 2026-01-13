@@ -21,10 +21,10 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     ///     XOrientation @ 0x00745d38, YOrientation @ 0x00745d48, ZOrientation @ 0x00745d58
     ///   - swkotor2.exe: XPosition @ 0x007bd000, YPosition @ 0x007bcff4, ZPosition @ 0x007bcfe8
     ///     XOrientation @ 0x007bcfb8, YOrientation @ 0x007bcfc8, ZOrientation @ 0x007bcfd8
-    ///   - FUN_005226d0 @ 0x005226d0 (save entity position/orientation to GFF)
-    ///   - FUN_004e08e0 @ 0x004e08e0 (load placeable/door position from GIT)
-    ///   - FUN_00506550 @ 0x00506550 (set orientation from vector)
-    ///   - FUN_004d8390 @ 0x004d8390 (normalize orientation vector)
+    ///   - 0x005226d0 @ 0x005226d0 (save entity position/orientation to GFF)
+    ///   - 0x004e08e0 @ 0x004e08e0 (load placeable/door position from GIT)
+    ///   - 0x00506550 @ 0x00506550 (set orientation from vector)
+    ///   - 0x004d8390 @ 0x004d8390 (normalize orientation vector)
     /// - Aurora (nwmain.exe):
     ///   - XPosition @ 0x140ddb700, YPosition @ 0x140ddb710, ZPosition @ 0x140ddb720
     ///   - XOrientation @ 0x140ddb750, YOrientation @ 0x140ddb740, ZOrientation @ 0x140ddb730

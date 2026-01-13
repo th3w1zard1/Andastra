@@ -69,13 +69,13 @@ namespace Andastra.Game.Games.Eclipse
         /// Sets fog settings.
         /// </summary>
         /// <param name="fogSettings">Fog settings to apply.</param>
-        void SetFog(Andastra.Runtime.Games.Eclipse.Lighting.FogSettings fogSettings);
+        void SetFog(Andastra.Game.Games.Eclipse.Lighting.FogSettings fogSettings);
 
         /// <summary>
         /// Gets current fog settings.
         /// </summary>
         /// <returns>Current fog settings.</returns>
-        Andastra.Runtime.Games.Eclipse.Lighting.FogSettings GetFog();
+        Andastra.Game.Games.Eclipse.Lighting.FogSettings GetFog();
     }
 
     /// <summary>

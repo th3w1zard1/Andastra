@@ -72,7 +72,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <StartupObject>Andastra.Runtime.Game.Program</StartupObject>
+    <StartupObject>Andastra.Game.Program</StartupObject>
     <!-- Explicitly disable any post-build execution -->
     <RunPostBuildEvent>Never</RunPostBuildEvent>
     <PreBuildEvent></PreBuildEvent>

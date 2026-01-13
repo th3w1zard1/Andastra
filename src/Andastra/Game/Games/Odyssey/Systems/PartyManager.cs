@@ -6,7 +6,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Systems;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// Event arguments for party changes (Odyssey-specific, extends base).

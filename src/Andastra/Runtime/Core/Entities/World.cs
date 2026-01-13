@@ -28,18 +28,18 @@ namespace Andastra.Runtime.Core.Entities
     /// - Entity lookup: GetEntityByTag searches by tag string (case-insensitive), GetEntity by ObjectId (O(1) lookup)
     /// - ObjectId is unique 32-bit identifier assigned sequentially (OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001)
     /// - Entity registration: Entities are registered in world with ObjectId, Tag, and ObjectType indices
-    /// - Entity serialization: FUN_005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
-    ///   - Function signature: `void FUN_005226d0(void *param_1, void *param_2)`
+    /// - Entity serialization: 0x005226d0 @ 0x005226d0 saves entity state including ObjectId, AreaId, Position, Orientation
+    ///   - Function signature: `void 0x005226d0(void *param_1, void *param_2)`
     ///   - param_1: Entity pointer
     ///   - param_2: GFF structure pointer
-    ///   - Writes ObjectId (uint32) via FUN_00413880 with "ObjectId" field name
-    ///   - Writes AreaId (uint32) via FUN_00413880 with "AreaId" field name
-    ///   - Writes Position (XPosition, YPosition, ZPosition as float) via FUN_00413a00
-    ///   - Writes Orientation (XOrientation, YOrientation, ZOrientation as float) via FUN_00413a00
-    ///   - Calls FUN_00508200 to save action queue, FUN_00505db0 to save effect list
-    /// - Entity deserialization: FUN_005223a0 @ 0x005223a0 loads entity data from GFF
-    ///   - Reads ObjectId (uint32) via FUN_00412d40 with "ObjectId" field name (default 0x7f000000)
-    ///   - Reads AreaId (uint32) via FUN_00412d40 with "AreaId" field name
+    ///   - Writes ObjectId (uint32) via 0x00413880 with "ObjectId" field name
+    ///   - Writes AreaId (uint32) via 0x00413880 with "AreaId" field name
+    ///   - Writes Position (XPosition, YPosition, ZPosition as float) via 0x00413a00
+    ///   - Writes Orientation (XOrientation, YOrientation, ZOrientation as float) via 0x00413a00
+    ///   - Calls 0x00508200 to save action queue, 0x00505db0 to save effect list
+    /// - Entity deserialization: 0x005223a0 @ 0x005223a0 loads entity data from GFF
+    ///   - Reads ObjectId (uint32) via 0x00412d40 with "ObjectId" field name (default 0x7f000000)
+    ///   - Reads AreaId (uint32) via 0x00412d40 with "AreaId" field name
     ///   - Reads Position and Orientation from GFF structure
     /// - Area management: Entities belong to areas (AreaId field), areas contain entity lists by type
     /// - Module management: "ModuleList" @ 0x007bdd3c, "ModuleName" @ 0x007bde2c, "LASTMODULE" @ 0x007be1d0
@@ -75,7 +75,7 @@ namespace Andastra.Runtime.Core.Entities
         // Module ObjectId: 0x7F000002 (special object ID for module, between OBJECT_SELF 0x7F000001 and area IDs 0x7F000010+)
         // Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID
         public const uint ModuleObjectId = 0x7F000002;
-        private Andastra.Runtime.Core.Interfaces.IModule _registeredModule;
+        private Runtime.Core.Interfaces.IModule _registeredModule;
 
         public World(ITimeManager timeManager)
         {
@@ -96,7 +96,7 @@ namespace Andastra.Runtime.Core.Entities
             CombatSystem = new CombatSystem(this);
             EffectSystem = new EffectSystem(this);
             PerceptionSystem = new PerceptionSystem(this);
-            TriggerSystem = new TriggerSystem(this);
+            TriggerSystem = new TriggerSystem(this, (entity, scriptEvent, target) => EventBus.FireScriptEvent(entity, scriptEvent, target));
             AIController = new AIController(this, CombatSystem);
             AnimationSystem = new AnimationSystem(this);
             AppearAnimationFadeSystem = new AppearAnimationFadeSystem(this);
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Core.Entities
         }
 
         public IArea CurrentArea { get; set; }
-        public Andastra.Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
+        public Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
 
         /// <summary>
         /// Sets the current area.
@@ -233,7 +233,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
         /// Common across all engines: Modules are registered with fixed ObjectId when set as current
         /// </remarks>
-        public void SetCurrentModule(Andastra.Runtime.Core.Interfaces.IModule module)
+        public void SetCurrentModule(Runtime.Core.Interfaces.IModule module)
         {
             CurrentModule = module;
             _registeredModule = module;
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Common across all engines: Modules use fixed ObjectId (0x7F000002) for script references
         /// Used by GetModule NWScript function to return the module object ID
         /// </remarks>
-        public uint GetModuleId(Andastra.Runtime.Core.Interfaces.IModule module)
+        public uint GetModuleId(Runtime.Core.Interfaces.IModule module)
         {
             if (module == null)
             {
@@ -310,10 +310,10 @@ namespace Andastra.Runtime.Core.Entities
         /// </summary>
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject NWScript function
-        /// Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb in FUN_004dcfb0)
+        /// Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb in 0x004dcfb0)
         /// Original implementation: Unregisters entity from world, fires destroy events, marks as invalid
         /// Destroy sequence: Fire OnDeath script event (for creatures), unregister from world indices, mark entity as invalid
-        /// EVENT_DESTROY_OBJECT (case 0xb) is an object event logged by FUN_004dcfb0, not a script event
+        /// EVENT_DESTROY_OBJECT (case 0xb) is an object event logged by 0x004dcfb0, not a script event
         /// For creatures, OnDeath script event should fire before destruction (CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH @ 0x007bca54, case 0xa)
         /// </remarks>
         public void DestroyEntity(uint objectId)
@@ -323,7 +323,7 @@ namespace Andastra.Runtime.Core.Entities
             {
                 // Fire OnDeath script event for creatures before destruction
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnDeath script fires before entity is destroyed
-                // Located via string reference: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54 (case 0xa in FUN_004dcfb0)
+                // Located via string reference: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54 (case 0xa in 0x004dcfb0)
                 if (EventBus != null && (entity.ObjectType & ObjectType.Creature) != 0)
                 {
                     EventBus.FireScriptEvent(entity, ScriptEvent.OnDeath, null);
@@ -344,7 +344,7 @@ namespace Andastra.Runtime.Core.Entities
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetObject function
         /// Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
-        /// Original implementation: FUN_004dc030 @ 0x004dc030 (wrapper that calls FUN_004e9de0)
+        /// Original implementation: 0x004dc030 @ 0x004dc030 (wrapper that calls 0x004e9de0)
         /// ObjectId lookup: O(1) dictionary lookup by ObjectId (uint32)
         /// Returns null if ObjectId not found (OBJECT_INVALID = 0x7F000000)
         /// </remarks>
@@ -520,15 +520,15 @@ namespace Andastra.Runtime.Core.Entities
         /// Updates all entities for a single frame.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404cf0 @ 0x00404cf0 (area update function).
-        /// Called from main game loop via FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404cf0 @ 0x00404cf0 (area update function).
+        /// Called from main game loop via 0x00638ca0 → 0x0063de50 → 0x0077f790 → 0x00404cf0.
         /// 
         /// Execution flow (swkotor2.exe: 0x00404250):
         /// 1. Main loop: while (DAT_00828390 == 0)
         /// 2. PeekMessageA() - Windows message processing
-        /// 3. FUN_00638ca0() - Game update (calls area update)
+        /// 3. 0x00638ca0() - Game update (calls area update)
         /// 4. glClear() - Clear screen
-        /// 5. FUN_00461c20()/FUN_00461c00() - Render
+        /// 5. 0x00461c20()/0x00461c00() - Render
         /// 6. SwapBuffers() - Present frame
         /// 
         /// Area update is called every frame to update area state, effects, lighting, etc.
@@ -565,8 +565,8 @@ namespace Andastra.Runtime.Core.Entities
             CombatSystem.Update(deltaTime);
 
             // Update current area (CRITICAL: Must be called every frame)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404cf0 @ 0x00404cf0 updates area state
-            // Located via call chain: FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404cf0 @ 0x00404cf0 updates area state
+            // Located via call chain: 0x00638ca0 → 0x0063de50 → 0x0077f790 → 0x00404cf0
             // Original implementation: Area update handles area effects, lighting, weather, entity spawning/despawning
             if (CurrentArea != null)
             {

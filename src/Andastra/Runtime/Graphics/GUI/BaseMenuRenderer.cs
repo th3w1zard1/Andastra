@@ -10,8 +10,8 @@ namespace Andastra.Runtime.Graphics.Common.GUI
     /// <remarks>
     /// Base Menu Renderer:
     /// - Based on exhaustive reverse engineering of swkotor.exe and swkotor2.exe menu initialization
-    /// - swkotor2.exe: FUN_006d2350 @ 0x006d2350 (menu constructor/initializer)
-    /// - swkotor.exe: FUN_0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
+    /// - swkotor2.exe: 0x006d2350 @ 0x006d2350 (menu constructor/initializer)
+    /// - swkotor.exe: 0x0067c4c0 @ 0x0067c4c0 (menu constructor/initializer)
     /// 
     /// Initialization Sequence (matching original engines):
     /// 1. Load "MAINMENU" GUI file first (swkotor2.exe: 0x006d2350:73, swkotor.exe: 0x0067c4c0:62)

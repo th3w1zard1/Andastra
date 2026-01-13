@@ -7,7 +7,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// System for detecting entity entry/exit into trigger volumes.
@@ -22,34 +22,34 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
     /// - "ScriptOnEnter" @ 0x007beebc, "ScriptOnExit" @ 0x007beec0 (trigger script ResRef fields)
     /// - "OnTrapTriggered" @ 0x007c1a34 (trap triggered script event), "CSWSSCRIPTEVENT_EVENTTYPE_ON_MINE_TRIGGERED" @ 0x007bc7ac
     /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2) and EVENT_LEFT_TRIGGER (case 3)
-    /// - Trigger loading: FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT TriggerList, reads UTT templates
-    ///   - Function signature: `undefined4 FUN_004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_ENTERED_TRIGGER (case 2) and EVENT_LEFT_TRIGGER (case 3)
+    /// - Trigger loading: 0x004e5920 @ 0x004e5920 loads trigger instances from GIT TriggerList, reads UTT templates
+    ///   - Function signature: `undefined4 0x004e5920(void *param_1, uint *param_2, int param_3, int param_4)`
     ///   - param_1: GFF structure pointer
     ///   - param_2: GIT structure pointer
     ///   - param_3: Unknown flag
     ///   - param_4: Template loading flag (0 = load from GIT, non-zero = load from template ResRef)
-    ///   - Reads "TriggerList" list from GFF structure (via FUN_004129e0)
+    ///   - Reads "TriggerList" list from GFF structure (via 0x004129e0)
     ///   - For each trigger entry in TriggerList:
-    ///     - Checks trigger type (via FUN_004122d0) - must be type 1 (Trigger)
-    ///     - Reads ObjectId (uint32) via FUN_00412d40 with "ObjectId" field name (default 0x7f000000)
-    ///     - Creates trigger object (via FUN_00586350 with ObjectId)
-    ///     - If param_4 == 0: Loads trigger data from GIT entry via FUN_00584f40
+    ///     - Checks trigger type (via 0x004122d0) - must be type 1 (Trigger)
+    ///     - Reads ObjectId (uint32) via 0x00412d40 with "ObjectId" field name (default 0x7f000000)
+    ///     - Creates trigger object (via 0x00586350 with ObjectId)
+    ///     - If param_4 == 0: Loads trigger data from GIT entry via 0x00584f40
     ///     - If param_4 != 0: Loads trigger template via TemplateResRef:
-    ///       - Reads TemplateResRef (string) via FUN_00412f30 with "TemplateResRef" field name
-    ///       - Loads UTT template via FUN_005865e0
-    ///       - Reads LinkedToModule (string) via FUN_00412f30 with "LinkedToModule" field name
-    ///       - Reads TransitionDestination (string) via FUN_004130f0 with "TransitionDestination" field name
-    ///       - Reads LinkedTo (string) via FUN_00412fe0 with "LinkedTo" field name (waypoint tag for transitions)
-    ///       - Reads LinkedToFlags (uint8) via FUN_00412b80 with "LinkedToFlags" field name
-    ///     - Reads XPosition, YPosition, ZPosition (float) via FUN_00412e20
-    ///     - Reads "Geometry" list (via FUN_004129e0) and loads trigger polygon geometry via FUN_00584490
-    ///     - Sets trigger position via FUN_005868a0
-    ///     - Calls FUN_0050b650 for additional trigger data loading (if param_3 != 0)
-    /// - FUN_004e2b20 @ 0x004e2b20 saves trigger instances to GIT TriggerList
-    ///   - Function signature: `void FUN_004e2b20(void *param_1, uint *param_2, int *param_3)`
+    ///       - Reads TemplateResRef (string) via 0x00412f30 with "TemplateResRef" field name
+    ///       - Loads UTT template via 0x005865e0
+    ///       - Reads LinkedToModule (string) via 0x00412f30 with "LinkedToModule" field name
+    ///       - Reads TransitionDestination (string) via 0x004130f0 with "TransitionDestination" field name
+    ///       - Reads LinkedTo (string) via 0x00412fe0 with "LinkedTo" field name (waypoint tag for transitions)
+    ///       - Reads LinkedToFlags (uint8) via 0x00412b80 with "LinkedToFlags" field name
+    ///     - Reads XPosition, YPosition, ZPosition (float) via 0x00412e20
+    ///     - Reads "Geometry" list (via 0x004129e0) and loads trigger polygon geometry via 0x00584490
+    ///     - Sets trigger position via 0x005868a0
+    ///     - Calls 0x0050b650 for additional trigger data loading (if param_3 != 0)
+    /// - 0x004e2b20 @ 0x004e2b20 saves trigger instances to GIT TriggerList
+    ///   - Function signature: `void 0x004e2b20(void *param_1, uint *param_2, int *param_3)`
     ///   - Iterates through trigger list, writes ObjectId and trigger data to GFF
-    ///   - Calls FUN_00585ec0 and FUN_00508200 to save trigger data
+    ///   - Calls 0x00585ec0 and 0x00508200 to save trigger data
     /// - Original implementation: Triggers have polygon geometry, detect creature entry/exit
     /// - Trigger detection: Updates every frame, checks if creature position is inside trigger polygon
     /// - Script events: OnEnter (entity enters), OnExit (entity exits), OnClick, OnDisarm, OnTrapTriggered

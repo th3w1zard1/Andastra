@@ -291,7 +291,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Gets the mouse position as a Vector2.
         /// </summary>
-        public Vector2 Position => new Vector2(_x, _y);
+        public Runtime.Graphics.Vector2 Position => new Runtime.Graphics.Vector2(_x, _y);
         
         /// <summary>
         /// Gets the mouse scroll wheel value.

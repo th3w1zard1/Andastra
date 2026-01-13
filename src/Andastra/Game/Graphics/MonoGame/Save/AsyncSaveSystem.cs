@@ -39,7 +39,7 @@ namespace Andastra.Game.Graphics.MonoGame.Save
     /// - Compression: Optional compression of save data (original engine doesn't compress)
     /// - Progress tracking: Reports save/load progress for loading screens
     /// - Error handling: Catches and reports save/load errors gracefully
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750 (save metadata), FUN_00708990 @ 0x00708990 (save file operations)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750 (save metadata), 0x00708990 @ 0x00708990 (save file operations)
     /// - Note: Original engine saves synchronously, async is a modern enhancement for better performance
     /// </remarks>
     public class AsyncSaveSystem

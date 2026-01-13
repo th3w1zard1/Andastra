@@ -1176,11 +1176,11 @@ namespace Andastra.Game.GUI
                 switch (key)
                 {
                     case "RasterizerCullMode":
-                        if (Enum.TryParse<Andastra.Runtime.Graphics.Common.Enums.CullMode>(value, out var cullMode))
+                        if (Enum.TryParse<Runtime.Graphics.Common.Enums.CullMode>(value, out var cullMode))
                             targetSettings.RasterizerCullMode = cullMode;
                         break;
                     case "RasterizerFillMode":
-                        if (Enum.TryParse<Andastra.Runtime.Graphics.Common.Enums.FillMode>(value, out var fillMode))
+                        if (Enum.TryParse<Runtime.Graphics.Common.Enums.FillMode>(value, out var fillMode))
                             targetSettings.RasterizerFillMode = fillMode;
                         break;
                     case "DepthStencilDepthBufferFunction":
@@ -1586,8 +1586,8 @@ namespace Andastra.Game.GUI
         public bool? MonoGameSupportedOrientationsLandscapeRight { get; set; }
 
         // Rasterizer State
-        public Andastra.Runtime.Graphics.Common.Enums.CullMode? RasterizerCullMode { get; set; }
-        public Andastra.Runtime.Graphics.Common.Enums.FillMode? RasterizerFillMode { get; set; }
+        public Runtime.Graphics.Common.Enums.CullMode? RasterizerCullMode { get; set; }
+        public Runtime.Graphics.Common.Enums.FillMode? RasterizerFillMode { get; set; }
         public bool? RasterizerDepthBiasEnabled { get; set; }
         public double? RasterizerDepthBias { get; set; }
         public double? RasterizerSlopeScaleDepthBias { get; set; }

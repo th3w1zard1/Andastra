@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Common interface for faction and hostility management across all BioWare engines
     /// - Base implementation: BaseFactionComponent (Runtime.Games.Common.Components)
     /// - Engine-specific implementations:
-    ///   - Odyssey: OdysseyFactionComponent (swkotor.exe: FUN_005b1b90 @ 0x005b1b90, swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0)
+    ///   - Odyssey: OdysseyFactionComponent (swkotor.exe: 0x005b1b90 @ 0x005b1b90, swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0)
     ///   - Aurora: AuroraFactionComponent (nwmain.exe: CNWSFaction @ 0x1404ad3e0, GetFaction @ 0x140357900)
     ///   - Eclipse: EclipseFactionComponent (daorigins.exe, DragonAge2.exe: IsHostile/IsFriendly checks)
     ///   - Infinity: InfinityFactionComponent (, : BioFaction classes)

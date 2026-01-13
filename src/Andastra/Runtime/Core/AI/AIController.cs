@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Andastra.Game.Games.Aurora.Systems;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
@@ -21,7 +22,7 @@ namespace Andastra.Runtime.Core.AI
     /// - "HeartbeatInterval" @ 0x007c38e8 (heartbeat timing interval field)
     /// - "AIState" @ 0x007c4090 (AI state field), "AISTATE" @ 0x007c81f8 (AI state constant)
     /// - Debug: "    AI Level: " @ 0x007cb174 (AI debug output)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves heartbeat script and interval
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 saves heartbeat script and interval
     /// - Heartbeat timing: Default 6.0 seconds between heartbeat script executions (HeartbeatInterval field)
     /// - AI behavior: NPCs process action queues, execute heartbeat scripts, and respond to combat
     /// - Combat AI: NPCs attack nearest enemy when in combat (default combat behavior)
@@ -183,7 +184,7 @@ namespace Andastra.Runtime.Core.AI
                     // Execute heartbeat script with entity as owner
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Heartbeat script execution
                     // Located via string references: "OnHeartbeat" @ 0x007beeb0, "Heartbeat" @ 0x007c1a90
-                    // Original implementation: FUN_005226d0 @ 0x005226d0 executes heartbeat scripts every 6 seconds
+                    // Original implementation: 0x005226d0 @ 0x005226d0 executes heartbeat scripts every 6 seconds
                     if (_world.EventBus != null)
                     {
                         _world.EventBus.FireScriptEvent(entity, ScriptEvent.OnHeartbeat, null);
@@ -261,6 +262,11 @@ namespace Andastra.Runtime.Core.AI
         public void ClearAIState(IEntity entity)
         {
             _aiStates.Remove(entity);
+        }
+
+        public static implicit operator AIController(AuroraAIController v)
+        {
+            throw new NotImplementedException();
         }
     }
 

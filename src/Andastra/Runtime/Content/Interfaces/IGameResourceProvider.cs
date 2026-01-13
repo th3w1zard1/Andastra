@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// - Resource enumeration: Can enumerate all resources of a type (for modding tools, resource browsers)
     /// - Location tracking: LocateAsync returns all locations where resource exists (useful for debugging mod conflicts)
     /// - Based on CExoKeyTable and CExoResMan resource management in original engine
-    /// - FUN_00633270 @ 0x00633270 sets up all resource directories and precedence chains
+    /// - 0x00633270 @ 0x00633270 sets up all resource directories and precedence chains
     /// </remarks>
     public interface IGameResourceProvider
     {
@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Content.Interfaces
         /// <summary>
         /// Locates a resource across multiple search locations.
         /// </summary>
-        Task<IReadOnlyList<Andastra.Runtime.Content.Interfaces.LocationResult>> LocateAsync(ResourceIdentifier id, SearchLocation[] order, CancellationToken ct);
+        Task<IReadOnlyList<Runtime.Content.Interfaces.LocationResult>> LocateAsync(ResourceIdentifier id, SearchLocation[] order, CancellationToken ct);
 
         /// <summary>
         /// Enumerates all resources of a specific type.

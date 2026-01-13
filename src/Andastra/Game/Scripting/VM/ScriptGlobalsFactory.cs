@@ -1,5 +1,5 @@
 using Andastra.Runtime.Core;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 
 namespace Andastra.Game.Scripting.VM
 {

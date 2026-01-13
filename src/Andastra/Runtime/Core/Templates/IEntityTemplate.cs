@@ -14,9 +14,9 @@ namespace Andastra.Runtime.Core.Templates
     /// - Located via string references: Template loading from GFF files with signatures
     /// - GFF template signatures: "UTC " (Creature), "UTP " (Placeable), "UTD " (Door), "UTT " (Trigger)
     /// - "UTW " (Waypoint), "UTS " (Sound), "UTE " (Encounter), "UTI " (Item), "UTM " (Store)
-    /// - Template loading: FUN_004e10b0 @ 0x004e10b0 loads creature instances from GIT
-    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door instances from GIT
-    /// - FUN_004e01a0 @ 0x004e01a0 loads encounter instances from GIT
+    /// - Template loading: 0x004e10b0 @ 0x004e10b0 loads creature instances from GIT
+    /// - 0x004e08e0 @ 0x004e08e0 loads placeable/door instances from GIT
+    /// - 0x004e01a0 @ 0x004e01a0 loads encounter instances from GIT
     /// - Template ResRef: Template resource reference (e.g., "n_darthmalak" for creature template)
     /// - Template Tag: Unique identifier for script lookups (GetObjectByTag)
     /// - Original implementation: Templates define entity properties, stats, scripts, appearance

@@ -7,7 +7,7 @@ using BioWare.NET.Resource.Formats.BWM;
 using BioWare.NET.Extract;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
-using Andastra.Runtime.Runtime.Core.Module;
+using Andastra.Runtime.Core.Module;
 using Andastra.Game.Games.Eclipse;
 using JetBrains.Annotations;
 

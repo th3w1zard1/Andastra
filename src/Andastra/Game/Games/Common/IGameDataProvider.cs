@@ -1,4 +1,3 @@
-using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Common
@@ -23,7 +22,7 @@ namespace Andastra.Game.Games.Common
     /// All existing implementations remain compatible as they automatically implement the base interface.
     /// </remarks>
     [PublicAPI]
-    public interface IGameDataProvider : Core.Interfaces.IGameDataProvider
+    public interface IGameDataProvider : Runtime.Core.Interfaces.IGameDataProvider
     {
         /// <summary>
         /// Gets the creature collision radius for a given appearance type.

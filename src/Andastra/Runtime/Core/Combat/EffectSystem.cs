@@ -123,20 +123,20 @@ namespace Andastra.Runtime.Core.Combat
     ///   - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8
     /// - "VisualEffect" @ 0x007c4624, "RangedEffect" @ 0x007c4634 (effect categories)
     /// - "GameEffects" @ 0x007c4e70, "VideoEffects" @ 0x007c4f30, "EffectIcon" @ 0x007c4f48
-    /// - Original implementation: FUN_0050b540 @ 0x0050b540 (load EffectList from GFF)
-    ///   - Function signature: `void FUN_0050b540(void *this, void *param_1, uint *param_2)`
+    /// - Original implementation: 0x0050b540 @ 0x0050b540 (load EffectList from GFF)
+    ///   - Function signature: `void 0x0050b540(void *this, void *param_1, uint *param_2)`
     ///   - param_1: GFF structure pointer
     ///   - param_2: GFF field pointer
-    ///   - Loads "EffectList" GFF list field (via FUN_004129e0), iterates through each effect struct
-    ///   - Creates effect object (0x8c bytes) via FUN_00541600, loads effect data via FUN_00541b60
+    ///   - Loads "EffectList" GFF list field (via 0x004129e0), iterates through each effect struct
+    ///   - Creates effect object (0x8c bytes) via 0x00541600, loads effect data via 0x00541b60
     ///   - Filters effects: Only adds effects where effect type matches or effect subtype matches (DAT_007c02ec)
-    ///   - Calls FUN_0050ae30 to add effect to entity's effect list
+    ///   - Calls 0x0050ae30 to add effect to entity's effect list
     ///   - Effect filtering: Effects with type 1 (instant) or matching subtype are added
     ///   - Effect structure: Contains effect type, subtype, duration, parameters, visual effect ID, etc.
-    /// - FUN_00505db0 @ 0x00505db0 (save EffectList to GFF)
-    ///   - Function signature: `void FUN_00505db0(void *this, void *param_1, uint *param_2)`
-    ///   - Saves "EffectList" GFF list field (via FUN_00413570), iterates through entity's effect list
-    ///   - Calls FUN_00540f10 to serialize each effect to GFF struct
+    /// - 0x00505db0 @ 0x00505db0 (save EffectList to GFF)
+    ///   - Function signature: `void 0x00505db0(void *this, void *param_1, uint *param_2)`
+    ///   - Saves "EffectList" GFF list field (via 0x00413570), iterates through entity's effect list
+    ///   - Calls 0x00540f10 to serialize each effect to GFF struct
     ///   - Effect count stored at offset 0x14c, effect list pointer at offset 0x148
     ///   - Each effect struct saved with effect type, subtype, duration, parameters, visual effect ID
     /// - Effects applied to entities with duration tracking, stacking rules, removal on expiration
@@ -403,7 +403,7 @@ namespace Andastra.Runtime.Core.Combat
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AC effects modify total AC calculation
                     // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
                     // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
-                    // swkotor2.exe: FUN_0050b540 loads EffectList, AC effects are tracked and applied to total AC calculation
+                    // swkotor2.exe: 0x0050b540 loads EffectList, AC effects are tracked and applied to total AC calculation
                     int acBonus = effect.Type == EffectType.ACIncrease ? effect.Amount : -effect.Amount;
                     if (apply)
                     {
@@ -421,7 +421,7 @@ namespace Andastra.Runtime.Core.Combat
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack effects modify total attack bonus
                     // Located via string references: "EffectAttackIncrease" @ routine 118
                     // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
-                    // swkotor2.exe: FUN_0050b540 loads EffectList, attack effects are tracked and applied to total attack bonus calculation
+                    // swkotor2.exe: 0x0050b540 loads EffectList, attack effects are tracked and applied to total attack bonus calculation
                     int attackBonus = effect.Type == EffectType.AttackIncrease ? effect.Amount : -effect.Amount;
                     if (apply)
                     {

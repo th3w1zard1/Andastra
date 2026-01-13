@@ -8,8 +8,8 @@ using BioWare.NET.Extract;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.Types;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.Types;
 
 namespace Andastra.Game.Scripting.VM
 {

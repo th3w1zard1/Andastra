@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Perception
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (perception script event type, 0x1)
     /// - "PerceptionData" @ 0x007bf6c4 (perception data structure), "PerceptionList" @ 0x007bf6d4 (perception list field)
     /// - "PERCEPTIONDIST" @ 0x007c4070 (perception distance field), "PerceptionRange" @ 0x007c4080 (perception range field)
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves perception data including sight/hearing ranges
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 saves perception data including sight/hearing ranges
     /// - Perception checks: Entities check sight/hearing ranges periodically (every 0.5 seconds)
     /// - Line-of-sight: Raycast through walkmesh to determine if target is visible (uses NavigationMesh.Raycast)
     /// - Perception events: OnPerception fires when entity sees/hears another entity for first time
@@ -294,7 +294,7 @@ namespace Andastra.Runtime.Core.Perception
                 // Execute perception script with subject as owner and target as triggerer
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Perception script execution
                 // Located via string references: "OnPerception" @ 0x007bee80, "OnNotice" @ 0x007beea0
-                // Original implementation: FUN_004dfbb0 @ 0x004dfbb0 executes perception scripts when entities are detected
+                // Original implementation: 0x004dfbb0 @ 0x004dfbb0 executes perception scripts when entities are detected
                 if (_world.EventBus != null)
                 {
                     _world.EventBus.FireScriptEvent(subject, ScriptEvent.OnPerception, target);

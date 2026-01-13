@@ -48,7 +48,7 @@ namespace Andastra.Game.Games.Common
         /// - LASTMODIFIED: Save timestamp
         /// - PORTRAIT: Player portrait data
         /// </remarks>
-        public abstract byte[] SerializeSaveNfo(SaveGameData saveData);
+        public abstract byte[] SerializeSaveNfo(Andastra.Game.Games.Common.SaveGameData saveData);
 
         /// <summary>
         /// Deserializes save game metadata from NFO format.
@@ -145,7 +145,7 @@ namespace Andastra.Game.Games.Common
         /// Engine-specific directory naming conventions.
         /// Includes validation and error handling.
         /// </remarks>
-        public abstract void CreateSaveDirectory(string saveName, SaveGameData saveData);
+        public abstract void CreateSaveDirectory(string saveName, Andastra.Game.Games.Common.SaveGameData saveData);
 
         /// <summary>
         /// Validates save game compatibility.

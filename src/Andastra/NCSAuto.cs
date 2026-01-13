@@ -1,22 +1,20 @@
-extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.NCS;
 using BioWare.NET.Resource.Formats.NCS.Compiler;
 using BioWare.NET.Resource.Formats.NCS.Decomp;
 using BioWare.NET.Resource.Formats.NCS.Decomp.Utils;
+using BioWare.NET.Resource.Formats.NCS.Optimizers;
 using BioWare.NET.Common.Script;
 using Andastra.Script;
 using JetBrains.Annotations;
-// Note: NCSBinaryReader/Writer use NCS from Resource assembly, so use that NCS type here
-// ResourceNCS alias is for types that specifically need the Resource.NCS assembly version
-using FileScriptData = ResourceNCS::BioWare.NET.Resource.Formats.NCS.NCSDecomp.Utils.FileScriptData;
+using NcsFile = BioWare.NET.Resource.Formats.NCS.Decomp.NcsFile;
+using FileDecompiler = BioWare.NET.Resource.Formats.NCS.Decomp.FileDecompiler;
 
 namespace Andastra
 {
@@ -571,18 +569,18 @@ namespace Andastra
 
             // Use FileDecompiler (DeNCS port) for 1:1 accurate decompilation
             // FileDecompiler is in Resource assembly (not ResourceNCS), use NCS from Resource assembly
-            NCSDecomp.FileDecompiler fileDecompiler;
-            if (!string.IsNullOrEmpty(nwscriptPath) && System.IO.File.Exists(nwscriptPath))
+            FileDecompiler fileDecompiler;
+            if (!string.IsNullOrEmpty(nwscriptPath) && File.Exists(nwscriptPath))
             {
                 // Use nwscript file directly if provided
-                var nwscriptFile = new NCSDecomp.NcsFile(nwscriptPath);
-                fileDecompiler = new NCSDecomp.FileDecompiler(nwscriptFile);
+                var nwscriptFile = new NcsFile(nwscriptPath);
+                fileDecompiler = new FileDecompiler(nwscriptFile);
             }
             else
             {
                 // Fall back to lazy loading (will search for nwscript file)
                 NWScriptLocator.GameType gameType = game.IsK2() ? NWScriptLocator.GameType.TSL : NWScriptLocator.GameType.K1;
-                fileDecompiler = new NCSDecomp.FileDecompiler(null, gameType);
+                fileDecompiler = new FileDecompiler(null, gameType);
             }
 
             FileScriptData data = null;

@@ -42,7 +42,7 @@ namespace Andastra.Game.Games.Odyssey.Combat
     /// KOTOR Combat Round (~3 seconds):
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSCombatRound class
     /// - Located via string reference: "CombatRoundData" @ 0x007bf6b4
-    /// - Original implementation: FUN_00529470 @ 0x00529470 (save CombatRoundData to GFF)
+    /// - Original implementation: 0x00529470 @ 0x00529470 (save CombatRoundData to GFF)
     ///   - Saves all combat round state fields in specific order:
     ///     - RoundStarted (byte @ offset 0xa84), SpellCastRound (byte @ offset 0xa88), DeflectArrow (byte @ offset 0xac8), WeaponSucks (byte @ offset 0xacc)
     ///     - DodgeTarget (int32 @ offset 0xafc), NewAttackTarget (int32 @ offset 0xadc), Engaged (float @ offset 0xb08), Master (float @ offset 0xb0c), MasterID (int32 @ offset 0xb10)
@@ -51,18 +51,18 @@ namespace Andastra.Game.Games.Odyssey.Combat
     ///     - CurrentAttack (byte @ offset 0xabc), AttackID (uint16 @ offset 0xa80), AttackGroup (byte @ offset 0xac4), ParryIndex (float @ offset 0xad0)
     ///     - NumAOOs (float @ offset 0xad4), NumCleaves (float @ offset 0xad8), OnHandAttacks (float @ offset 0xae0), OffHandAttacks (float @ offset 0xae4)
     ///     - AdditAttacks (float @ offset 0xaf0), EffectAttacks (float @ offset 0xaf4), ParryActions (byte @ offset 0xaf8), OffHandTaken (float @ offset 0xae8), ExtraTaken (float @ offset 0xaec)
-    ///   - AttackList: Saves 5 attack entries (FUN_00527530 saves each attack struct, iterates 5 times with offset increment 0x17c per attack)
+    ///   - AttackList: Saves 5 attack entries (0x00527530 saves each attack struct, iterates 5 times with offset increment 0x17c per attack)
     ///   - SpecAttackList: Saves special attack list (SpecialAttack uint16 per entry, iterates through list at offset 0xa68, count at offset 0xa6c)
     ///   - SpecAttackIdList: Saves special attack ID list (SpecialAttackId uint16 per entry, iterates through list at offset 0xa74, count at offset 0xa78)
-    ///   - SchedActionList: Saves scheduled action list (FUN_005270f0 saves each scheduled action, iterates through linked list at offset 0xb00)
-    /// - FUN_005226d0 @ 0x005226d0 (creature save function, saves CombatRoundData if round is active)
+    ///   - SchedActionList: Saves scheduled action list (0x005270f0 saves each scheduled action, iterates through linked list at offset 0xb00)
+    /// - 0x005226d0 @ 0x005226d0 (creature save function, saves CombatRoundData if round is active)
     ///   - Original implementation: Checks if CombatRoundData is active (*(int *)(*(void **)((int)this + 0x10dc) + 0xa84) == 1)
-    ///   - If active, calls FUN_00529470 to save CombatRoundData to GFF structure
+    ///   - If active, calls 0x00529470 to save CombatRoundData to GFF structure
     ///   - Saves creature state including: DetectMode, StealthMode, CreatureSize, IsDestroyable, IsRaiseable, DeadSelectable
     ///   - Saves all script hooks: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged, ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine, ScriptOnBlocked, ScriptEndDialogue
     ///   - Saves Equip_ItemList (20 slots), ItemList (inventory items), PerceptionList, CombatRoundData, AreaId, AmbientAnimState, Animation, CreatnScrptFird, PM_IsDisguised, PM_Appearance, Listening, ForceAlwaysUpdate, Position/Orientation, JoiningXP, BonusForcePoints, AssignedPup, PlayerCreated, FollowInfo, ActionList
-    /// - FUN_005fb0f0 @ 0x005fb0f0 (reference to CombatRoundData usage)
-    /// - CombatRoundData GFF fields (from FUN_00529470):
+    /// - 0x005fb0f0 @ 0x005fb0f0 (reference to CombatRoundData usage)
+    /// - CombatRoundData GFF fields (from 0x00529470):
     ///   - "RoundStarted" (byte): Whether round has started
     ///   - "SpellCastRound" (byte): Spell cast during round flag
     ///   - "DeflectArrow" (byte): Deflect arrow ability flag

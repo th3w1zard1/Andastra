@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Scripting.Types;
+using Andastra.Game.Scripting.Types;
 
 namespace Andastra.Game.Scripting.VM
 {

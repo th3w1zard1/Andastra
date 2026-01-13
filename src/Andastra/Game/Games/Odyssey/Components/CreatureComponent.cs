@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Components;
 
-using ClassData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.ClassData;
-using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
+using ClassData = Andastra.Game.Games.Odyssey.Data.GameDataManager.ClassData;
+using FeatData = Andastra.Game.Games.Odyssey.Data.GameDataManager.FeatData;
 
 namespace Andastra.Game.Games.Odyssey.Components
 {
@@ -29,12 +29,12 @@ namespace Andastra.Game.Games.Odyssey.Components
     ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510
     ///   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
     ///   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
-    /// - FUN_004dfbb0 @ 0x004dfbb0 (load creature instances from GIT)
-    /// - FUN_005261b0 @ 0x005261b0 (load creature from UTC template)
-    /// - FUN_0050c510 @ 0x0050c510 (load creature script hooks from GFF)
-    ///   - Original implementation (from decompiled FUN_0050c510):
-    ///     - Function signature: `void FUN_0050c510(void *this, void *param_1, uint *param_2)`
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 (save creature data to GFF)
+    /// - 0x004dfbb0 @ 0x004dfbb0 (load creature instances from GIT)
+    /// - 0x005261b0 @ 0x005261b0 (load creature from UTC template)
+    /// - 0x0050c510 @ 0x0050c510 (load creature script hooks from GFF)
+    ///   - Original implementation (from decompiled 0x0050c510):
+    ///     - Function signature: `void 0x0050c510(void *this, void *param_1, uint *param_2)`
     ///     - param_1: GFF structure pointer
     ///     - param_2: GFF field pointer
     ///     - Reads script ResRef fields from GFF and stores at offsets in creature object:
@@ -52,13 +52,13 @@ namespace Andastra.Game.Games.Odyssey.Components
     ///       - "ScriptUserDefine" @ this + 0x2c8 (OnUserDefined script)
     ///       - "ScriptOnBlocked" @ this + 0x2d0 (OnBlocked script)
     ///       - "ScriptEndDialogue" @ this + 0x2d8 (OnEndDialogue script)
-    ///     - Uses FUN_00412f30 to read GFF string fields, FUN_00630c50 to store strings
+    ///     - Uses 0x00412f30 to read GFF string fields, 0x00630c50 to store strings
     ///     - Script hooks stored as ResRef strings (16 bytes, null-terminated)
     /// - Creatures have appearance, stats, equipment, classes, feats, force powers
     /// - Based on UTC file format (GFF with "UTC " signature)
     /// - Script events: OnHeartbeat, OnPerception, OnAttacked, OnDamaged, OnDeath, etc.
     /// - Equip_ItemList stores equipped items, ItemList stores inventory, PerceptionList stores perception data
-    /// - CombatRoundData stores combat state (FUN_00529470 saves combat round data)
+    /// - CombatRoundData stores combat state (0x00529470 saves combat round data)
     /// </remarks>
     public class CreatureComponent : BaseCreatureComponent
     {
@@ -184,7 +184,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Stored in UTC template as "ScriptDialogue" field.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
         /// Located via string reference: "ScriptDialogue" @ 0x007bee40, "Conversation" @ 0x007c1abc
         /// </remarks>
         public string Conversation { get; set; }
@@ -263,13 +263,13 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 @ 0x005d63d0 reads classes.2da, loads attack bonus tables, calculates BAB per level
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 @ 0x005d63d0 reads classes.2da, loads attack bonus tables, calculates BAB per level
         /// </summary>
         /// <param name="gameDataManager">GameDataManager to look up class data and attack bonus tables.</param>
         /// <returns>Total base attack bonus from all class levels, or simplified calculation if game data unavailable.</returns>
         /// <remarks>
         /// Based on reverse engineering of swkotor.exe, swkotor2.exe:
-        /// - swkotor2.exe: FUN_005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
+        /// - swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
         /// - Attack bonus tables are named like "cls_atk_jedi_guardian" (referenced in classes.2da)
         /// - Each attack bonus table has rows for each level (row 0 = level 1, row 1 = level 2, etc.)
         /// - Table columns typically include "BAB" or "Value" column with the BAB value for that level
@@ -315,7 +315,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                 }
 
                 // Get attack bonus table name from classes.2da
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads "attackbonustable" column from classes.2da
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 reads "attackbonustable" column from classes.2da
                 string attackBonusTableName = classRow.GetString("attackbonustable");
                 if (string.IsNullOrEmpty(attackBonusTableName) || attackBonusTableName == "****")
                 {
@@ -534,14 +534,14 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Based on swkotor.exe, swkotor2.exe: Feat-to-class mapping for special feat usage calculation
         /// Located via string references: "classfeat" @ classes.2da column, featgain.2da class-specific columns
         /// Original implementation: Determines which class a feat is associated with for calculating uses per day
-        /// 
+        ///
         /// Odyssey-specific feat-to-class mappings:
         /// 1. Check classes.2da "classfeat" column - each class may have a class-specific feat
         /// 2. Check featgain.2da - if feat is only available through one class's feat gain table, it's class-specific
         /// 3. Most special feats in Odyssey are not class-specific (return -1 to use total level)
-        /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 @ 0x005d63d0 reads classes.2da and checks classfeat column
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
+        ///
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 @ 0x005d63d0 reads classes.2da and checks classfeat column
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
         /// </remarks>
         protected override int GetFeatClassId(int featId, object gameDataProvider)
         {
@@ -557,7 +557,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Method 1: Check classes.2da "classfeat" column
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 @ 0x005d63d0 reads "classfeat" column from classes.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005d63d0 @ 0x005d63d0 reads "classfeat" column from classes.2da
             // Each class may have a class-specific feat defined in the "classfeat" column
             // If the feat ID matches a class's classfeat value, that class is associated with the feat
             BioWare.NET.Resource.Formats.TwoDA.TwoDA classesTable = gameDataManager.GetTable("classes");
@@ -582,7 +582,7 @@ namespace Andastra.Game.Games.Odyssey.Components
             }
 
             // Method 2: Check featgain.2da to see if feat is only available through one class
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
             // If a feat appears only in one class's feat gain table and not in others, it's class-specific
             BioWare.NET.Resource.Formats.TwoDA.TwoDA featgainTable = gameDataManager.GetTable("featgain");
             if (featgainTable != null && classesTable != null)
@@ -621,7 +621,7 @@ namespace Andastra.Game.Games.Odyssey.Components
                     }
 
                     // Check if feat appears in this class's feat gain columns (_REG and _BON)
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads from "_REG" and "_BON" columns (loop 0 to 0x32 = 50)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 reads from "_REG" and "_BON" columns (loop 0 to 0x32 = 50)
                     bool foundInThisClass = false;
 
                     // Check indexed columns (_REG0, _REG1, ..., _REG49, _BON0, _BON1, ..., _BON49)
@@ -726,7 +726,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="classId">The class ID.</param>
         /// <returns>The column name prefix, or null if class ID is unknown.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 uses class column names in featgain.2da
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0060d1d0 @ 0x0060d1d0 uses class column names in featgain.2da
         /// Class column name mapping:
         /// - Soldier (0) -> "soldier"
         /// - Scout (1) -> "scout"

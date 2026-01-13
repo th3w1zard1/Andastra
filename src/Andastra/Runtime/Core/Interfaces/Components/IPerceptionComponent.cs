@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// Perception Component Interface:
     /// - Common interface for perception systems across all BioWare engines
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): PerceptionData/PerceptionList structures, FUN_005fb0f0 @ 0x005fb0f0 (swkotor2.exe), FUN_005afce0 @ 0x005afce0 (swkotor.exe)
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): PerceptionData/PerceptionList structures, 0x005fb0f0 @ 0x005fb0f0 (swkotor2.exe), 0x005afce0 @ 0x005afce0 (swkotor.exe)
     ///   - Aurora (nwmain.exe): DoPerceptionUpdateOnCreature @ 0x14038b0c0, PerceptionList/PerceptionData structures
     ///   - Eclipse (daorigins.exe, DragonAge2.exe): PerceptionClass found, uses different AI system
     ///   - Infinity (, ): DisplayPerceptionList found, squad-based perception system

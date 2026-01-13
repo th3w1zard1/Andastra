@@ -23,7 +23,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// Cross-engine analysis:
     /// - Odyssey (swkotor.exe, swkotor2.exe): Uses SoundComponent with UTS GFF templates
     ///   - SoundList @ 0x007bd080 (GIT sound list), Sound @ 0x007bc500 (sound entity type)
-    ///   - FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
+    ///   - 0x004e08e0 @ 0x004e08e0 loads sound instances from GIT
     /// - Aurora (nwmain.exe, nwn2main.exe): Uses AuroraSoundComponent with similar UTS format
     ///   - CNWSSoundObject class for sound entities
     /// - Eclipse (daorigins.exe, DragonAge2.exe): Uses EclipseSoundComponent with UTS format
@@ -37,7 +37,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     ///   - Sound entities are loaded from GIT file "SoundList" (GFFList, StructID 6) during area loading
     ///   - Sound properties loaded from GIT sound instances: Position, ResRef, and from UTS templates
     ///   - Sound properties: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, Sounds list, Hours, GeneratedType
-    ///   - Implementation: Sound entities created in area loading code (similar to Odyssey pattern at FUN_004e08e0)
+    ///   - Implementation: Sound entities created in area loading code (similar to Odyssey pattern at 0x004e08e0)
     ///   - Function addresses: Sound loading is integrated into area GIT parsing, not a separate function
     /// - DragonAge2.exe: Enhanced sound system (compatible with daorigins.exe)
     ///   - String references found: "SoundList" @ 0x00bf1a48, "Sound" @ 0x00bf8abc, "Active" @ 0x00bf85b8, "Looping" @ 0x00c0c7b4

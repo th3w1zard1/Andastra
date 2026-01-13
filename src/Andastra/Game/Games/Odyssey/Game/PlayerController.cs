@@ -47,7 +47,7 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// - Right-click: Context menu or alternative action (examine, attack, etc.)
     /// - Party members follow leader, respond to same commands (party control system)
     /// - Movement speeds: Walk speed (default 2.5 units/sec), run speed (default 5.0 units/sec, can be modified by effects)
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (player input handling and movement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (player input handling and movement)
     /// </remarks>
     public class PlayerController
     {

@@ -48,17 +48,17 @@ namespace Andastra.Runtime.Core.Save
     /// - Main save function: SerializeSaveNfo @ 0x004eb750 (located via "savenfo" @ 0x007be1f0)
     /// - Save global variables: SaveGlobalVariables @ 0x005ac670 (located via "GLOBALVARS" @ 0x007c27bc)
     /// - Save party table: SavePartyTable @ 0x0057bd70 (located via "PARTYTABLE" @ 0x007c1910)
-    /// - Load save function: FUN_00708990 @ 0x00708990 (located via "LoadSavegame" @ 0x007bdc90)
-    /// - Auto-save function: FUN_004f0c50 @ 0x004f0c50
-    /// - Load save metadata: FUN_00707290 @ 0x00707290
+    /// - Load save function: 0x00708990 @ 0x00708990 (located via "LoadSavegame" @ 0x007bdc90)
+    /// - Auto-save function: 0x004f0c50 @ 0x004f0c50
+    /// - Load save metadata: 0x00707290 @ 0x00707290
     /// </remarks>
     public class SaveSystem
     {
         private readonly IWorld _world;
         private readonly ISaveDataProvider _dataProvider;
         private object _globals; // IScriptGlobals - stored as object to avoid dependency
-        private Party.PartySystem _partySystem; // PartySystem - stored as concrete type since both are in Andastra.Runtime.Core
-        private PlotSystem _plotSystem; // PlotSystem - stored as concrete type since both are in Andastra.Runtime.Core
+        private Party.PartySystem _partySystem; // PartySystem - stored as concrete type since both are in Runtime.Core
+        private PlotSystem _plotSystem; // PlotSystem - stored as concrete type since both are in Runtime.Core
         private object _factionManager; // FactionManager - stored as object to avoid dependency on engine-specific implementation
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Andastra.Runtime.Core.Save
             saveData.SaveTime = DateTime.Now;
 
             // Save module info
-            Andastra.Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
+            Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
             if (module != null)
             {
                 saveData.CurrentModule = module.ResRef;
@@ -480,7 +480,7 @@ namespace Andastra.Runtime.Core.Save
             // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
             // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
             // This allows verification of area-to-module relationships without loading the module IFO
-            Andastra.Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
+            Runtime.Core.Interfaces.IModule module = _world.CurrentModule;
             if (module != null && !string.IsNullOrEmpty(module.ResRef))
             {
                 // Initialize the mapping for this module if not already present
@@ -593,7 +593,7 @@ namespace Andastra.Runtime.Core.Save
         /// Creates a creature state from an entity.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005226d0 @ 0x005226d0 (save creature data to GFF)
         /// Original implementation saves complete creature state including:
         /// - Position, orientation, HP, FP
         /// - Level, XP, ClassLevels, Skills, Attributes
@@ -697,7 +697,7 @@ namespace Andastra.Runtime.Core.Save
 
             // Save class levels using reflection to access CreatureComponent if available
             // Based on Odyssey CreatureComponent which has ClassList property
-            var creatureComponentType = entity.GetType().Assembly.GetType("Andastra.Runtime.Engines.Odyssey.Components.CreatureComponent");
+            var creatureComponentType = entity.GetType().Assembly.GetType("Andastra.Game.Games.Odyssey.Components.CreatureComponent");
             if (creatureComponentType != null)
             {
                 // Try to get CreatureComponent from entity using reflection
@@ -920,13 +920,13 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="saveName">Name of the save to load.</param>
         /// <returns>True if load succeeded.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
         /// Located via string reference: "LoadSavegame" @ 0x007bdc90 (also "savenfo" @ 0x007be1f0)
         /// Original implementation:
         /// 1. Reads savegame.sav ERF archive (signature "MOD V1.0")
         /// 2. Extracts and loads savenfo.res (GFF with "NFO " signature) for metadata
-        /// 3. Extracts GLOBALVARS.res (see FUN_005ac740 @ 0x005ac740) and restores global variables
-        /// 4. Extracts PARTYTABLE.res (see FUN_0057dcd0 @ 0x0057dcd0) and restores party state
+        /// 3. Extracts GLOBALVARS.res (see 0x005ac740 @ 0x005ac740) and restores global variables
+        /// 4. Extracts PARTYTABLE.res (see 0x0057dcd0 @ 0x0057dcd0) and restores party state
         /// 5. Loads module state files (entity positions, door/placeable states)
         /// 6. Progress updates at 5%, 10%, 15%, 20%, 25%, 30%, 50% completion
         /// </remarks>
@@ -999,7 +999,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Restore global variables from save data
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac740 @ 0x005ac740
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005ac740 @ 0x005ac740
         // Located via string reference: "GLOBALVARS" @ 0x007c27bc
         // Original implementation: Reads GFF file from "SAVES:\{saveName}\GLOBALVARS", restores all global int/bool/string variables
         // Uses reflection to call SetGlobalInt, SetGlobalBool, SetGlobalString methods on ScriptGlobals
@@ -1043,7 +1043,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Restore party member list and selection state
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0
         // Located via string reference: "PARTYTABLE" @ 0x007c1910
         // Original implementation: Reads GFF file with "PT  " signature, restores party members, puppets, available NPCs,
         // influence values, gold, XP pool, solo mode flag, and various game state flags
@@ -1148,7 +1148,7 @@ namespace Andastra.Runtime.Core.Save
         /// Restores creature state to an entity.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
         /// Original implementation restores complete creature state including:
         /// - Position, orientation, HP, FP
         /// - Level, XP, ClassLevels, Skills, Attributes
@@ -1237,7 +1237,7 @@ namespace Andastra.Runtime.Core.Save
 
             // Restore class levels using reflection to access CreatureComponent if available
             // Based on Odyssey CreatureComponent which has ClassList property
-            var creatureComponentType = entity.GetType().Assembly.GetType("Andastra.Runtime.Engines.Odyssey.Components.CreatureComponent");
+            var creatureComponentType = entity.GetType().Assembly.GetType("Andastra.Game.Games.Odyssey.Components.CreatureComponent");
             if (creatureComponentType != null)
             {
                 // Try to get CreatureComponent from entity using reflection
@@ -1255,7 +1255,7 @@ namespace Andastra.Runtime.Core.Save
                             if (classList != null)
                             {
                                 classList.Clear();
-                                var classType = System.Type.GetType("Andastra.Runtime.Engines.Odyssey.Components.CreatureClass");
+                                var classType = System.Type.GetType("Andastra.Game.Games.Odyssey.Components.CreatureClass");
                                 if (classType != null)
                                 {
                                     foreach (ClassLevel classLevel in state.ClassLevels)
@@ -1442,7 +1442,7 @@ namespace Andastra.Runtime.Core.Save
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item data restored from PARTYTABLE.res
         /// Creates item entity from template ResRef and restores stack size, charges, identified flag, and upgrades
         /// Uses EntityFactory to create items from templates (via reflection to avoid direct dependency)
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
         /// Original implementation: Items restored from save files with all properties (StackSize, Charges, Identified, Upgrades)
         /// </remarks>
         private IEntity RestoreItemFromState(ItemState itemState)
@@ -1623,7 +1623,7 @@ namespace Andastra.Runtime.Core.Save
             // Fallback: Create new EntityFactory instance
             // Based on Odyssey EntityFactory: new Loading.EntityFactory()
             // Use reflection to create instance to avoid direct dependency
-            var entityFactoryTypeName = "Andastra.Runtime.Games.Odyssey.Loading.EntityFactory";
+            var entityFactoryTypeName = "Runtime.Games.Odyssey.Loading.EntityFactory";
             var entityFactoryType = System.Type.GetType(entityFactoryTypeName);
             if (entityFactoryType != null)
             {
@@ -1644,7 +1644,7 @@ namespace Andastra.Runtime.Core.Save
         /// Gets parsing Module from IModule interface.
         /// </summary>
         /// <returns>Parsing Module instance or null if conversion not possible.</returns>
-        private object GetParsingModule(Andastra.Runtime.Core.Interfaces.IModule module)
+        private object GetParsingModule(Runtime.Core.Interfaces.IModule module)
         {
             if (module == null)
             {
@@ -1945,7 +1945,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Get the module to check
-            Andastra.Runtime.Core.Interfaces.IModule module = null;
+            Runtime.Core.Interfaces.IModule module = null;
 
             // First, check if the current module matches
             if (_world.CurrentModule != null &&

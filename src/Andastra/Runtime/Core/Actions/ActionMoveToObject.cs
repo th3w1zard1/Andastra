@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Core.Actions
     /// <remarks>
     /// Move To Object Action:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) movement action system
-    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - Original implementation: 0x00508260 @ 0x00508260 (load ActionList from GFF)
     /// - Located via string reference: "ActionList" @ 0x007bebdc, "MOVETO" @ 0x007b6b24
     /// - Moves actor towards target object within specified range
     /// - Uses direct movement (no pathfinding) - follows target if it moves
@@ -63,7 +63,7 @@ namespace Andastra.Runtime.Core.Actions
         /// - Uses reflection to instantiate engine-specific collision detector classes
         /// - Falls back to DefaultCreatureCollisionDetector if engine type cannot be determined
         /// - Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe collision systems
-        /// - Original implementation: FUN_005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
+        /// - Original implementation: 0x005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
         /// </remarks>
         private BaseCreatureCollisionDetector GetOrCreateCollisionDetector(IWorld world)
         {
@@ -88,19 +88,19 @@ namespace Andastra.Runtime.Core.Actions
             // Check for Odyssey engine (KOTOR games)
             if (worldNamespace.Contains("Odyssey"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Odyssey.Collision";
+                detectorNamespace = "Runtime.Games.Odyssey.Collision";
                 detectorTypeName = "OdysseyCreatureCollisionDetector";
             }
             // Check for Aurora engine (NWN games)
             else if (worldNamespace.Contains("Aurora"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Aurora.Collision";
+                detectorNamespace = "Runtime.Games.Aurora.Collision";
                 detectorTypeName = "AuroraCreatureCollisionDetector";
             }
             // Check for Eclipse engine (Dragon Age games)
             else if (worldNamespace.Contains("Eclipse"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Eclipse.Collision";
+                detectorNamespace = "Runtime.Games.Eclipse.Collision";
                 detectorTypeName = "EclipseCreatureCollisionDetector";
             }
 
@@ -231,9 +231,9 @@ namespace Andastra.Runtime.Core.Actions
             //   - Position tracking: Current position at offsets 0x25 (X), 0x26 (Y), 0x27 (Z) in entity structure
             //   - Orientation: Facing stored at offsets 0x28 (X), 0x29 (Y), 0x2a (Z) as direction vector
             //   - Distance calculation: Uses 2D distance (X/Z plane, ignores Y) for movement calculations
-            //   - Walkmesh projection: Projects position to walkmesh surface using FUN_004f5070 (walkmesh height lookup)
-            //   - Direction normalization: Uses FUN_004d8390 to normalize direction vectors
-            //   - Creature collision: Checks for collisions with other creatures along movement path using FUN_005479f0
+            //   - Walkmesh projection: Projects position to walkmesh surface using 0x004f5070 (walkmesh height lookup)
+            //   - Direction normalization: Uses 0x004d8390 to normalize direction vectors
+            //   - Creature collision: Checks for collisions with other creatures along movement path using 0x005479f0
             //   - Bump counter: Tracks number of creature bumps (stored at offset 0x268 in entity structure)
             //   - Maximum bumps: If bump count exceeds 5, aborts movement and clears path (frees path array, sets path length to 0)
             //   - Total blocking: If same creature blocks repeatedly (local_c0 == entity ID at offset 0x254), aborts movement
@@ -271,10 +271,10 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 currentPosition = transform.Position;
             Vector3 newPosition = currentPosition + direction2 * moveDistance;
 
-            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
-            // Original implementation: FUN_004f5070 projects 3D position to walkmesh surface height
+            // Original implementation: 0x004f5070 projects 3D position to walkmesh surface height
             IArea area = actor.World.CurrentArea;
             if (area != null && area.NavigationMesh != null)
             {
@@ -290,24 +290,24 @@ namespace Andastra.Runtime.Core.Actions
             BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(actor.World);
 
             // Check for creature collisions along movement path
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005479f0 @ 0x005479f0 checks for creature collisions
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005479f0 @ 0x005479f0 checks for creature collisions
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
             //   - "aborted walking, Maximum number of bumps happened" @ 0x007c0458
-            // Original implementation: FUN_005479f0 checks if movement path intersects with other creatures
-            // Function signature: `undefined4 FUN_005479f0(void *this, float *param_1, float *param_2, undefined4 *param_3, uint *param_4)`
+            // Original implementation: 0x005479f0 checks if movement path intersects with other creatures
+            // Function signature: `undefined4 0x005479f0(void *this, float *param_1, float *param_2, undefined4 *param_3, uint *param_4)`
             // param_1: Start position (float[3])
             // param_2: End position (float[3])
             // param_3: Output collision normal (float[3]) or null
             // param_4: Output blocking creature ObjectId (uint) or null
             // Returns: 0 if collision detected, 1 if path is clear
-            // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
+            // Uses 0x004e17a0 and 0x004f5290 for collision detection with creature bounding boxes
             // Implementation: Uses proper bounding box collision detection (not simplified radius-based check)
             // - GetCreatureBoundingBox() retrieves engine-specific bounding boxes from appearance.2da hitradius
             // - CheckLineSegmentVsBoundingBox() performs line-segment vs axis-aligned bounding box intersection
             // - Uses Minkowski sum to expand creature bounding box by actor's bounding box for accurate collision
-            // - Matches original engine behavior: FUN_005479f0 uses bounding box width/height from entity structure
+            // - Matches original engine behavior: 0x005479f0 uses bounding box width/height from entity structure
             // - K1 (swkotor.exe): Radius at offset +8 from bounding box pointer (0x340)
             // - K2 (swkotor2.exe): Width at +0x14, height at +0xbc from bounding box pointer (0x380)
             // Exclude target object from collision checking (we're moving towards it)
@@ -428,7 +428,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Could not find path around obstacle - action fails
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If FUN_0054a1f0 returns null, movement is aborted
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If 0x0054a1f0 returns null, movement is aborted
                 return ActionStatus.Failed;
             }
 
@@ -447,12 +447,12 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Collision Radius Calculation:
-        /// - Based on swkotor.exe and swkotor2.exe reverse engineering via Ghidra MCP
-        /// - K1 (swkotor.exe): FUN_004ed6e0 @ 0x004ed6e0 updates bounding box from appearance.2da
+        /// - Based on swkotor.exe and swkotor2.exe further analysis
+        /// - K1 (swkotor.exe): 0x004ed6e0 @ 0x004ed6e0 updates bounding box from appearance.2da
         ///   - Radius stored at offset +8 from bounding box pointer (at offset 0x340)
-        ///   - FUN_004f1310 @ 0x004f1310: `*(float *)(*(int *)(iVar3 + 0x340) + 8)` gets radius for collision distance
+        ///   - 0x004f1310 @ 0x004f1310: `*(float *)(*(int *)(iVar3 + 0x340) + 8)` gets radius for collision distance
         ///   - Uses appearance.2da HITRADIUS column, defaults to 0.6f (0x3f19999a) if not found
-        /// - K2 (swkotor2.exe): FUN_005479f0 @ 0x005479f0 uses width at +0x14 and height at +0xbc
+        /// - K2 (swkotor2.exe): 0x005479f0 @ 0x005479f0 uses width at +0x14 and height at +0xbc
         ///   - Width and depth are half-extents, radius is typically max(width, depth) for horizontal collision
         /// - Implementation: Uses collision detector's GetCreatureBoundingBoxPublic to get engine-specific bounding box
         ///   - Derives radius as maximum of width and depth (horizontal extent)
@@ -470,8 +470,8 @@ namespace Andastra.Runtime.Core.Actions
             BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(world);
 
             // Use collision detector to get bounding box (handles engine-specific logic)
-            // Based on swkotor.exe: FUN_004f1310 gets radius from bounding box at offset +8
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005479f0 uses width at +0x14 for collision
+            // Based on swkotor.exe: 0x004f1310 gets radius from bounding box at offset +8
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005479f0 uses width at +0x14 for collision
             CreatureBoundingBox boundingBox = collisionDetector.GetCreatureBoundingBoxPublic(entity);
 
             // Derive radius from bounding box

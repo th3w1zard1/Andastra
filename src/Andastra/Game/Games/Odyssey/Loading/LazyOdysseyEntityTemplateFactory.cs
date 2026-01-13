@@ -18,9 +18,9 @@ namespace Andastra.Game.Games.Odyssey.Loading
     ///   before the module is loaded. This matches the original engine behavior where template creation requires module resources.
     /// - Based on swkotor.exe and swkotor2.exe entity creation systems
     /// - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
-    /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 (swkotor2.exe) loads creature templates from GFF
-    /// - swkotor.exe: FUN_0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
-    /// - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature templates, FUN_005fb0f0 @ 0x005fb0f0 loads template data
+    /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 (swkotor2.exe) loads creature templates from GFF
+    /// - swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
+    /// - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
     /// - Original implementation: Creates runtime entities from UTC GFF templates
     /// - This implementation wraps EntityFactory to provide Core-compatible interface
     /// - Module is retrieved lazily from ModuleLoader when CreateCreatureFromTemplate is called

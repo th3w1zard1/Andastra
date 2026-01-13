@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Andastra.Runtime.Core.AI;
 using Andastra.Runtime.Core.Animation;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
@@ -69,7 +68,7 @@ namespace Andastra.Game.Games.Common
         /// <summary>
         /// The current module.
         /// </summary>
-        public abstract Andastra.Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
+        public abstract Runtime.Core.Interfaces.IModule CurrentModule { get; set; }
 
         /// <summary>
         /// The simulation time manager.
@@ -84,32 +83,32 @@ namespace Andastra.Game.Games.Common
         /// <summary>
         /// The effect system for managing entity effects.
         /// </summary>
-        public abstract Andastra.Runtime.Core.Combat.EffectSystem EffectSystem { get; }
+        public abstract EffectSystem EffectSystem { get; }
 
         /// <summary>
         /// The perception system for sight/hearing checks.
         /// </summary>
-        public abstract Andastra.Runtime.Core.Perception.PerceptionSystem PerceptionSystem { get; }
+        public abstract PerceptionSystem PerceptionSystem { get; }
 
         /// <summary>
         /// The combat system for combat resolution.
         /// </summary>
-        public abstract Andastra.Runtime.Core.Combat.CombatSystem CombatSystem { get; }
+        public abstract CombatSystem CombatSystem { get; }
 
         /// <summary>
         /// The trigger system for trigger volume events.
         /// </summary>
-        public abstract Andastra.Runtime.Core.Triggers.TriggerSystem TriggerSystem { get; }
+        public abstract TriggerSystem TriggerSystem { get; }
 
         /// <summary>
         /// The AI controller for NPC behavior.
         /// </summary>
-        public abstract Andastra.Runtime.Core.AI.AIController AIController { get; }
+        public abstract Runtime.Core.AI.AIController AIController { get; }
 
         /// <summary>
         /// The animation system for updating entity animations.
         /// </summary>
-        public abstract Andastra.Runtime.Core.Animation.AnimationSystem AnimationSystem { get; }
+        public abstract AnimationSystem AnimationSystem { get; }
 
         /// <summary>
         /// The game data provider for accessing engine-agnostic game data tables.
@@ -119,7 +118,7 @@ namespace Andastra.Game.Games.Common
         /// appearance data, and other game configuration data.
         /// Engine-specific implementations handle the actual table loading and lookup.
         /// </remarks>
-        public abstract Core.Interfaces.IGameDataProvider GameDataProvider { get; }
+        public abstract Runtime.Core.Interfaces.IGameDataProvider GameDataProvider { get; }
 
 
         /// <summary>
@@ -304,7 +303,7 @@ namespace Andastra.Game.Games.Common
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module object ID constant
         /// Located via string references: "GetModule" NWScript function, module object references
         /// </remarks>
-        public virtual uint GetModuleId(Andastra.Runtime.Core.Interfaces.IModule module)
+        public virtual uint GetModuleId(Runtime.Core.Interfaces.IModule module)
         {
             if (module == null)
                 return 0;

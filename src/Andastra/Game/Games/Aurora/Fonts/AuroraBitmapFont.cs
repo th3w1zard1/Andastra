@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
-using BioWare.NET;
-using BioWare.NET.Resource.Formats.TPC;
-using BioWare.NET.Resource.Formats.TXI;
-using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Graphics.MonoGame.Converters;
-using Andastra.Game.Graphics.MonoGame.Textures;
 using Andastra.Game.Graphics.MonoGame.Graphics;
-using JetBrains.Annotations;
+using BioWare.NET.Common;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.TXI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using JetBrains.Annotations;
+using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
 namespace Andastra.Game.Games.Aurora.Fonts
 {
@@ -38,7 +36,7 @@ namespace Andastra.Game.Games.Aurora.Fonts
     /// </remarks>
     public class AuroraBitmapFont : BaseBitmapFont
     {
-        private readonly Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D _texture;
+        private readonly MonoGameTexture2D _texture;
         private readonly Dictionary<int, CharacterInfo> _characterMap;
         private readonly TXIFeatures _fontMetrics;
         private readonly float _fontHeight;
@@ -52,7 +50,7 @@ namespace Andastra.Game.Games.Aurora.Fonts
         /// <summary>
         /// Gets the font texture.
         /// </summary>
-        public override Andastra.Runtime.Graphics.ITexture2D Texture => _texture;
+        public override Runtime.Graphics.ITexture2D Texture => _texture;
 
         /// <summary>
         /// Gets the font height in pixels.
@@ -112,7 +110,7 @@ namespace Andastra.Game.Games.Aurora.Fonts
         /// <param name="graphicsDevice">The graphics device for texture creation.</param>
         /// <returns>The loaded bitmap font, or null if loading failed.</returns>
         [CanBeNull]
-        public static AuroraBitmapFont Load([NotNull] string fontResRef, [NotNull] Installation installation, [NotNull] Andastra.Runtime.Graphics.IGraphicsDevice graphicsDevice)
+        public static AuroraBitmapFont Load([NotNull] string fontResRef, [NotNull] Installation installation, [NotNull] Runtime.Graphics.IGraphicsDevice graphicsDevice)
         {
             if (string.IsNullOrEmpty(fontResRef))
             {
@@ -208,7 +206,7 @@ namespace Andastra.Game.Games.Aurora.Fonts
         /// <summary>
         /// Private constructor for creating an AuroraBitmapFont instance.
         /// </summary>
-        private AuroraBitmapFont([NotNull] Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D texture, [NotNull] TXIFeatures fontMetrics, string fontResRef)
+        private AuroraBitmapFont([NotNull] MonoGameTexture2D texture, [NotNull] TXIFeatures fontMetrics, string fontResRef)
         {
             if (texture == null)
             {

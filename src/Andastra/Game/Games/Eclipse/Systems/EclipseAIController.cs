@@ -7,9 +7,10 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Common;
+using Andastra.Runtime.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Eclipse.Systems
+namespace Andastra.Game.Games.Engines.Eclipse.Systems
 {
     /// <summary>
     /// AI controller system for NPCs in Eclipse engine (Dragon Age series,  series).

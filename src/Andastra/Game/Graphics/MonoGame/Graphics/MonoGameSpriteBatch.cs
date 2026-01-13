@@ -1,5 +1,5 @@
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Game.Graphics.MonoGame.Graphics
@@ -19,7 +19,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _spriteBatch = spriteBatch ?? throw new System.ArgumentNullException(nameof(spriteBatch));
         }
 
-        public void Begin(Andastra.Runtime.Graphics.SpriteSortMode sortMode = Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Andastra.Runtime.Graphics.BlendState blendState = null)
+        public void Begin(Andastra.Runtime.Graphics.SpriteSortMode sortMode = Andastra.Runtime.Graphics.SpriteSortMode.Deferred, Runtime.Graphics.BlendState blendState = null)
         {
             if (_isBegun)
             {
@@ -44,7 +44,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _isBegun = false;
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var mgTexture = GetMonoGameTexture(texture);
@@ -52,7 +52,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _spriteBatch.Draw(mgTexture, new Microsoft.Xna.Framework.Vector2(position.X, position.Y), mgColor);
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Color color)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var mgTexture = GetMonoGameTexture(texture);
@@ -61,7 +61,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _spriteBatch.Draw(mgTexture, mgRect, mgColor);
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var mgTexture = GetMonoGameTexture(texture);
@@ -75,7 +75,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _spriteBatch.Draw(mgTexture, new Microsoft.Xna.Framework.Vector2(position.X, position.Y), mgRect, mgColor);
         }
 
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Andastra.Runtime.Graphics.SpriteEffects effects, float layerDepth)
+        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Rectangle destinationRectangle, Andastra.Runtime.Graphics.Rectangle? sourceRectangle, Andastra.Runtime.Graphics.Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, Runtime.Graphics.SpriteEffects effects, float layerDepth)
         {
             EnsureBegun();
             var mgTexture = GetMonoGameTexture(texture);
@@ -92,7 +92,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _spriteBatch.Draw(mgTexture, mgDestRect, mgSrcRect, mgColor, rotation, mgOrigin, mgEffects, layerDepth);
         }
 
-        public void DrawString(IFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Andastra.Runtime.Graphics.Color color)
+        public void DrawString(IFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Runtime.Graphics.Color color)
         {
             EnsureBegun();
             var mgFont = GetMonoGameFont(font);
@@ -126,26 +126,26 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             throw new System.ArgumentException("Font must be a MonoGameFont", nameof(font));
         }
 
-        private Microsoft.Xna.Framework.Graphics.SpriteSortMode ConvertSortMode(Andastra.Runtime.Graphics.SpriteSortMode sortMode)
+        private Microsoft.Xna.Framework.Graphics.SpriteSortMode ConvertSortMode(Runtime.Graphics.SpriteSortMode sortMode)
         {
             switch (sortMode)
             {
-                case Andastra.Runtime.Graphics.SpriteSortMode.Deferred:
+                case Runtime.Graphics.SpriteSortMode.Deferred:
                     return Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred;
-                case Andastra.Runtime.Graphics.SpriteSortMode.Immediate:
+                case Runtime.Graphics.SpriteSortMode.Immediate:
                     return Microsoft.Xna.Framework.Graphics.SpriteSortMode.Immediate;
-                case Andastra.Runtime.Graphics.SpriteSortMode.Texture:
+                case Runtime.Graphics.SpriteSortMode.Texture:
                     return Microsoft.Xna.Framework.Graphics.SpriteSortMode.Texture;
-                case Andastra.Runtime.Graphics.SpriteSortMode.BackToFront:
+                case Runtime.Graphics.SpriteSortMode.BackToFront:
                     return Microsoft.Xna.Framework.Graphics.SpriteSortMode.BackToFront;
-                case Andastra.Runtime.Graphics.SpriteSortMode.FrontToBack:
+                case Runtime.Graphics.SpriteSortMode.FrontToBack:
                     return Microsoft.Xna.Framework.Graphics.SpriteSortMode.FrontToBack;
                 default:
                     return Microsoft.Xna.Framework.Graphics.SpriteSortMode.Deferred;
             }
         }
 
-        private Microsoft.Xna.Framework.Graphics.BlendState ConvertBlendState(Andastra.Runtime.Graphics.BlendState blendState)
+        private Microsoft.Xna.Framework.Graphics.BlendState ConvertBlendState(Runtime.Graphics.BlendState blendState)
         {
             if (blendState == null)
             {
@@ -165,14 +165,14 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             return Microsoft.Xna.Framework.Graphics.BlendState.Opaque;
         }
 
-        private Microsoft.Xna.Framework.Graphics.SpriteEffects ConvertSpriteEffects(Andastra.Runtime.Graphics.SpriteEffects effects)
+        private Microsoft.Xna.Framework.Graphics.SpriteEffects ConvertSpriteEffects(Runtime.Graphics.SpriteEffects effects)
         {
             Microsoft.Xna.Framework.Graphics.SpriteEffects result = Microsoft.Xna.Framework.Graphics.SpriteEffects.None;
-            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
+            if ((effects & Runtime.Graphics.SpriteEffects.FlipHorizontally) != 0)
             {
                 result |= Microsoft.Xna.Framework.Graphics.SpriteEffects.FlipHorizontally;
             }
-            if ((effects & Andastra.Runtime.Graphics.SpriteEffects.FlipVertically) != 0)
+            if ((effects & Runtime.Graphics.SpriteEffects.FlipVertically) != 0)
             {
                 result |= Microsoft.Xna.Framework.Graphics.SpriteEffects.FlipVertically;
             }

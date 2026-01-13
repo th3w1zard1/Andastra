@@ -30,8 +30,8 @@ namespace Andastra.Game.Games.Common
     /// - Engine-specific: 2DA file names, upgrade slot counts, UI implementation details
     ///
     /// Based on reverse engineering of:
-    /// - swkotor.exe: FUN_006c7630 (constructor), FUN_006c6500 (button handler), FUN_006c59a0 (ApplyUpgrade)
-    /// - swkotor2.exe: FUN_00731a00 (constructor), FUN_0072e260 (button handler), FUN_00729640 (ApplyUpgrade)
+    /// - swkotor.exe: 0x006c7630 (constructor), 0x006c6500 (button handler), 0x006c59a0 (ApplyUpgrade)
+    /// - swkotor2.exe: 0x00731a00 (constructor), 0x0072e260 (button handler), 0x00729640 (ApplyUpgrade)
     /// - daorigins.exe: ItemUpgrade, GUIItemUpgrade, COMMAND_OPENITEMUPGRADEGUI
     /// - DragonAge2.exe: ItemUpgrade, GUIItemUpgrade, UpgradePrereqType, GetAbilityUpgradedValue
     ///
@@ -407,7 +407,7 @@ namespace Andastra.Game.Games.Common
         /// <remarks>
         /// Item Stat Recalculation:
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stats are recalculated after applying/removing upgrades
-        /// - Located via string references: Item stat calculation in upgrade system (FUN_00729640 @ 0x00729640)
+        /// - Located via string references: Item stat calculation in upgrade system (0x00729640 @ 0x00729640)
         /// - Original implementation: Base item stats from baseitems.2da + cumulative property bonuses from itempropdef.2da
         /// - Stats calculated: Damage bonuses, AC bonuses, attack bonuses, saving throw bonuses, skill bonuses, ability bonuses
         /// - Calculated stats are stored on item entity for UI display and combat calculations
@@ -430,7 +430,7 @@ namespace Andastra.Game.Games.Common
             // Get base item stats from baseitems.2da
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats loaded from baseitems.2da via GameDataProvider
             // Located via string references: "baseitems" @ 0x007c4594, "BASEITEMS" @ 0x007c4594
-            // Original implementation: FUN_005fb0f0 loads base item data from baseitems.2da
+            // Original implementation: 0x005fb0f0 loads base item data from baseitems.2da
             int baseItemId = itemComponent.BaseItem;
             if (baseItemId < 0)
             {

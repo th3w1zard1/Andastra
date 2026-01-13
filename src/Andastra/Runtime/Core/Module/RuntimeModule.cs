@@ -32,8 +32,8 @@ namespace Andastra.Runtime.Core.Module
     /// - ":: Server mode: Module Loaded.\n" @ 0x007cbc68
     /// - Windows API: GetModuleHandleA, GetModuleFileNameA (module handle/file name functions)
     /// - IFO file format: GFF with "IFO " signature containing module metadata
-    /// - Module loading: FUN_00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
-    /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES
+    /// - Module loading: 0x00708990 @ 0x00708990 (loads module, sets up areas, spawns entities)
+    /// - 0x00633270 @ 0x00633270 sets up all game directories including MODULES
     /// - Original implementation stores module data in IFO file, references areas by ResRef
     /// 
     /// Module Loading Sequence:
@@ -49,7 +49,7 @@ namespace Andastra.Runtime.Core.Module
     /// 
     /// Based on IFO file format documentation in vendor/PyKotor/wiki/GFF-IFO.md.
     /// </remarks>
-    public class RuntimeModule : Andastra.Runtime.Core.Interfaces.IModule
+    public class RuntimeModule : Runtime.Core.Interfaces.IModule
     {
         private readonly Dictionary<string, RuntimeArea> _areas;
         private readonly Dictionary<ScriptEvent, string> _scripts;

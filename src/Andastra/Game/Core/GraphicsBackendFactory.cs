@@ -37,7 +37,7 @@ namespace Andastra.Game.Core
                 switch (backendType)
                 {
                     case GraphicsBackendType.MonoGame:
-                        return new MonoGame.Graphics.MonoGameGraphicsBackend();
+                        return new Andastra.Game.Graphics.MonoGame.Graphics.MonoGameGraphicsBackend();
                     case GraphicsBackendType.Stride:
                         return new Stride.Graphics.StrideGraphicsBackend();
                     case GraphicsBackendType.OdysseyEngine:

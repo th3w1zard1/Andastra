@@ -1,6 +1,6 @@
 using System;
 using BioWare.NET.Resource.Formats.TPC;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using StrideGraphics = global::Stride.Graphics;

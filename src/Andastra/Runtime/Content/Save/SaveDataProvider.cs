@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Content.Save
     /// </summary>
     /// <remarks>
     /// KOTOR Save Structure:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750 (save metadata serialization), FUN_00708990 @ 0x00708990 (save file operations)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750 (save metadata serialization), 0x00708990 @ 0x00708990 (save file operations)
     /// - Located via string references: "SAVES:" @ 0x007be284 (save directory prefix), "savenfo" @ 0x007be1f0 (save metadata file name)
     /// - "SAVEGAME" @ 0x007be28c (save game file name), "SAVENUMBER" @ 0x007be188 (save number field)
     /// - "SAVEGAMENAME" @ 0x007be1a8 (save game name field), "SAVES:\{saveName}\" (save path format)
@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Content.Save
     /// - "BTN_LASTSAVE" @ 0x007c8db0 (last save button), "SaveLoad" @ 0x007cb2ac (save/load constant)
     /// - "CB_AUTOSAVE" @ 0x007d2918 (auto-save checkbox), "Old Save Game" @ 0x007cea24 (old save game message)
     /// - Save structure: saves/[SaveName]/
-    ///   - savenfo.res      - Save metadata (GFF with "NFO " signature) - FUN_004eb750 writes this
+    ///   - savenfo.res      - Save metadata (GFF with "NFO " signature) - 0x004eb750 writes this
     ///   - savegame.sav     - ERF archive with "MOD V1.0" signature containing:
     ///     - GLOBALVARS.res - Global variables (GFF with "VAR " signature)
     ///     - PARTYTABLE.res - Party state (GFF with "PT  " signature)
@@ -75,7 +75,7 @@ namespace Andastra.Runtime.Content.Save
         /// Gets the path to a specific save folder.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
         /// Original implementation constructs path as "SAVES:\{saveName}\"
         /// Save name format: "%06d - %s" (6-digit number - name) from string @ 0x007be298
         /// </remarks>
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Content.Save
         /// Formats save name in original engine format: "%06d - %s"
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
         /// Located via string reference: "%06d - %s" @ 0x007be298
         /// Original uses 6-digit zero-padded number followed by " - " and save name
         /// </remarks>
@@ -104,7 +104,7 @@ namespace Andastra.Runtime.Content.Save
         /// Gets the path to the slot folder for numbered saves.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00708990 @ 0x00708990
         /// Original uses format "%06d - %s" for save names
         /// </remarks>
         private string GetSlotPath(int slotNumber)
@@ -248,7 +248,7 @@ namespace Andastra.Runtime.Content.Save
         #region File Operations
 
         // Write save metadata to savenfo.res
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
         // Located via string reference: "savenfo" @ 0x007be1f0
         // Original implementation: Constructs path "SAVES:\{saveName}\savenfo", writes GFF with "NFO " signature
         private void WriteSaveNfo(string savePath, SaveGameData saveData)
@@ -266,7 +266,7 @@ namespace Andastra.Runtime.Content.Save
         }
 
         // Write save archive to savegame.sav
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004eb750 @ 0x004eb750
         // Located via string reference: "SAVEGAME" @ 0x007be28c, "MOD V1.0" @ 0x007be0d4
         // Original implementation: Constructs path "SAVES:\{saveName}\SAVEGAME", writes ERF with "MOD V1.0" signature
         private void WriteSaveArchive(string savePath, SaveGameData saveData)

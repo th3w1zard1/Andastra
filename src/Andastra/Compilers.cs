@@ -1,4 +1,3 @@
-extern alias ResourceNCS; // Must be first - before all using statements
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,13 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using BioWare.NET;
 using BioWare.NET.Common;
-using BioWare.NET.Resource.Formats.NCS.Compiler;
 using JetBrains.Annotations;
-using NCS = ResourceNCS::BioWare.NET.Resource.Formats.NCS.NCS;
-// NCSOptimizer comes from Resource project (not ResourceNCS) to match base class
-// Using fully qualified name to avoid ambiguity with ResourceNCS
+using NCS = BioWare.NET.Resource.Formats.NCS.NCS;
 using NCSOptimizer = BioWare.NET.Resource.Formats.NCS.NCSOptimizer;
 
 namespace Andastra

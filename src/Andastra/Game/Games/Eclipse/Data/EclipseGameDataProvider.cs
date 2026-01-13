@@ -16,7 +16,7 @@ namespace Andastra.Game.Games.Eclipse.Data
     /// - Uses EclipseTwoDATableManager to access 2DA tables (appearance.2da, baseitems.2da, etc.)
     /// - Wraps EclipseTwoDATableManager to provide engine-agnostic interface
     /// - Cross-engine analysis:
-    ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses GameDataManager for 2DA access, FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup), FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
+    ///   - Odyssey (swkotor.exe, swkotor2.exe): Uses GameDataManager for 2DA access, 0x0041d2c0 @ 0x0041d2c0 (2DA table lookup), 0x0065a380 @ 0x0065a380 (GetCreatureRadius)
     ///   - Aurora (nwmain.exe): Uses C2DA class for 2DA access, C2DA::Load2DArray @ 0x1401a73a0
     ///   - Eclipse: Uses same Installation.Resources.LookupResource pattern as Odyssey/Aurora
     /// </remarks>
@@ -54,7 +54,7 @@ namespace Andastra.Game.Games.Eclipse.Data
         ///   - Size 2 (Large): 0.7
         ///   - Size 3 (Huge): 1.0
         ///   - Size 4 (Gargantuan): 1.5
-        /// - Cross-engine pattern: Same as Odyssey (swkotor2.exe: FUN_0065a380 @ 0x0065a380) and Aurora
+        /// - Cross-engine pattern: Same as Odyssey (swkotor2.exe: 0x0065a380 @ 0x0065a380) and Aurora
         /// </remarks>
         public float GetCreatureRadius(int appearanceType, float defaultRadius = 0.5f)
         {
@@ -120,7 +120,7 @@ namespace Andastra.Game.Games.Eclipse.Data
         /// <remarks>
         /// Based on Eclipse engine: Looks up float value from 2DA table by row index and column name
         /// - Uses EclipseTwoDATableManager to access 2DA tables
-        /// - Cross-engine pattern: Same as Odyssey (swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0) and Aurora
+        /// - Cross-engine pattern: Same as Odyssey (swkotor2.exe: 0x0041d2c0 @ 0x0041d2c0) and Aurora
         /// </remarks>
         public float GetTableFloat(string tableName, int rowIndex, string columnName, float defaultValue = 0.0f)
         {

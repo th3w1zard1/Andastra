@@ -6,7 +6,7 @@ using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 
 namespace Andastra.Game.Scripting.EngineApi
 {
@@ -17,11 +17,11 @@ namespace Andastra.Game.Scripting.EngineApi
     /// Base Engine API:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript engine API system
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
-    /// - "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString function debug output format)
-    /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
-    /// - PrintString implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format)
-    /// - ActionList loading: FUN_00508260 @ 0x00508260 (loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
-    ///   - Original implementation (from decompiled FUN_00508260):
+    /// - "PRINTSTRING: %s\n" @ (K1: TODO: Find this address, TSL: 0x007c29f8) (PrintString function debug output format)
+    /// - "ActionList" @ (K1: TODO: Find this address, TSL: 0x007bebdc) (action list GFF field), "ActionId" @ (K1: TODO: Find this address, TSL: 0x007bebd0), "ActionType" @ (K1: TODO: Find this address, TSL: 0x007bf7f8)
+    /// - PrintString implementation: [0x005c4ff0] @ (K1: TODO: Find this address, TSL: 0x005c4ff0) (prints string with "PRINTSTRING: %s\n" format)
+    /// - ActionList loading: [0x00508260] @ (K1: TODO: Find this address, TSL: 0x00508260) - loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
+    ///   - Original implementation (from decompiled 0x00508260):
     ///     - Reads "ActionList" list from GFF structure
     ///     - For each action entry, reads:
     ///       - ActionId (int32): Action type identifier
@@ -30,7 +30,7 @@ namespace Andastra.Game.Scripting.EngineApi
     ///       - Paramaters (list): Parameter list with Type and Value fields
     ///     - Parameter types: 1 = int, 2 = float, 3 = int (signed), 4 = string, 5 = object
     ///     - Parameter values: Stored as Type-specific values (int, float, string, object)
-    ///     - Calls FUN_00507fd0 to create action from parsed parameters
+    ///     - Calls 0x00507fd0 to create action from parsed parameters
     ///     - Cleans up allocated parameter memory after action creation
     /// - Original implementation: Common NWScript functions shared between K1 and K2
     /// - Object constants: OBJECT_INVALID (0x7F000000), OBJECT_SELF (0x7F000001)
@@ -117,23 +117,23 @@ namespace Andastra.Game.Scripting.EngineApi
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): PrintString implementation
         /// Located via string references: "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output format)
-        /// Original implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format to console/log)
-        ///   - Original implementation (from decompiled FUN_005c4ff0):
-        ///     - Function signature: `undefined4 FUN_005c4ff0(undefined4 param_1, int param_2)`
+        /// Original implementation: 0x005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format to console/log)
+        ///   - Original implementation (from decompiled 0x005c4ff0):
+        ///     - Function signature: `undefined4 0x005c4ff0(undefined4 param_1, int param_2)`
         ///     - param_1: Execution context pointer
         ///     - param_2: Parameter count (requires at least 2 parameters for valid call)
         ///     - Parameter validation: If param_2 < 2, skips parameter reading and uses default format
-        ///     - Parameter reading: Calls FUN_0061cc20 to read parameter value from execution context
+        ///     - Parameter reading: Calls 0x0061cc20 to read parameter value from execution context
         ///     - Parameter type check: If parameter type is 1 (string type), uses "PRINTSTRING: %s\n" format
         ///     - Format string: "PRINTSTRING: %s\n" @ 0x007c29f8 (used when parameter type is string)
         ///     - Alternative format: Uses different format string (DAT_007b8f34) if parameter type is not string
-        ///     - Output: Calls FUN_006306c0 to output formatted string to console/log via engine logging system
+        ///     - Output: Calls 0x006306c0 to output formatted string to console/log via engine logging system
         ///     - Return value: Returns 0 on success, 0xfffff82f (error code) on failure
         ///     - Error handling: Returns error code if parameter reading fails or execution context is invalid
         /// </remarks>
         protected Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005c4ff0 @ 0x005c4ff0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005c4ff0 @ 0x005c4ff0
             // Located via string reference: "PRINTSTRING: %s\n" @ 0x007c29f8
             // Original implementation: Checks parameter count, formats with "PRINTSTRING: %s\n", outputs to console/log
             string msg = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -194,7 +194,7 @@ namespace Andastra.Game.Scripting.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 return Variable.FromString(entity.Tag ?? string.Empty);
@@ -216,7 +216,7 @@ namespace Andastra.Game.Scripting.EngineApi
             string tag = args.Count > 0 ? args[0].AsString() : string.Empty;
             int nth = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Core.Interfaces.IEntity entity = ctx.World.GetEntityByTag(tag, nth);
+            IEntity entity = ctx.World.GetEntityByTag(tag, nth);
             return Variable.FromObject(entity?.ObjectId ?? ObjectInvalid);
         }
 
@@ -225,7 +225,7 @@ namespace Andastra.Game.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 return Variable.FromInt(ctx.Globals.GetLocalInt(entity, name));
@@ -239,7 +239,7 @@ namespace Andastra.Game.Scripting.EngineApi
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
             int value = args.Count > 2 ? args[2].AsInt() : 0;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 ctx.Globals.SetLocalInt(entity, name, value);
@@ -252,7 +252,7 @@ namespace Andastra.Game.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 return Variable.FromFloat(ctx.Globals.GetLocalFloat(entity, name));
@@ -266,7 +266,7 @@ namespace Andastra.Game.Scripting.EngineApi
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
             float value = args.Count > 2 ? args[2].AsFloat() : 0f;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 ctx.Globals.SetLocalFloat(entity, name, value);
@@ -279,7 +279,7 @@ namespace Andastra.Game.Scripting.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 return Variable.FromString(ctx.Globals.GetLocalString(entity, name));
@@ -293,7 +293,7 @@ namespace Andastra.Game.Scripting.EngineApi
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
             string value = args.Count > 2 ? args[2].AsString() : string.Empty;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 ctx.Globals.SetLocalString(entity, name, value);
@@ -310,19 +310,19 @@ namespace Andastra.Game.Scripting.EngineApi
                 return Variable.FromInt(0);
             }
 
-            Core.Interfaces.IEntity entity = ctx.World.GetEntity(objectId);
+            IEntity entity = ctx.World.GetEntity(objectId);
             return Variable.FromInt(entity != null && entity.IsValid ? 1 : 0);
         }
 
         protected Variable Func_GetDistanceToObject(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint targetId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
-            Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            IEntity target = ResolveObject(targetId, ctx);
 
             if (ctx.Caller != null && target != null)
             {
-                Core.Interfaces.Components.ITransformComponent callerTransform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                Core.Interfaces.Components.ITransformComponent targetTransform = target.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                ITransformComponent callerTransform = ctx.Caller.GetComponent<ITransformComponent>();
+                ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
 
                 if (callerTransform != null && targetTransform != null)
                 {
@@ -366,10 +366,10 @@ namespace Andastra.Game.Scripting.EngineApi
         protected Variable Func_GetPosition(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
                 if (transform != null)
                 {
                     return Variable.FromVector(transform.Position);
@@ -414,10 +414,10 @@ namespace Andastra.Game.Scripting.EngineApi
         protected Variable Func_GetFacing(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
-                Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                ITransformComponent transform = entity.GetComponent<ITransformComponent>();
                 if (transform != null)
                 {
                     // Convert facing angle (radians) to degrees from East
@@ -453,7 +453,7 @@ namespace Andastra.Game.Scripting.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            IModule module = ctx.World.CurrentModule;
+            Runtime.Core.Interfaces.IModule module = ctx.World.CurrentModule;
             if (module == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -563,22 +563,22 @@ namespace Andastra.Game.Scripting.EngineApi
             uint target = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             int nth = args.Count > 2 ? args[2].AsInt() : 0;
 
-            Core.Interfaces.IEntity targetEntity = ResolveObject(target, ctx);
+            IEntity targetEntity = ResolveObject(target, ctx);
             if (targetEntity == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            Core.Interfaces.Components.ITransformComponent transform = targetEntity.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+            ITransformComponent transform = targetEntity.GetComponent<ITransformComponent>();
             if (transform == null)
             {
                 return Variable.FromObject(ObjectInvalid);
             }
 
             // Get all entities with this tag
-            var candidates = new List<Core.Interfaces.IEntity>();
+            var candidates = new List<IEntity>();
             int index = 0;
-            Core.Interfaces.IEntity candidate;
+            IEntity candidate;
             while ((candidate = ctx.World.GetEntityByTag(tag, index)) != null)
             {
                 if (candidate.ObjectId != targetEntity.ObjectId)
@@ -591,8 +591,8 @@ namespace Andastra.Game.Scripting.EngineApi
             // Sort by distance
             candidates.Sort((a, b) =>
             {
-                Core.Interfaces.Components.ITransformComponent ta = a.GetComponent<Core.Interfaces.Components.ITransformComponent>();
-                Core.Interfaces.Components.ITransformComponent tb = b.GetComponent<Core.Interfaces.Components.ITransformComponent>();
+                ITransformComponent ta = a.GetComponent<ITransformComponent>();
+                ITransformComponent tb = b.GetComponent<ITransformComponent>();
                 if (ta == null || tb == null) return 0;
 
                 float distA = (ta.Position - transform.Position).Length();
@@ -685,7 +685,7 @@ namespace Andastra.Game.Scripting.EngineApi
                 return Variable.Void();
             }
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 return Variable.Void();
@@ -737,7 +737,7 @@ namespace Andastra.Game.Scripting.EngineApi
             }
 
             // Get the caller entity (original uses this+0xc for execution context's caller ObjectId)
-            Core.Interfaces.IEntity caller = ctx.Caller;
+            IEntity caller = ctx.Caller;
             if (caller == null)
             {
                 return Variable.Void();
@@ -764,15 +764,15 @@ namespace Andastra.Game.Scripting.EngineApi
         /// Located via function dispatch table: CNWSVirtualMachineCommands::InitializeCommands @ 0x14054de30
         /// 
         /// Original implementation (from decompiled 0x14051d5c0):
-        ///   - Original function is a stub/thunk that calls FUN_140c10370 (memory free/cleanup function)
-        ///   - FUN_140c10370 @ 0x140c10370: Memory management function used for cleanup operations
+        ///   - Original function is a stub/thunk that calls 0x140c10370 (memory free/cleanup function)
+        ///   - 0x140c10370 @ 0x140c10370: Memory management function used for cleanup operations
         ///   - The stub function itself does not perform script execution - it's a placeholder in the command table
         ///   - Actual script execution is handled by the NCS VM through the ACTION opcode system
         ///   - When ACTION opcode (0x0F) is encountered in NCS bytecode, the VM dispatches to the script executor
         ///   - Script executor loads NCS bytecode, creates execution context, and executes via NCS VM
         ///   - Script execution is synchronous and blocks until script completes (VM runs to completion)
         ///   - Return value from script execution is captured but ExecuteScript function signature returns void
-        ///   - Memory cleanup: FUN_140c10370 handles cleanup of temporary script execution structures
+        ///   - Memory cleanup: 0x140c10370 handles cleanup of temporary script execution structures
         ///   - This implementation provides full script execution functionality (not just a stub)
         ///   - Matches original behavior: Scripts execute synchronously, blocking until completion
         ///   - Error handling: Script execution errors are logged but don't abort execution
@@ -789,14 +789,14 @@ namespace Andastra.Game.Scripting.EngineApi
         /// - Eclipse (daorigins.exe): Uses UnrealScript instead of NCS (different architecture)
         /// 
         /// Verified via Ghidra MCP analysis:
-        /// - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (stub calling FUN_140c10370)
-        /// - FUN_140c10370 @ 0x140c10370: Memory cleanup function (used for async operations and resource cleanup)
+        /// - nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0 (stub calling 0x140c10370)
+        /// - 0x140c10370 @ 0x140c10370: Memory cleanup function (used for async operations and resource cleanup)
         /// - Actual execution: NCS VM ACTION opcode dispatches to script executor for bytecode execution
         /// </remarks>
         protected Variable Func_ExecuteScript(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Based on nwmain.exe: ExecuteCommandExecuteScript @ 0x14051d5c0
-            // Original implementation: Stub function that calls FUN_140c10370 (memory free function)
+            // Original implementation: Stub function that calls 0x140c10370 (memory free function)
             // This implementation provides full script execution (not just a stub)
             // Script execution is synchronous and blocks until script completes
 
@@ -820,7 +820,7 @@ namespace Andastra.Game.Scripting.EngineApi
             // Original implementation (nwmain.exe): Pops object from stack via CVirtualMachine::StackPopObject
             // Defaults to execution context caller (OBJECT_SELF) if object not provided
             // OBJECT_INVALID (0x7F000000) is treated as invalid and results in no-op
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 // Invalid object ID - return void (ExecuteScript returns void on error)
@@ -829,7 +829,7 @@ namespace Andastra.Game.Scripting.EngineApi
             }
 
             // Execute script immediately and synchronously via script executor
-            // Original implementation (nwmain.exe): Stub calls FUN_140c10370 (memory cleanup)
+            // Original implementation (nwmain.exe): Stub calls 0x140c10370 (memory cleanup)
             // Actual execution happens via NCS VM ACTION opcode system when script bytecode is executed
             // This implementation provides full execution (not just a stub):
             // 1. Script executor loads NCS bytecode from resource provider (Installation, HAK, module)
@@ -854,7 +854,7 @@ namespace Andastra.Game.Scripting.EngineApi
                     // Script execution completed successfully
                     // Note: scriptReturnValue is captured for potential future use but not returned
                     // since ExecuteScript function signature returns void (NWScript specification)
-                    // Memory cleanup: FUN_140c10370 equivalent - resources released after execution
+                    // Memory cleanup: 0x140c10370 equivalent - resources released after execution
                     // In C#: Bytecode arrays, execution contexts, and VM state are GC'd automatically
                 }
                 catch (Exception ex)
@@ -905,7 +905,7 @@ namespace Andastra.Game.Scripting.EngineApi
             int clearCombatState = args.Count > 0 ? args[0].AsInt() : 0;
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 return Variable.Void();
@@ -995,7 +995,7 @@ namespace Andastra.Game.Scripting.EngineApi
             float facingDegrees = args[0].AsFloat();
             uint objectId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
 
-            Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 return Variable.Void();
@@ -1049,7 +1049,7 @@ namespace Andastra.Game.Scripting.EngineApi
 
             // Alternative: Check if world has ExecuteScript method directly
             System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript",
-                new System.Type[] { typeof(string), typeof(Core.Interfaces.IEntity), typeof(Core.Interfaces.IEntity) });
+                new Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
             if (executeMethod != null)
             {
                 // Return a wrapper that delegates to the world's ExecuteScript method
@@ -1064,16 +1064,16 @@ namespace Andastra.Game.Scripting.EngineApi
         /// </summary>
         private class ScriptExecutorWrapper : IScriptExecutor
         {
-            private readonly Core.Interfaces.IWorld _world;
+            private readonly IWorld _world;
             private readonly System.Reflection.MethodInfo _executeMethod;
 
-            public ScriptExecutorWrapper(Core.Interfaces.IWorld world, System.Reflection.MethodInfo executeMethod)
+            public ScriptExecutorWrapper(IWorld world, System.Reflection.MethodInfo executeMethod)
             {
                 _world = world;
                 _executeMethod = executeMethod;
             }
 
-            public int ExecuteScript(string scriptResRef, Core.Interfaces.IEntity owner, Core.Interfaces.IEntity triggerer)
+            public int ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
             {
                 if (_executeMethod != null)
                 {
@@ -1140,7 +1140,7 @@ namespace Andastra.Game.Scripting.EngineApi
                 }
 
                 System.Reflection.MethodInfo executeMethod = ctx.World.GetType().GetMethod("ExecuteScript",
-                    new System.Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
+                    new Type[] { typeof(string), typeof(IEntity), typeof(IEntity) });
                 if (executeMethod != null)
                 {
                     return new ScriptExecutorWrapper(ctx.World, executeMethod);
@@ -1150,7 +1150,7 @@ namespace Andastra.Game.Scripting.EngineApi
             }
         }
 
-        protected Core.Interfaces.IEntity ResolveObject(uint objectId, IExecutionContext ctx)
+        protected IEntity ResolveObject(uint objectId, IExecutionContext ctx)
         {
             if (objectId == ObjectInvalid)
             {

@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// Cross-engine analysis:
     /// - Odyssey (swkotor.exe, swkotor2.exe): 12 slots (0-11), QuickSlot_* fields in UTC GFF, types: 0=item, 1=ability
     ///   - swkotor.exe: Quick slot system (function addresses to be determined via Ghidra)
-    ///   - swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves QuickSlot_* fields, FUN_005223a0 @ 0x005223a0 loads QuickSlot_* fields
+    ///   - swkotor2.exe: 0x005226d0 @ 0x005226d0 saves QuickSlot_* fields, 0x005223a0 @ 0x005223a0 loads QuickSlot_* fields
     /// - Aurora (nwmain.exe, nwn2main.exe): 36 slots, QuickBar list in UTC GFF, QBObjectType field (0=empty, 1=item, 2=spell, 4=feat, etc.)
     ///   - nwmain.exe: CNWSCreature::SaveQuickBar, CNWSCreature::LoadQuickBar (function addresses to be determined via Ghidra)
     ///   - nwn2main.exe: Enhanced quick bar system (function addresses to be determined via Ghidra)

@@ -8,7 +8,7 @@ namespace Andastra.Game.Games.Eclipse.Collision
     /// </summary>
     /// <remarks>
     /// DA2 Creature Collision Detection:
-    /// - Based on DragonAge2.exe reverse engineering via Ghidra MCP
+    /// - Based on DragonAge2.exe further analysis
     /// - Eclipse engine uses PhysX-based collision detection (different from older engines)
     /// - Collision masks: Similar to DAO, uses PhysX collision system
     /// - Located via string references:
@@ -35,7 +35,7 @@ namespace Andastra.Game.Games.Eclipse.Collision
         /// <param name="entity">The creature entity.</param>
         /// <returns>The creature's bounding box.</returns>
         /// <remarks>
-        /// Based on DragonAge2.exe reverse engineering via Ghidra MCP:
+        /// Based on DragonAge2.exe further analysis:
         /// - Eclipse engine uses PhysX physics engine for collision detection
         /// - Collision masks: Similar to DAO, uses PhysX collision system
         /// - Located via string references: "Appearance_Type" @ 0x00bf0b9c, "TargetRadius" @ 0x00be1314

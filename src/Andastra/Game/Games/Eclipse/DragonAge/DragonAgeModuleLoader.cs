@@ -6,7 +6,7 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Eclipse.DragonAge
+namespace Andastra.Game.Games.Engines.Eclipse.DragonAge
 {
     /// <summary>
     /// Base module loader for Dragon Age series (DA:O and DA2).

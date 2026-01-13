@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Common
+namespace Andastra.Game.Games.Engines.Common
 {
     /// <summary>
     /// Abstract base class for game profiles across all engines.
@@ -107,5 +108,4 @@ namespace Andastra.Game.Engines.Common
         protected abstract void InitializeSupportedFeatures();
     }
 }
-
 

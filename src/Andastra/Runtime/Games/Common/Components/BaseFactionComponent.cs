@@ -18,8 +18,8 @@ namespace Andastra.Runtime.Games.Common.Components
     /// - Engine-specific: Faction relationship tables, reputation systems, hostility calculations
     ///
     /// Based on reverse engineering of:
-    /// - swkotor.exe: Faction component system with repute.2da table (FUN_005b1b90 @ 0x005b1b90 loads faction data)
-    /// - swkotor2.exe: Enhanced faction system with repute.2da table (FUN_005fb0f0 @ 0x005fb0f0 loads faction data)
+    /// - swkotor.exe: Faction component system with repute.2da table (0x005b1b90 @ 0x005b1b90 loads faction data)
+    /// - swkotor2.exe: Enhanced faction system with repute.2da table (0x005fb0f0 @ 0x005fb0f0 loads faction data)
     /// - nwmain.exe: Aurora faction system using CNWSFaction and CFactionManager (CNWSFaction @ 0x1404ad3e0, GetFaction @ 0x140357900)
     /// - daorigins.exe: Eclipse faction system with IsHostile/IsFriendly checks
     /// - DragonAge2.exe: Enhanced Eclipse faction system

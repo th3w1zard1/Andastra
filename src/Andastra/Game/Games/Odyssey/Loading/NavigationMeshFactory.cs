@@ -1,17 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using BioWare.NET;
 using BioWare.NET.Common;
 using BioWare.NET.Resource.Formats.BWM;
 using BioWare.NET.Extract;
-using BioWare.NET.Common;
-using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
-using Logger = BioWare.NET.Utility.Logger.RobustLogger;
 using Vector3 = System.Numerics.Vector3;
 
 namespace Andastra.Game.Games.Odyssey.Loading
@@ -53,7 +48,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             }
 
             // Collect all vertices and faces from all room walkmeshes
-            var allVertices = new List<System.Numerics.Vector3>();
+            var allVertices = new List<Vector3>();
             var allFaceIndices = new List<int>();
             var allAdjacency = new List<int>();
             var allSurfaceMaterials = new List<int>();
@@ -80,15 +75,15 @@ namespace Andastra.Game.Games.Odyssey.Loading
                 Vector3 roomPosition = room.Position;
 
                 // Build vertex index map for this walkmesh
-                var vertexIndexMap = new Dictionary<System.Numerics.Vector3, int>();
+                var vertexIndexMap = new Dictionary<Vector3, int>();
 
                 // Process faces from this walkmesh
                 foreach (BWMFace face in bwm.Faces)
                 {
                     // Add vertices (with room offset applied)
-                    int idx1 = AddVertex(allVertices, new System.Numerics.Vector3(face.V1.X, face.V1.Y, face.V1.Z), roomPosition, vertexIndexMap);
-                    int idx2 = AddVertex(allVertices, new System.Numerics.Vector3(face.V2.X, face.V2.Y, face.V2.Z), roomPosition, vertexIndexMap);
-                    int idx3 = AddVertex(allVertices, new System.Numerics.Vector3(face.V3.X, face.V3.Y, face.V3.Z), roomPosition, vertexIndexMap);
+                    int idx1 = AddVertex(allVertices, new Vector3(face.V1.X, face.V1.Y, face.V1.Z), roomPosition, vertexIndexMap);
+                    int idx2 = AddVertex(allVertices, new Vector3(face.V2.X, face.V2.Y, face.V2.Z), roomPosition, vertexIndexMap);
+                    int idx3 = AddVertex(allVertices, new Vector3(face.V3.X, face.V3.Y, face.V3.Z), roomPosition, vertexIndexMap);
 
                     // Add face indices
                     allFaceIndices.Add(idx1);
@@ -138,25 +133,25 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a navigation mesh from a single BWM.
         /// </summary>
         [CanBeNull]
-        public INavigationMesh CreateFromBwm(BWM bwm, System.Numerics.Vector3 offset)
+        public INavigationMesh CreateFromBwm(BWM bwm, Vector3 offset)
         {
             if (bwm == null || bwm.Faces.Count == 0)
             {
                 return null;
             }
 
-            var vertices = new List<System.Numerics.Vector3>();
+            var vertices = new List<Vector3>();
             var faceIndices = new List<int>();
             var adjacency = new List<int>();
             var surfaceMaterials = new List<int>();
 
-            var vertexIndexMap = new Dictionary<System.Numerics.Vector3, int>();
+            var vertexIndexMap = new Dictionary<Vector3, int>();
 
             foreach (BWMFace face in bwm.Faces)
             {
-                int idx1 = AddVertex(vertices, new System.Numerics.Vector3(face.V1.X, face.V1.Y, face.V1.Z), offset, vertexIndexMap);
-                int idx2 = AddVertex(vertices, new System.Numerics.Vector3(face.V2.X, face.V2.Y, face.V2.Z), offset, vertexIndexMap);
-                int idx3 = AddVertex(vertices, new System.Numerics.Vector3(face.V3.X, face.V3.Y, face.V3.Z), offset, vertexIndexMap);
+                int idx1 = AddVertex(vertices, new Vector3(face.V1.X, face.V1.Y, face.V1.Z), offset, vertexIndexMap);
+                int idx2 = AddVertex(vertices, new Vector3(face.V2.X, face.V2.Y, face.V2.Z), offset, vertexIndexMap);
+                int idx3 = AddVertex(vertices, new Vector3(face.V3.X, face.V3.Y, face.V3.Z), offset, vertexIndexMap);
 
                 faceIndices.Add(idx1);
                 faceIndices.Add(idx2);
@@ -224,7 +219,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                         catch (Exception ex)
                         {
                             // Log parsing error but continue to fallback
-                            Logger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
+                            new BioWare.NET.Utility.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
                         }
                     }
                 }
@@ -252,7 +247,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             catch (Exception ex)
             {
                 // Failed to load walkmesh - log and return null
-                Logger.Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
+                new BioWare.NET.Utility.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
                 return null;
             }
         }
@@ -260,8 +255,8 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Adds a vertex to the list, returning its index.
         /// </summary>
-        private int AddVertex(List<System.Numerics.Vector3> vertices, System.Numerics.Vector3 v, System.Numerics.Vector3 offset,
-            Dictionary<System.Numerics.Vector3, int> indexMap)
+        private int AddVertex(List<Vector3> vertices, Vector3 v, Vector3 offset,
+            Dictionary<Vector3, int> indexMap)
         {
             // Check if vertex already exists
             if (indexMap.TryGetValue(v, out int existingIndex))
@@ -271,7 +266,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             // Add new vertex with offset
             int newIndex = vertices.Count;
-            vertices.Add(new System.Numerics.Vector3(v.X + offset.X, v.Y + offset.Y, v.Z + offset.Z));
+            vertices.Add(new Vector3(v.X + offset.X, v.Y + offset.Y, v.Z + offset.Z));
             indexMap[v] = newIndex;
             return newIndex;
         }
@@ -310,7 +305,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Builds an AABB tree for the navigation mesh.
         /// </summary>
         [CanBeNull]
-        private NavigationMesh.AabbNode BuildAabbTree(List<System.Numerics.Vector3> vertices, List<int> faceIndices, List<int> materials)
+        private NavigationMesh.AabbNode BuildAabbTree(List<Vector3> vertices, List<int> faceIndices, List<int> materials)
         {
             int faceCount = faceIndices.Count / 3;
             if (faceCount == 0)
@@ -331,7 +326,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Recursively builds the AABB tree.
         /// </summary>
-        private NavigationMesh.AabbNode BuildAabbTreeRecursive(List<System.Numerics.Vector3> vertices, List<int> faceIndices,
+        private NavigationMesh.AabbNode BuildAabbTreeRecursive(List<Vector3> vertices, List<int> faceIndices,
             List<int> materials, List<int> faceList, int depth)
         {
             const int MaxDepth = 32;
@@ -462,7 +457,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             return node;
         }
 
-        private static float GetAxisValue(System.Numerics.Vector3 v, int axis)
+        private static float GetAxisValue(Vector3 v, int axis)
         {
             switch (axis)
             {

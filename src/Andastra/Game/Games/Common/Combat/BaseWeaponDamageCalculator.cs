@@ -188,7 +188,7 @@ namespace Andastra.Game.Games.Common.Combat
             }
 
             // Fallback: try entity data (common pattern)
-            if (weapon is Core.Entities.Entity entity)
+            if (weapon is Runtime.Core.Entities.Entity entity)
             {
                 return entity.GetData<int>("BaseItem", -1);
             }

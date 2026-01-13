@@ -16,14 +16,14 @@ namespace Andastra.Runtime.Core.Actions
     /// <remarks>
     /// Move To Location Action:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) movement action system
-    /// - Original implementation: FUN_00508260 @ 0x00508260 (load ActionList from GFF)
+    /// - Original implementation: 0x00508260 @ 0x00508260 (load ActionList from GFF)
     /// - Located via string reference: "ActionList" @ 0x007bebdc, "MOVETO" @ 0x007b6b24
     /// - Original implementation: Uses walkmesh pathfinding to find path to destination
     /// - Follows path waypoints, facing movement direction (Y-up: Atan2(Y, X))
     /// - Walk/run speed determined by entity stats (WalkSpeed/RunSpeed from appearance.2da)
     /// - Pathfinding uses A* algorithm on walkmesh adjacency graph
     /// - Action parameters stored as ActionId, GroupActionId, NumParams, Paramaters (Type/Value pairs)
-    /// - FUN_00505bc0 @ 0x00505bc0 saves ActionList to GFF structure
+    /// - 0x00505bc0 @ 0x00505bc0 saves ActionList to GFF structure
     /// - SchedActionList @ 0x007bf99c: Scheduled actions with timers for delayed execution
     /// </remarks>
     public class ActionMoveToLocation : ActionBase
@@ -63,8 +63,8 @@ namespace Andastra.Runtime.Core.Actions
         /// - Uses reflection to instantiate engine-specific collision detector classes
         /// - Falls back to DefaultCreatureCollisionDetector if engine type cannot be determined
         /// - Based on swkotor.exe, swkotor2.exe, nwmain.exe, daorigins.exe collision systems
-        /// - Original implementation: FUN_005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
-        /// - swkotor.exe: UpdateCreatureMovement @ 0x00516630 uses FUN_005479f0 equivalent
+        /// - Original implementation: 0x005479f0 @ 0x005479f0 (swkotor2.exe) uses creature bounding box
+        /// - swkotor.exe: UpdateCreatureMovement @ 0x00516630 uses 0x005479f0 equivalent
         /// - nwmain.exe: CPathfindInformation class with creature collision checking
         /// - daorigins.exe/DragonAge2.exe: PhysX-based collision detection system
         /// </remarks>
@@ -91,19 +91,19 @@ namespace Andastra.Runtime.Core.Actions
             // Check for Odyssey engine (KOTOR games)
             if (worldNamespace.Contains("Odyssey"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Odyssey.Collision";
+                detectorNamespace = "Runtime.Games.Odyssey.Collision";
                 detectorTypeName = "OdysseyCreatureCollisionDetector";
             }
             // Check for Aurora engine (NWN games)
             else if (worldNamespace.Contains("Aurora"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Aurora.Collision";
+                detectorNamespace = "Runtime.Games.Aurora.Collision";
                 detectorTypeName = "AuroraCreatureCollisionDetector";
             }
             // Check for Eclipse engine (Dragon Age games)
             else if (worldNamespace.Contains("Eclipse"))
             {
-                detectorNamespace = "Andastra.Runtime.Games.Eclipse.Collision";
+                detectorNamespace = "Runtime.Games.Eclipse.Collision";
                 detectorTypeName = "EclipseCreatureCollisionDetector";
             }
 
@@ -220,9 +220,9 @@ namespace Andastra.Runtime.Core.Actions
             //   - Position tracking: Current position at offsets 0x25 (X), 0x26 (Y), 0x27 (Z) in entity structure
             //   - Orientation: Facing stored at offsets 0x28 (X), 0x29 (Y), 0x2a (Z) as direction vector
             //   - Distance calculation: Uses 2D distance (X/Y plane, ignores Z) for movement calculations
-            //   - Walkmesh projection: Projects position to walkmesh surface using FUN_004f5070 (walkmesh height lookup)
-            //   - Direction normalization: Uses FUN_004d8390 to normalize direction vectors
-            //   - Creature collision: Checks for collisions with other creatures along path using FUN_005479f0
+            //   - Walkmesh projection: Projects position to walkmesh surface using 0x004f5070 (walkmesh height lookup)
+            //   - Direction normalization: Uses 0x004d8390 to normalize direction vectors
+            //   - Creature collision: Checks for collisions with other creatures along path using 0x005479f0
             //   - Bump counter: Tracks number of creature bumps (stored at offset 0x268 in entity structure)
             //   - Maximum bumps: If bump count exceeds 5, aborts movement and clears path (frees path array, sets path length to 0)
             //   - Total blocking: If same creature blocks repeatedly (local_c0 == entity ID at offset 0x254), aborts movement
@@ -286,10 +286,10 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 currentPosition = transform.Position;
             Vector3 newPosition = currentPosition + direction * moveDistance;
 
-            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: Walkmesh projection in movement system
-            // Original implementation: FUN_004f5070 projects 3D position to walkmesh surface height
+            // Original implementation: 0x004f5070 projects 3D position to walkmesh surface height
             IArea currentArea = actor.World.CurrentArea;
             if (currentArea != null && currentArea.NavigationMesh != null)
             {
@@ -302,19 +302,19 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Check for creature collisions along movement path
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005479f0 @ 0x005479f0 checks for creature collisions
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005479f0 @ 0x005479f0 checks for creature collisions
             // Located via string references:
             //   - "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             //   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
             //   - "aborted walking, Maximum number of bumps happened" @ 0x007c0458
-            // Original implementation: FUN_005479f0 checks if movement path intersects with other creatures
-            // Function signature: `undefined4 FUN_005479f0(void *this, float *param_1, float *param_2, undefined4 *param_3, uint *param_4)`
+            // Original implementation: 0x005479f0 checks if movement path intersects with other creatures
+            // Function signature: `undefined4 0x005479f0(void *this, float *param_1, float *param_2, undefined4 *param_3, uint *param_4)`
             // param_1: Start position (float[3])
             // param_2: End position (float[3])
             // param_3: Output collision normal (float[3]) or null
             // param_4: Output blocking creature ObjectId (uint) or null
             // Returns: 0 if collision detected, 1 if path is clear
-            // Uses FUN_004e17a0 and FUN_004f5290 for collision detection with creature bounding boxes
+            // Uses 0x004e17a0 and 0x004f5290 for collision detection with creature bounding boxes
             // Implementation: Uses proper bounding box collision detection instead of simplified radius-based check
             BaseCreatureCollisionDetector collisionDetector = GetOrCreateCollisionDetector(actor.World);
             uint blockingCreatureId;
@@ -368,19 +368,19 @@ namespace Andastra.Runtime.Core.Actions
                 // Returns: float* pointer to new path waypoints, or DAT_007c52ec (null) if no path found
                 // Implementation details (from Ghidra analysis):
                 //   - Line 57: Loads "k_def_pathfail01" string for error reporting
-                //   - Line 75: Calls FUN_0061a670 to set up obstacle avoidance polygon from creature bounding box
-                //   - Line 80-85: Calls FUN_0061b7d0 to check if start/end points are within obstacle polygon
-                //   - Line 92: Calls FUN_0061bcb0 to validate path against obstacles
-                //   - Line 100-105: Calls FUN_0061c1e0 to get waypoints, then FUN_0061c2c0 to check path segments
-                //   - Line 131-142: Calls FUN_0061b520 to insert waypoints into path to avoid obstacles
+                //   - Line 75: Calls 0x0061a670 to set up obstacle avoidance polygon from creature bounding box
+                //   - Line 80-85: Calls 0x0061b7d0 to check if start/end points are within obstacle polygon
+                //   - Line 92: Calls 0x0061bcb0 to validate path against obstacles
+                //   - Line 100-105: Calls 0x0061c1e0 to get waypoints, then 0x0061c2c0 to check path segments
+                //   - Line 131-142: Calls 0x0061b520 to insert waypoints into path to avoid obstacles
                 //   - If pathfinding fails, returns null pointer (DAT_007c52ec)
                 // Helper functions:
-                //   - FUN_0061b7d0: Checks if point is within obstacle polygon (6-sided polygon test)
-                //   - FUN_0061bcb0: Validates entire path against obstacles
-                //   - FUN_0061c2c0: Checks path segments for collisions (calls FUN_0061b310 per segment)
-                //   - FUN_0061b310: Checks single path segment for creature collision
-                //   - FUN_0061b520: Inserts waypoints into existing path array to route around obstacles
-                //   - FUN_0061c1e0: Gets waypoint array from pathfinding context
+                //   - 0x0061b7d0: Checks if point is within obstacle polygon (6-sided polygon test)
+                //   - 0x0061bcb0: Validates entire path against obstacles
+                //   - 0x0061c2c0: Checks path segments for collisions (calls 0x0061b310 per segment)
+                //   - 0x0061b310: Checks single path segment for creature collision
+                //   - 0x0061b520: Inserts waypoints into existing path array to route around obstacles
+                //   - 0x0061c1e0: Gets waypoint array from pathfinding context
                 // Equivalent functions in other engines:
                 //   - swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
                 //   - nwmain.exe: CPathfindInformation class with obstacle avoidance in pathfinding system
@@ -429,7 +429,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Could not find path around obstacle - action fails
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If FUN_0054a1f0 returns null, movement is aborted
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If 0x0054a1f0 returns null, movement is aborted
                 // Located via string reference: "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
                 return ActionStatus.Failed;
             }

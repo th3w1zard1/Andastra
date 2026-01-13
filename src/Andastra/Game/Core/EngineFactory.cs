@@ -1,12 +1,15 @@
 using System;
 using BioWare.NET.Common;
 using Andastra.Runtime.Content.Interfaces;
+using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Aurora;
 using Andastra.Game.Games.Aurora.Profiles;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse.DragonAge2;
 using Andastra.Game.Games.Eclipse.DragonAgeOrigins;
-using Andastra.Game.Games.Eclipse.Profiles;
+using DragonAgeOriginsEngine = Andastra.Game.Games.Engines.Eclipse.DragonAgeOrigins.DragonAgeOriginsEngine;
+using DragonAge2Engine = Andastra.Game.Games.Engines.Eclipse.DragonAge2.DragonAge2Engine;
+using Andastra.Game.Games.Engines.Eclipse.Profiles;
 using Andastra.Game.Games.Odyssey;
 using Andastra.Game.Games.Odyssey.Profiles;
 
@@ -18,7 +21,7 @@ namespace Andastra.Game.Core
     /// <remarks>
     /// Engine Factory:
     /// - Maps BioWareGame enum values to appropriate engine instances
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 determines game type and initializes appropriate engine
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 determines game type and initializes appropriate engine
     /// - Original implementation: Game executable identifies itself and initializes engine accordingly
     /// - Cross-engine: All BioWare games follow similar pattern - determine game type, create engine, initialize
     /// - This factory provides unified access to all engine families (Odyssey, Aurora, Eclipse, Infinity)
@@ -59,28 +62,28 @@ namespace Andastra.Game.Core
         /// <summary>
         /// Gets the engine family for the specified BioWare game.
         /// </summary>
-        public static Andastra.Runtime.Engines.Common.EngineFamily GetEngineFamily(BioWareGame bioWareGame)
+        public static Andastra.Game.Games.Common.EngineFamily GetEngineFamily(BioWareGame bioWareGame)
         {
             if (bioWareGame.IsOdyssey())
             {
-                return Andastra.Runtime.Engines.Common.EngineFamily.Odyssey;
+                return Andastra.Game.Games.Common.EngineFamily.Odyssey;
             }
             else if (bioWareGame.IsEclipse())
             {
-                return Andastra.Runtime.Engines.Common.EngineFamily.Eclipse;
+                return Andastra.Game.Games.Common.EngineFamily.Eclipse;
             }
             else if (bioWareGame.IsAurora())
             {
-                return Andastra.Runtime.Engines.Common.EngineFamily.Aurora;
+                return Andastra.Game.Games.Common.EngineFamily.Aurora;
             }
             else if (bioWareGame.IsInfinity())
             {
                 // Infinity Engine support is not yet implemented
-                return Andastra.Runtime.Engines.Common.EngineFamily.Unknown;
+                return Andastra.Game.Games.Common.EngineFamily.Unknown;
             }
             else
             {
-                return Andastra.Runtime.Engines.Common.EngineFamily.Unknown;
+                return Andastra.Game.Games.Common.EngineFamily.Unknown;
             }
         }
 

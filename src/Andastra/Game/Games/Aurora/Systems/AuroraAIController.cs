@@ -7,9 +7,10 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Common;
+using Andastra.Runtime.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Game.Engines.Aurora.Systems
+namespace Andastra.Game.Games.Aurora.Systems
 {
     /// <summary>
     /// AI controller system for NPCs in Aurora engine (Neverwinter Nights, Neverwinter Nights 2).

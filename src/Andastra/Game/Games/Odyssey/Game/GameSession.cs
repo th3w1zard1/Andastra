@@ -705,7 +705,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                                     // Register encounters with encounter system
                                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Encounters are registered with encounter system for spawning
                                     // Original implementation: Encounter system tracks encounter entities and spawns creatures when triggered
-                                    if (_encounterSystem != null && entity.ObjectType == Andastra.Runtime.Core.Enums.ObjectType.Encounter)
+                                    if (_encounterSystem != null && entity.ObjectType == Runtime.Core.Enums.ObjectType.Encounter)
                                     {
                                         _encounterSystem.RegisterEncounter(entity);
                                     }
@@ -787,7 +787,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             else
             {
                 // Default player entity creation (backwards compatibility)
-                _playerEntity = _world.CreateEntity(Andastra.Runtime.Core.Enums.ObjectType.Creature, entryPos, entryFacing);
+                _playerEntity = _world.CreateEntity(Runtime.Core.Enums.ObjectType.Creature, entryPos, entryFacing);
                 if (_playerEntity != null)
                 {
                     _playerEntity.Tag = "Player";
@@ -837,7 +837,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             Console.WriteLine("[GameSession] Creating player entity from character creation data");
 
             // Create player entity
-            IEntity playerEntity = _world.CreateEntity(Andastra.Runtime.Core.Enums.ObjectType.Creature, position, facing);
+            IEntity playerEntity = _world.CreateEntity(Runtime.Core.Enums.ObjectType.Creature, position, facing);
             if (playerEntity == null)
             {
                 Console.WriteLine("[GameSession] Failed to create player entity");
@@ -962,12 +962,12 @@ namespace Andastra.Game.Games.Odyssey.Game
             if (statsComp != null)
             {
                 // Set ability scores
-                statsComp.SetAbility(Andastra.Runtime.Core.Enums.Ability.Strength, characterData.Strength);
-                statsComp.SetAbility(Andastra.Runtime.Core.Enums.Ability.Dexterity, characterData.Dexterity);
-                statsComp.SetAbility(Andastra.Runtime.Core.Enums.Ability.Constitution, characterData.Constitution);
-                statsComp.SetAbility(Andastra.Runtime.Core.Enums.Ability.Intelligence, characterData.Intelligence);
-                statsComp.SetAbility(Andastra.Runtime.Core.Enums.Ability.Wisdom, characterData.Wisdom);
-                statsComp.SetAbility(Andastra.Runtime.Core.Enums.Ability.Charisma, characterData.Charisma);
+                statsComp.SetAbility(Runtime.Core.Enums.Ability.Strength, characterData.Strength);
+                statsComp.SetAbility(Runtime.Core.Enums.Ability.Dexterity, characterData.Dexterity);
+                statsComp.SetAbility(Runtime.Core.Enums.Ability.Constitution, characterData.Constitution);
+                statsComp.SetAbility(Runtime.Core.Enums.Ability.Intelligence, characterData.Intelligence);
+                statsComp.SetAbility(Runtime.Core.Enums.Ability.Wisdom, characterData.Wisdom);
+                statsComp.SetAbility(Runtime.Core.Enums.Ability.Charisma, characterData.Charisma);
 
                 // Set HP/FP
                 statsComp.MaxHP = maxHP;
@@ -1071,7 +1071,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Initialize all other components (ComponentInitializer already handles this, but ensure they exist)
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerEntity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerEntity);
 
             // Add player to party as leader
             _partySystem?.SetPlayerCharacter(playerEntity);
@@ -1200,7 +1200,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Create new module entity with fixed ObjectId
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with ObjectId 0x7F000002
             // Entity constructor: Entity(uint objectId, ObjectType objectType)
-            var entity = new Entity(World.ModuleObjectId, Andastra.Runtime.Core.Enums.ObjectType.Invalid);
+            var entity = new Entity(World.ModuleObjectId, Runtime.Core.Enums.ObjectType.Invalid);
             entity.World = _world;
             entity.Tag = runtimeModule.ResRef;
             entity.Position = System.Numerics.Vector3.Zero;
@@ -1211,7 +1211,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Module entities need IScriptHooksComponent for script execution
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
             if (!entity.HasComponent<IScriptHooksComponent>())

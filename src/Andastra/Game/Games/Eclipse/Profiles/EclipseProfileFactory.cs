@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Eclipse.Profiles
+namespace Andastra.Game.Games.Engines.Eclipse.Profiles
 {
     /// <summary>
     /// Factory for creating Eclipse Engine game profiles based on game type.
@@ -78,4 +79,3 @@ namespace Andastra.Game.Engines.Eclipse.Profiles
         }
     }
 }
-

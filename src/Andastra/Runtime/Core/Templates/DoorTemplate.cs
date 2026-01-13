@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Core.Templates
     /// Door Template:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door system
     /// - Located via string references: "Door" @ 0x007bc538, "Door List" @ 0x007bd270
-    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references door templates)
+    /// - Template loading: 0x005226d0 @ 0x005226d0 (entity serialization references door templates)
     /// - Original implementation: UTD (Door) GFF templates define door properties
     /// - UTD file format: GFF with "UTD " signature containing door data
     /// - Doors have appearance, open/locked states, transitions, HP, saves
@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Core.Templates
             // Apply script hooks
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door script hooks from UTD template
             // Located via string references: "ScriptOnOpen" @ 0x007c1a54, "ScriptOnClose" @ 0x007c1a8c, "ScriptOnClick" @ 0x007c1a20
-            // Original implementation: FUN_00580ed0 @ 0x00580ed0 loads door script hooks from UTD template
+            // Original implementation: 0x00580ed0 @ 0x00580ed0 loads door script hooks from UTD template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {

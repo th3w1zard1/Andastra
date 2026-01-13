@@ -25,8 +25,8 @@ namespace Andastra.Game.Core
     /// - Validation: Checks for chitin.key (keyfile) and game executable (swkotor.exe/swkotor2.exe)
     /// - chitin.key: Keyfile containing resource file mappings and encryption keys (required for resource loading)
     /// - Executable validation: Checks for swkotor.exe (K1) or swkotor2.exe (K2) in installation directory
-    /// - Engine initialization: FUN_00404250 @ 0x00404250 reads installation path during startup
-    /// - Path resolution: FUN_00633270 @ 0x00633270 resolves resource paths based on installation directory
+    /// - Engine initialization: 0x00404250 @ 0x00404250 reads installation path during startup
+    /// - Path resolution: 0x00633270 @ 0x00633270 resolves resource paths based on installation directory
     /// - This implementation: Enhanced with Steam, GOG, and environment variable detection
     /// - Note: Original engine primarily used registry lookup (HKEY_LOCAL_MACHINE), this adds modern distribution platform support
     /// - Steam detection: Checks Steam registry key "SOFTWARE\Valve\Steam" for InstallPath, then searches steamapps\common

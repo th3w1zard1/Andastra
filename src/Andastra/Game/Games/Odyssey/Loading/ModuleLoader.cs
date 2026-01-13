@@ -46,10 +46,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// - Script events: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
     /// - GUI: "LB_MODULES" @ 0x007cbff4, ":modules" @ 0x007cc0d8
-    /// - Original implementation: FUN_00633270 @ 0x00633270 (sets up all game directories including MODULES)
-    ///   - Function signature: `void FUN_00633270(undefined4 *param_1)`
+    /// - Original implementation: 0x00633270 @ 0x00633270 (sets up all game directories including MODULES)
+    ///   - Function signature: `void 0x00633270(undefined4 *param_1)`
     ///   - param_1: Directory alias manager structure pointer
-    ///   - Sets up directory aliases for resource lookup (via FUN_00632f30):
+    ///   - Sets up directory aliases for resource lookup (via 0x00632f30):
     ///     - HD0: Maps to "d:\" (absolute) or ".\" (relative) - Hard drive root
     ///     - CD0: Maps to "d:\" (absolute) or "d:\" (relative) - CD drive root
     ///     - OVERRIDE: Maps to "d:\override" (absolute) or ".\override" (relative) - Override directory
@@ -888,7 +888,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// <summary>
         /// Gets the navigation mesh for the current module's entry area.
         /// </summary>
-        public Andastra.Runtime.Core.Navigation.NavigationMesh GetNavigationMesh()
+        public Runtime.Core.Navigation.NavigationMesh GetNavigationMesh()
         {
             if (_currentModule == null)
             {
@@ -901,7 +901,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                 return null;
             }
 
-            return entryArea.NavigationMesh as Andastra.Runtime.Core.Navigation.NavigationMesh;
+            return entryArea.NavigationMesh as Runtime.Core.Navigation.NavigationMesh;
         }
 
         /// <summary>

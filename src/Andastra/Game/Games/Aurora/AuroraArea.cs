@@ -2358,37 +2358,37 @@ namespace Andastra.Game.Games.Aurora
             // Add to type-specific lists
             switch (entity.ObjectType)
             {
-                case ObjectType.Creature:
+                case Runtime.Core.Enums.ObjectType.Creature:
                     if (!_creatures.Contains(entity))
                     {
                         _creatures.Add(entity);
                     }
                     break;
-                case ObjectType.Placeable:
+                case Runtime.Core.Enums.ObjectType.Placeable:
                     if (!_placeables.Contains(entity))
                     {
                         _placeables.Add(entity);
                     }
                     break;
-                case ObjectType.Door:
+                case Runtime.Core.Enums.ObjectType.Door:
                     if (!_doors.Contains(entity))
                     {
                         _doors.Add(entity);
                     }
                     break;
-                case ObjectType.Trigger:
+                case Runtime.Core.Enums.ObjectType.Trigger:
                     if (!_triggers.Contains(entity))
                     {
                         _triggers.Add(entity);
                     }
                     break;
-                case ObjectType.Waypoint:
+                case Runtime.Core.Enums.ObjectType.Waypoint:
                     if (!_waypoints.Contains(entity))
                     {
                         _waypoints.Add(entity);
                     }
                     break;
-                case ObjectType.Sound:
+                case Runtime.Core.Enums.ObjectType.Sound:
                     if (!_sounds.Contains(entity))
                     {
                         _sounds.Add(entity);
@@ -2802,7 +2802,7 @@ namespace Andastra.Game.Games.Aurora
                     {
                         // Fire OnHeartbeat script event
                         // Based on nwmain.exe: Area heartbeat script execution
-                        world.EventBus.FireScriptEvent(areaEntity, ScriptEvent.OnHeartbeat, null);
+                        world.EventBus.FireScriptEvent(areaEntity, Runtime.Core.Enums.ScriptEvent.OnHeartbeat, null);
                     }
                 }
             }
@@ -2864,7 +2864,7 @@ namespace Andastra.Game.Games.Aurora
             // Create temporary area entity for script execution
             // Based on nwmain.exe: Area scripts execute with area ResRef as entity tag
             // Pattern matches ModuleTransitionSystem module entity creation (CreateEntity with ObjectType.Invalid)
-            areaEntity = world.CreateEntity(ObjectType.Invalid, Vector3.Zero, 0.0f);
+            areaEntity = world.CreateEntity(Runtime.Core.Enums.ObjectType.Invalid, Vector3.Zero, 0.0f);
             areaEntity.Tag = _resRef; // Set tag to area ResRef for script context
 
             // Cache the entity for reuse across script execution calls
@@ -3532,7 +3532,7 @@ namespace Andastra.Game.Games.Aurora
                 // Set up tile transform
                 // Based on nwmain.exe: CNWSArea::RenderTiles applies tile transform
                 Vector3 tilePos = tile.Position;
-                Matrix4x4 tileWorld = MatrixHelper.CreateTranslation(tilePos);
+                Matrix4x4 tileWorld = Matrix4x4.CreateTranslation(tilePos);
 
                 // Apply tile rotation if specified
                 // Based on nwmain.exe: CNWTile::SetOrientation applies rotation
@@ -3540,7 +3540,7 @@ namespace Andastra.Game.Games.Aurora
                 if (tile.Orientation > 0)
                 {
                     float rotationY = tile.Orientation * (float)(Math.PI / 2.0); // Convert to radians
-                    Matrix4x4 rotation = MatrixHelper.CreateRotationY(rotationY);
+                    Matrix4x4 rotation = Matrix4x4.CreateRotationY(rotationY);
                     tileWorld = Matrix4x4.Multiply(rotation, tileWorld);
                 }
 
@@ -3663,7 +3663,7 @@ namespace Andastra.Game.Games.Aurora
 
                 // Create white color with calculated alpha for brightness
                 // Based on nwmain.exe: Lightning flash is white with varying alpha for brightness control
-                Andastra.Runtime.Graphics.Color flashColor = new Andastra.Runtime.Graphics.Color(255, 255, 255, (byte)(alpha * 255));
+                Runtime.Graphics.Color flashColor = new Runtime.Graphics.Color(255, 255, 255, (byte)(alpha * 255));
 
                 // Render full-screen white overlay
                 // Based on nwmain.exe: Lightning flash covers entire screen
@@ -3859,7 +3859,7 @@ namespace Andastra.Game.Games.Aurora
                     {
                         // Entity not registered with world - destroy directly
                         // Based on Entity.Destroy() implementation
-                        if (entity is Core.Entities.Entity concreteEntity)
+                        if (entity is Runtime.Core.Entities.Entity concreteEntity)
                         {
                             concreteEntity.Destroy();
                         }
@@ -4255,7 +4255,7 @@ namespace Andastra.Game.Games.Aurora
             return GetResourceBytesAsync(id, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        public Andastra.Runtime.Content.Interfaces.GameType GameType => Andastra.Runtime.Content.Interfaces.GameType.NWN;
+        public GameType GameType => GameType.NWN;
     }
 
     /// <summary>

@@ -186,7 +186,7 @@ namespace Andastra.Game.Games.Common.Save
         /// <param name="saveName">Name for the save game.</param>
         /// <param name="ct">Cancellation token.</param>
         /// <returns>True if save succeeded.</returns>
-        public abstract Task<bool> SaveGameAsync(Andastra.Runtime.Core.Save.SaveGameData saveData, string saveName, CancellationToken ct = default);
+        public abstract Task<bool> SaveGameAsync(Runtime.Core.Save.SaveGameData saveData, string saveName, CancellationToken ct = default);
 
         /// <summary>
         /// Loads a save game from a save file.
@@ -194,7 +194,7 @@ namespace Andastra.Game.Games.Common.Save
         /// <param name="saveName">Name of the save game to load.</param>
         /// <param name="ct">Cancellation token.</param>
         /// <returns>Loaded save game data, or null if not found.</returns>
-        public abstract Task<Andastra.Runtime.Core.Save.SaveGameData> LoadGameAsync(string saveName, CancellationToken ct = default);
+        public abstract Task<Runtime.Core.Save.SaveGameData> LoadGameAsync(string saveName, CancellationToken ct = default);
 
         /// <summary>
         /// Lists all available save games.

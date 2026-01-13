@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 using Andastra.Runtime.Graphics.Common.Culling;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using Stride.Core.Mathematics;
 using StrideGraphics = Stride.Graphics;
 

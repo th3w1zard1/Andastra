@@ -611,10 +611,10 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// the full BackendFactory selection and initialization process.
         /// 
         /// Based on original engine graphics initialization:
-        /// - swkotor.exe: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
-        /// - swkotor.exe: FUN_0044dab0 @ 0x0044dab0 (OpenGL context creation via wglCreateContext)
-        /// - swkotor2.exe: FUN_00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
-        /// - swkotor2.exe: FUN_00461c50 @ 0x00461c50 (OpenGL context creation via wglCreateContext)
+        /// - swkotor.exe: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
+        /// - swkotor.exe: 0x0044dab0 @ 0x0044dab0 (OpenGL context creation via wglCreateContext)
+        /// - swkotor2.exe: 0x00404250 @ 0x00404250 (main game loop, WinMain equivalent) calls graphics initialization
+        /// - swkotor2.exe: 0x00461c50 @ 0x00461c50 (OpenGL context creation via wglCreateContext)
         /// - Original game uses OpenGL for rendering (OPENGL32.DLL, GLU32.DLL) - NOT DirectX
         /// - Located via string references: "wglCreateContext" @ swkotor.exe:0x0073d2b8, swkotor2.exe:0x007b52cc
         /// - "wglChoosePixelFormatARB" @ swkotor.exe:0x0073f444, swkotor2.exe:0x007b880c

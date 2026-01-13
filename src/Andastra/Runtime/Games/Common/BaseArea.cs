@@ -402,7 +402,7 @@ namespace Andastra.Runtime.Games.Common
         /// - Return loaded area
         /// 
         /// Based on reverse engineering of:
-        /// - swkotor2.exe: Area loading during transitions (FUN_004e26d0 @ 0x004e26d0)
+        /// - swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
         /// - swkotor.exe: Similar area loading system (KOTOR 1)
         /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
         /// - Module resource lookup: Areas are loaded from module archives using area ResRef

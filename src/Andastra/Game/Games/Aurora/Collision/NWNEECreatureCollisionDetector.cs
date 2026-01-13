@@ -10,7 +10,7 @@ namespace Andastra.Game.Games.Aurora.Collision
     /// </summary>
     /// <remarks>
     /// NWN:EE Creature Collision Detection:
-    /// - Based on nwmain.exe reverse engineering via Ghidra MCP
+    /// - Based on nwmain.exe further analysis
     /// - Bounding box structure pointer at offset 0x530 (same as original NWN)
     /// - Reverse engineered functions:
     ///   - CNWSCreature::AIActionCheckMoveToObjectRadius @ 0x1403b4580 (nwmain.exe: checks if creature can move to object within radius)
@@ -44,7 +44,7 @@ namespace Andastra.Game.Games.Aurora.Collision
         /// <param name="entity">The creature entity.</param>
         /// <returns>The creature's bounding box.</returns>
         /// <remarks>
-        /// Based on nwmain.exe reverse engineering via Ghidra MCP:
+        /// Based on nwmain.exe further analysis:
         /// - CNWSCreature::GetUseRange @ 0x140396480:
         ///   - Line 27: Default radius (width): `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 4);` - width at +4
         ///   - Line 35: For creatures: `*param_3 = *(float *)(*(longlong *)(this + 0x530) + 8);` - radius at +8

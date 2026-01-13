@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - Common interface for all BioWare engine navigation systems
     /// - Implemented through three-tier inheritance structure:
     ///   1. Tier 1 (BaseNavigationMesh): Common functionality shared across ALL engines
-    ///      - Location: Andastra.Runtime.Games.Common.BaseNavigationMesh
+    ///      - Location: Runtime.Games.Common.BaseNavigationMesh
     ///      - Contains: Common line-of-sight algorithms, AABB helpers, abstract method contracts
     ///   2. Tier 2 (Engine-specific): Common functionality within an engine family
     ///      - OdysseyNavigationMesh: Common walkmesh functionality for swkotor.exe and swkotor2.exe

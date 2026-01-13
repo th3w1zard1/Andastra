@@ -59,26 +59,26 @@ namespace Andastra.Game.GUI
                 MonoGameGraphicsProfile = "Reach",
 
                 // Rasterizer
-                RasterizerCullMode = Andastra.Runtime.Graphics.Common.Enums.CullMode.Back,
-                RasterizerFillMode = Andastra.Runtime.Graphics.Common.Enums.FillMode.Solid,
+                RasterizerCullMode = Runtime.Graphics.Common.Enums.CullMode.Back,
+                RasterizerFillMode = Runtime.Graphics.Common.Enums.FillMode.Solid,
                 RasterizerDepthBiasEnabled = false,
                 RasterizerMultiSampleAntiAlias = false,
 
                 // Depth Stencil
                 DepthStencilDepthBufferEnable = true,
                 DepthStencilDepthBufferWriteEnable = true,
-                DepthStencilDepthBufferFunction = (Andastra.Runtime.Graphics.CompareFunction?)Andastra.Runtime.Graphics.CompareFunction.LessEqual,
+                DepthStencilDepthBufferFunction = (Andastra.Runtime.Graphics.CompareFunction?)Runtime.Graphics.CompareFunction.LessEqual,
                 DepthStencilStencilEnable = false,
 
                 // Blend
                 BlendBlendEnable = true,
-                BlendAlphaBlendFunction = (Andastra.Runtime.Graphics.BlendFunction?)Andastra.Runtime.Graphics.BlendFunction.Add,
-                BlendAlphaSourceBlend = Andastra.Runtime.Graphics.Blend.SourceAlpha,
-                BlendAlphaDestinationBlend = Andastra.Runtime.Graphics.Blend.InverseSourceAlpha,
-                BlendColorBlendFunction = (Andastra.Runtime.Graphics.BlendFunction?)Andastra.Runtime.Graphics.BlendFunction.Add,
-                BlendColorSourceBlend = Andastra.Runtime.Graphics.Blend.SourceAlpha,
-                BlendColorDestinationBlend = Andastra.Runtime.Graphics.Blend.InverseSourceAlpha,
-                BlendColorWriteChannels = Andastra.Runtime.Graphics.ColorWriteChannels.All,
+                BlendAlphaBlendFunction = (Andastra.Runtime.Graphics.BlendFunction?)Runtime.Graphics.BlendFunction.Add,
+                BlendAlphaSourceBlend = Runtime.Graphics.Blend.SourceAlpha,
+                BlendAlphaDestinationBlend = Runtime.Graphics.Blend.InverseSourceAlpha,
+                BlendColorBlendFunction = (Andastra.Runtime.Graphics.BlendFunction?)Runtime.Graphics.BlendFunction.Add,
+                BlendColorSourceBlend = Runtime.Graphics.Blend.SourceAlpha,
+                BlendColorDestinationBlend = Runtime.Graphics.Blend.InverseSourceAlpha,
+                BlendColorWriteChannels = Runtime.Graphics.ColorWriteChannels.All,
 
                 // Sampler
                 SamplerAddressU = TextureAddressMode.Wrap,

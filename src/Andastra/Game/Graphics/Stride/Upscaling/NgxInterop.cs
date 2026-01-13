@@ -335,21 +335,21 @@ namespace Andastra.Game.Stride.Upscaling
         /// <summary>
         /// Convert Andastra DlssMode to NGX DLSS mode value.
         /// </summary>
-        public static int DlssModeToNgxValue(Andastra.Runtime.Graphics.Common.Enums.DlssMode mode)
+        public static int DlssModeToNgxValue(Runtime.Graphics.Common.Enums.DlssMode mode)
         {
             switch (mode)
             {
-                case Andastra.Runtime.Graphics.Common.Enums.DlssMode.Off:
+                case Runtime.Graphics.Common.Enums.DlssMode.Off:
                     return (int)NgxDlssMode.Off;
-                case Andastra.Runtime.Graphics.Common.Enums.DlssMode.DLAA:
+                case Runtime.Graphics.Common.Enums.DlssMode.DLAA:
                     return (int)NgxDlssMode.DLAA;
-                case Andastra.Runtime.Graphics.Common.Enums.DlssMode.Quality:
+                case Runtime.Graphics.Common.Enums.DlssMode.Quality:
                     return (int)NgxDlssMode.Quality;
-                case Andastra.Runtime.Graphics.Common.Enums.DlssMode.Balanced:
+                case Runtime.Graphics.Common.Enums.DlssMode.Balanced:
                     return (int)NgxDlssMode.Balanced;
-                case Andastra.Runtime.Graphics.Common.Enums.DlssMode.Performance:
+                case Runtime.Graphics.Common.Enums.DlssMode.Performance:
                     return (int)NgxDlssMode.Performance;
-                case Andastra.Runtime.Graphics.Common.Enums.DlssMode.UltraPerformance:
+                case Runtime.Graphics.Common.Enums.DlssMode.UltraPerformance:
                     return (int)NgxDlssMode.UltraPerformance;
                 default:
                     return (int)NgxDlssMode.Off;

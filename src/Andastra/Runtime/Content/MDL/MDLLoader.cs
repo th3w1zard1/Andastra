@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Content.MDL
     /// - "Cannot load door model '%s'." @ 0x007d2488 (door model loading error)
     /// - "CSWCVisualEffect::LoadModel: Failed to load visual effect model '%s'." @ 0x007cd5a8 (VFX model error)
     /// - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40 (body model error)
-    /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models from appearance.2da
+    /// - Model loading: 0x005261b0 @ 0x005261b0 loads creature models from appearance.2da
     /// - Original implementation: Loads MDL (model definition) and MDX (geometry data) files
     /// - Model resolution: Resolves model ResRefs from appearance.2da (ModelA, ModelB columns for variants)
     /// - Fallback models: Uses default models when specified model cannot be loaded
@@ -136,7 +136,7 @@ namespace Andastra.Runtime.Content.MDL
         /// </summary>
         /// <param name="resRef">Resource reference (model name without extension)</param>
         /// <returns>Loaded MDL model, or null if not found</returns>
-        public Andastra.Runtime.Core.MDL.MDLModel Load(string resRef)
+        public Runtime.Core.MDL.MDLModel Load(string resRef)
         {
             if (string.IsNullOrEmpty(resRef))
             {

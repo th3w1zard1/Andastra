@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using Andastra.Game.Games.Aurora.EngineApi;
 using Andastra.Game.Games.Common;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Aurora.Profiles
+namespace Andastra.Game.Games.Aurora.Profiles
 {
     /// <summary>
     /// Abstract base class for Aurora Engine game profiles (Neverwinter Nights, Neverwinter Nights 2).

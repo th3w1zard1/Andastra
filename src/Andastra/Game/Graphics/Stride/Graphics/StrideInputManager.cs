@@ -239,9 +239,9 @@ namespace Andastra.Game.Stride.Graphics
         public Vector2 Position => new Vector2(_inputManager.MousePosition.X, _inputManager.MousePosition.Y);
         public int ScrollWheelValue => (int)_inputManager.MouseWheelDelta;
 
-        public ButtonState LeftButton => _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
-        public ButtonState RightButton => _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
-        public ButtonState MiddleButton => _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
+        public ButtonState LeftButton => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Left) ? ButtonState.Pressed : ButtonState.Released;
+        public ButtonState RightButton => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Right) ? ButtonState.Pressed : ButtonState.Released;
+        public ButtonState MiddleButton => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Middle) ? ButtonState.Pressed : ButtonState.Released;
         public ButtonState XButton1 => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended1) ? ButtonState.Pressed : ButtonState.Released;
         public ButtonState XButton2 => _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended2) ? ButtonState.Pressed : ButtonState.Released;
 
@@ -250,11 +250,11 @@ namespace Andastra.Game.Stride.Graphics
             switch (button)
             {
                 case GraphicsMouseButton.Left:
-                    return _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Left);
+                    return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Left);
                 case GraphicsMouseButton.Right:
-                    return _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Right);
+                    return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Right);
                 case GraphicsMouseButton.Middle:
-                    return _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Middle);
+                    return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Middle);
                 case GraphicsMouseButton.XButton1:
                     return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended1);
                 case GraphicsMouseButton.XButton2:

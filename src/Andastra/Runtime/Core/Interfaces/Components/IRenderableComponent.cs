@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// - Cross-Engine Analysis (Reverse Engineered via Ghidra):
     ///   - Odyssey Engine (swkotor.exe, swkotor2.exe):
     ///     - swkotor.exe: CSWCCreature::LoadModel() @ 0x0074f85c loads creature model from appearance.2da
-    ///     - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da row
+    ///     - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature model from appearance.2da row
     ///     - String references: "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
     ///     - Model fields: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c, "ModelA" @ 0x007bf4bc, "ModelB" (implied)
     ///     - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990

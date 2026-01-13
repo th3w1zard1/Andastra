@@ -24,7 +24,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity creation system
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
     /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
-    /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
+    /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
     ///   - Original implementation: Loads UTC GFF structure, reads fields in specific order:
     ///     - FirstName, LastName, Description (localized strings)
     ///     - IsPC, Tag, Conversation (ResRef)
@@ -64,7 +64,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
     {
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ObjectId assignment system
         // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
-        // Original implementation: FUN_004e5920 @ 0x004e5920 reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
+        // Original implementation: 0x004e5920 @ 0x004e5920 reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
         // ObjectIds should be unique across all entities. Use high range (1000000+) to avoid conflicts with World.CreateEntity counter
         private uint _nextObjectId = 1000000;
 
@@ -79,7 +79,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
         /// <summary>
         /// Reads ObjectId from GIT struct if present, otherwise generates new one.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
         /// </summary>
         private uint GetObjectIdFromGit(GFFStruct gitStruct)
         {
@@ -314,7 +314,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             });
 
             // Load ScriptDialogue as Conversation property (dialogue ResRef for BeginConversation)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
             // ScriptDialogue ResRef is the dialogue file (DLG) used for conversations with this creature
             string scriptDialogue = GetResRefField(root, "ScriptDialogue");
             if (!string.IsNullOrEmpty(scriptDialogue))
@@ -399,14 +399,14 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("Static", GetIntField(root, "Static", 0) != 0);
 
             // Load TSL-specific fields (KotOR2 only)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
             // Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only), "NotBlastable" (UInt8/Byte, KotOR2 only)
             // Original implementation: These fields do not exist in swkotor.exe (KotOR1)
             entity.SetData("Min1HP", GetIntField(root, "Min1HP", 0) != 0);
             entity.SetData("NotBlastable", GetIntField(root, "NotBlastable", 0) != 0);
 
             // Load Conversation field (dialogue ResRef for BeginConversation)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00580330 @ 0x00580330 saves door data including Conversation field
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00580330 @ 0x00580330 saves door data including Conversation field
             // Located via string reference: "Conversation" @ 0x007c1abc
             string conversation = GetResRefField(root, "Conversation");
             if (!string.IsNullOrEmpty(conversation))
@@ -607,7 +607,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
                         int param1 = GetIntField(propStruct, "Param1", 0);
                         int param1Value = GetIntField(propStruct, "Param1Value", 0);
 
-                        var property = new Andastra.Runtime.Core.Interfaces.Components.ItemProperty
+                        var property = new Runtime.Core.Interfaces.Components.ItemProperty
                         {
                             PropertyType = propertyName,
                             Subtype = subType,

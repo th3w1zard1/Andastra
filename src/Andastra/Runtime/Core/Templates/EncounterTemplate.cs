@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Templates
     /// Encounter Template:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) encounter system
     /// - Located via string references: "Encounter" @ 0x007bc524, "Encounter List" @ 0x007bd050
-    /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references encounter templates)
+    /// - Template loading: 0x005226d0 @ 0x005226d0 (entity serialization references encounter templates)
     /// - Original implementation: UTE (Encounter) GFF templates define encounter properties
     /// - UTE file format: GFF with "UTE " signature containing encounter data
     /// - Encounters spawn creatures when hostile creatures enter encounter polygon area
@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Core.Templates
             // Apply script hooks
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Encounter script hooks from UTE template
             // Located via string references: "ScriptOnEnter" @ 0x007c1a10, "ScriptOnExit" @ 0x007c1a0c, "OnExhausted" @ 0x007c1a28
-            // Original implementation: FUN_005226d0 @ 0x005226d0 loads encounter script hooks from UTE template
+            // Original implementation: 0x005226d0 @ 0x005226d0 loads encounter script hooks from UTE template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();
             if (scripts != null)
             {

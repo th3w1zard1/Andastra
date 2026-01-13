@@ -16,7 +16,7 @@ namespace Andastra.Game.Games.Odyssey.Input
     /// </summary>
     /// <remarks>
     /// K2 Player Input Handler:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) input system reverse engineering via Ghidra MCP
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) input system further analysis
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
@@ -34,7 +34,7 @@ namespace Andastra.Game.Games.Odyssey.Input
     ///   - Combat forms (affects combat cursor modes)
     ///   - Item crafting system (workbench/lab station interaction)
     /// - Reverse engineered functions:
-    ///   - FUN_005226d0 @ 0x005226d0 (swkotor2.exe: player input handling and movement)
+    ///   - 0x005226d0 @ 0x005226d0 (swkotor2.exe: player input handling and movement)
     ///   - UpdateCreatureMovement @ 0x0054be70 (movement handling)
     ///   - Input processing functions in CExoInputInternal class
     /// - Cross-engine comparison:
@@ -67,7 +67,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - K2 has Combat Forms which can affect cursor display (attack cursor variations)
-        /// - FUN_005226d0 @ 0x005226d0 processes input and determines cursor mode
+        /// - 0x005226d0 @ 0x005226d0 processes input and determines cursor mode
         /// - K2-specific: Combat forms (Juyo, Makashi, etc.) affect cursor appearance when hovering over hostile targets
         /// - Combat forms are stored as "ActiveCombatForm" in entity data (int value matching CombatForm enum)
         /// - Lightsaber forms (258-264) affect attack cursor display
@@ -263,7 +263,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// - Party member influence can change how NPCs react (hostile/friendly)
         /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
         /// - Located via string references: Faction system, influence system
-        /// - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (player input handling) checks influence when determining hostility
+        /// - swkotor2.exe: 0x005226d0 @ 0x005226d0 (player input handling) checks influence when determining hostility
         /// - Influence system: Party member influence (0-100, 50 = neutral) affects NPC reactions
         /// - High influence (80-100) with certain party members can make NPCs more friendly
         /// - Low influence (0-20) can make NPCs more hostile

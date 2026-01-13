@@ -26,7 +26,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Trap triggers: OnTrapTriggered script fires when trap is activated
     /// - Geometry: Triggers have polygon geometry (Geometry field in GIT) defining trigger volume
     /// - Based on UTT file format documentation in vendor/PyKotor/wiki/
-    /// - FUN_004e5920 @ 0x004e5920 (swkotor2.exe) loads trigger instances from GIT TriggerList, reads UTT templates
+    /// - 0x004e5920 @ 0x004e5920 (swkotor2.exe) loads trigger instances from GIT TriggerList, reads UTT templates
     /// </remarks>
     public class TriggerComponent : BaseTriggerComponent
     {

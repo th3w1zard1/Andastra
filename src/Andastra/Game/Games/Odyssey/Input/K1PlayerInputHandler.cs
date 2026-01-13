@@ -13,7 +13,7 @@ namespace Andastra.Game.Games.Odyssey.Input
     /// </summary>
     /// <remarks>
     /// K1 Player Input Handler:
-    /// - Based on swkotor.exe input system reverse engineering via Ghidra MCP
+    /// - Based on swkotor.exe input system further analysis
     /// - Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "Mouse Sensitivity" @ 0x007c85cc
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
@@ -28,12 +28,12 @@ namespace Andastra.Game.Games.Odyssey.Input
     ///   - No Combat Forms (standard combat only)
     ///   - Simpler item system (no workbench/lab station crafting)
     /// - Reverse engineered functions (swkotor.exe):
-    ///   - FUN_0054b550 @ 0x0054b550 (swkotor.exe: input event handler for mouse clicks and movement)
+    ///   - 0x0054b550 @ 0x0054b550 (swkotor.exe: input event handler for mouse clicks and movement)
     ///     - Processes DirectInput event codes (0x26 = left mouse button, 0xe2 = right mouse button, etc.)
     ///     - Handles click-to-move, object selection, and interaction
     ///     - Validates movement targets on walkmesh before processing
     ///   - Input processing functions in CExoInputInternal class equivalent
-    ///   - Note: FUN_005226d0 in swkotor2.exe is SerializeCreature_K2 (serialization), NOT input handling
+    ///   - Note: 0x005226d0 in swkotor2.exe is SerializeCreature_K2 (serialization), NOT input handling
     /// - Cross-engine comparison:
     ///   - K1 (swkotor.exe): Simpler input system without K2-specific features
     ///   - K2 (swkotor2.exe): Enhanced input system with Influence, Prestige Classes, Combat Forms
@@ -64,7 +64,7 @@ namespace Andastra.Game.Games.Odyssey.Input
         /// <remarks>
         /// Based on swkotor.exe reverse engineering:
         /// - K1 has a simpler cursor system without combat form variations
-        /// - FUN_0054b550 @ 0x0054b550 (swkotor.exe) processes input events and determines cursor mode
+        /// - 0x0054b550 @ 0x0054b550 (swkotor.exe) processes input events and determines cursor mode
         /// - K1-specific: Standard cursor modes only (no combat form-specific variations)
         /// - Uses base class implementation which handles all common cases
         /// - Input handling is fully implemented in base PlayerInputHandler class

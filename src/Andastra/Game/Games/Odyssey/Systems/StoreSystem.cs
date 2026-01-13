@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Odyssey.Components;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// Manages merchant store interactions.
@@ -22,7 +22,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
     /// - "OnOpenStore" @ 0x007c1200 (store open script event), "Store template %s doesn't exist.\n" @ 0x007c1228
     /// - "StorePanelSort" @ 0x007c440c, "StorePanel" @ 0x007c441c (store GUI panels)
     /// - "store_p" @ 0x007d0190 (store panel GUI), "store" @ 0x007b6068 (store constant)
-    /// - Original implementation: FUN_004e08e0 @ 0x004e08e0 loads store instances from GIT
+    /// - Original implementation: 0x004e08e0 @ 0x004e08e0 loads store instances from GIT
     /// - Store templates: UTM (Store) GFF files with "UTM " signature containing merchant inventory
     /// - Store inventory: List of items with prices, quantities, and restock flags
     /// - Markup rates: Buy/sell price multipliers (buyPrice = basePrice * buyMarkup, sellPrice = basePrice * sellMarkup)
@@ -52,7 +52,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
                 return;
             }
 
-            if (storeEntity.ObjectType != Core.Enums.ObjectType.Store)
+            if (storeEntity.ObjectType != Runtime.Core.Enums.ObjectType.Store)
             {
                 return;
             }
@@ -66,7 +66,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
             // Fire OnOpenStore script event
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnOpenStore script fires when store is opened
             // Located via string reference: "OnOpenStore" @ 0x007c1200
-            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 dispatches OnOpenStore script event
+            // Original implementation: 0x004dcfb0 @ 0x004dcfb0 dispatches OnOpenStore script event
             IEventBus eventBus = _world.EventBus;
             if (eventBus != null)
             {

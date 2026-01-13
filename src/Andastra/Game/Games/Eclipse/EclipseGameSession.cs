@@ -6,8 +6,9 @@ using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Game.Engines.Eclipse
+namespace Andastra.Game.Games.Engines.Eclipse
 {
     /// <summary>
     /// Abstract base class for Eclipse Engine game session implementations.
@@ -75,4 +76,3 @@ namespace Andastra.Game.Engines.Eclipse
         }
     }
 }
-

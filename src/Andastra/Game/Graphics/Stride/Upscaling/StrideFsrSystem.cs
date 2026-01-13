@@ -4,7 +4,7 @@ using System.Reflection;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Upscaling;
-using Andastra.Runtime.Stride.Graphics;
+using Andastra.Game.Stride.Graphics;
 using Stride.Core;
 using Stride.Core.IO;
 using Stride.Core.Mathematics;

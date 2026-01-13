@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Enums
     /// - Original implementation: Action types stored in GFF ActionList structures
     /// - Action types correspond to NWScript action functions (ActionMoveToLocation, ActionAttack, etc.)
     /// - Actions stored with parameters (ActionParam1-5, ActionParamStrA/B) for execution
-    /// - FUN_00508260 @ 0x00508260 (load ActionList), FUN_00505bc0 @ 0x00505bc0 (save ActionList)
+    /// - 0x00508260 @ 0x00508260 (load ActionList), 0x00505bc0 @ 0x00505bc0 (save ActionList)
     /// </remarks>
     public enum ActionType
     {

@@ -18,11 +18,11 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - "ScriptOnTrapTriggered" @ 0x007c1a34, "ScriptOnClick" @ 0x007c1a20, "ScriptOnLock" @ 0x007c1a0c
     /// - "ScriptOnUnlock" @ 0x007c1a00, "ScriptOnFailToOpen" @ 0x007c1a10, "ScriptOnUserDefined" @ 0x007bee10
     /// - Original implementation:
-    ///   - swkotor.exe: FUN_004ebf20, FUN_00500610, FUN_0058e660, FUN_0058da80 (script hooks save/load)
-    ///   - swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save script hooks for creatures)
-    ///   - swkotor2.exe: FUN_00585ec0 @ 0x00585ec0 (save script hooks for placeables)
-    ///   - swkotor2.exe: FUN_00584f40 @ 0x00584f40 (save script hooks for doors)
-    ///   - swkotor2.exe: FUN_0050c510 @ 0x0050c510 (load script hooks from UTC template)
+    ///   - swkotor.exe: 0x004ebf20, 0x00500610, 0x0058e660, 0x0058da80 (script hooks save/load)
+    ///   - swkotor2.exe: 0x005226d0 @ 0x005226d0 (save script hooks for creatures)
+    ///   - swkotor2.exe: 0x00585ec0 @ 0x00585ec0 (save script hooks for placeables)
+    ///   - swkotor2.exe: 0x00584f40 @ 0x00584f40 (save script hooks for doors)
+    ///   - swkotor2.exe: 0x0050c510 @ 0x0050c510 (load script hooks from UTC template)
     /// - Maps script events to script resource references (ResRef strings)
     /// - Scripts are executed by NCS VM when events fire (OnHeartbeat, OnPerception, OnAttacked, etc.)
     /// - Script ResRefs stored in GFF structures (e.g., ScriptHeartbeat, ScriptOnNotice fields)

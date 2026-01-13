@@ -19,7 +19,7 @@ using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 using ObjectType = BioWare.NET.Common.ObjectType;
 // Removed: ParsingIModule - IModule does not exist in BioWare.NET.Common
-// Use RuntimeIModule (Andastra.Runtime.Core.Interfaces.IModule) instead if needed
+// Use RuntimeIModule (Runtime.Core.Interfaces.IModule) instead if needed
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
@@ -152,7 +152,7 @@ namespace Andastra.Game.Games.Odyssey
 
             // Initialize area local variables storage
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variables are initialized when area is created
-            _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+            _localVariables = new Runtime.Core.Save.LocalVariableSet();
 
             LoadAreaGeometry(areData);
             LoadEntities(gitData);
@@ -302,10 +302,10 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects a point onto the walkmesh.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
+        /// Based on 0x004f5070 @ 0x004f5070 in swkotor2.exe.
         ///
         /// Ghidra analysis (swkotor2.exe: 0x004f5070, verified):
-        /// - Signature: `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
+        /// - Signature: `float10 __thiscall 0x004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
         /// - Projects point to walkmesh surface and returns height
         /// - Called from 34 locations throughout the engine for positioning and pathfinding
         /// - Delegates to OdysseyNavigationMesh.ProjectToWalkmesh for actual projection
@@ -345,25 +345,25 @@ namespace Andastra.Game.Games.Odyssey
         /// - Returns: uint* pointer (typically param_2 or null)
         ///
         /// Function flow:
-        /// 1. Calls FUN_00412b30 to get "AreaProperties" nested struct from GFF root
+        /// 1. Calls 0x00412b30 to get "AreaProperties" nested struct from GFF root
         /// 2. If AreaProperties struct exists, reads the following fields:
-        ///    - "Unescapable" (UInt8) via FUN_00412b80 -> stored at offset 0x2dc
-        ///    - "RestrictMode" (UInt8) via FUN_00412b80 -> stored at offset 0x2e4
-        ///      * If RestrictMode changed, triggers FUN_004dc770 and FUN_0057a370 (restriction update)
-        ///    - "StealthXPMax" (Int32) via FUN_00412d40 -> stored at offset 0x2e8
+        ///    - "Unescapable" (UInt8) via 0x00412b80 -> stored at offset 0x2dc
+        ///    - "RestrictMode" (UInt8) via 0x00412b80 -> stored at offset 0x2e4
+        ///      * If RestrictMode changed, triggers 0x004dc770 and 0x0057a370 (restriction update)
+        ///    - "StealthXPMax" (Int32) via 0x00412d40 -> stored at offset 0x2e8
         ///      * Clamps StealthXPCurrent to StealthXPMax if current > max
-        ///    - "StealthXPCurrent" (Int32) via FUN_00412d40 -> stored at offset 0x2ec
+        ///    - "StealthXPCurrent" (Int32) via 0x00412d40 -> stored at offset 0x2ec
         ///      * Clamped to StealthXPMax if exceeds max
-        ///    - "StealthXPLoss" (Int32) via FUN_00412d40 -> stored at offset 0x2f0
-        ///    - "StealthXPEnabled" (UInt8) via FUN_00412b80 -> stored at offset 0x2f4
-        ///    - "TransPending" (UInt8) via FUN_00412b80 -> stored at offset 0x2f8
-        ///    - "TransPendNextID" (UInt8) via FUN_00412b80 -> stored at offset 0x2fc
-        ///    - "TransPendCurrID" (UInt8) via FUN_00412b80 -> stored at offset 0x2fd
-        ///    - "SunFogColor" (UInt32) via FUN_00412d40 -> stored at offset 0x8c
-        /// 3. Calls FUN_00574350 to load music properties (MusicDelay, MusicDay, etc.)
+        ///    - "StealthXPLoss" (Int32) via 0x00412d40 -> stored at offset 0x2f0
+        ///    - "StealthXPEnabled" (UInt8) via 0x00412b80 -> stored at offset 0x2f4
+        ///    - "TransPending" (UInt8) via 0x00412b80 -> stored at offset 0x2f8
+        ///    - "TransPendNextID" (UInt8) via 0x00412b80 -> stored at offset 0x2fc
+        ///    - "TransPendCurrID" (UInt8) via 0x00412b80 -> stored at offset 0x2fd
+        ///    - "SunFogColor" (UInt32) via 0x00412d40 -> stored at offset 0x8c
+        /// 3. Calls 0x00574350 to load music properties (MusicDelay, MusicDay, etc.)
         ///
         /// Called from:
-        /// - FUN_004e9440 @ 0x004e9440 (area loading sequence)
+        /// - 0x004e9440 @ 0x004e9440 (area loading sequence)
         ///
         /// Note: This implementation only stores Unescapable and StealthXPEnabled.
         /// Other fields (RestrictMode, StealthXPMax, StealthXPCurrent, StealthXPLoss,
@@ -456,61 +456,61 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Read AreaProperties nested struct (based on Ghidra analysis: swkotor2.exe: 0x004e26d0)
-                // Line 16: FUN_00412b30(param_1, (int *)&param_2, param_2, "AreaProperties")
+                // Line 16: 0x00412b30(param_1, (int *)&param_2, param_2, "AreaProperties")
                 GFFStruct areaProperties = root.GetStruct("AreaProperties");
                 if (areaProperties != null)
                 {
-                    // Read Unescapable (line 18-20: FUN_00412b80 reads "Unescapable")
+                    // Read Unescapable (line 18-20: 0x00412b80 reads "Unescapable")
                     // Stored as UInt8, converted to bool
                     if (areaProperties.Exists("Unescapable"))
                     {
                         _isUnescapable = areaProperties.GetUInt8("Unescapable") != 0;
                     }
 
-                    // Read RestrictMode (line 21-29: FUN_00412b80 reads "RestrictMode")
+                    // Read RestrictMode (line 21-29: 0x00412b80 reads "RestrictMode")
                     // Note: RestrictMode is not currently stored in OdysseyArea, but we read it for completeness
                     // If needed in future, add _restrictMode field
 
-                    // Read StealthXPMax (line 30-35: FUN_00412d40 reads "StealthXPMax")
+                    // Read StealthXPMax (line 30-35: 0x00412d40 reads "StealthXPMax")
                     // Note: StealthXPMax is not currently stored in OdysseyArea, but we read it for completeness
                     // If needed in future, add _stealthXpMax field
 
-                    // Read StealthXPCurrent (line 36-40: FUN_00412d40 reads "StealthXPCurrent")
+                    // Read StealthXPCurrent (line 36-40: 0x00412d40 reads "StealthXPCurrent")
                     // Note: StealthXPCurrent is not currently stored in OdysseyArea, but we read it for completeness
                     // If needed in future, add _stealthXpCurrent field
 
-                    // Read StealthXPLoss (line 41-43: FUN_00412d40 reads "StealthXPLoss")
+                    // Read StealthXPLoss (line 41-43: 0x00412d40 reads "StealthXPLoss")
                     // Note: StealthXPLoss is not currently stored in OdysseyArea, but we read it for completeness
                     // If needed in future, add _stealthXpLoss field
 
-                    // Read StealthXPEnabled (line 44-46: FUN_00412b80 reads "StealthXPEnabled")
+                    // Read StealthXPEnabled (line 44-46: 0x00412b80 reads "StealthXPEnabled")
                     if (areaProperties.Exists("StealthXPEnabled"))
                     {
                         _stealthXpEnabled = areaProperties.GetUInt8("StealthXPEnabled") != 0;
                     }
 
-                    // Read TransPending (line 47-49: FUN_00412b80 reads "TransPending")
+                    // Read TransPending (line 47-49: 0x00412b80 reads "TransPending")
                     // Stored as UInt8, converted to bool
                     if (areaProperties.Exists("TransPending"))
                     {
                         _transPending = areaProperties.GetUInt8("TransPending") != 0;
                     }
 
-                    // Read TransPendNextID (line 50-52: FUN_00412b80 reads "TransPendNextID")
+                    // Read TransPendNextID (line 50-52: 0x00412b80 reads "TransPendNextID")
                     // Stored as UInt8
                     if (areaProperties.Exists("TransPendNextID"))
                     {
                         _transPendNextId = areaProperties.GetUInt8("TransPendNextID");
                     }
 
-                    // Read TransPendCurrID (line 53-55: FUN_00412b80 reads "TransPendCurrID")
+                    // Read TransPendCurrID (line 53-55: 0x00412b80 reads "TransPendCurrID")
                     // Stored as UInt8
                     if (areaProperties.Exists("TransPendCurrID"))
                     {
                         _transPendCurrId = areaProperties.GetUInt8("TransPendCurrID");
                     }
 
-                    // Read SunFogColor from AreaProperties (line 56-58: FUN_00412d40 reads "SunFogColor")
+                    // Read SunFogColor from AreaProperties (line 56-58: 0x00412d40 reads "SunFogColor")
                     // Note: This is also available at root level, but AreaProperties takes precedence
                     if (areaProperties.Exists("SunFogColor"))
                     {
@@ -557,23 +557,23 @@ namespace Andastra.Game.Games.Odyssey
         /// - param_2: Additional parameter (unused in this context)
         ///
         /// Function flow:
-        /// 1. Calls FUN_004136d0 to create/get "AreaProperties" nested struct from GFF root
-        /// 2. Calls FUN_00574440 to save music properties (MusicDelay, MusicDay, etc.)
+        /// 1. Calls 0x004136d0 to create/get "AreaProperties" nested struct from GFF root
+        /// 2. Calls 0x00574440 to save music properties (MusicDelay, MusicDay, etc.)
         /// 3. Writes the following fields to AreaProperties struct:
-        ///    - "Unescapable" (UInt8) via FUN_00413740 -> from offset 0x2dc
-        ///    - "DisableTransit" (UInt8) via FUN_00413740 -> from offset 0x2e0
-        ///    - "RestrictMode" (UInt8) via FUN_00413740 -> from offset 0x2e4
-        ///    - "StealthXPMax" (Int32) via FUN_00413880 -> from offset 0x2e8
-        ///    - "StealthXPCurrent" (Int32) via FUN_00413880 -> from offset 0x2ec
-        ///    - "StealthXPLoss" (Int32) via FUN_00413880 -> from offset 0x2f0
-        ///    - "StealthXPEnabled" (UInt8) via FUN_00413740 -> from offset 0x2f4
-        ///    - "TransPending" (UInt8) via FUN_00413740 -> from offset 0x2f8
-        ///    - "TransPendNextID" (UInt8) via FUN_00413740 -> from offset 0x2fc
-        ///    - "TransPendCurrID" (UInt8) via FUN_00413740 -> from offset 0x2fd
-        ///    - "SunFogColor" (UInt32) via FUN_00413880 -> from offset 0x8c
+        ///    - "Unescapable" (UInt8) via 0x00413740 -> from offset 0x2dc
+        ///    - "DisableTransit" (UInt8) via 0x00413740 -> from offset 0x2e0
+        ///    - "RestrictMode" (UInt8) via 0x00413740 -> from offset 0x2e4
+        ///    - "StealthXPMax" (Int32) via 0x00413880 -> from offset 0x2e8
+        ///    - "StealthXPCurrent" (Int32) via 0x00413880 -> from offset 0x2ec
+        ///    - "StealthXPLoss" (Int32) via 0x00413880 -> from offset 0x2f0
+        ///    - "StealthXPEnabled" (UInt8) via 0x00413740 -> from offset 0x2f4
+        ///    - "TransPending" (UInt8) via 0x00413740 -> from offset 0x2f8
+        ///    - "TransPendNextID" (UInt8) via 0x00413740 -> from offset 0x2fc
+        ///    - "TransPendCurrID" (UInt8) via 0x00413740 -> from offset 0x2fd
+        ///    - "SunFogColor" (UInt32) via 0x00413880 -> from offset 0x8c
         ///
         /// Called from:
-        /// - FUN_004e7040 @ 0x004e7040 (area save sequence)
+        /// - 0x004e7040 @ 0x004e7040 (area save sequence)
         ///
         /// Note: This implementation writes both root-level ARE fields and AreaProperties nested struct
         /// to ensure full round-trip compatibility with LoadAreaProperties. The original SaveAreaProperties
@@ -627,73 +627,73 @@ namespace Andastra.Game.Games.Odyssey
             root.SetSingle("SunFogNear", FogNear);
             root.SetSingle("SunFogFar", _fogFar);
 
-            // Create AreaProperties nested struct (based on Ghidra analysis: FUN_004136d0 creates/gets struct)
+            // Create AreaProperties nested struct (based on Ghidra analysis: 0x004136d0 creates/gets struct)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SaveAreaProperties @ 0x004e11d0 line 12
-            // FUN_004136d0(param_1, (uint *)&param_2, param_2, "AreaProperties", 100)
+            // 0x004136d0(param_1, (uint *)&param_2, param_2, "AreaProperties", 100)
             var areaProperties = new GFFStruct();
             root.SetStruct("AreaProperties", areaProperties);
 
             // Write Unescapable (based on Ghidra analysis: line 14)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2dc), "Unescapable")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2dc), "Unescapable")
             // Stored as UInt8, converted from bool
             areaProperties.SetUInt8("Unescapable", _isUnescapable ? (byte)1 : (byte)0);
 
             // Write DisableTransit (based on Ghidra analysis: line 15)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2e0), "DisableTransit")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2e0), "DisableTransit")
             // Note: DisableTransit is not currently stored in OdysseyArea, but we write default value for compatibility
             // If needed in future, add _disableTransit field
             areaProperties.SetUInt8("DisableTransit", (byte)0);
 
             // Write RestrictMode (based on Ghidra analysis: line 16)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2e4), "RestrictMode")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2e4), "RestrictMode")
             // Note: RestrictMode is not currently stored in OdysseyArea, but we write default value for compatibility
             // If needed in future, add _restrictMode field
             areaProperties.SetUInt8("RestrictMode", (byte)0);
 
             // Write StealthXPMax (based on Ghidra analysis: line 17)
-            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2e8), "StealthXPMax")
+            // 0x00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2e8), "StealthXPMax")
             // Note: StealthXPMax is not currently stored in OdysseyArea, but we write default value for compatibility
             // If needed in future, add _stealthXpMax field
             areaProperties.SetInt32("StealthXPMax", 0);
 
             // Write StealthXPCurrent (based on Ghidra analysis: line 18)
-            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2ec), "StealthXPCurrent")
+            // 0x00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2ec), "StealthXPCurrent")
             // Note: StealthXPCurrent is not currently stored in OdysseyArea, but we write default value for compatibility
             // If needed in future, add _stealthXpCurrent field
             areaProperties.SetInt32("StealthXPCurrent", 0);
 
             // Write StealthXPLoss (based on Ghidra analysis: line 19)
-            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2f0), "StealthXPLoss")
+            // 0x00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x2f0), "StealthXPLoss")
             // Note: StealthXPLoss is not currently stored in OdysseyArea, but we write default value for compatibility
             // If needed in future, add _stealthXpLoss field
             areaProperties.SetInt32("StealthXPLoss", 0);
 
             // Write StealthXPEnabled (based on Ghidra analysis: line 20)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2f4), "StealthXPEnabled")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2f4), "StealthXPEnabled")
             // Stored as UInt8, converted from bool
             areaProperties.SetUInt8("StealthXPEnabled", _stealthXpEnabled ? (byte)1 : (byte)0);
 
             // Write TransPending (based on Ghidra analysis: line 21)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2f8), "TransPending")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2f8), "TransPending")
             // Stored as UInt8, converted from bool
             areaProperties.SetUInt8("TransPending", _transPending ? (byte)1 : (byte)0);
 
             // Write TransPendNextID (based on Ghidra analysis: line 22)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2fc), "TransPendNextID")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2fc), "TransPendNextID")
             // Stored as UInt8
             areaProperties.SetUInt8("TransPendNextID", _transPendNextId);
 
             // Write TransPendCurrID (based on Ghidra analysis: line 23)
-            // FUN_00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2fd), "TransPendCurrID")
+            // 0x00413740(param_1, (uint *)&param_2, *(byte *)((int)this + 0x2fd), "TransPendCurrID")
             // Stored as UInt8
             areaProperties.SetUInt8("TransPendCurrID", _transPendCurrId);
 
             // Write SunFogColor (based on Ghidra analysis: line 24)
-            // FUN_00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x8c), "SunFogColor")
+            // 0x00413880(param_1, (uint *)&param_2, *(undefined4 *)((int)this + 0x8c), "SunFogColor")
             // Stored as UInt32 in BGR format
             areaProperties.SetUInt32("SunFogColor", _sunFogColor);
 
-            // Note: FUN_00574440 (line 13) saves music properties, but music properties are not stored in OdysseyArea
+            // Note: 0x00574440 (line 13) saves music properties, but music properties are not stored in OdysseyArea
             // If needed in future, add music property fields and call equivalent function
 
             // Serialize GFF to byte array
@@ -710,25 +710,25 @@ namespace Andastra.Game.Games.Odyssey
         /// Creates appropriate entity types and attaches components.
         ///
         /// Function addresses (verified via Ghidra MCP):
-        /// - swkotor.exe: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
+        /// - swkotor.exe: 0x004dfbb0 @ 0x004dfbb0 loads creature instances from GIT
         ///   - Located via string reference: "Creature List" @ 0x007bd01c
         ///   - Reads ObjectId, TemplateResRef, XPosition, YPosition, ZPosition, XOrientation, YOrientation
         ///   - Validates position on walkmesh (20.0 unit radius check) before spawning
         ///   - Converts orientation vector to quaternion
-        /// - swkotor2.exe: FUN_004e08e0 @ 0x004e08e0 loads placeable/door/store instances from GIT
+        /// - swkotor2.exe: 0x004e08e0 @ 0x004e08e0 loads placeable/door/store instances from GIT
         ///   - Located via string reference: "StoreList" (also handles "Door List" and "Placeable List")
         ///   - Reads ObjectId, ResRef, XPosition, YPosition, ZPosition, Bearing
         ///   - Loads template from UTP/UTD/UTM file
-        /// - swkotor2.exe: FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT
+        /// - swkotor2.exe: 0x004e5920 @ 0x004e5920 loads trigger instances from GIT
         ///   - Located via string reference: "TriggerList" @ 0x007bd254
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Geometry, LinkedTo, LinkedToModule
-        /// - swkotor2.exe: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
+        /// - swkotor2.exe: 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
         ///   - Located via string reference: "WaypointList" @ 0x007bd060
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Orientation, MapNote, MapNoteEnabled
-        /// - swkotor2.exe: FUN_004e06a0 @ 0x004e06a0 loads sound instances from GIT
+        /// - swkotor2.exe: 0x004e06a0 @ 0x004e06a0 loads sound instances from GIT
         ///   - Located via string reference: "SoundList" @ 0x007bd080
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Active, Continuous, Looping, Volume
-        /// - swkotor2.exe: FUN_004e2b20 @ 0x004e2b20 loads encounter instances from GIT
+        /// - swkotor2.exe: 0x004e2b20 @ 0x004e2b20 loads encounter instances from GIT
         ///   - Located via string reference: "Encounter List" @ 0x007bd050
         ///   - Reads ObjectId, Tag, TemplateResRef, Position, Geometry, SpawnPointList
         ///
@@ -817,7 +817,7 @@ namespace Andastra.Game.Games.Odyssey
                 uint nextObjectId = 1000000;
 
                 // Helper function to get or generate ObjectId
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
                 uint GetObjectId(uint? gitObjectId)
                 {
                     if (gitObjectId.HasValue && gitObjectId.Value != 0 && gitObjectId.Value != 0x7F000000)
@@ -828,7 +828,7 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Load creatures from GIT
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITCreature creature in git.Creatures)
                 {
                     // Create entity with ObjectId, ObjectType, and Tag
@@ -838,7 +838,7 @@ namespace Andastra.Game.Games.Odyssey
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Creature, creature.ResRef?.ToString() ?? string.Empty);
 
                     // Set position from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004dfbb0 reads XPosition, YPosition, ZPosition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004dfbb0 reads XPosition, YPosition, ZPosition
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -847,7 +847,7 @@ namespace Andastra.Game.Games.Odyssey
                     }
 
                     // Validate position on walkmesh if available
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f7590 validates position on walkmesh (20.0 unit radius check)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f7590 validates position on walkmesh (20.0 unit radius check)
                     if (_navigationMesh != null)
                     {
                         Vector3 validatedPosition;
@@ -867,14 +867,14 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Load doors from GIT
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads door instances from GIT "Door List"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 @ 0x004e08e0 loads door instances from GIT "Door List"
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Door, door.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 reads X, Y, Z, Bearing
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 reads X, Y, Z, Bearing
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -901,14 +901,14 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Load placeables from GIT
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads placeable instances from GIT "Placeable List"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 @ 0x004e08e0 loads placeable instances from GIT "Placeable List"
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
 
                     // Set position and orientation from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 reads X, Y, Z, Bearing
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 reads X, Y, Z, Bearing
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -926,14 +926,14 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Load triggers from GIT
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT "TriggerList"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e5920 @ 0x004e5920 loads trigger instances from GIT "TriggerList"
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Trigger, trigger.Tag ?? string.Empty);
 
                     // Set position from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 reads XPosition, YPosition, ZPosition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e5920 reads XPosition, YPosition, ZPosition
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -941,7 +941,7 @@ namespace Andastra.Game.Games.Odyssey
                     }
 
                     // Set trigger geometry from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 reads Geometry list (polygon vertices)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e5920 reads Geometry list (polygon vertices)
                     var triggerComponent = entity.GetComponent<ITriggerComponent>();
                     if (triggerComponent != null)
                     {
@@ -966,14 +966,14 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Load waypoints from GIT
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT "WaypointList"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT "WaypointList"
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Waypoint, waypoint.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e04a0 reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -982,7 +982,7 @@ namespace Andastra.Game.Games.Odyssey
                     }
 
                     // Set waypoint-specific properties from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 reads MapNote, MapNoteEnabled, HasMapNote
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e04a0 reads MapNote, MapNoteEnabled, HasMapNote
                     var waypointComponent = entity.GetComponent<IWaypointComponent>();
                     if (waypointComponent != null && waypointComponent is Components.OdysseyWaypointComponent odysseyWaypoint)
                     {
@@ -1015,14 +1015,14 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Load sounds from GIT
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e06a0 @ 0x004e06a0 loads sound instances from GIT "SoundList"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e06a0 @ 0x004e06a0 loads sound instances from GIT "SoundList"
                 foreach (BioWare.NET.Resource.Formats.GFF.Generics.GITSound sound in git.Sounds)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
 
                     // Set position from GIT
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e06a0 reads XPosition, YPosition, ZPosition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e06a0 reads XPosition, YPosition, ZPosition
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -1040,8 +1040,8 @@ namespace Andastra.Game.Games.Odyssey
 
                 // Note: Encounters and Stores are not currently supported in BaseArea entity collections
                 // They would be added here if support is added in the future
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e2b20 @ 0x004e2b20 loads encounter instances
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads store instances
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e2b20 @ 0x004e2b20 loads encounter instances
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e08e0 @ 0x004e08e0 loads store instances
             }
             catch (Exception)
             {
@@ -1143,9 +1143,9 @@ namespace Andastra.Game.Games.Odyssey
         ///
         /// Function addresses (verified via Ghidra MCP):
         /// - swkotor.exe: Walkmesh loading from WOK files
-        /// - swkotor2.exe: FUN_0055aef0 @ 0x0055aef0 (verified - references "BWM V1.0" string, likely WriteBWMFile)
-        /// - swkotor2.exe: FUN_006160c0 @ 0x006160c0 (verified - references "BWM V1.0" string, likely ValidateBWMHeader)
-        /// - swkotor2.exe: FUN_004f5070 @ 0x004f5070 (verified - walkmesh projection function, called from raycast/pathfinding)
+        /// - swkotor2.exe: 0x0055aef0 @ 0x0055aef0 (verified - references "BWM V1.0" string, likely WriteBWMFile)
+        /// - swkotor2.exe: 0x006160c0 @ 0x006160c0 (verified - references "BWM V1.0" string, likely ValidateBWMHeader)
+        /// - swkotor2.exe: 0x004f5070 @ 0x004f5070 (verified - walkmesh projection function, called from raycast/pathfinding)
         /// - swkotor2.exe: "BWM V1.0" string @ 0x007c061c (verified - BWM file signature)
         ///
         /// Walkmesh loading process:
@@ -1193,7 +1193,7 @@ namespace Andastra.Game.Games.Odyssey
         /// 2. Rebuild AABB tree using NavigationMesh.BuildAabbTreeFromFaces (static method)
         /// 3. Create OdysseyNavigationMesh with extracted data
         ///
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
         /// </remarks>
         private static OdysseyNavigationMesh ConvertToOdysseyNavigationMesh(INavigationMesh navMesh)
         {
@@ -1245,7 +1245,7 @@ namespace Andastra.Game.Games.Odyssey
             // Rebuild AABB tree using NavigationMesh static method
             // Based on NavigationMesh.BuildAabbTreeFromFaces - builds AABB tree from face data
             int faceCount = faceIndices.Length / 3;
-            Andastra.Runtime.Core.Navigation.NavigationMesh.AabbNode aabbRoot = Andastra.Runtime.Core.Navigation.NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
+            Andastra.Runtime.Core.Navigation.NavigationMesh.AabbNode aabbRoot = Runtime.Core.Navigation.NavigationMesh.BuildAabbTreeFromFaces(vertices, faceIndices, surfaceMaterials, faceCount);
 
             // Create OdysseyNavigationMesh with extracted data
             // Based on OdysseyNavigationMesh constructor: takes arrays and AABB root
@@ -1280,7 +1280,7 @@ namespace Andastra.Game.Games.Odyssey
                     // NavigationMeshFactory returns NavigationMesh (core/engine-agnostic class)
                     // For proper Odyssey abstraction, we wrap it in OdysseyNavigationMesh (engine-specific)
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area stores walkmesh with Odyssey-specific navigation behavior
-                    // swkotor2.exe: FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
+                    // swkotor2.exe: 0x004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
                     _navigationMesh = ConvertToOdysseyNavigationMesh(combinedNavMesh);
                 }
                 else
@@ -1587,8 +1587,8 @@ namespace Andastra.Game.Games.Odyssey
         /// Processes pending area transitions and updates environmental effects.
         ///
         /// Function addresses (verified via Ghidra MCP):
-        /// - swkotor2.exe: FUN_004e3ff0 @ 0x004e3ff0 (area update function called from game loop)
-        ///   - Located via call from FUN_004e9850 @ 0x004e9850 (main game update loop)
+        /// - swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 (area update function called from game loop)
+        ///   - Located via call from 0x004e9850 @ 0x004e9850 (main game update loop)
         ///   - Handles area heartbeat scripts and transition processing
         /// - swkotor.exe: Similar area update logic with heartbeat script execution
         ///
@@ -1674,7 +1674,7 @@ namespace Andastra.Game.Games.Odyssey
         /// - Checks if TransPending flag is set
         /// - Processes transition IDs (NextID, CurrID) for pending transitions
         /// - Based on LoadAreaProperties @ 0x004e26d0 and area update logic
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e3ff0 @ 0x004e3ff0 processes area transitions during update
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e3ff0 @ 0x004e3ff0 processes area transitions during update
         ///
         /// Transition ID resolution:
         /// - TransPendNextID: Index into module's area list (Mod_Area_list from IFO)
@@ -1694,7 +1694,7 @@ namespace Andastra.Game.Games.Odyssey
         private void ProcessPendingAreaTransitions(float deltaTime)
         {
             // Process pending area transitions if TransPending is set
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e3ff0 processes area transitions during update
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e3ff0 processes area transitions during update
             if (_transPending)
             {
                 Console.WriteLine($"[OdysseyArea] Processing pending area transitions: NextID={_transPendNextId}, CurrID={_transPendCurrId}");
@@ -2011,7 +2011,7 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Move each entity to target area
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transition system (FUN_004e3ff0 @ 0x004e3ff0)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transition system (0x004e3ff0 @ 0x004e3ff0)
             // Full transition flow: Remove from current area -> Project position -> Add to target area -> Update AreaId
             foreach (IEntity entity in entitiesToTransition)
             {
@@ -2027,7 +2027,7 @@ namespace Andastra.Game.Games.Odyssey
                 OnBeforeTransition(entity, this);
 
                 // Step 3: Project entity position to target area walkmesh
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (0x004f5070 @ 0x004f5070)
                 // Projects position to walkable surface for accurate positioning
                 ProjectEntityToTargetArea(entity, targetArea);
 
@@ -2593,7 +2593,7 @@ namespace Andastra.Game.Games.Odyssey
                         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room meshes are loaded from MDL files referenced in LYT file
                         // Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
                         // Original implementation: Loads room MDL models from module archives when needed for rendering
-                        // swkotor2.exe: FUN_004e3ff0 @ 0x004e3ff0 - Room mesh loading function
+                        // swkotor2.exe: 0x004e3ff0 @ 0x004e3ff0 - Room mesh loading function
                         meshData = LoadRoomMeshOnDemand(room.ModelName, roomRenderer);
                         if (meshData != null)
                         {
@@ -3364,11 +3364,11 @@ namespace Andastra.Game.Games.Odyssey
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variable storage
         /// Area variables are stored separately from entity variables
         /// </remarks>
-        public Andastra.Runtime.Core.Save.LocalVariableSet GetLocalVariables()
+        public Runtime.Core.Save.LocalVariableSet GetLocalVariables()
         {
             if (_localVariables == null)
             {
-                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+                _localVariables = new Runtime.Core.Save.LocalVariableSet();
             }
             return _localVariables;
         }
@@ -3387,7 +3387,7 @@ namespace Andastra.Game.Games.Odyssey
             }
             if (_localVariables == null)
             {
-                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+                _localVariables = new Runtime.Core.Save.LocalVariableSet();
             }
             _localVariables.Ints[name] = value;
         }
@@ -3425,7 +3425,7 @@ namespace Andastra.Game.Games.Odyssey
             }
             if (_localVariables == null)
             {
-                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+                _localVariables = new Runtime.Core.Save.LocalVariableSet();
             }
             _localVariables.Floats[name] = value;
         }
@@ -3463,7 +3463,7 @@ namespace Andastra.Game.Games.Odyssey
             }
             if (_localVariables == null)
             {
-                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+                _localVariables = new Runtime.Core.Save.LocalVariableSet();
             }
             _localVariables.Strings[name] = value ?? "";
         }
@@ -3501,7 +3501,7 @@ namespace Andastra.Game.Games.Odyssey
             }
             if (_localVariables == null)
             {
-                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+                _localVariables = new Runtime.Core.Save.LocalVariableSet();
             }
             _localVariables.Objects[name] = objectId;
         }
@@ -3531,7 +3531,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
-        public void SetLocalLocation(string name, Andastra.Runtime.Core.Save.SavedLocation location)
+        public void SetLocalLocation(string name, Runtime.Core.Save.SavedLocation location)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -3539,7 +3539,7 @@ namespace Andastra.Game.Games.Odyssey
             }
             if (_localVariables == null)
             {
-                _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
+                _localVariables = new Runtime.Core.Save.LocalVariableSet();
             }
             _localVariables.Locations[name] = location;
         }
@@ -3550,13 +3550,13 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
-        public Andastra.Runtime.Core.Save.SavedLocation GetLocalLocation(string name)
+        public Runtime.Core.Save.SavedLocation GetLocalLocation(string name)
         {
             if (string.IsNullOrEmpty(name) || _localVariables == null)
             {
                 return null;
             }
-            if (_localVariables.Locations.TryGetValue(name, out Andastra.Runtime.Core.Save.SavedLocation value))
+            if (_localVariables.Locations.TryGetValue(name, out Runtime.Core.Save.SavedLocation value))
             {
                 return value;
             }

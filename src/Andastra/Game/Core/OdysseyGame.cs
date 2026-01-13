@@ -123,7 +123,7 @@ namespace Andastra.Game.Core
                 if (_graphicsBackend != null && _graphicsBackend.GraphicsDevice != null)
                 {
                     // Use dark blue color similar to KOTOR's main menu background
-                    var clearColor = new Andastra.Runtime.Graphics.Color(0, 0, 32, 255); // Dark blue
+                    var clearColor = new Runtime.Graphics.Color(0, 0, 32, 255); // Dark blue
                     _graphicsBackend.GraphicsDevice.Clear(clearColor);
                 }
 

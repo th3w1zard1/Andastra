@@ -31,14 +31,14 @@ using InstResourceResult = BioWare.NET.Extract.ResourceResult;
 using KotorVector3 = System.Numerics.Vector3;
 using MDLData = BioWare.NET.Resource.Formats.MDLData;
 using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
-using OdysseyDoorComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent;
+using OdysseyDoorComponent = Andastra.Game.Games.Odyssey.Components.OdysseyDoorComponent;
 using OdysseyNavigationMeshFactory = Andastra.Game.Games.Odyssey.Loading.NavigationMeshFactory;
-using OdysseyWaypointComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyWaypointComponent;
-using PlaceableComponent = Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent;
+using OdysseyWaypointComponent = Andastra.Game.Games.Odyssey.Components.OdysseyWaypointComponent;
+using PlaceableComponent = Andastra.Game.Games.Odyssey.Components.PlaceableComponent;
 using ResRef = BioWare.NET.Common.ResRef;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
-using SoundComponent = Andastra.Runtime.Games.Odyssey.Components.SoundComponent;
-using Systems = Andastra.Runtime.Games.Odyssey.Systems;
+using SoundComponent = Andastra.Game.Games.Odyssey.Components.SoundComponent;
+using Systems = Andastra.Game.Games.Odyssey.Systems;
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
 
@@ -55,8 +55,8 @@ namespace Andastra.Game.Games.Odyssey.Game
     ///   - Aurora (nwmain.exe): CNWSModule::LoadModule, CNWCModule::LoadModuleResources - similar module loading system, uses HAK files, different file formats
     ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): "LoadModule" - UnrealScript-based module loading, different architecture
     /// - Inheritance: Base class BaseModuleLoader (Runtime.Games.Common) - abstract module loading, Odyssey override (Runtime.Games.Odyssey) - IFO/LYT/VIS/GIT/ARE-based module loading
-    /// - Directory setup: FUN_00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
-    ///   - Original implementation (from decompiled FUN_00633270):
+    /// - Directory setup: 0x00633270 @ 0x00633270 (sets up MODULES, OVERRIDE, SAVES, etc. directory aliases)
+    ///   - Original implementation (from decompiled 0x00633270):
     ///     - Sets up directory aliases for resource lookup with both absolute ("d:\...") and relative (".\...") paths
     ///     - Directory aliases registered: HD0 (d:\), CD0 (d:\), OVERRIDE (.\override or d:\override), MODULES (.\modules or d:\modules)
     ///     - Additional aliases: ERRORTEX, TEMP, NWMFILES, LOGS, LOCALVAULT, DMVAULT, SERVERVAULT, SAVES (.\saves or u:\)
@@ -69,19 +69,19 @@ namespace Andastra.Game.Games.Odyssey.Game
     /// - Module loading order: IFO (module info) -> LYT (layout) -> VIS (visibility) -> GIT (instances) -> ARE (area properties)
     /// - Original engine uses "MODULES:" prefix for module directory access
     /// - Module resources loaded from: MODULES:\{moduleName}\module.ifo, MODULES:\{moduleName}\{moduleName}.lyt, etc.
-    /// - Load savegame function: FUN_00708990 @ 0x00708990 (loads savegame ERF archive, extracts GLOBALVARS, PARTYTABLE, etc.)
-    ///   - Original implementation (from decompiled FUN_00708990):
-    ///     - Function signature: `void FUN_00708990(void *this, int *param_1)`
+    /// - Load savegame function: 0x00708990 @ 0x00708990 (loads savegame ERF archive, extracts GLOBALVARS, PARTYTABLE, etc.)
+    ///   - Original implementation (from decompiled 0x00708990):
+    ///     - Function signature: `void 0x00708990(void *this, int *param_1)`
     ///     - param_1: Save game data structure pointer
     ///     - Constructs save path: "SAVES:\{saveName}\SAVEGAME" using format string "%06d - %s" (save number and name)
-    ///     - Creates GAMEINPROGRESS: directory if missing (checks existence via FUN_004069c0, creates via FUN_00409670 if not found)
-    ///     - Loads savegame.sav ERF archive from constructed path (via FUN_00629d60, FUN_0062a2b0)
-    ///     - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature (via FUN_00406aa0)
+    ///     - Creates GAMEINPROGRESS: directory if missing (checks existence via 0x004069c0, creates via 0x00409670 if not found)
+    ///     - Loads savegame.sav ERF archive from constructed path (via 0x00629d60, 0x0062a2b0)
+    ///     - Extracts savenfo.res (NFO GFF) to TEMP:pifo, reads NFO GFF with "NFO " signature (via 0x00406aa0)
     ///     - Progress updates: 5% (0x5), 10% (0xa), 15% (0xf), 20% (0x14), 25% (0x19), 30% (0x1e), 35% (0x23), 40% (0x28), 45% (0x2d), 50% (0x32)
-    ///     - Loads PARTYTABLE via FUN_0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
-    ///     - Loads GLOBALVARS via FUN_005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
-    ///     - Reads AUTOSAVEPARAMS from NFO GFF if present (via FUN_00412b30, FUN_00708660)
-    ///     - Sets module state flags and initializes game session (via FUN_004dc470, FUN_004dc9e0, FUN_004dc9c0)
+    ///     - Loads PARTYTABLE via 0x0057dcd0 @ 0x0057dcd0 (party table deserialization, called at 30% progress)
+    ///     - Loads GLOBALVARS via 0x005ac740 @ 0x005ac740 (global variables deserialization, called at 35% progress)
+    ///     - Reads AUTOSAVEPARAMS from NFO GFF if present (via 0x00412b30, 0x00708660)
+    ///     - Sets module state flags and initializes game session (via 0x004dc470, 0x004dc9e0, 0x004dc9c0)
     ///     - Module state: Sets flags at offset 0x48 in game session object (bit 0x200 = module loaded flag)
     ///     - Final progress: 50% (0x32) when savegame load completes
     /// </remarks>
@@ -103,7 +103,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         // EntityFactory for creating entities from templates
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory creates runtime entities from GFF templates (UTC, UTP, UTD, etc.)
         // Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
-        // Original implementation: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
+        // Original implementation: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
         // EntityFactory is cached per ModuleLoader instance to maintain ObjectId uniqueness
         private readonly Loading.EntityFactory _entityFactory;
 
@@ -214,7 +214,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity creation system
         /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
         /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
-        /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
+        /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
         /// - Original implementation: Creates runtime entities from GIT instance data and GFF templates
         /// - Entities created from GIT instances override template values with instance-specific data
         /// - ObjectId assignment: Sequential uint32 starting from 1000000 (high range to avoid conflicts with World.CreateEntity counter)
@@ -465,7 +465,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             // Module entities need IScriptHooksComponent for script execution
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Ensure IScriptHooksComponent is present (ComponentInitializer should add it, but verify for safety)
             if (!entity.HasComponent<IScriptHooksComponent>())
@@ -923,7 +923,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 {
                     // Convert GITCamera to EntityState for save system
                     // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera states are stored with position and FOV
-                    var cameraState = new Andastra.Runtime.Core.Save.EntityState
+                    var cameraState = new Runtime.Core.Save.EntityState
                     {
                         Position = new SysVector3(gitCamera.Position.X, gitCamera.Position.Y, gitCamera.Position.Z),
                         ObjectType = RuntimeObjectType.Invalid, // Cameras don't have standard ObjectType
@@ -945,7 +945,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         // Spawn waypoint from GIT instance data
         // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) waypoint spawning system
         // Located via string references: "WaypointList" @ 0x007bd060, "Waypoint" @ 0x007bc510
-        // Original implementation: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT WaypointList
+        // Original implementation: 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT WaypointList
         // - Reads waypoint struct from GIT WaypointList (StructID 5)
         // - Creates waypoint entity with ObjectId from GIT
         // - Loads UTW template if TemplateResRef is provided
@@ -962,7 +962,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Waypoint, ToSysVector3(waypoint.Position), waypoint.Bearing);
 
             // Initialize waypoint components
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Set tag from GIT (GIT tag takes precedence over template tag)
             if (!string.IsNullOrEmpty(waypoint.Tag))
@@ -977,7 +977,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Load waypoint template (UTW) if ResRef is provided
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 loads UTW template from TemplateResRef
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x004e04a0 loads UTW template from TemplateResRef
             // Original implementation: Loads UTW template, applies properties to waypoint entity
             if (!string.IsNullOrEmpty(waypoint.ResRef?.ToString()))
             {
@@ -1013,7 +1013,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             entity.Tag = door.Tag;
 
             // Initialize components
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load door template
             if (!string.IsNullOrEmpty(door.ResRef?.ToString()))
@@ -1037,7 +1037,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Placeable, ToSysVector3(placeable.Position), placeable.Bearing);
 
             // Initialize components
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load placeable template
             if (!string.IsNullOrEmpty(placeable.ResRef?.ToString()))
@@ -1053,7 +1053,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             IEntity entity = _world.CreateEntity(OdyObjectType.Creature, ToSysVector3(creature.Position), creature.Bearing);
 
             // Initialize components
-            Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
+            Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
             // Load creature template
             if (!string.IsNullOrEmpty(creature.ResRef?.ToString()))
@@ -1501,7 +1501,7 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) waypoint template loading
         /// Located via string references: "Waypoint template %s doesn't exist.\n" @ 0x007c0f24
-        /// Original implementation: FUN_004e04a0 @ 0x004e04a0 loads UTW template from TemplateResRef
+        /// Original implementation: 0x004e04a0 @ 0x004e04a0 loads UTW template from TemplateResRef
         /// - Loads UTW GFF file from installation
         /// - Applies waypoint properties: Tag, Name, AppearanceId, Description, MapNote, MapNoteEnabled, HasMapNote
         /// - Sets waypoint component properties from UTW template
@@ -1657,7 +1657,7 @@ namespace Andastra.Game.Games.Odyssey.Game
 
             // Load waypoints from GIT if available (even if installation is null, GIT might have been loaded from another source)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Waypoints are loaded from GIT WaypointList
-            // Original implementation: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
+            // Original implementation: 0x004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
             // If GIT is available, spawn waypoints from GIT instead of creating placeholder
             if (_currentGit != null && _currentGit.Waypoints.Count > 0)
             {
@@ -1676,7 +1676,7 @@ namespace Andastra.Game.Games.Odyssey.Game
                 playerSpawn.Tag = "wp_player_spawn";
 
                 // Initialize waypoint component
-                Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerSpawn);
+                Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(playerSpawn);
 
                 runtimeArea.AddEntity(playerSpawn);
             }

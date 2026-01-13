@@ -19,8 +19,8 @@ namespace Andastra.Runtime.Core.Enums
     /// - Ability scores range: 1-30 (typical), modifiers = (score - 10) / 2 (rounded down)
     /// - Ability modifiers used for: Attack rolls, skill checks, saving throws, damage, etc.
     /// - Classes.2da defines ability requirements and modifiers for classes
-    /// - Original implementation: FUN_005226d0 @ 0x005226d0 saves ability scores to creature GFF
-    /// - FUN_0050c510 @ 0x0050c510 loads ability scores from UTC template
+    /// - Original implementation: 0x005226d0 @ 0x005226d0 saves ability scores to creature GFF
+    /// - 0x0050c510 @ 0x0050c510 loads ability scores from UTC template
     /// </remarks>
     public enum Ability
     {

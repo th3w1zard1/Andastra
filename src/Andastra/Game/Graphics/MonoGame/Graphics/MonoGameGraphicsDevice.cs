@@ -22,12 +22,12 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             _device = device ?? throw new ArgumentNullException(nameof(device));
         }
 
-        public Andastra.Runtime.Graphics.Viewport Viewport
+        public Runtime.Graphics.Viewport Viewport
         {
             get
             {
                 var vp = _device.Viewport;
-                return new Andastra.Runtime.Graphics.Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
+                return new Runtime.Graphics.Viewport(vp.X, vp.Y, vp.Width, vp.Height, vp.MinDepth, vp.MaxDepth);
             }
         }
 
@@ -173,7 +173,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             }
         }
 
-        public void DrawIndexedPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
+        public void DrawIndexedPrimitives(Runtime.Graphics.PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
         {
             _device.DrawIndexedPrimitives(
                 ConvertPrimitiveType(primitiveType),
@@ -185,7 +185,7 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             );
         }
 
-        public void DrawPrimitives(Andastra.Runtime.Graphics.PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
+        public void DrawPrimitives(Runtime.Graphics.PrimitiveType primitiveType, int vertexOffset, int primitiveCount)
         {
             _device.DrawPrimitives(
                 ConvertPrimitiveType(primitiveType),
@@ -288,19 +288,19 @@ namespace Andastra.Game.Graphics.MonoGame.Graphics
             // GraphicsDevice is managed by Game, don't dispose it
         }
 
-        private static Microsoft.Xna.Framework.Graphics.PrimitiveType ConvertPrimitiveType(Andastra.Runtime.Graphics.PrimitiveType type)
+        private static Microsoft.Xna.Framework.Graphics.PrimitiveType ConvertPrimitiveType(Runtime.Graphics.PrimitiveType type)
         {
             switch (type)
             {
-                case Andastra.Runtime.Graphics.PrimitiveType.TriangleList:
+                case Runtime.Graphics.PrimitiveType.TriangleList:
                     return Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList;
-                case Andastra.Runtime.Graphics.PrimitiveType.TriangleStrip:
+                case Runtime.Graphics.PrimitiveType.TriangleStrip:
                     return Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleStrip;
-                case Andastra.Runtime.Graphics.PrimitiveType.LineList:
+                case Runtime.Graphics.PrimitiveType.LineList:
                     return Microsoft.Xna.Framework.Graphics.PrimitiveType.LineList;
-                case Andastra.Runtime.Graphics.PrimitiveType.LineStrip:
+                case Runtime.Graphics.PrimitiveType.LineStrip:
                     return Microsoft.Xna.Framework.Graphics.PrimitiveType.LineStrip;
-                case Andastra.Runtime.Graphics.PrimitiveType.PointList:
+                case Runtime.Graphics.PrimitiveType.PointList:
                     return Microsoft.Xna.Framework.Graphics.PrimitiveType.PointList;
                 default:
                     return Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList;

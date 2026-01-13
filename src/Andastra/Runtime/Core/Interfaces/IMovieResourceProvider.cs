@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Interfaces
     /// </summary>
     /// <remarks>
     /// Movie Resource Provider Interface:
-    /// - Based on swkotor.exe/swkotor2.exe: Movie file loading (FUN_005fbbf0 @ 0x005fbbf0)
+    /// - Based on swkotor.exe/swkotor2.exe: Movie file loading (0x005fbbf0 @ 0x005fbbf0)
     /// - Movie file paths: "MOVIES:%s" @ 0x0073d7d8 (path format string)
     /// - ".\\movies" @ 0x0074e004, "d:\\movies" @ 0x0074e010 (movie directory paths)
     /// - "LIVE%d:movies\\%s" @ 0x0074ec3c (LIVE path format for CD-based installations)

@@ -1,7 +1,7 @@
 using System;
-using System.Numerics;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
+using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
 
 namespace Andastra.Game.Games.Common
 {
@@ -15,7 +15,7 @@ namespace Andastra.Game.Games.Common
     /// - All engines use texture-based fonts with character glyphs in grids
     /// - Common operations: MeasureString, GetCharacter, character coordinate mapping
     /// - Engine-specific: Font format (TPC/TGA/TEX), metric format (TXI/other), coordinate system
-    /// 
+    ///
     /// Inheritance Structure:
     /// - BaseBitmapFont (Runtime.Games.Common) - Common font operations
     ///   - Odyssey: OdysseyBitmapFont : BaseBitmapFont (swkotor.exe, swkotor2.exe)
@@ -92,11 +92,11 @@ namespace Andastra.Game.Games.Common
         /// </summary>
         /// <param name="text">The text to measure.</param>
         /// <returns>The size of the text in pixels.</returns>
-        public virtual Graphics.Vector2 MeasureString([CanBeNull] string text)
+        public virtual GraphicsVector2 MeasureString([CanBeNull] string text)
         {
             if (string.IsNullOrEmpty(text))
             {
-                return Graphics.Vector2.Zero;
+                return GraphicsVector2.Zero;
             }
 
             float maxWidth = 0.0f;
@@ -128,7 +128,7 @@ namespace Andastra.Game.Games.Common
             }
 
             maxWidth = Math.Max(maxWidth, currentWidth);
-            return new Graphics.Vector2(maxWidth, totalHeight);
+            return new GraphicsVector2(maxWidth, totalHeight);
         }
     }
 }

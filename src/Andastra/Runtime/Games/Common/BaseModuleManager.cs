@@ -47,8 +47,8 @@ namespace Andastra.Runtime.Games.Common
     public abstract class BaseModuleManager
     {
         protected readonly IWorld _world;
-        protected Andastra.Runtime.Core.Interfaces.IModule _currentModule;
-        protected readonly Dictionary<string, Andastra.Runtime.Core.Interfaces.IModule> _loadedModules = new Dictionary<string, Andastra.Runtime.Core.Interfaces.IModule>();
+        protected Runtime.Core.Interfaces.IModule _currentModule;
+        protected readonly Dictionary<string, Andastra.Runtime.Core.Interfaces.IModule> _loadedModules = new Dictionary<string, Runtime.Core.Interfaces.IModule>();
 
         protected BaseModuleManager(IWorld world)
         {
@@ -58,7 +58,7 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Gets the currently loaded module.
         /// </summary>
-        public Andastra.Runtime.Core.Interfaces.IModule CurrentModule => _currentModule;
+        public Runtime.Core.Interfaces.IModule CurrentModule => _currentModule;
 
         /// <summary>
         /// Loads a module by name.
@@ -231,7 +231,7 @@ namespace Andastra.Runtime.Games.Common
         /// Engine-specific module loading implementation.
         /// Subclasses implement format-specific loading (IFO, MOD, etc.).
         /// </remarks>
-        protected abstract Andastra.Runtime.Core.Interfaces.IModule LoadModuleFromResources(string moduleName);
+        protected abstract Runtime.Core.Interfaces.IModule LoadModuleFromResources(string moduleName);
 
         /// <summary>
         /// Sets the current module.
@@ -240,7 +240,7 @@ namespace Andastra.Runtime.Games.Common
         /// Updates world state for the new module.
         /// Handles area loading and entity spawning.
         /// </remarks>
-        protected virtual void SetCurrentModule(Andastra.Runtime.Core.Interfaces.IModule module)
+        protected virtual void SetCurrentModule(Runtime.Core.Interfaces.IModule module)
         {
             var previousModule = _currentModule;
             _currentModule = module;
@@ -295,7 +295,7 @@ namespace Andastra.Runtime.Games.Common
         /// Complete cleanup of module resources.
         /// Called when module is permanently unloaded.
         /// </remarks>
-        protected virtual void DisposeModule(Andastra.Runtime.Core.Interfaces.IModule module)
+        protected virtual void DisposeModule(Runtime.Core.Interfaces.IModule module)
         {
             if (module is IDisposable disposable)
             {
@@ -310,7 +310,7 @@ namespace Andastra.Runtime.Games.Common
         /// Hook for engine-specific module change logic.
         /// Subclasses can override for additional handling.
         /// </remarks>
-        protected virtual void OnCurrentModuleChanged(Andastra.Runtime.Core.Interfaces.IModule previousModule, Andastra.Runtime.Core.Interfaces.IModule newModule)
+        protected virtual void OnCurrentModuleChanged(Andastra.Runtime.Core.Interfaces.IModule previousModule, Runtime.Core.Interfaces.IModule newModule)
         {
             // Default: no additional logic
         }
@@ -322,7 +322,7 @@ namespace Andastra.Runtime.Games.Common
         /// Hook for engine-specific cleanup logic.
         /// Subclasses can override for additional cleanup.
         /// </remarks>
-        protected virtual void OnModuleUnloading(Andastra.Runtime.Core.Interfaces.IModule module)
+        protected virtual void OnModuleUnloading(Runtime.Core.Interfaces.IModule module)
         {
             // Default: no additional logic
         }
@@ -334,7 +334,7 @@ namespace Andastra.Runtime.Games.Common
         /// Hook for transition effects and cleanup.
         /// Subclasses can override for transition handling.
         /// </remarks>
-        protected virtual void OnModuleTransitionOut(Andastra.Runtime.Core.Interfaces.IModule module)
+        protected virtual void OnModuleTransitionOut(Runtime.Core.Interfaces.IModule module)
         {
             // Default: no additional logic
         }
@@ -346,7 +346,7 @@ namespace Andastra.Runtime.Games.Common
         /// Hook for initialization and transition effects.
         /// Subclasses can override for transition handling.
         /// </remarks>
-        protected virtual void OnModuleTransitionIn(Andastra.Runtime.Core.Interfaces.IModule module)
+        protected virtual void OnModuleTransitionIn(Runtime.Core.Interfaces.IModule module)
         {
             // Default: no additional logic
         }

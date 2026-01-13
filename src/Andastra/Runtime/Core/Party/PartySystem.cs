@@ -21,8 +21,8 @@ namespace Andastra.Runtime.Core.Party
     /// - "CB_PARTYKILLED" @ 0x007d29e4 (party killed checkbox)
     /// - "Party Killed" @ 0x007c8470 (party killed message)
     /// - Error message: "While creating the party select screen, NPC %d's ID is Out of Synch with what's in the Client Side Party Table." @ 0x007cff20
-    /// - Original implementation: FUN_0057bd70 @ 0x0057bd70 (save PARTYTABLE.res to GFF)
-    ///   - Original implementation (from decompiled FUN_0057bd70):
+    /// - Original implementation: 0x0057bd70 @ 0x0057bd70 (save PARTYTABLE.res to GFF)
+    ///   - Original implementation (from decompiled 0x0057bd70):
     ///     - Creates GFF with "PT " signature (4 bytes) and "V2.0" version string
     ///     - Constructs file path: "PARTYTABLE\SAVEGAME\{saveName}" using format string "%06d - %s"
     ///     - Writes fields in this exact order:
@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Core.Party
     ///       - PT_ITEM_CHEMICAL (int32): Item chemical count
     ///       - PT_SWOOP1, PT_SWOOP2, PT_SWOOP3 (int32): Swoop race times
     ///       - PT_XP_POOL (float): Experience point pool
-    ///       - PT_PLAYEDSECONDS (int32): Total seconds played (calculated via FUN_0057a300)
+    ///       - PT_PLAYEDSECONDS (int32): Total seconds played (calculated via 0x0057a300)
     ///       - PT_CONTROLLED_NPC (float): Currently controlled NPC (-1 = none)
     ///       - PT_SOLOMODE (byte): Solo mode flag (K2)
     ///       - PT_CHEAT_USED (byte): Cheat used flag
@@ -80,17 +80,17 @@ namespace Andastra.Runtime.Core.Party
     ///         - PT_COST_MULT_VALUE (float): Multiplier value
     ///       - PT_DISABLEMAP (float): Disable map flag
     ///       - PT_DISABLEREGEN (float): Disable regen flag
-    ///     - Saves GFF to file path via FUN_0057a730
-    /// - FUN_0057dcd0 @ 0x0057dcd0 (load PARTYTABLE.res from GFF)
-    ///   - Original implementation (from decompiled FUN_0057dcd0):
+    ///     - Saves GFF to file path via 0x0057a730
+    /// - 0x0057dcd0 @ 0x0057dcd0 (load PARTYTABLE.res from GFF)
+    ///   - Original implementation (from decompiled 0x0057dcd0):
     ///     - Loads GFF with "PT " signature from "PARTYTABLE" path
     ///     - Reads all fields in same order as save function
     ///     - Validates list sizes (PT_MEMBERS, PT_PUPPETS, PT_AVAIL_PUPS, PT_AVAIL_NPCS, PT_INFLUENCE)
     ///     - Falls back to PT_PLAYEDMINUTES if PT_PLAYEDSECONDS not found (converts to seconds)
     ///     - Restores party member states, available NPCs, puppets, influence levels
     ///     - Restores message lists (feedback, dialogue, combat), Pazaak cards, tutorial flags
-    ///     - Calls FUN_00579660 to initialize party system, FUN_005798f0 to restore party state
-    /// - FUN_005a8220 @ 0x005a8220 (handle Party network message)
+    ///     - Calls 0x00579660 to initialize party system, 0x005798f0 to restore party state
+    /// - 0x005a8220 @ 0x005a8220 (handle Party network message)
     /// - Party state stored in PARTYTABLE.res GFF file with "PT " signature
     /// - GFF structure fields (all located via string references):
     ///   - PT_PCNAME @ 0x007c1904: Player character name

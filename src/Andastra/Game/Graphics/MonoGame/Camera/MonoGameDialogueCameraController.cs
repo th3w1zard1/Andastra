@@ -16,8 +16,8 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
     /// <remarks>
     /// Dialogue Camera Controller (MonoGame Implementation for Odyssey Engine):
     /// - Based on swkotor.exe and swkotor2.exe dialogue camera system
-    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading FUN_005a2ae0 @ 0x005a2ae0
-    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading FUN_005ea880 @ 0x005ea880
+    /// - swkotor.exe (KOTOR 1): EndConversation @ 0x0074a7c0, dialogue loading 0x005a2ae0 @ 0x005a2ae0
+    /// - swkotor2.exe (KOTOR 2): EndConversation @ 0x007c38e0, dialogue loading 0x005ea880 @ 0x005ea880
     /// - Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
     /// - "CameraModel" @ 0x007c3908, "CameraViewAngle" @ 0x007cb940
     /// - Camera hooks: "camerahook" @ 0x007c7dac, "camerahookt" @ 0x007c7da0, "camerahookz" @ 0x007c7db8, "camerahookh" @ 0x007c7dc4
@@ -34,7 +34,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
     /// - Camera hooks: Attachment points on models for precise camera positioning
     /// - Camera animation data: Loaded from dialogue entries (CameraAnimation field) and resolved via dialoganimations.2da
     /// - This implementation matches 1:1 with both swkotor.exe and swkotor2.exe behavior
-    /// - This implementation uses Andastra.Runtime.Core.Camera.CameraController for actual camera control
+    /// - This implementation uses Runtime.Core.Camera.CameraController for actual camera control
     /// </remarks>
     public class MonoGameDialogueCameraController : IDialogueCameraController
     {
@@ -181,7 +181,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
         /// Reverse engineered functions:
         ///   - CGuiInGame::GetCameraAnimationName @ 0x006288f0 - Resolves animation name from dialoganimations.2da
         ///   - CGuiInGame::SetDialogAnimations @ 0x006313a0 - Sets camera animations for dialogue entries
-        ///   - FUN_006c6020 @ 0x006c6020 - Searches MDL node tree for "camerahook" nodes
+        ///   - 0x006c6020 @ 0x006c6020 - Searches MDL node tree for "camerahook" nodes
         /// Original implementation: Camera animations are scripted camera movements using camera hooks or predefined angles
         /// Camera animation IDs map to predefined camera movements, hooks, or angles
         /// Full implementation supports camera hooks for precise positioning from MDL models:
@@ -218,7 +218,7 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
                 // Camera hooks are MDL dummy nodes that define precise camera positions relative to character models
                 // The GetCameraHookPosition method searches MDL node tree recursively for "camerahook{N}" nodes
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
                 // Implementation:
                 //   1. Constructs camera hook node name (format: "camerahook{N}" where N is hookIndex)
                 //   2. Searches MDL model node tree recursively for matching node name
@@ -314,12 +314,12 @@ namespace Andastra.Game.Graphics.MonoGame.Camera
         /// Based on swkotor.exe and swkotor2.exe: Camera reset to chase mode after dialogue ends
         /// Reverse engineered from swkotor.exe:
         ///   - EndConversation script execution @ 0x0074a7c0 triggers camera reset
-        ///   - Dialogue loading function FUN_005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
+        ///   - Dialogue loading function 0x005a2ae0 @ 0x005a2ae0 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
         /// Reverse engineered from swkotor2.exe:
         ///   - EndConversation script execution @ 0x007c38e0 triggers camera reset
-        ///   - Dialogue loading function FUN_005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
+        ///   - Dialogue loading function 0x005ea880 @ 0x005ea880 loads EndConversation script reference (line 55)
         ///   - Camera reset occurs when dialogue ends (EndConversation script fires)
         ///   - Camera returns to chase mode following player entity
         /// Located via string references: "EndConversation" @ 0x0074a7c0 (swkotor.exe), @ 0x007c38e0 (swkotor2.exe)

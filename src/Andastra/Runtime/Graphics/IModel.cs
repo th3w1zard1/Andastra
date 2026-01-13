@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Graphics
     /// - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
     /// - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "ModelA" @ 0x007bf4bc
     /// - "DefaultModel" @ 0x007c4530, "StuntModel" @ 0x007c37e0, "CameraModel" @ 0x007c3908, "ProjModel" @ 0x007c31c0
-    /// - CSWCCreature::LoadModel @ 0x007c82fc (creature model loading), FUN_005261b0 @ 0x005261b0 (model loading function)
+    /// - CSWCCreature::LoadModel @ 0x007c82fc (creature model loading), 0x005261b0 @ 0x005261b0 (model loading function)
     /// - Original implementation: Loads and renders 3D models from MDL/MDX files
     /// - Model structure: Meshes, bones, animations stored in MDL (model) and MDX (animation) files
     /// - This interface: Abstraction layer for modern graphics backends (MonoGame Model, Stride Model)

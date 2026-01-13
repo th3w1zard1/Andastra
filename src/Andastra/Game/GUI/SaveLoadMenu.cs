@@ -19,9 +19,9 @@ namespace Andastra.Game.GUI
     /// - Original implementation: Shows list of save games with metadata (name, time, module, play time)
     /// - Save slots: 1-99 (numbered saves), quick save slot, auto save slot
     /// - Save display: Shows save name, module name, play time, save time, screenshot thumbnail
-    /// - Load save menu: FUN_00708990 @ 0x00708990 (loads save game list, displays save metadata)
-    /// - Save menu: FUN_004eb750 @ 0x004eb750 (creates save game ERF archive, writes savenfo.res GFF)
-    /// - Save list loading: FUN_0070a020 @ 0x0070a020 (enumerates save directories, reads savenfo.res files)
+    /// - Load save menu: 0x00708990 @ 0x00708990 (loads save game list, displays save metadata)
+    /// - Save menu: 0x004eb750 @ 0x004eb750 (creates save game ERF archive, writes savenfo.res GFF)
+    /// - Save list loading: 0x0070a020 @ 0x0070a020 (enumerates save directories, reads savenfo.res files)
     /// - Save validation: Checks for savenfo.res GFF file in each save directory to determine valid saves
     /// - Save directory structure: "SAVES:\{saveName}\" contains savegame.sav (ERF) and savenfo.res (GFF metadata)
     /// </remarks>

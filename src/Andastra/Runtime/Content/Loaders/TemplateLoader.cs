@@ -35,19 +35,19 @@ namespace Andastra.Runtime.Content.Loaders
     ///   - "Waypoint template %s doesn't exist.\n" @ 0x007c0f24
     ///   - "Store template %s doesn't exist.\n" @ 0x007c1228
     ///   - "Item template %s doesn't exist.\n" @ 0x007c2028
-    /// - Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates from UTC GFF files
+    /// - Original implementation: 0x005261b0 @ 0x005261b0 loads creature templates from UTC GFF files
     ///   - Loads UTC GFF with "UTC " signature, falls back to "NW_BADGER" if template not found
-    ///   - Calls FUN_005fb0f0 to load creature data from template
-    ///   - Calls FUN_0050c510 to load creature scripts (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, etc.)
+    ///   - Calls 0x005fb0f0 to load creature data from template
+    ///   - Calls 0x0050c510 to load creature scripts (ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, etc.)
     ///   - Loads position/orientation: XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation
     ///   - Loads JoiningXP, PM_IsDisguised, PM_Appearance, StealthMode flags
     ///   - Sets creature position and orientation, initializes creature state
-    /// - FUN_0050c510 @ 0x0050c510 loads creature script hooks from UTC template
+    /// - 0x0050c510 @ 0x0050c510 loads creature script hooks from UTC template
     ///   - Loads script ResRefs: ScriptHeartbeat, ScriptOnNotice, ScriptSpellAt, ScriptAttacked, ScriptDamaged,
     ///     ScriptDisturbed, ScriptEndRound, ScriptDialogue, ScriptSpawn, ScriptRested, ScriptDeath, ScriptUserDefine,
     ///     ScriptOnBlocked, ScriptEndDialogue
     ///   - Stores scripts in creature object at specific offsets (0x270, 0x278, 0x280, etc.)
-    /// - FUN_00580ed0 @ 0x00580ed0 loads door properties from UTD template
+    /// - 0x00580ed0 @ 0x00580ed0 loads door properties from UTD template
     ///   - Loads door appearance, generic type, open state, bearing, faction, saves (Fort, Will, Ref), HP
     ///   - Loads flags: Invulnerable, Plot, Static, NotBlastable, Min1HP, AutoRemoveKey
     ///   - Loads lock properties: KeyName, KeyRequired, OpenLockDC, CloseLockDC, SecretDoorDC, OpenLockDiff, OpenLockDiffMod
@@ -60,8 +60,8 @@ namespace Andastra.Runtime.Content.Loaders
     ///   - Loads localization: LocName, Description
     ///   - Loads conversation: Conversation ResRef
     ///   - Creates door walkmesh instances for each walkmesh type
-    /// - FUN_004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
-    /// - FUN_005838d0 @ 0x005838d0 loads door template and transition data
+    /// - 0x004e08e0 @ 0x004e08e0 loads placeable/door templates from UTP/UTD GFF files
+    /// - 0x005838d0 @ 0x005838d0 loads door template and transition data
     /// - Loads GFF template files, parses entity data, creates template objects
     /// - Templates define base properties for entities (stats, appearance, scripts, etc.)
     /// - Template GFF fields: Tag, TemplateResRef, Appearance_Type, ScriptHeartbeat, ScriptOnNotice, etc.
@@ -589,7 +589,7 @@ namespace Andastra.Runtime.Content.Loaders
         /// Gets a localized string from a GFF struct field.
         /// Resolves LocalizedString fields using TLK lookup or embedded substrings.
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LocalizedString resolution in template loading
-        /// Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates with LocalizedString fields
+        /// Original implementation: 0x005261b0 @ 0x005261b0 loads creature templates with LocalizedString fields
         /// - FirstName, LastName fields use LocalizedString with StringRef pointing to TLK entries
         /// - LocName, Description fields use LocalizedString with StringRef or embedded substrings
         /// - TLK lookup: Uses dialog.tlk for base strings, custom TLK for modded strings (>= 0x01000000)

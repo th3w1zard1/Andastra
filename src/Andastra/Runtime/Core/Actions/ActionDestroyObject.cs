@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Actions
     /// Destroy Object Action:
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DestroyObject NWScript function
     /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb)
-    /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT event (case 0xb, fires before object removal)
+    /// - Event dispatching: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT event (case 0xb, fires before object removal)
     /// - "DestroyObjectDelay" @ 0x007c0248 (destroy object delay field), "IsDestroyable" @ 0x007bf670 (is destroyable flag)
     /// - "Destroyed" @ 0x007c4bdc (destroyed flag), "CSWSSCRIPTEVENT_EVENTTYPE_ON_DESTROYPLAYERCREATURE" @ 0x007bc5ec (player creature destruction event, 0x5)
     /// - Original implementation: Destroys object after delay, optionally with fade-out effect
@@ -32,7 +32,7 @@ namespace Andastra.Runtime.Core.Actions
         // Located via string references: "FadeLength" @ 0x007c3580 (fade length parameter)
         // Original implementation: Uses fade duration of 1.0 seconds for object destruction fade
         // Fade duration: 1.0 seconds for smooth visual transition (matches original engine behavior)
-        // swkotor2.exe: FUN_004dcfb0 @ 0x004dcfb0 handles DestroyObject with fade length parameter
+        // swkotor2.exe: 0x004dcfb0 @ 0x004dcfb0 handles DestroyObject with fade length parameter
         private const float DestroyObjectFadeDuration = 1.0f;
 
         private readonly uint _targetObjectId;
@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Core.Actions
                             // Set flag for rendering system to fade out
                             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject fade implementation
                             // Stores fade state on entity for rendering system to process
-                            // swkotor2.exe: FUN_004dcfb0 sets fade flags before starting fade animation
+                            // swkotor2.exe: 0x004dcfb0 sets fade flags before starting fade animation
                             targetEntity.SetData("DestroyFade", true);
                             targetEntity.SetData("DestroyFadeStartTime", ElapsedTime);
                             targetEntity.SetData("DestroyFadeDuration", DestroyObjectFadeDuration);
@@ -111,7 +111,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // If fade, wait for fade duration to complete
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject fade completion check
-            // swkotor2.exe: FUN_004dcfb0 @ 0x004dcfb0 waits for fade duration after fade starts
+            // swkotor2.exe: 0x004dcfb0 @ 0x004dcfb0 waits for fade duration after fade starts
             // Fade starts at _fadeStartTime (when we set DestroyFade flag on entity)
             // Fade completes after DestroyObjectFadeDuration seconds from fade start time
             // The rendering system handles the actual visual fade based on "DestroyFade" flag
@@ -136,7 +136,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject implementation
             // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb)
-            // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT (case 0xb, fires before object removal)
+            // Original implementation: 0x004dcfb0 @ 0x004dcfb0 handles EVENT_DESTROY_OBJECT (case 0xb, fires before object removal)
             // Fires EVENT_DESTROY_OBJECT event before removing object from world (allows scripts to react)
             // Object is removed from area's entity list, all references become invalid
             if (actor != null && actor.World != null)

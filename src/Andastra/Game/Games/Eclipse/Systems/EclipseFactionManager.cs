@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Game.Engines.Eclipse.Systems
+namespace Andastra.Game.Games.Common.Systems
 {
     /// <summary>
     /// Manages faction relationships and hostility for Eclipse engine (Dragon Age Origins, Dragon Age 2).

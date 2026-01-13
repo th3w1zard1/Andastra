@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Engine family enumeration for grouping related engines.
@@ -119,8 +119,8 @@ namespace Andastra.Runtime.Engines.Common
     ///
     /// 5. Cross-Engine Reverse Engineering References:
     ///    - Odyssey Engine (swkotor.exe, swkotor2.exe):
-    ///      * FUN_00404250 @ 0x00404250 (swkotor2.exe: WinMain equivalent, engine initialization)
-    ///      * FUN_00633270 @ 0x00633270 (swkotor2.exe: Sets up resource directories)
+    ///      * 0x00404250 @ 0x00404250 (swkotor2.exe: WinMain equivalent, engine initialization)
+    ///      * 0x00633270 @ 0x00633270 (swkotor2.exe: Sets up resource directories)
     ///      * Initialization pattern: Entry point -> Resource setup -> Module loading
     ///    - Aurora Engine (nwmain.exe, nwn2main.exe):
     ///      * CServerExoApp::Initialize (nwmain.exe: main initialization function)

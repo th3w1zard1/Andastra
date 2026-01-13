@@ -73,7 +73,7 @@ namespace Andastra.Game.Games.Aurora.Components
     /// Cross-engine analysis:
     /// - Odyssey (swkotor.exe, swkotor2.exe): Uses SoundComponent with UTS GFF templates
     ///   - SoundList @ 0x007bd080 (GIT sound list), Sound @ 0x007bc500 (sound entity type)
-    ///   - FUN_004e08e0 @ 0x004e08e0 loads sound instances from GIT
+    ///   - 0x004e08e0 @ 0x004e08e0 loads sound instances from GIT
     /// - Aurora (nwmain.exe): Uses AuroraSoundComponent with similar UTS format
     ///   - CNWSSoundObject class for sound entities
     ///   - CNWSArea::LoadSounds @ 0x140362260 loads sound list from GIT

@@ -23,13 +23,13 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - "MODELMIN02" @ 0x007c4b3c, "MODELMIN03" @ 0x007c4b28
     /// - Visibility: "VISIBLEVALUE" @ 0x007b6a58, "VisibleModel" @ 0x007c1c98, "IsBodyBagVisible" @ 0x007c1ff0
     /// - "sdr_invisible" @ 0x007cb1dc (invisibility shader/material)
-    /// - Model loading: FUN_005261b0 @ 0x005261b0 (swkotor2.exe) loads creature model from appearance.2da row
+    /// - Model loading: 0x005261b0 @ 0x005261b0 (swkotor2.exe) loads creature model from appearance.2da row
     /// - Error messages: "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (swkotor2.exe)
     /// - "CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ 0x007cdc40 (swkotor2.exe)
     /// - Original implementation: Entities with models can be rendered in the game world
     /// - ModelResRef: MDL file resource reference for 3D model (loaded from installation resources)
     /// - AppearanceRow: Index into appearance.2da for creature appearance customization (Appearance_Type field)
-    /// - FUN_005261b0 loads creature model by reading appearance.2da row, extracting ModelA/ModelB fields,
+    /// - 0x005261b0 loads creature model by reading appearance.2da row, extracting ModelA/ModelB fields,
     ///   constructing model path, loading MDL/MDX files (model geometry/animation)
     /// - Textures loaded from TPC files (texture data) referenced by TexA/TexB fields in appearance.2da
     /// - Appearance.2da defines: ModelA, ModelB (model variants), TexA, TexB (texture variants), Race (race model base)

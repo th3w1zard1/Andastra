@@ -388,13 +388,13 @@ namespace Andastra.Runtime.Core.Movement
             var normalizedDir = Vector3.Normalize(direction);
             Vector3 newPosition = currentPos + normalizedDir * moveDistance;
 
-            // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
+            // Project position to walkmesh surface (matches 0x004f5070 in swkotor2.exe)
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
             // Error messages: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             // "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
             // "aborted walking, Maximum number of bumps happened" @ 0x007c0458
-            // Original implementation: Always projects position to walkmesh surface after movement (FUN_004f5070)
+            // Original implementation: Always projects position to walkmesh surface after movement (0x004f5070)
             // Bumping system: Detects creature collisions, attempts to navigate around blocked creatures
             if (_navMesh != null)
             {

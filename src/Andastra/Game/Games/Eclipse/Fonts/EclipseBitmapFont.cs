@@ -10,12 +10,12 @@ using BioWare.NET.Resource;
 using BioWare.NET.Resource.Formats.TEX;
 using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using Andastra.Game.Graphics.MonoGame.Converters;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
+using MonoGameTexture2D = Andastra.Game.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
 namespace Andastra.Game.Games.Eclipse.Fonts
 {

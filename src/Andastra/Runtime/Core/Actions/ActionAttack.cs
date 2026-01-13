@@ -198,7 +198,7 @@ namespace Andastra.Runtime.Core.Actions
                 // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70
                 // ScriptDamaged script is loaded from creature template and executed when damage is dealt
-                // FUN_005226d0 @ 0x005226d0 saves ScriptDamaged field, FUN_0050c510 @ 0x0050c510 loads ScriptDamaged field
+                // 0x005226d0 @ 0x005226d0 saves ScriptDamaged field, 0x0050c510 @ 0x0050c510 loads ScriptDamaged field
                 if (eventBus != null)
                 {
                     eventBus.FireScriptEvent(target, ScriptEvent.OnDamaged, attacker);

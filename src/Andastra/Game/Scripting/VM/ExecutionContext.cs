@@ -1,6 +1,6 @@
 using System.Threading;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 
 namespace Andastra.Game.Scripting.VM
 {

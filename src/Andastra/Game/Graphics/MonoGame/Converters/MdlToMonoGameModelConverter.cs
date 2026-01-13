@@ -39,7 +39,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
     ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     /// - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) to ensure spell visuals work correctly
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
     /// - Original implementation: KOTOR loads MDL/MDX files and renders with DirectX 8/9 APIs
     /// - MDL format: Binary model format containing trimesh nodes, bones, animations
     /// - MDX format: Binary geometry format containing vertex positions, normals, UVs, indices
@@ -56,7 +56,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
     /// 
     /// <code>
     /// // New optimized approach (recommended):
-    /// using Andastra.Runtime.Content.MDL;
+    /// using Runtime.Content.MDL;
     /// using Andastra.Game.Graphics.MonoGame.Models;
     /// 
     /// var mdlData = resourceProvider.GetResource(resRef, "mdl");
@@ -222,7 +222,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
 
         private Matrix CreateNodeTransform(MDLNode node)
         {
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006f8590 @ 0x006f8590
             // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
             // Otherwise spell visuals will not be correct
             // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error
@@ -236,7 +236,7 @@ namespace Andastra.Game.Graphics.MonoGame.Converters
                 {
                     // Force identity orientation for spell visual attachment points
                     // These dummy nodes should not have any rotation - they're just attachment points
-                    // swkotor2.exe: FUN_006f8590 validates that these nodes have identity quaternion (0,0,0,1)
+                    // swkotor2.exe: 0x006f8590 validates that these nodes have identity quaternion (0,0,0,1)
                     rotation = Quaternion.Identity;
                 }
                 else

@@ -27,9 +27,9 @@ namespace Andastra.Runtime.Games.Common
     ///
     /// Engine-specific differences:
     /// - Odyssey (swkotor.exe, swkotor2.exe): UTC GFF templates, EntityFactory wrapper
-    ///   - swkotor.exe: FUN_0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
-    ///   - swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature templates, FUN_005fb0f0 @ 0x005fb0f0 loads template data
-    ///   - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
+    ///   - swkotor.exe: 0x0050a350 @ 0x0050a350 loads templates from GIT with TemplateResRef field
+    ///   - swkotor2.exe: 0x005261b0 @ 0x005261b0 loads creature templates, 0x005fb0f0 @ 0x005fb0f0 loads template data
+    ///   - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
     ///   - Located via string references: "TemplateResRef" @ 0x00747494 (swkotor.exe), "TemplateResRef" @ 0x007bd00c (swkotor2.exe)
     /// - Aurora (nwmain.exe): Similar template system, different GFF format
     ///   - Located via string references: "TemplateResRef" @ 0x140dddee8 (nwmain.exe)

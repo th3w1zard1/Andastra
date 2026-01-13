@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using BioWare.NET.Common;
-using BioWare.NET.Common.Script;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -12,7 +11,7 @@ using Andastra.Game.Games.Eclipse.Loading;
 using Andastra.Game.Scripting.EngineApi;
 using Andastra.Game.Scripting.Interfaces;
 
-namespace Andastra.Game.Engines.Eclipse.EngineApi
+namespace Andastra.Game.Games.Engines.Eclipse.EngineApi
 {
     /// <summary>
     /// Base Eclipse Engine API implementation containing ONLY functions common between daorigins.exe and DragonAge2.exe.
@@ -47,7 +46,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         // Helper class to store iteration state per area
         private class AreaIterationState
         {
-            public System.Collections.Generic.List<Andastra.Runtime.Core.Interfaces.IEntity> Entities { get; set; }
+            public System.Collections.Generic.List<Runtime.Core.Interfaces.IEntity> Entities { get; set; }
             public int CurrentIndex { get; set; }
         }
 
@@ -346,7 +345,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             Vector3 position = args.Count > 1 ? args[1].AsVector() : Vector3.Zero;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 ITransformComponent transform = entity.GetComponent<ITransformComponent>();
@@ -371,7 +370,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             float direction = args.Count > 1 ? args[1].AsFloat() : 0.0f;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 ITransformComponent transform = entity.GetComponent<ITransformComponent>();
@@ -398,8 +397,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
-            Andastra.Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
+            Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
+            Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
 
             if (entity1 != null && entity2 != null)
             {
@@ -428,8 +427,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
-            Andastra.Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
+            Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
+            Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
 
             if (entity1 != null && entity2 != null)
             {
@@ -500,7 +499,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             // Located via string references: "TemplateResRef" @ 0x00af4f00 (daorigins.exe), "TemplateResRef" @ 0x00bf2538 (DragonAge2.exe)
             // Original implementation: Loads UTC GFF template, creates EclipseEntity with all template data applied
             // Template data includes: Tag, FirstName, LastName, Appearance_Type, FactionID, HP, Attributes, Scripts, etc.
-            Andastra.Runtime.Core.Interfaces.IEntity creature = templateFactory.CreateCreatureFromTemplate(template, position, facingRadians);
+            Runtime.Core.Interfaces.IEntity creature = templateFactory.CreateCreatureFromTemplate(template, position, facingRadians);
             if (creature != null)
             {
                 // Register entity with world if not already registered
@@ -538,7 +537,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 return Variable.FromObject(ObjectInvalid);
             }
 
-            Andastra.Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -549,7 +548,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             ITransformComponent targetTransform = target.GetComponent<ITransformComponent>();
             Vector3 itemPosition = targetTransform != null ? targetTransform.Position : Vector3.Zero;
 
-            Andastra.Runtime.Core.Interfaces.IEntity item = ctx.World.CreateEntity(Andastra.Runtime.Core.Enums.ObjectType.Item, itemPosition, 0.0f);
+            Andastra.Runtime.Core.Interfaces.IEntity item = ctx.World.CreateEntity(Runtime.Core.Enums.ObjectType.Item, itemPosition, 0.0f);
             if (item != null)
             {
                 // Set template tag if provided
@@ -617,7 +616,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 return Variable.Void();
             }
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ctx.World.GetEntity(objectId);
+            Runtime.Core.Interfaces.IEntity entity = ctx.World.GetEntity(objectId);
             if (entity != null)
             {
                 Console.WriteLine("[Eclipse] DestroyObject: Object 0x{0:X8}", objectId);
@@ -652,7 +651,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint targetId = args.Count > 2 ? args[2].AsObjectId() : ObjectSelf;
             int nth = args.Count > 3 ? args[3].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -669,9 +668,9 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             // Search for creatures within reasonable radius (100 units default)
             // Get all creatures in radius, filter by criteria, sort by distance, return nth
             const float searchRadius = 100.0f;
-            var candidates = new List<Tuple<Andastra.Runtime.Core.Interfaces.IEntity, float>>();
+            var candidates = new List<Tuple<Runtime.Core.Interfaces.IEntity, float>>();
 
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetEntitiesInRadius(targetTransform.Position, searchRadius, Andastra.Runtime.Core.Enums.ObjectType.Creature))
+            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetEntitiesInRadius(targetTransform.Position, searchRadius, Runtime.Core.Enums.ObjectType.Creature))
             {
                 if (entity == null || entity.ObjectId == target.ObjectId)
                 {
@@ -726,7 +725,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 if (entityTransform != null)
                 {
                     float distance = Vector3.Distance(targetTransform.Position, entityTransform.Position);
-                    candidates.Add(new Tuple<Andastra.Runtime.Core.Interfaces.IEntity, float>(entity, distance));
+                    candidates.Add(new Tuple<Runtime.Core.Interfaces.IEntity, float>(entity, distance));
                 }
             }
 
@@ -755,7 +754,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectSelf;
             int nth = args.Count > 2 ? args[2].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target == null || ctx.World == null)
             {
                 return Variable.FromObject(ObjectInvalid);
@@ -770,24 +769,24 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             Console.WriteLine("[Eclipse] GetNearestObject: Type {0}, Target 0x{1:X8}, nth {2}", objectType, targetId, nth);
             // Convert objectType to ObjectType enum mask
             // Eclipse object types: 1=Creature, 2=Item, 4=Trigger, 8=Door, 64=Placeable, etc.
-            Andastra.Runtime.Core.Enums.ObjectType typeMask = Andastra.Runtime.Core.Enums.ObjectType.Invalid;
-            if ((objectType & 1) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Creature;
-            if ((objectType & 2) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Item;
-            if ((objectType & 4) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Trigger;
-            if ((objectType & 8) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Door;
-            if ((objectType & 64) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Placeable;
+            Andastra.Runtime.Core.Enums.ObjectType typeMask = Runtime.Core.Enums.ObjectType.Invalid;
+            if ((objectType & 1) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Creature;
+            if ((objectType & 2) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Item;
+            if ((objectType & 4) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Trigger;
+            if ((objectType & 8) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Door;
+            if ((objectType & 64) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Placeable;
 
             // If no type specified, search all types
-            if (typeMask == Andastra.Runtime.Core.Enums.ObjectType.Invalid)
+            if (typeMask == Runtime.Core.Enums.ObjectType.Invalid)
             {
-                typeMask = Andastra.Runtime.Core.Enums.ObjectType.All;
+                typeMask = Runtime.Core.Enums.ObjectType.All;
             }
 
             // Search for objects within reasonable radius (100 units default)
             const float searchRadius = 100.0f;
-            var candidates = new List<Tuple<Andastra.Runtime.Core.Interfaces.IEntity, float>>();
+            var candidates = new List<Tuple<Runtime.Core.Interfaces.IEntity, float>>();
 
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetEntitiesInRadius(targetTransform.Position, searchRadius, typeMask))
+            foreach (Runtime.Core.Interfaces.IEntity entity in ctx.World.GetEntitiesInRadius(targetTransform.Position, searchRadius, typeMask))
             {
                 if (entity == null || entity.ObjectId == target.ObjectId)
                 {
@@ -799,7 +798,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 if (entityTransform != null)
                 {
                     float distance = Vector3.Distance(targetTransform.Position, entityTransform.Position);
-                    candidates.Add(new Tuple<Andastra.Runtime.Core.Interfaces.IEntity, float>(entity, distance));
+                    candidates.Add(new Tuple<Runtime.Core.Interfaces.IEntity, float>(entity, distance));
                 }
             }
 
@@ -826,7 +825,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity == null)
             {
                 return Variable.FromInt(0); // OBJECT_TYPE_INVALID
@@ -871,7 +870,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 // Check if entity is player character by tag or by being party leader
@@ -900,7 +899,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 // If it's a creature but not PC, it's an NPC
@@ -923,7 +922,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IStatsComponent>() != null)
             {
                 return Variable.FromInt(1);
@@ -939,7 +938,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IItemComponent>() != null)
             {
                 return Variable.FromInt(1);
@@ -955,7 +954,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IPlaceableComponent>() != null)
             {
                 return Variable.FromInt(1);
@@ -971,7 +970,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<IDoorComponent>() != null)
             {
                 return Variable.FromInt(1);
@@ -993,7 +992,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && ctx.World != null && ctx.World.CombatSystem != null)
             {
                 // Check if entity is in combat using CombatSystem
@@ -1017,11 +1016,11 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint attackerId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity attacker = ResolveObject(attackerId, ctx);
+            Runtime.Core.Interfaces.IEntity attacker = ResolveObject(attackerId, ctx);
             if (attacker != null && ctx.World != null && ctx.World.CombatSystem != null)
             {
                 // CombatSystem has GetTarget method, not GetAttackTarget
-                Andastra.Runtime.Core.Interfaces.IEntity target = ctx.World.CombatSystem.GetTarget(attacker);
+                Runtime.Core.Interfaces.IEntity target = ctx.World.CombatSystem.GetTarget(attacker);
                 if (target != null)
                 {
                     return Variable.FromObject(target.ObjectId);
@@ -1044,7 +1043,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 IStatsComponent stats = entity.GetComponent<IStatsComponent>();
@@ -1070,7 +1069,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 IStatsComponent stats = entity.GetComponent<IStatsComponent>();
@@ -1097,7 +1096,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int hp = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 IStatsComponent stats = entity.GetComponent<IStatsComponent>();
@@ -1126,8 +1125,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
-            Andastra.Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
+            Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
+            Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
 
             if (entity1 != null && entity2 != null)
             {
@@ -1155,8 +1154,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
-            Andastra.Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
+            Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
+            Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
 
             if (entity1 != null && entity2 != null)
             {
@@ -1184,8 +1183,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId1 = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             uint objectId2 = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
-            Andastra.Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
+            Runtime.Core.Interfaces.IEntity entity1 = ResolveObject(objectId1, ctx);
+            Runtime.Core.Interfaces.IEntity entity2 = ResolveObject(objectId2, ctx);
 
             if (entity1 != null && entity2 != null)
             {
@@ -1212,7 +1211,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 IFactionComponent faction = entity.GetComponent<IFactionComponent>();
@@ -1239,7 +1238,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int faction = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 IFactionComponent factionComp = entity.GetComponent<IFactionComponent>();
@@ -1271,7 +1270,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
 
             // Count entities marked as party members
             int count = 0;
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
+            foreach (Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
             {
                 if (entity != null && entity.HasData("IsPartyMember") && entity.GetData<bool>("IsPartyMember"))
                 {
@@ -1302,8 +1301,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             // Collect party members
-            var partyMembers = new List<Andastra.Runtime.Core.Interfaces.IEntity>();
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
+            var partyMembers = new List<Runtime.Core.Interfaces.IEntity>();
+            foreach (Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
             {
                 if (entity != null && entity.HasData("IsPartyMember") && entity.GetData<bool>("IsPartyMember"))
                 {
@@ -1334,7 +1333,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.HasData("IsPartyMember"))
             {
                 return Variable.FromInt(entity.GetData<bool>("IsPartyMember") ? 1 : 0);
@@ -1357,7 +1356,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 // Mark entity as party member
@@ -1381,7 +1380,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 // Unmark entity as party member
@@ -1431,7 +1430,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
 
             // Strategy 2: Try to find entity by tag "PlayerCharacter" (Eclipse engine pattern)
             // Based on string reference "PlayerCharacter" @ 0x00b08188 in daorigins.exe
-            Andastra.Runtime.Core.Interfaces.IEntity playerEntity = ctx.World.GetEntityByTag("PlayerCharacter", 0);
+            Runtime.Core.Interfaces.IEntity playerEntity = ctx.World.GetEntityByTag("PlayerCharacter", 0);
             if (playerEntity != null)
             {
                 return Variable.FromObject(playerEntity.ObjectId);
@@ -1446,7 +1445,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
 
             // Strategy 4: Search through all entities for one marked as player character
             // This is a fallback if tag-based lookup fails
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
+            foreach (Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
             {
                 if (entity == null)
                 {
@@ -1487,7 +1486,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             string conversation = args.Count > 1 ? args[1].AsString() : string.Empty;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && !string.IsNullOrEmpty(conversation) && ctx.World != null && ctx.World.CurrentArea != null)
             {
                 // Store conversation state in entity data
@@ -1526,7 +1525,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.HasData("InConversation"))
             {
                 return Variable.FromInt(entity.GetData<bool>("InConversation") ? 1 : 0);
@@ -1603,13 +1602,13 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int slot = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 IInventoryComponent inventory = creature.GetComponent<IInventoryComponent>();
                 if (inventory != null)
                 {
-                    Andastra.Runtime.Core.Interfaces.IEntity item = inventory.GetItemInSlot(slot);
+                    Runtime.Core.Interfaces.IEntity item = inventory.GetItemInSlot(slot);
                     if (item != null)
                     {
                         return Variable.FromObject(item.ObjectId);
@@ -1627,7 +1626,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
 
-            Andastra.Runtime.Core.Interfaces.IEntity item = ResolveObject(itemId, ctx);
+            Runtime.Core.Interfaces.IEntity item = ResolveObject(itemId, ctx);
             if (item != null)
             {
                 IItemComponent itemComp = item.GetComponent<IItemComponent>();
@@ -1649,7 +1648,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint itemId = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             int stackSize = args.Count > 1 ? args[1].AsInt() : 1;
 
-            Andastra.Runtime.Core.Interfaces.IEntity item = ResolveObject(itemId, ctx);
+            Runtime.Core.Interfaces.IEntity item = ResolveObject(itemId, ctx);
             if (item != null)
             {
                 IItemComponent itemComp = item.GetComponent<IItemComponent>();
@@ -1683,7 +1682,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int ability = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 IStatsComponent stats = creature.GetComponent<IStatsComponent>();
@@ -1692,7 +1691,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     // Convert int to Ability enum (0-5 map to Strength-Charisma)
                     if (ability >= 0 && ability <= 5)
                     {
-                        Andastra.Runtime.Core.Enums.Ability abilityEnum = (Andastra.Runtime.Core.Enums.Ability)ability;
+                        Andastra.Runtime.Core.Enums.Ability abilityEnum = (Runtime.Core.Enums.Ability)ability;
                         return Variable.FromInt(stats.GetAbility(abilityEnum));
                     }
                 }
@@ -1716,7 +1715,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int ability = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 IStatsComponent stats = creature.GetComponent<IStatsComponent>();
@@ -1725,7 +1724,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     // Convert int to Ability enum (0-5 map to Strength-Charisma)
                     if (ability >= 0 && ability <= 5)
                     {
-                        Andastra.Runtime.Core.Enums.Ability abilityEnum = (Andastra.Runtime.Core.Enums.Ability)ability;
+                        Andastra.Runtime.Core.Enums.Ability abilityEnum = (Runtime.Core.Enums.Ability)ability;
                         return Variable.FromInt(stats.GetAbilityModifier(abilityEnum));
                     }
                 }
@@ -1760,7 +1759,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             // Fallback: try to get entity by ID and return its tag
             if (areaId != ObjectInvalid)
             {
-                Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(areaId, ctx);
+                Runtime.Core.Interfaces.IEntity entity = ResolveObject(areaId, ctx);
                 if (entity != null)
                 {
                     return Variable.FromString(entity.Tag ?? string.Empty);
@@ -1805,7 +1804,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 // Try to get name from entity data first
@@ -1839,7 +1838,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             string name = args.Count > 1 ? args[1].AsString() : string.Empty;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 // Set name in entity data
@@ -1870,7 +1869,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             // Get area - if invalid, use current area
-            Andastra.Runtime.Core.Interfaces.IEntity areaEntity = null;
+            Runtime.Core.Interfaces.IEntity areaEntity = null;
             if (areaId != ObjectInvalid)
             {
                 areaEntity = ResolveObject(areaId, ctx);
@@ -1884,16 +1883,16 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             // Convert objectType to ObjectType enum mask
-            Andastra.Runtime.Core.Enums.ObjectType typeMask = Andastra.Runtime.Core.Enums.ObjectType.Invalid;
-            if ((objectType & 1) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Creature;
-            if ((objectType & 2) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Item;
-            if ((objectType & 4) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Trigger;
-            if ((objectType & 8) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Door;
-            if ((objectType & 64) != 0) typeMask |= Andastra.Runtime.Core.Enums.ObjectType.Placeable;
+            Andastra.Runtime.Core.Enums.ObjectType typeMask = Runtime.Core.Enums.ObjectType.Invalid;
+            if ((objectType & 1) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Creature;
+            if ((objectType & 2) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Item;
+            if ((objectType & 4) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Trigger;
+            if ((objectType & 8) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Door;
+            if ((objectType & 64) != 0) typeMask |= Runtime.Core.Enums.ObjectType.Placeable;
 
-            if (typeMask == Andastra.Runtime.Core.Enums.ObjectType.Invalid)
+            if (typeMask == Runtime.Core.Enums.ObjectType.Invalid)
             {
-                typeMask = Andastra.Runtime.Core.Enums.ObjectType.All;
+                typeMask = Runtime.Core.Enums.ObjectType.All;
             }
 
             // Initialize iteration state using static dictionary keyed by area ResRef
@@ -1902,8 +1901,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 string areaKey = ctx.World.CurrentArea.ResRef ?? "default";
 
                 // Get first object
-                var entities = new List<Andastra.Runtime.Core.Interfaces.IEntity>();
-                foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
+                var entities = new List<Runtime.Core.Interfaces.IEntity>();
+                foreach (Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
                 {
                     if (entity == null)
                     {
@@ -1979,23 +1978,23 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
 
                     // Check object type
                     bool matchesType = false;
-                    if ((typeMask & Andastra.Runtime.Core.Enums.ObjectType.Creature) != 0 && entity.GetComponent<IStatsComponent>() != null)
+                    if ((typeMask & Runtime.Core.Enums.ObjectType.Creature) != 0 && entity.GetComponent<IStatsComponent>() != null)
                     {
                         matchesType = true;
                     }
-                    else if ((typeMask & Andastra.Runtime.Core.Enums.ObjectType.Item) != 0 && entity.GetComponent<IItemComponent>() != null)
+                    else if ((typeMask & Runtime.Core.Enums.ObjectType.Item) != 0 && entity.GetComponent<IItemComponent>() != null)
                     {
                         matchesType = true;
                     }
-                    else if ((typeMask & Andastra.Runtime.Core.Enums.ObjectType.Trigger) != 0 && entity.GetComponent<ITriggerComponent>() != null)
+                    else if ((typeMask & Runtime.Core.Enums.ObjectType.Trigger) != 0 && entity.GetComponent<ITriggerComponent>() != null)
                     {
                         matchesType = true;
                     }
-                    else if ((typeMask & Andastra.Runtime.Core.Enums.ObjectType.Door) != 0 && entity.GetComponent<IDoorComponent>() != null)
+                    else if ((typeMask & Runtime.Core.Enums.ObjectType.Door) != 0 && entity.GetComponent<IDoorComponent>() != null)
                     {
                         matchesType = true;
                     }
-                    else if ((typeMask & Andastra.Runtime.Core.Enums.ObjectType.Placeable) != 0 && entity.GetComponent<IPlaceableComponent>() != null)
+                    else if ((typeMask & Runtime.Core.Enums.ObjectType.Placeable) != 0 && entity.GetComponent<IPlaceableComponent>() != null)
                     {
                         matchesType = true;
                     }
@@ -2087,7 +2086,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.GetComponent<ITriggerComponent>() != null)
             {
                 return Variable.FromInt(1);
@@ -2109,7 +2108,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null)
             {
                 // Check if entity has waypoint tag pattern or waypoint component
@@ -2237,7 +2236,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
 
             // Fallback check: Check if entity has module-specific data
             // This is a safety measure for edge cases where modules might be represented as entities
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.HasData("IsModule"))
             {
                 return Variable.FromInt(1);
@@ -2262,8 +2261,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint targetId = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
             int run = args.Count > 2 ? args[2].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
-            Andastra.Runtime.Core.Interfaces.IEntity targetEntity = ResolveObject(targetId, ctx);
+            Runtime.Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
+            Runtime.Core.Interfaces.IEntity targetEntity = ResolveObject(targetId, ctx);
 
             if (moveToEntity != null && targetEntity != null)
             {
@@ -2302,7 +2301,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             Vector3 destination = args.Count > 1 ? args[1].AsVector() : Vector3.Zero;
             int run = args.Count > 2 ? args[2].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
+            Runtime.Core.Interfaces.IEntity moveToEntity = ResolveObject(moveToId, ctx);
             if (moveToEntity != null)
             {
                 // Queue movement action to destination using pathfinding system
@@ -2339,7 +2338,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 return Variable.Void();
             }
 
-            Andastra.Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
             if (target != null)
             {
                 IStatsComponent stats = target.GetComponent<IStatsComponent>();
@@ -2485,7 +2484,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             // Clear conversation state from all entities
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
+            foreach (Runtime.Core.Interfaces.IEntity entity in ctx.World.GetAllEntities())
             {
                 if (entity != null && entity.HasData("InConversation"))
                 {
@@ -2638,7 +2637,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 IInventoryComponent inventory = creature.GetComponent<IInventoryComponent>();
@@ -2648,8 +2647,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     creature.SetData("InventoryIteration_Index", 0);
 
                     // Get first item
-                    var items = new List<Andastra.Runtime.Core.Interfaces.IEntity>();
-                    foreach (Andastra.Runtime.Core.Interfaces.IEntity item in inventory.GetAllItems())
+                    var items = new List<Runtime.Core.Interfaces.IEntity>();
+                    foreach (Runtime.Core.Interfaces.IEntity item in inventory.GetAllItems())
                     {
                         if (item != null)
                         {
@@ -2682,10 +2681,10 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         {
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null && creature.HasData("InventoryIteration_Items"))
             {
-                var items = creature.GetData<List<Andastra.Runtime.Core.Interfaces.IEntity>>("InventoryIteration_Items");
+                var items = creature.GetData<List<Runtime.Core.Interfaces.IEntity>>("InventoryIteration_Items");
                 int currentIndex = creature.GetData<int>("InventoryIteration_Index");
 
                 // Increment index
@@ -2725,8 +2724,8 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 return Variable.Void();
             }
 
-            Andastra.Runtime.Core.Interfaces.IEntity caster = ctx.Caller;
-            Andastra.Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
+            Runtime.Core.Interfaces.IEntity caster = ctx.Caller;
+            Runtime.Core.Interfaces.IEntity target = ResolveObject(targetId, ctx);
 
             if (caster == null)
             {
@@ -2797,7 +2796,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             // 5. Fire spell events for script hooks
             // For now, we fire events and let scripts handle spell effects
 
-            Andastra.Runtime.Core.Interfaces.IEntity caster = ctx.Caller;
+            Runtime.Core.Interfaces.IEntity caster = ctx.Caller;
             if (caster != null && ctx.World != null && ctx.World.EventBus != null)
             {
                 // Fire OnSpellCastAt script event for the caster with location
@@ -2843,7 +2842,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int ability = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 IStatsComponent stats = creature.GetComponent<IStatsComponent>();
@@ -2874,7 +2873,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             uint creatureId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             int spell = args.Count > 1 ? args[1].AsInt() : 0;
 
-            Andastra.Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
+            Runtime.Core.Interfaces.IEntity creature = ResolveObject(creatureId, ctx);
             if (creature != null)
             {
                 IStatsComponent stats = creature.GetComponent<IStatsComponent>();
@@ -2967,7 +2966,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             // Get object's area
-            Andastra.Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
+            Runtime.Core.Interfaces.IEntity entity = ResolveObject(objectId, ctx);
             if (entity != null && entity.IsValid)
             {
                 // Get area from entity's AreaId
@@ -3082,7 +3081,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// Criteria types: 0=None, 1=Perception, 2=Disposition, 3=Reputation, 4=Team, 5=Reaction, 6=Class, 7=Race, 8=Hp, 9=Tag, 10=NotDead, 11=InCombat, 12=TargetType, 13=CreatureType, 14=Allegiance, 15=Gender, 16=Player, 17=Party, 18=Area, 19=Location, 20=LineOfSight, 21=Distance, 22=HasItem, 23=HasSpell, 24=HasSkill, 25=HasFeat, 26=HasTalent, 27=HasEffect, 28=HasVariable, 29=HasLocalVariable, 30=HasGlobalVariable, 31=HasFaction, 32=HasAlignment, 33=HasGoodEvil, 34=HasLawfulChaotic, 35=HasLevel, 36=HasClass, 37=HasRace, 38=HasGender, 39=HasSubrace, 40=HasDeity, 41=HasDomain, 42=HasDomainSource, 43=HasAbilityScore, 44=HasAbilityModifier, 45=HasSkillRank, 46=HasFeatCount, 47=HasSpellCount, 48=HasTalentCount, 49=HasEffectCount, 50=HasItemCount, 51=HasVariableValue, 52=HasLocalVariableValue, 53=HasGlobalVariableValue, 54=HasFactionValue, 55=HasAlignmentValue, 56=HasGoodEvilValue, 57=HasLawfulChaoticValue, 58=HasLevelValue, 59=HasClassValue, 60=HasRaceValue, 61=HasGenderValue, 62=HasSubraceValue, 63=HasDeityValue, 64=HasDomainValue, 65=HasDomainSourceValue, 66=HasAbilityScoreValue, 67=HasAbilityModifierValue, 68=HasSkillRankValue, 69=HasFeatCountValue, 70=HasSpellCountValue, 71=HasTalentCountValue, 72=HasEffectCountValue, 73=HasItemCountValue
         /// </remarks>
-        private bool MatchesCriteria(Andastra.Runtime.Core.Interfaces.IEntity entity, int criteriaType, int criteriaValue, Andastra.Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
+        private bool MatchesCriteria(Andastra.Runtime.Core.Interfaces.IEntity entity, int criteriaType, int criteriaValue, Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
         {
             if (entity == null)
             {
@@ -3450,7 +3449,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Andastra.Runtime.Core.Enums.Ability ability = (Andastra.Runtime.Core.Enums.Ability)abilityId;
+                    Andastra.Runtime.Core.Enums.Ability ability = (Runtime.Core.Enums.Ability)abilityId;
                     int abilityScore = stats.GetAbility(ability);
                     return abilityScore > 0; // Has non-zero ability score
 
@@ -3465,7 +3464,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Andastra.Runtime.Core.Enums.Ability ability44 = (Andastra.Runtime.Core.Enums.Ability)abilityId44;
+                    Andastra.Runtime.Core.Enums.Ability ability44 = (Runtime.Core.Enums.Ability)abilityId44;
                     int modifier = stats.GetAbilityModifier(ability44);
                     return modifier > 0;
 
@@ -3606,7 +3605,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Andastra.Runtime.Core.Enums.Ability ability66 = (Andastra.Runtime.Core.Enums.Ability)abilityId66;
+                    Andastra.Runtime.Core.Enums.Ability ability66 = (Runtime.Core.Enums.Ability)abilityId66;
                     int actualScore = stats.GetAbility(ability66);
                     return actualScore == expectedScore;
 
@@ -3622,7 +3621,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                     {
                         return false;
                     }
-                    Andastra.Runtime.Core.Enums.Ability ability67 = (Andastra.Runtime.Core.Enums.Ability)abilityId67;
+                    Andastra.Runtime.Core.Enums.Ability ability67 = (Runtime.Core.Enums.Ability)abilityId67;
                     int actualModifier = stats.GetAbilityModifier(ability67);
                     return actualModifier == expectedModifier;
 
@@ -3679,7 +3678,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// Based on Eclipse engine: Disposition calculation
         /// Disposition represents relationship status (0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
         /// </remarks>
-        private int GetDispositionValue(Andastra.Runtime.Core.Interfaces.IEntity entity, Andastra.Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
+        private int GetDispositionValue(Andastra.Runtime.Core.Interfaces.IEntity entity, Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
         {
             if (entity == null || target == null)
             {
@@ -3701,7 +3700,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
                 if (factionManagerProperty != null)
                 {
                     var factionManager = factionManagerProperty.GetValue(ctx.World);
-                    if (factionManager is Andastra.Game.Games.Eclipse.Systems.EclipseFactionManager eclipseFactionManager)
+                    if (factionManager is Games.Common.Systems.EclipseFactionManager eclipseFactionManager)
                     {
                         return eclipseFactionManager.GetReputation(entity, target);
                     }
@@ -3727,7 +3726,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// Based on Eclipse engine: Reputation calculation
         /// Reputation represents relationship status (0-100, where 0-10=hostile, 11-89=neutral, 90-100=friendly)
         /// </remarks>
-        private int GetReputationValue(Andastra.Runtime.Core.Interfaces.IEntity entity, Andastra.Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
+        private int GetReputationValue(Andastra.Runtime.Core.Interfaces.IEntity entity, Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
         {
             // Reputation and disposition are the same in Eclipse engine
             return GetDispositionValue(entity, target, ctx);
@@ -3740,7 +3739,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// Based on Eclipse engine: Reaction type calculation
         /// Returns: 0=hostile, 1=neutral, 2=friendly
         /// </remarks>
-        private int GetReactionType(Andastra.Runtime.Core.Interfaces.IEntity entity, Andastra.Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
+        private int GetReactionType(Andastra.Runtime.Core.Interfaces.IEntity entity, Runtime.Core.Interfaces.IEntity target, IExecutionContext ctx)
         {
             if (entity == null || target == null)
             {
@@ -3844,7 +3843,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if entity has item by ID or tag
         /// </summary>
-        private bool HasItemByIdOrTag(Andastra.Runtime.Core.Interfaces.IEntity entity, int itemIdOrTag, IExecutionContext ctx)
+        private bool HasItemByIdOrTag(Runtime.Core.Interfaces.IEntity entity, int itemIdOrTag, IExecutionContext ctx)
         {
             IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
             if (inventory == null)
@@ -3853,7 +3852,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             // Check all items in inventory
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity item in inventory.GetAllItems())
+            foreach (Runtime.Core.Interfaces.IEntity item in inventory.GetAllItems())
             {
                 if (item == null)
                 {
@@ -3923,7 +3922,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if entity has a feat
         /// </summary>
-        private bool HasFeat(Andastra.Runtime.Core.Interfaces.IEntity entity, int featId, IExecutionContext ctx)
+        private bool HasFeat(Runtime.Core.Interfaces.IEntity entity, int featId, IExecutionContext ctx)
         {
             // Check if entity has feat in feat list (stored in entity data)
             List<int> featList = entity.GetData<List<int>>("FeatList", null);
@@ -3950,7 +3949,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if entity has a talent
         /// </summary>
-        private bool HasTalent(Andastra.Runtime.Core.Interfaces.IEntity entity, int talentId, IExecutionContext ctx)
+        private bool HasTalent(Runtime.Core.Interfaces.IEntity entity, int talentId, IExecutionContext ctx)
         {
             // Check if entity has talent in talent list (stored in entity data)
             List<int> talentList = entity.GetData<List<int>>("TalentList", null);
@@ -3965,7 +3964,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if entity has an effect
         /// </summary>
-        private bool HasEffect(Andastra.Runtime.Core.Interfaces.IEntity entity, int effectId, IExecutionContext ctx)
+        private bool HasEffect(Runtime.Core.Interfaces.IEntity entity, int effectId, IExecutionContext ctx)
         {
             // Check if entity has effect in effect list (stored in entity data)
             List<int> effectList = entity.GetData<List<int>>("EffectList", null);
@@ -3980,7 +3979,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if entity has a variable
         /// </summary>
-        private bool HasVariable(Andastra.Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        private bool HasVariable(Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
         {
             // Check if entity has variable (stored in entity data)
             string varKey = $"Variable_{variableId}";
@@ -3990,7 +3989,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to check if entity has a local variable
         /// </summary>
-        private bool HasLocalVariable(Andastra.Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        private bool HasLocalVariable(Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
         {
             // Local variables are stored on entity
             string varKey = $"LocalVariable_{variableId}";
@@ -4094,7 +4093,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get variable value
         /// </summary>
-        private int GetVariableValue(Andastra.Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        private int GetVariableValue(Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
         {
             string varKey = $"Variable_{variableId}";
             return entity.GetData<int>(varKey, 0);
@@ -4103,7 +4102,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get local variable value
         /// </summary>
-        private int GetLocalVariableValue(Andastra.Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
+        private int GetLocalVariableValue(Runtime.Core.Interfaces.IEntity entity, int variableId, IExecutionContext ctx)
         {
             string varKey = $"LocalVariable_{variableId}";
             return entity.GetData<int>(varKey, 0);
@@ -4242,7 +4241,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get feat count
         /// </summary>
-        private int GetFeatCount(Andastra.Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        private int GetFeatCount(Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
         {
             List<int> featList = entity.GetData<List<int>>("FeatList", null);
             if (featList != null)
@@ -4262,7 +4261,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// EclipseStatsComponent.GetKnownSpells() returns all known spells/talents/abilities
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// </remarks>
-        private int GetSpellCount(Andastra.Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        private int GetSpellCount(Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
         {
             IStatsComponent stats = entity.GetComponent<IStatsComponent>();
             if (stats == null)
@@ -4339,7 +4338,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get talent count
         /// </summary>
-        private int GetTalentCount(Andastra.Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        private int GetTalentCount(Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
         {
             List<int> talentList = entity.GetData<List<int>>("TalentList", null);
             if (talentList != null)
@@ -4352,7 +4351,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get effect count
         /// </summary>
-        private int GetEffectCount(Andastra.Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        private int GetEffectCount(Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
         {
             List<int> effectList = entity.GetData<List<int>>("EffectList", null);
             if (effectList != null)
@@ -4365,7 +4364,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
         /// <summary>
         /// Helper method to get item count
         /// </summary>
-        private int GetItemCount(Andastra.Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
+        private int GetItemCount(Runtime.Core.Interfaces.IEntity entity, IExecutionContext ctx)
         {
             IInventoryComponent inventory = entity.GetComponent<IInventoryComponent>();
             if (inventory == null)
@@ -4374,7 +4373,7 @@ namespace Andastra.Game.Engines.Eclipse.EngineApi
             }
 
             int count = 0;
-            foreach (Andastra.Runtime.Core.Interfaces.IEntity item in inventory.GetAllItems())
+            foreach (Runtime.Core.Interfaces.IEntity item in inventory.GetAllItems())
             {
                 if (item != null)
                 {

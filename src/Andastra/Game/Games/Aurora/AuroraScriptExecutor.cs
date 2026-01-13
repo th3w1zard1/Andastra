@@ -7,7 +7,7 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common;
-using Andastra.Runtime.Scripting.Interfaces;
+using Andastra.Game.Scripting.Interfaces;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Aurora
@@ -146,7 +146,7 @@ namespace Andastra.Game.Games.Aurora
             var context = base.CreateExecutionContext(caller, triggerer);
 
             // Set resource provider - cast to concrete type since interface property is readonly
-            if (context is Andastra.Runtime.Scripting.VM.ExecutionContext vmContext)
+            if (context is Scripting.VM.ExecutionContext vmContext)
             {
                 vmContext.ResourceProvider = _resourceProvider;
             }
@@ -186,7 +186,7 @@ namespace Andastra.Game.Games.Aurora
             // Get current module from world
             // Based on nwmain.exe: Module scripts execute on current module only
             // Module must be loaded and set as current module before scripts can execute
-            IModule module = _world?.CurrentModule;
+            Runtime.Core.Interfaces.IModule module = _world?.CurrentModule;
             if (module == null)
             {
                 LogScriptWarning("ExecuteModuleScript: No current module loaded");
@@ -213,7 +213,7 @@ namespace Andastra.Game.Games.Aurora
             // Map ModuleEventType to ScriptEvent enum
             // Based on nwmain.exe: Module event types map to ScriptEvent enum values
             // Event types are consistent across Aurora engine games
-            Core.Enums.ScriptEvent scriptEvent = MapModuleEventTypeToScriptEvent(eventType);
+            Runtime.Core.Enums.ScriptEvent scriptEvent = MapModuleEventTypeToScriptEvent(eventType);
             if (scriptEvent == 0) // Invalid mapping
             {
                 LogScriptWarning($"ExecuteModuleScript: Invalid ModuleEventType {eventType}");
@@ -230,7 +230,7 @@ namespace Andastra.Game.Games.Aurora
             // Based on nwmain.exe: Module scripts may be stored in entity component for runtime modification
             if (string.IsNullOrEmpty(scriptResRef))
             {
-                var scriptHooks = moduleEntity.GetComponent<Core.Interfaces.Components.IScriptHooksComponent>();
+                var scriptHooks = moduleEntity.GetComponent<Runtime.Core.Interfaces.Components.IScriptHooksComponent>();
                 if (scriptHooks != null)
                 {
                     scriptResRef = scriptHooks.GetScript(scriptEvent);
@@ -290,7 +290,7 @@ namespace Andastra.Game.Games.Aurora
         /// Based on nwmain.exe: Module event types map directly to ScriptEvent enum values.
         /// Event type mapping is consistent across Aurora engine games.
         /// </remarks>
-        private Core.Enums.ScriptEvent MapModuleEventTypeToScriptEvent(ModuleEventType eventType)
+        private Runtime.Core.Enums.ScriptEvent MapModuleEventTypeToScriptEvent(ModuleEventType eventType)
         {
             // Map ModuleEventType to ScriptEvent enum
             // Based on nwmain.exe: Module event types correspond to ScriptEvent enum values
@@ -298,31 +298,31 @@ namespace Andastra.Game.Games.Aurora
             switch (eventType)
             {
                 case ModuleEventType.OnModuleLoad:
-                    return Core.Enums.ScriptEvent.OnModuleLoad;
+                    return Runtime.Core.Enums.ScriptEvent.OnModuleLoad;
 
                 case ModuleEventType.OnModuleHeartbeat:
-                    return Core.Enums.ScriptEvent.OnModuleHeartbeat;
+                    return Runtime.Core.Enums.ScriptEvent.OnModuleHeartbeat;
 
                 case ModuleEventType.OnClientEnter:
-                    return Core.Enums.ScriptEvent.OnClientEnter;
+                    return Runtime.Core.Enums.ScriptEvent.OnClientEnter;
 
                 case ModuleEventType.OnClientLeave:
-                    return Core.Enums.ScriptEvent.OnClientLeave;
+                    return Runtime.Core.Enums.ScriptEvent.OnClientLeave;
 
                 case ModuleEventType.OnPlayerDeath:
-                    return Core.Enums.ScriptEvent.OnPlayerDeath;
+                    return Runtime.Core.Enums.ScriptEvent.OnPlayerDeath;
 
                 case ModuleEventType.OnPlayerDying:
-                    return Core.Enums.ScriptEvent.OnPlayerDying;
+                    return Runtime.Core.Enums.ScriptEvent.OnPlayerDying;
 
                 case ModuleEventType.OnPlayerLevelUp:
-                    return Core.Enums.ScriptEvent.OnPlayerLevelUp;
+                    return Runtime.Core.Enums.ScriptEvent.OnPlayerLevelUp;
 
                 case ModuleEventType.OnPlayerRespawn:
-                    return Core.Enums.ScriptEvent.OnPlayerRespawn;
+                    return Runtime.Core.Enums.ScriptEvent.OnPlayerRespawn;
 
                 case ModuleEventType.OnPlayerRest:
-                    return Core.Enums.ScriptEvent.OnPlayerRest;
+                    return Runtime.Core.Enums.ScriptEvent.OnPlayerRest;
 
                 case ModuleEventType.OnPlayerEquipItem:
                     // Map OnPlayerEquipItem to OnDisturbed
@@ -333,7 +333,7 @@ namespace Andastra.Game.Games.Aurora
                     // OnDisturbed is the appropriate event for inventory modifications including equipping
                     // Note: While OnAcquireItem exists, it's for item acquisition (picking up), not equipping
                     // OnDisturbed is the correct event for equip/unequip operations as it fires on inventory modifications
-                    return Core.Enums.ScriptEvent.OnDisturbed;
+                    return Runtime.Core.Enums.ScriptEvent.OnDisturbed;
 
                 case ModuleEventType.OnPlayerUnequipItem:
                     // Map OnPlayerUnequipItem to OnDisturbed
@@ -344,7 +344,7 @@ namespace Andastra.Game.Games.Aurora
                     // OnDisturbed is the appropriate event for inventory modifications including unequipping
                     // Note: While OnUnacquireItem exists, it's for item loss (removal from inventory), not unequipping
                     // OnDisturbed is the correct event for equip/unequip operations as it fires on inventory modifications
-                    return Core.Enums.ScriptEvent.OnDisturbed;
+                    return Runtime.Core.Enums.ScriptEvent.OnDisturbed;
 
                 default:
                     return 0; // Invalid mapping

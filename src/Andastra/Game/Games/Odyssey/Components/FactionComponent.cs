@@ -15,8 +15,8 @@ namespace Andastra.Game.Games.Odyssey.Components
     /// - Based on swkotor.exe and swkotor2.exe faction systems
     ///
     /// Odyssey-specific details:
-    /// - swkotor.exe: Faction component system with repute.2da table (FUN_005b1b90 @ 0x005b1b90 loads faction data)
-    /// - swkotor2.exe: Enhanced faction system with repute.2da table (FUN_005fb0f0 @ 0x005fb0f0 loads faction data)
+    /// - swkotor.exe: Faction component system with repute.2da table (0x005b1b90 @ 0x005b1b90 loads faction data)
+    /// - swkotor2.exe: Enhanced faction system with repute.2da table (0x005fb0f0 @ 0x005fb0f0 loads faction data)
     /// - Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe) / 0x0074ae48 (swkotor.exe)
     /// - "Faction" @ 0x007c0ca0 (swkotor2.exe), "FactionList" @ 0x007be604 (swkotor2.exe)
     /// - "FactionRep" @ 0x007c290c (swkotor2.exe), "FACTIONREP" @ 0x007bcec8 (swkotor2.exe)
