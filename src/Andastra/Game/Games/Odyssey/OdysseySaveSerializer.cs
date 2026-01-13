@@ -2300,7 +2300,11 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 26. PT_COM_MSG_LIST - Combat message list
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0057dcd0 lines 332-357 read PT_COM_MSG_LIST
+            // swkotor2.exe: LoadPartyTable @ 0x0057dcd0 lines 332-357 read PT_COM_MSG_LIST
+            // swkotor.exe: TODO: Find equivalent function address
+            // Original implementation: Gets PT_COM_MSG_LIST from GFF root, iterates through each entry,
+            // reads PT_COM_MSG_MSG (string), PT_COM_MSG_TYPE (int32), and PT_COM_MSG_COOR (byte),
+            // then adds each combat message to the message system via FUN_0067c9f0
             var comMsgList = root.GetList("PT_COM_MSG_LIST");
             if (comMsgList != null)
             {
