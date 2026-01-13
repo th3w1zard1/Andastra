@@ -5,6 +5,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 
 namespace Andastra.Runtime.Graphics.MonoGame.Backends
 {
