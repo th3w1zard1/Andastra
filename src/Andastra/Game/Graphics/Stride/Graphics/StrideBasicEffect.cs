@@ -7,6 +7,7 @@ using Stride.Core.Mathematics;
 using Stride.Engine;
 using Stride.Graphics;
 using Vector3Stride = Stride.Core.Mathematics.Vector3;
+using MatrixStride = Stride.Core.Mathematics.Matrix;
 using Stride.Rendering;
 using Stride.Rendering.Materials;
 using Stride.Rendering.Materials.ComputeColors;
