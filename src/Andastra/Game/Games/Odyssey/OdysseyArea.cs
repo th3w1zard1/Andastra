@@ -2038,7 +2038,14 @@ namespace Andastra.Game.Games.Odyssey
                 Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to target area {targetAreaResRef}");
 
                 // Step 6: Update entity's AreaId
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId is updated after successful area transition
+                // Entity AreaId update after area transition (K1: inline after AddToArea @ 0x004fa100 / AddObjectToArea @ 0x0050dfd0, TSL: inline after AddToArea @ 0x00589ce0)
+                // Located via string references: "AreaId" @ 0x00746d10 (K1), "AreaId" @ 0x007bef48 (TSL)
+                // Original implementation: After entity is successfully added to target area via AddToArea/AddObjectToArea,
+                // the entity's GameObject.area_id field is updated to reflect the new area. This update happens inline in the
+                // area transition handler code, not within AddToArea itself. The area_id field is part of the base GameObject
+                // structure (offset 0x90 in GFF serialization, see LoadCreature @ 0x00500350 which reads AreaId from GFF).
+                // Pattern: AddToArea/AddObjectToArea adds entity to area's type-specific lists -> GetAreaId retrieves target area's ID -> entity.area_id = targetAreaId
+                // This ensures entity lookup by area_id (used in GetAreaByGameObjectID @ 0x004ae780) returns correct area after transition.
                 uint targetAreaId = world.GetAreaId(targetArea);
                 if (targetAreaId != 0)
                 {
