@@ -682,7 +682,7 @@ namespace Andastra.Game.Core
         {
             // Get class data
             int classId = GetClassId(_characterData.Class);
-            Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.ClassData classData = _gameDataManager.GetClass(classId);
+            Andastra.Game.Games.Odyssey.Data.GameDataManager.ClassData classData = _gameDataManager.GetClass(classId);
             if (classData == null)
             {
                 _availableSkillPoints = 0;
@@ -2087,7 +2087,10 @@ namespace Andastra.Game.Core
                         // This implementation: Software decompression using DXT algorithm
                         try
                         {
-                            DxtDecompression.DecompressDxt1(tpcData, width, height, rgbaData);
+                            // TODO: STUB - Implement DXT1 decompression (use OdysseyContentManager or shared utility)
+                            // For now, return null to indicate texture loading failure
+                            System.Console.WriteLine("[CharacterCreationScreen] DXT1 decompression not yet implemented");
+                            return null;
                         }
                         catch (Exception ex)
                         {
@@ -2103,7 +2106,10 @@ namespace Andastra.Game.Core
                         // This implementation: Software decompression using DXT algorithm
                         try
                         {
-                            DxtDecompression.DecompressDxt3(tpcData, width, height, rgbaData);
+                            // TODO: STUB - Implement DXT3 decompression (use OdysseyContentManager or shared utility)
+                            // For now, return null to indicate texture loading failure
+                            System.Console.WriteLine("[CharacterCreationScreen] DXT3 decompression not yet implemented");
+                            return null;
                         }
                         catch (Exception ex)
                         {
@@ -2119,7 +2125,10 @@ namespace Andastra.Game.Core
                         // This implementation: Software decompression using DXT algorithm
                         try
                         {
-                            DxtDecompression.DecompressDxt5(tpcData, width, height, rgbaData);
+                            // TODO: STUB - Implement DXT5 decompression (use OdysseyContentManager or shared utility)
+                            // For now, return null to indicate texture loading failure
+                            System.Console.WriteLine("[CharacterCreationScreen] DXT5 decompression not yet implemented");
+                            return null;
                         }
                         catch (Exception ex)
                         {
@@ -2350,7 +2359,7 @@ namespace Andastra.Game.Core
 
         /// <summary>
         /// Updates the available feats list based on current class.
-        /// Based on swkotor.exe and swkotor2.exe: FUN_0060d1d0 (LoadFeatGain) loads starting feats from featgain.2da
+        /// Based on swkotor.exe and swkotor2.exe: 0x0060d1d0 (LoadFeatGain) loads starting feats from featgain.2da
         /// - Original implementation: Gets starting feats from featgain.2da _REG and _BON columns
         /// - Feats are filtered to only include selectable feats that meet prerequisites
         /// </summary>

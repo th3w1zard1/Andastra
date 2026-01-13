@@ -340,7 +340,7 @@ namespace Andastra.Game.GUI
                 }
 
                 // Also try GamePathDetector for additional paths
-                List<string> detectorPaths = GamePathDetector.FindKotorPathsFromDefault(kotorGame);
+                List<string> detectorPaths = Andastra.Game.Core.GamePathDetector.FindKotorPathsFromDefault(kotorGame);
                 foreach (string path in detectorPaths)
                 {
                     if (!paths.Contains(path))
@@ -353,7 +353,7 @@ namespace Andastra.Game.GUI
                      SelectedGame == GameType.DA || SelectedGame == GameType.DA2)
             {
                 // Use GamePathDetector to find paths for NWN, DA games
-                List<string> detectorPaths = GamePathDetector.FindGamePathsFromDefault(SelectedGame);
+                List<string> detectorPaths = Andastra.Game.Core.GamePathDetector.FindGamePathsFromDefault(SelectedGame);
                 foreach (string path in detectorPaths)
                 {
                     if (!paths.Contains(path))

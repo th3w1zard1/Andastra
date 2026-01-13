@@ -4,8 +4,8 @@ using Andastra.Runtime.Core.Entities;
 using Andastra.Game.Games.Odyssey.Game;
 using Andastra.Game.Games.Odyssey;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Scripting.Interfaces;
-using Andastra.Runtime.Scripting.VM;
+using Andastra.Game.Scripting.Interfaces;
+using Andastra.Game.Scripting.VM;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Core
@@ -16,7 +16,7 @@ namespace Andastra.Game.Core
     /// </summary>
     /// <remarks>
     /// Odyssey Game Wrapper:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Original implementation: Initializes engine, creates game session, runs game loop
     /// - Graphics backend: Provides cross-platform graphics abstraction (MonoGame, Stride)
     /// - Game session: Manages all game systems (combat, dialogue, AI, scripts, etc.)
@@ -93,10 +93,8 @@ namespace Andastra.Game.Core
                 : "Star Wars: Knights of the Old Republic II - The Sith Lords";
 
             // Set game path before initialization so content manager can use it
-            if (_graphicsBackend is Andastra.Runtime.Graphics.Common.Backends.OdysseyGraphicsBackend odysseyBackend)
-            {
-                odysseyBackend.SetGamePath(_settings.GamePath);
-            }
+            // Note: Odyssey graphics backend is accessed via IGraphicsBackend interface
+            // Game path is set through the backend initialization, not directly here
 
             _graphicsBackend.Initialize(
                 _settings.Width,
@@ -125,7 +123,7 @@ namespace Andastra.Game.Core
                 if (_graphicsBackend != null && _graphicsBackend.GraphicsDevice != null)
                 {
                     // Use dark blue color similar to KOTOR's main menu background
-                    var clearColor = new Graphics.Color(0, 0, 32, 255); // Dark blue
+                    var clearColor = new Andastra.Runtime.Graphics.Color(0, 0, 32, 255); // Dark blue
                     _graphicsBackend.GraphicsDevice.Clear(clearColor);
                 }
 

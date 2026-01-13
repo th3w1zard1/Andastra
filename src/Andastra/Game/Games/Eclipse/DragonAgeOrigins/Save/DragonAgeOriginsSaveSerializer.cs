@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using Andastra.Runtime.Core.Save;
-using Andastra.Game.Games.Eclipse.Save;
+using Andastra.Game.Engines.Eclipse.Save;
 
 namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins.Save
 {
@@ -99,13 +99,13 @@ namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins.Save
                 // Initialize PartyState if needed
                 if (saveData.PartyState == null)
                 {
-                    saveData.PartyState = new Core.Save.PartyState();
+                    saveData.PartyState = new Andastra.Runtime.Core.Save.PartyState();
                 }
 
                 // Set player level if PlayerCharacter exists
                 if (saveData.PartyState.PlayerCharacter == null)
                 {
-                    saveData.PartyState.PlayerCharacter = new Core.Save.CreatureState();
+                    saveData.PartyState.PlayerCharacter = new Andastra.Runtime.Core.Save.CreatureState();
                 }
                 saveData.PartyState.PlayerCharacter.Level = playerLevel;
             }
@@ -198,11 +198,11 @@ namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins.Save
                 // Initialize PartyState if needed
                 if (saveData.PartyState == null)
                 {
-                    saveData.PartyState = new Core.Save.PartyState();
+                    saveData.PartyState = new Andastra.Runtime.Core.Save.PartyState();
                 }
                 if (saveData.PartyState.PlayerCharacter == null)
                 {
-                    saveData.PartyState.PlayerCharacter = new Core.Save.CreatureState();
+                    saveData.PartyState.PlayerCharacter = new Andastra.Runtime.Core.Save.CreatureState();
                 }
                 saveData.PartyState.PlayerCharacter.Level = playerLevel;
 
@@ -212,14 +212,14 @@ namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins.Save
                 // Party state: Deserialize party member data (using base class method)
                 if (saveData.PartyState == null)
                 {
-                    saveData.PartyState = new Core.Save.PartyState();
+                    saveData.PartyState = new Andastra.Runtime.Core.Save.PartyState();
                 }
                 DeserializeSelectedParty(reader, saveData.PartyState);
 
                 // Inventory state: Deserialize inventory data (using base class method)
                 if (saveData.PartyState.PlayerCharacter == null)
                 {
-                    saveData.PartyState.PlayerCharacter = new Core.Save.CreatureState();
+                    saveData.PartyState.PlayerCharacter = new Andastra.Runtime.Core.Save.CreatureState();
                 }
                 saveData.PartyState.PlayerCharacter.Inventory = DeserializeBasicInventory(reader);
 

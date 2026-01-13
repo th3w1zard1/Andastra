@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Andastra.Runtime.Graphics.Common.Enums;
+using Color = Andastra.Runtime.Graphics.Color;
 
 namespace Andastra.Runtime.Graphics.Common.Structs
 {
@@ -326,6 +327,21 @@ namespace Andastra.Runtime.Graphics.Common.Structs
         public DenoiserType Type;
         public float TemporalBlend;
         public float SpatialSigma;
+    }
+
+    /// <summary>
+    /// Vertex structure for position and color.
+    /// </summary>
+    public struct VertexPositionColor
+    {
+        public Vector3 Position;
+        public Color Color;
+
+        public VertexPositionColor(Vector3 position, Color color)
+        {
+            Position = position;
+            Color = color;
+        }
     }
 }
 

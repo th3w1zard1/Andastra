@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics;
+using Andastra.Runtime.Graphics.Common.Structs;
 using Andastra.Runtime.Graphics.Common;
 using JetBrains.Annotations;
 

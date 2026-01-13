@@ -21,7 +21,7 @@ namespace Andastra.Game.Stride.Audio
     /// </summary>
     /// <remarks>
     /// Music Player (Stride Implementation):
-    /// - Based on swkotor.exe: FUN_005f9af0 @ 0x005f9af0 (music playback function)
+    /// - Based on swkotor.exe: 0x005f9af0 @ 0x005f9af0 (music playback function)
     /// - Located via string references: "mus_theme_cult" @ 0x0074ebfc (K1 main menu music)
     /// - "mus_sion" @ 0x007c75e4 (K2 main menu music), "mus_theme_rep" (character creation music)
     /// - Original implementation: KOTOR plays WAV files for background music (looping)
@@ -110,7 +110,7 @@ namespace Andastra.Game.Stride.Audio
         /// <param name="volume">Volume level (0.0f to 1.0f, default 1.0f).</param>
         /// <returns>True if music started playing successfully, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor.exe FUN_005f9af0:
+        /// Based on swkotor.exe 0x005f9af0:
         /// - K1 main menu: "mus_theme_cult"
         /// - K1 character creation: "mus_theme_rep"
         /// - K2 main menu: "mus_sion"
@@ -593,9 +593,9 @@ namespace Andastra.Game.Stride.Audio
             Array.Copy(_pcmData, _position, buffer, 0, bytesToCopy);
             _position += bytesToCopy;
 
-            // Music always loops, so buffer type is always Normal
-            // Use Stride's BufferType directly
-            AudioLayer.BufferType bufferType = AudioLayer.BufferType.Normal;
+            // Music always loops, so use EndOfStream for the buffer type
+            // Use Stride's BufferType directly - EndOfStream indicates normal streaming buffer
+            StrideAudioLayer.BufferType bufferType = StrideAudioLayer.BufferType.EndOfStream;
 
             // Fill the buffer - pin the array and get pointer
             GCHandle bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);

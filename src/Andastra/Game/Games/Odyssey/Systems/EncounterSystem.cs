@@ -7,7 +7,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Odyssey.Combat;
 using Andastra.Game.Games.Odyssey.Components;
 
-namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
+namespace Andastra.Game.Games.Odyssey.Systems
 {
     /// <summary>
     /// Manages encounter spawning when creatures enter encounter areas.
@@ -345,7 +345,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
                             // Override appearance if specified
                             if (template.Appearance > 0)
                             {
-                                if (creature is Core.Entities.Entity entity)
+                                if (creature is Andastra.Runtime.Core.Entities.Entity entity)
                                 {
                                     entity.SetData("Appearance_Type", template.Appearance);
                                 }
@@ -355,7 +355,7 @@ namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
                             _world.RegisterEntity(creature);
 
                             // Add to area
-                            if (area is Core.Module.RuntimeArea runtimeArea)
+                            if (area is Andastra.Runtime.Core.Module.RuntimeArea runtimeArea)
                             {
                                 runtimeArea.AddEntity(creature);
                             }

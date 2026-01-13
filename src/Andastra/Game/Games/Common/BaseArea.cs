@@ -129,7 +129,7 @@ namespace Andastra.Game.Games.Common
         /// <remarks>
         /// Common area property across engines.
         /// Engine-specific implementations handle storage format differences.
-        /// 
+        ///
         /// Aurora/Eclipse Engines:
         /// - Not supported - implementations return false (no-op setter)
         /// - Aurora and Eclipse use different progression systems
@@ -389,20 +389,20 @@ namespace Andastra.Game.Games.Common
         /// Common across all engines: Implements area lookup - checks if target area is already loaded.
         /// Base implementation checks current area and module's loaded areas.
         /// Engine-specific implementations should override to add area streaming (loading areas on demand).
-        /// 
+        ///
         /// Area lookup flow (based on swkotor2.exe area transition system):
         /// 1. Check if target area is the current area (fast path)
         /// 2. Check if area is already loaded in module via IModule.GetArea(resRef)
         /// 3. If not found, return null (area streaming/loading handled by engine-specific overrides)
-        /// 
+        ///
         /// Engine-specific overrides (e.g., OdysseyEventDispatcher.LoadOrGetTargetArea):
         /// - Have access to ModuleLoader for area streaming
         /// - Load area from module archives if not already loaded
         /// - Register loaded area with world and module
         /// - Return loaded area
-        /// 
+        ///
         /// Based on reverse engineering of:
-        /// - swkotor2.exe: Area loading during transitions (FUN_004e26d0 @ 0x004e26d0)
+        /// - swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
         /// - swkotor.exe: Similar area loading system (KOTOR 1)
         /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
         /// - Module resource lookup: Areas are loaded from module archives using area ResRef
@@ -458,9 +458,9 @@ namespace Andastra.Game.Games.Common
 
             // Fire OnEnter script for target area
             // Common across all engines: Fires when entity enters an area
-            if (targetArea is Runtime.Runtime.Core.Module.RuntimeArea targetRuntimeArea)
+            if (targetArea is Andastra.Runtime.Core.Module.RuntimeArea targetRuntimeArea)
             {
-                string enterScript = targetRuntimeArea.GetScript(Core.Enums.ScriptEvent.OnEnter);
+                string enterScript = targetRuntimeArea.GetScript(Andastra.Runtime.Core.Enums.ScriptEvent.OnEnter);
                 if (!string.IsNullOrEmpty(enterScript))
                 {
                     IEntity areaEntity = world.GetEntityByTag(targetArea.ResRef, 0);
@@ -470,7 +470,7 @@ namespace Andastra.Game.Games.Common
                     }
                     if (areaEntity != null)
                     {
-                        world.EventBus.FireScriptEvent(areaEntity, Core.Enums.ScriptEvent.OnEnter, entity);
+                        world.EventBus.FireScriptEvent(areaEntity, Andastra.Runtime.Core.Enums.ScriptEvent.OnEnter, entity);
                     }
                 }
             }
