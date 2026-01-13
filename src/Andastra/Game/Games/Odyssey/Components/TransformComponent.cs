@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using Andastra.Game.Games.Common.Components;
 
@@ -34,6 +33,7 @@ namespace Andastra.Game.Games.Odyssey.Components
     ///   - Scale typically (1,1,1) but can be modified for effects (visual scaling, not physics)
     /// - Transform stored in GFF structures as XPosition, YPosition, ZPosition, XOrientation, YOrientation, ZOrientation
     /// - Forward/Right vectors calculated from facing angle for 2D movement (cos/sin pattern matches engine: Forward = (cos(facing), sin(facing), 0))
+    /// - Engine-specific transform component classes have been merged into BaseTransformComponent
     /// </remarks>
     public class TransformComponent : BaseTransformComponent
     {
@@ -52,32 +52,5 @@ namespace Andastra.Game.Games.Odyssey.Components
         public TransformComponent(Vector3 position, float facing) : base(position, facing)
         {
         }
-
-        #region Extended Properties
-
-        /// <summary>
-        /// Gets the up direction vector (Z axis in KOTOR).
-        /// </summary>
-        /// <remarks>
-        /// Odyssey-specific: Returns Vector3.UnitZ for KOTOR's coordinate system.
-        /// </remarks>
-        public Vector3 Up
-        {
-            get { return Vector3.UnitZ; }
-        }
-
-        /// <summary>
-        /// Facing direction in degrees.
-        /// </summary>
-        /// <remarks>
-        /// Odyssey-specific: Convenience property for working with degrees instead of radians.
-        /// </remarks>
-        public float FacingDegrees
-        {
-            get { return Facing * (180f / (float)Math.PI); }
-            set { Facing = value * ((float)Math.PI / 180f); }
-        }
-
-        #endregion
     }
 }

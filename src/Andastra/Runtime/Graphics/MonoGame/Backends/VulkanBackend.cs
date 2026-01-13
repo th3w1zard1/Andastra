@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Andastra.Runtime.MonoGame.Enums;
-using Andastra.Runtime.MonoGame.Interfaces;
-using Andastra.Runtime.MonoGame.Rendering;
+using Andastra.Runtime.Graphics.Common.Enums;
+using Andastra.Runtime.Graphics.Common.Interfaces;
+using Andastra.Runtime.Graphics.Common.Rendering;
 
-namespace Andastra.Runtime.MonoGame.Backends
+namespace Andastra.Runtime.Graphics.MonoGame.Backends
 {
     /// <summary>
     /// Vulkan graphics backend implementation.
