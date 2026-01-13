@@ -2275,8 +2275,8 @@ namespace Andastra.Runtime.Content.Save
                 UTC utc = CreateUtcFromCreatureState(memberState.State, templateResRef, out Dictionary<string, int> itemStackSizes);
 
                 // Serialize UTC to bytes with StackSize support for save games
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures
-                // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item
+                // SerializeItemPropertiesToItemList @ (K1: TODO: Find this address, TSL: 0x005675e0): writes StackSize to ItemList struct when serializing creatures
+                // swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls SerializeItemPropertiesToItemList (0x005675e0) for each inventory item
                 byte[] utcData = SerializeUtcForSaveGame(utc, BioWareGame.K2, itemStackSizes);
 
                 // Create ResRef for cached character (AVAILNPC + index)
@@ -2579,7 +2579,7 @@ namespace Andastra.Runtime.Content.Save
 
                 // Add one InventoryItem per unique item template
                 // StackSize will be written directly to GFF structure when serializing for save games
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ItemList contains one entry per unique item with StackSize field
+                // SerializeItemPropertiesToItemList @ (K1: TODO: Find this address, TSL: 0x005675e0): ItemList contains one entry per unique item with StackSize field
                 foreach (ItemState groupedItem in groupedItems.Values)
                 {
                     // Create InventoryItem for each unique item template
@@ -2610,8 +2610,8 @@ namespace Andastra.Runtime.Content.Save
 
         /// <summary>
         /// Serializes a UTC object to bytes for save game format, including StackSize in ItemList.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 writes StackSize to ItemList struct when serializing creatures in save games.
-        /// swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls 0x005675e0 for each inventory item.
+        /// SerializeItemPropertiesToItemList @ (K1: TODO: Find this address, TSL: 0x005675e0): writes StackSize to ItemList struct when serializing creatures in save games.
+        /// swkotor2.exe: SerializeCreature_K2 @ 0x005226d0 calls SerializeItemPropertiesToItemList (0x005675e0) for each inventory item.
         /// </summary>
         /// <param name="utc">The UTC object to serialize.</param>
         /// <param name="game">The game version.</param>
@@ -2629,7 +2629,7 @@ namespace Andastra.Runtime.Content.Save
             GFFStruct root = gff.Root;
 
             // Modify ItemList to include StackSize for each item
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
+            // SerializeItemPropertiesToItemList @ (K1: TODO: Find this address, TSL: 0x005675e0): line 15 writes StackSize as WORD (ushort)
             // swkotor2.exe: StackSize is written to ItemList struct when serializing creatures in save games
             if (itemStackSizes != null && itemStackSizes.Count > 0 && utc.Inventory != null && utc.Inventory.Count > 0)
             {
@@ -2647,7 +2647,7 @@ namespace Andastra.Runtime.Content.Save
                             if (item != null && itemStackSizes.TryGetValue(item.ResRef.ToString(), out int stackSize))
                             {
                                 // Write StackSize to ItemList struct
-                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005675e0 @ 0x005675e0 line 15 writes StackSize as WORD (ushort)
+                                // SerializeItemPropertiesToItemList @ (K1: TODO: Find this address, TSL: 0x005675e0): line 15 writes StackSize as WORD (ushort)
                                 // However, save game format uses DWORD (uint) for StackSize (see SerializeInventory line 2066)
                                 // We'll use DWORD to match the save game format
                                 itemStruct.SetUInt32("StackSize", (uint)Math.Max(1, stackSize));
