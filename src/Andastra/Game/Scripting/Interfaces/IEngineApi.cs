@@ -7,11 +7,14 @@ namespace Andastra.Game.Scripting.Interfaces
     /// </summary>
     /// <remarks>
     /// Engine API Interface:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript engine API system
+    /// - CVirtualMachineInternal::ExecuteCode @ (K1: 0x005d2bd0, TSL: TODO: Find this address) NWScript engine API system
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
-    /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0 (action ID field)
-    /// - "ActionType" @ 0x007bf7f8 (action type field), "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output)
-    /// - Original implementation: ACTION opcode (0x2A) calls engine functions by routine ID
+    /// - "ActionList" @ 0x007bebdc (K2 action list GFF field), "ActionList" @ 0x00745ea0 (K1 action list GFF field)
+    /// - "ActionId" @ 0x007bebd0 (K2 action ID field), "PRINTSTRING: %s\n" @ 0x007c29f8 (K2 PrintString debug output)
+    /// - "PRINTSTRING: %s\n" @ 0x00748718 (K1 PrintString debug output)
+    /// - Original implementation: ACTION opcode (0x05 in bytecode, enum value ACTION in switch) calls engine functions by routine ID
+    /// - ACTION opcode handler: In ExecuteCode switch statement, case ACTION: (line 281-293) calls command_implementer->vtable->ExecuteCommand
+    /// - ExecuteCommand parameters: routine ID (uint16 big-endian from bytes 2-3) and arg count (uint8 from byte 4)
     /// - Routine ID: uint16 value (big-endian) from NCS bytecode, maps to function index in engine API
     /// - Function dispatch: Original engine uses dispatch table indexed by routine ID to call function implementations
     /// - K1 functions: ~850 functions (routine IDs 0-849)
@@ -20,6 +23,7 @@ namespace Andastra.Game.Scripting.Interfaces
     /// - Return value: Functions return Variable (can be int, float, string, object, location, void)
     /// - Function implementations must match original engine behavior for script compatibility
     /// - Based on NCS VM ACTION opcode semantics in vendor/PyKotor/wiki/NCS-File-Format.md
+    /// - swkotor.exe: ExecuteCode @ 0x005d2bd0, ACTION case calls ExecuteCommand vtable function with routine ID and arg count
     /// </remarks>
     public interface IEngineApi
     {
