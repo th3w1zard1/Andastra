@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Andastra.Game.Games.Aurora.EngineApi;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Scripting.Interfaces;
-using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Aurora.Profiles
 {

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Engines.Eclipse.EngineApi;
 using Andastra.Game.Scripting.Interfaces;
-using Andastra.Game.Games.Common;
 
 namespace Andastra.Game.Games.Engines.Eclipse.Profiles
 {
