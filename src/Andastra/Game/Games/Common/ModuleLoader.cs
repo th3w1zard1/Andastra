@@ -484,8 +484,15 @@ namespace Andastra.Game.Games.Engines.Common
         {
             try
             {
-                // Load ARE file from resource provider
-                byte[] areData = await Task.Run(() => _auroraResourceProvider.GetResource(areaResRef, ResourceType.ARE));
+                // Set current module context for resource lookup
+                if (!string.IsNullOrEmpty(_currentModuleName))
+                {
+                    _auroraResourceProvider.SetCurrentModule(_currentModuleName);
+                }
+
+                // Try to load ARE file from resource provider
+                var resourceId = new ResourceIdentifier(areaResRef, ResourceType.ARE);
+                byte[] areData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
                 return areData;
             }
             catch
@@ -498,8 +505,15 @@ namespace Andastra.Game.Games.Engines.Common
         {
             try
             {
-                // Load GIT file from resource provider
-                byte[] gitData = await Task.Run(() => _auroraResourceProvider.GetResource(areaResRef, ResourceType.GIT));
+                // Set current module context for resource lookup
+                if (!string.IsNullOrEmpty(_currentModuleName))
+                {
+                    _auroraResourceProvider.SetCurrentModule(_currentModuleName);
+                }
+
+                // Try to load GIT file from resource provider
+                var resourceId = new ResourceIdentifier(areaResRef, ResourceType.GIT);
+                byte[] gitData = await _resourceProvider.GetResourceBytesAsync(resourceId, System.Threading.CancellationToken.None);
                 return gitData;
             }
             catch
