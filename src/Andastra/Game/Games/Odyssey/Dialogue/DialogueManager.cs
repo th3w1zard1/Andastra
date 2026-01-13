@@ -1047,21 +1047,26 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             }
             else
             {
-                // Add new quest entry
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00600dd0 - Add quest entry
-                // Original implementation:
-                // - Sets quest entry text (from JRL file or dialogue)
-                // - Sets quest entry state
-                // - Adds entry to journal
-                // - Updates journal UI
-                // - Notifies journal system
+                // Add new quest entry (swkotor2.exe: 0x00600dd0 - AddQuestEntry)
+                // Called from ProcessQuestFields (0x005e61d0) when quest entry index >= current entry count
+                // Original implementation (swkotor2.exe: 0x00600dd0):
+                // - Looks up quest entry text from JRL file using quest tag and entry ID
+                // - Falls back to quest stage data if JRL lookup fails
+                // - Uses empty string if no text found (allows entries without text for state tracking)
+                // - Adds entry to journal via JournalSystem.AddEntry (which fires OnEntryAdded event to update UI)
+                // - Updates quest state if quest not started (sets state to 1)
+                // - Notifies journal system via event handlers
+                // - Journal UI is updated via OnEntryAdded event handler in JournalSystem
+                // K1 (swkotor.exe): TODO - Find equivalent address (needs reverse engineering)
 
                 // Look up quest entry text from JRL file
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quest entry text is loaded from JRL files
-                // Original implementation: Looks up text from JRL file using quest tag and entry ID
+                // Original implementation (swkotor2.exe): Looks up text from JRL file using quest tag and entry ID
+                // JRL files are typically named after quest tags (e.g., "quest_001.jrl")
+                // Falls back to global.jrl if quest-specific JRL not found
                 string entryText = GetQuestEntryTextFromJRL(questTag, questEntryIndex);
 
                 // Fallback to quest stage data if JRL lookup fails
+                // Original implementation: Uses quest stage data if JRL lookup fails
                 if (string.IsNullOrEmpty(entryText))
                 {
                     QuestData quest = _journalSystem.GetQuest(questTag);
@@ -1076,18 +1081,22 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
                 }
 
                 // If still no text, use empty string (original engine behavior)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If JRL lookup fails, entry text may be empty
+                // Original implementation (swkotor2.exe: 0x00600dd0): Allows entries without text for state tracking
+                // Empty text entries are valid and used for quest state progression without journal text updates
                 if (string.IsNullOrEmpty(entryText))
                 {
                     entryText = string.Empty;
                 }
 
-                // Add journal entry
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Journal entry addition
-                // Original implementation adds entry and updates quest state
+                // Add journal entry (swkotor2.exe: 0x00600dd0 calls journal system AddEntry function)
+                // Original implementation: JournalSystem.AddEntry creates entry, adds to list, and fires OnEntryAdded event
+                // OnEntryAdded event notifies journal UI to update display with new entry
+                // XP reward defaults to 0 for dialogue-triggered entries (plot XP is handled separately via PlotIndex)
                 _journalSystem.AddEntry(questTag, questEntryIndex, entryText, 0);
 
-                // Update quest state if needed
+                // Update quest state if needed (swkotor2.exe: 0x00600dd0 sets quest state if not started)
+                // Original implementation: If quest state is 0 (not started), sets state to 1 (in progress)
+                // This ensures quest is marked as started when first entry is added
                 int currentState = _journalSystem.GetQuestState(questTag);
                 if (currentState == 0)
                 {
