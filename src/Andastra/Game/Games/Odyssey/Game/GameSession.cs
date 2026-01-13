@@ -410,48 +410,367 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// Low-level implementation documentation for New Game button handler across all executables.
         /// All addresses documented for swkotor.exe, swkotor2.exe, and swkotor2_aspyr.exe.
         ///
-        /// Entry Point Functions:
+        /// ENTRY POINT FUNCTIONS:
         /// - swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0
         /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00
         /// - swkotor2_aspyr.exe: FUN_00882230 @ 0x00882230
         ///
-        /// String References:
+        /// STRING REFERENCES:
         /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58
         /// - Module name "001ebo": swkotor2.exe @ 0x007cc028, swkotor2_aspyr.exe @ 0x009a5ab0
         /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c, swkotor2.exe @ 0x007b58b4, swkotor2_aspyr.exe @ 0x00993e50
         /// - Resource directory "HD0:effects": swkotor2.exe @ 0x007cc01c, swkotor2_aspyr.exe @ 0x009a5aa4
         ///
-        /// Execution Flow (swkotor.exe @ 0x0067afb0):
-        /// 1. Structured exception handling setup: FrameHandler_0072e2f3 @ 0x0072e2f3, ExceptionList registration
-        /// 2. Panel state validation: Check (this->panel).bit_flags &amp; 0x600 != 0x400, this->field20_0x140c != 0, param_1->is_active != 0
-        /// 3. Session reset: CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0
-        /// 4. INI initialization: CExoIni::CExoIni() @ 0x005e6750 (temporary object in param_1 stack location)
-        /// 5. String construction: CExoString::CExoString() @ 0x005b3190 (empty), CExoString::CExoString() @ 0x005e5a90 (from "END_M01AA" @ 0x00752f58)
-        /// 6. Resource directory management:
-        ///    - CExoString::CExoString() @ 0x005e5a90 (from "MODULES:" @ 0x0073d90c)
-        ///    - CExoResMan::AddResourceDirectory() @ 0x00408800 (ExoResMan @ 0x007a39e8, "MODULES:")
-        ///    - CExoString::~CExoString() @ 0x005e5c20
-        /// 7. Module resource existence check:
-        ///    - CResRef::CResRef() @ 0x00406d60 (from CExoString "END_M01AA")
-        ///    - CExoResMan::Exists() @ 0x00408bc0 (ExoResMan, CResRef, MOD type, null)
-        ///    - If MOD not found: CResRef::CResRef() @ 0x00406d60, CExoResMan::Exists() @ 0x00408bc0 (RIM type)
-        ///    - If both fail: CExoString::operator=() @ 0x005e5140 (reassign "END_M01AA")
-        /// 8. Resource directory cleanup:
-        ///    - CExoString::CExoString() @ 0x005e5a90 (from "MODULES:")
-        ///    - CExoResMan::RemoveResourceDirectory() @ 0x004088d0 (ExoResMan, "MODULES:")
-        ///    - CExoString::~CExoString() @ 0x005e5c20
-        /// 9. GUI panel allocation and creation:
-        ///    - operator_new() @ 0x006fa7e6 (0x1560 bytes)
-        ///    - If allocation succeeds: CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (allocated memory, (this->panel).manager, module name CExoString)
-        /// 10. Panel registration: CSWGuiManager::AddPanel() @ 0x0040bc70 ((this->panel).manager, panel, 2, 1)
-        /// 11. Sound mode: CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec)
-        /// 12. Panel flags: (this->panel).bit_flags = (this->panel).bit_flags &amp; 0xfffffcff | 0x400
-        /// 13. Cleanup: CExoString destructors, CExoIni::~CExoIni() @ 0x005e67e0, ExceptionList restoration
+        /// GLOBAL DATA REFERENCES:
+        /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8
+        /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec
+        /// - DAT_008283d4 (CAppManager*): swkotor2.exe @ 0x008283d4, swkotor2_aspyr.exe @ 0x00a1b4a4
+        /// - DAT_008283c0 (CExoResMan*): swkotor2.exe @ 0x008283c0, swkotor2_aspyr.exe @ 0x00a1b490
+        /// - DAT_008283c4 (void*): swkotor2.exe @ 0x008283c4, swkotor2_aspyr.exe @ 0x00a1b494
+        /// - DAT_0074c5ec (int): swkotor.exe @ 0x0074c5ec
+        /// - DAT_007c5474 (int): swkotor2.exe @ 0x007c5474, swkotor2_aspyr.exe @ 0x0099c2a8
         ///
-        /// Execution Flow (swkotor2.exe @ 0x006d0b00):
-        /// 1. Structured exception handling setup: LAB_007a3adb @ 0x007a3adb, ExceptionList registration
-        /// 2. Panel state validation: Check *(uint *)((int)this + 0x48) &amp; 0x300 != 0x200, *(int *)((int)this + 0x18f4) != 0, *(int *)(param_1 + 0x50) != 0
-        /// 3. Game time initialization: FUN_0057a400() @ 0x0057a400
+        /// RESOURCE TYPE CONSTANTS:
+        /// - MOD (Module): 0x7db (2011 decimal) - Used in swkotor2.exe @ 0x006d0c22, swkotor2_aspyr.exe @ 0x008822d1
+        /// - RIM (Resource Information Module): 0xbba (3002 decimal) - Used in swkotor2.exe @ 0x006d0c4b, swkotor2_aspyr.exe @ 0x008822e4
+        /// - MOD (Module): swkotor.exe uses MOD type constant (via CExoResMan::Exists with MOD parameter)
+        /// - RIM (Resource Information Module): swkotor.exe uses RIM type constant (via CExoResMan::Exists with RIM parameter)
+        ///
+        /// PANEL FLAG CONSTANTS:
+        /// - 0x600 (1536): Bit mask for panel state flags (swkotor.exe @ 0x0067afce)
+        /// - 0x400 (1024): Panel active/visible flag (swkotor.exe @ 0x0067afd3, 0x0067b14f)
+        /// - 0x300 (768): Bit mask for panel state flags (swkotor2.exe @ 0x006d0b1a, swkotor2_aspyr.exe @ 0x0088224a)
+        /// - 0x200 (512): Panel active/visible flag (swkotor2.exe @ 0x006d0b1a, 0x006d0d0a, swkotor2_aspyr.exe @ 0x0088224a, 0x008822d8)
+        ///
+        /// EXECUTION FLOW - swkotor.exe @ 0x0067afb0 (CSWGuiMainMenu::OnNewGamePicked):
+        /// 1. Structured exception handling setup:
+        ///    - FrameHandler_0072e2f3 @ 0x0072e2f3 stored in pcStack_8
+        ///    - ExceptionList saved to local_c
+        ///    - local_4 initialized to 0xffffffff (exception state tracking)
+        /// 2. Panel state validation:
+        ///    - Check (this->panel).bit_flags &amp; 0x600 != 0x400 (panel not already in active state)
+        ///    - Check this->field20_0x140c != 0 (panel field validation)
+        ///    - Check param_1->is_active != 0 (control is active)
+        /// 3. Exception handler activation: ExceptionList = &amp;local_c
+        /// 4. Session time reset: CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0
+        ///    - Calls GetSystemTimeAsFileTime() to capture current system time
+        ///    - Stores FILETIME.dwLowDateTime to PTR__g_nCurrentSessionStartFILETIME_007a3a20 @ 0x007a3a20
+        ///    - Stores FILETIME.dwHighDateTime to DAT_007a3a24 @ 0x007a3a24
+        /// 5. INI initialization: CExoIni::CExoIni() @ 0x005e6750
+        ///    - Constructed in param_1 stack location (temporary object)
+        ///    - local_4 set to 0 (exception state tracking)
+        /// 6. String construction:
+        ///    - CExoString::CExoString() @ 0x005b3190 creates empty string in local_14
+        ///    - local_4._0_1_ set to 1 (exception state tracking)
+        ///    - CExoString::CExoString() @ 0x005e5a90 creates string from "END_M01AA" @ 0x00752f58 in local_2c
+        ///    - local_4._0_1_ set to 2 (exception state tracking)
+        /// 7. Resource directory management:
+        ///    - CExoString::CExoString() @ 0x005e5a90 creates string from "MODULES:" @ 0x0073d90c in local_34
+        ///    - local_4._0_1_ set to 3 (exception state tracking)
+        ///    - CExoResMan::AddResourceDirectory() @ 0x00408800 (ExoResMan @ 0x007a39e8, &amp;local_34)
+        ///      - Calls AddKeyTable(this, param_1, DIRECTORY, 0) internally
+        ///    - local_4 = CONCAT31(local_4._1_3_, 2) (exception state tracking)
+        ///    - CExoString::~CExoString() @ 0x005e5c20 destroys local_34
+        /// 8. Module resource existence check:
+        ///    - CResRef::CResRef() @ 0x00406d60 constructs CResRef from local_2c in local_24
+        ///    - CExoResMan::Exists() @ 0x00408bc0 (ExoResMan, &amp;local_24, MOD, null)
+        ///      - Calls GetKeyEntry(this, param_1, param_2, &amp;local_4, &amp;param_2) internally
+        ///      - Returns non-zero if resource exists
+        ///    - If MOD not found (iVar1 == 0):
+        ///      - CResRef::CResRef() @ 0x00406d60 reconstructs CResRef from local_2c
+        ///      - CExoResMan::Exists() @ 0x00408bc0 (ExoResMan, &amp;local_24, RIM, null)
+        ///      - If RIM also not found: CExoString::operator=() @ 0x005e5140 reassigns "END_M01AA" to local_2c
+        /// 9. Resource directory cleanup:
+        ///    - CExoString::CExoString() @ 0x005e5a90 creates string from "MODULES:" in local_24 (reusing CResRef location)
+        ///    - local_4._0_1_ set to 4 (exception state tracking)
+        ///    - CExoResMan::RemoveResourceDirectory() @ 0x004088d0 (ExoResMan, &amp;local_24)
+        ///    - local_4._0_1_ set to 2 (exception state tracking)
+        ///    - CExoString::~CExoString() @ 0x005e5c20 destroys local_24
+        /// 10. GUI panel allocation and creation:
+        ///     - operator_new() @ 0x006fa7e6 allocates 0x1560 (5472) bytes, stored in local_34.c_string
+        ///     - local_4._0_1_ set to 5 (exception state tracking)
+        ///     - If allocation succeeds (local_34.c_string != null):
+        ///       - CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0
+        ///         - Parameters: allocated memory, (this->panel).manager, &amp;local_2c (module name)
+        ///         - Initializes class selection GUI panel with starting module name
+        ///       - panel set to constructor return value
+        ///     - Else: panel set to null
+        /// 11. Panel registration: CSWGuiManager::AddPanel() @ 0x0040bc70
+        ///     - Parameters: (this->panel).manager, panel, 2, 1
+        ///     - If panel != null: plays GUI sound, updates panel bit flags, adds to panel list, calls OnPanelAdded
+        ///     - local_4._0_1_ set to 2 (exception state tracking)
+        /// 12. Sound mode: CExoSoundInternal::SetSoundMode() @ 0x005d5e80
+        ///     - Parameters: ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec
+        ///     - Manages sound system state transitions (menu mode, pause states, etc.)
+        /// 13. Panel flags update: (this->panel).bit_flags = (this->panel).bit_flags &amp; 0xfffffcff | 0x400
+        ///     - Clears bits 0x300, sets bit 0x400 (panel active flag)
+        /// 14. Cleanup:
+        ///     - local_4._0_1_ set to 1 (exception state tracking)
+        ///     - CExoString::~CExoString() @ 0x005e5c20 destroys local_2c
+        ///     - local_4 = (uint)local_4._1_3_ &lt;&lt; 8 (exception state tracking)
+        ///     - CExoString::~CExoString() @ 0x005e5c20 destroys local_14
+        ///     - local_4 = 0xffffffff (exception state tracking)
+        ///     - CExoIni::~CExoIni() @ 0x005e67e0 destroys temporary INI object
+        /// 15. Exception handler restoration: ExceptionList = local_c
+        ///
+        /// EXECUTION FLOW - swkotor2.exe @ 0x006d0b00 (OnNewGameButtonClicked):
+        /// 1. Structured exception handling setup:
+        ///    - LAB_007a3adb @ 0x007a3adb stored in puStack_10
+        ///    - ExceptionList saved to local_14
+        ///    - local_c initialized to 0xffffffff (exception state tracking)
+        /// 2. Panel state validation:
+        ///    - Check *(uint *)((int)this + 0x48) &amp; 0x300 != 0x200 (panel not already in active state)
+        ///    - Check *(int *)((int)this + 0x18f4) != 0 (panel field validation)
+        ///    - Check *(int *)(param_1 + 0x50) != 0 (control is active)
+        /// 3. Exception handler activation: ExceptionList = &amp;local_14
+        /// 4. Game time initialization: FUN_0057a400() @ 0x0057a400
+        ///    - Calls GetSystemTimeAsFileTime() to capture current system time
+        ///    - Stores FILETIME.dwLowDateTime to DAT_00828400 @ 0x00828400
+        ///    - Stores FILETIME.dwHighDateTime to DAT_00828404 @ 0x00828404
+        /// 5. Module loading system initialization: FUN_00401380() @ 0x00401380
+        ///    - Parameter: DAT_008283d4 @ 0x008283d4 (CAppManager*)
+        ///    - If existing server exists (*(int *)(param_1 + 8) != 0):
+        ///      - Calls FUN_00638c70() to stop services
+        ///      - Calls FUN_004dc1c0() to cleanup existing server
+        ///      - Frees existing server memory
+        ///      - Calls FUN_00401440() for cleanup
+        ///    - Allocates new server via operator_new(8)
+        ///    - Calls FUN_004dc4c0() to construct CServerExoApp
+        ///    - Stores in *(undefined4 **)(param_1 + 8)
+        ///    - Calls FUN_004dc1b0() and FUN_004dc110() to initialize server
+        /// 6. Context initialization: FUN_00631f70() @ 0x00631f70
+        ///    - Parameter: &amp;local_44
+        ///    - Allocates 0xc (12) bytes via operator_new
+        ///    - Calls FUN_00635e30() to initialize context object
+        ///    - Stores pointer in local_44
+        /// 7. String construction:
+        ///    - local_c set to 0 (exception state tracking)
+        ///    - CExoString__CExoString_empty() creates empty string in local_20
+        ///    - local_c._0_1_ set to 1 (exception state tracking)
+        ///    - CExoString__CExoString() @ 0x00630a90 creates string from "001ebo" @ 0x007cc028 in local_38
+        ///    - local_c._0_1_ set to 2 (exception state tracking)
+        /// 8. Effects resource directory loading:
+        ///    - CExoString__CExoString() @ 0x00630a90 creates string from "HD0:effects" @ 0x007cc01c in local_40
+        ///    - local_c._0_1_ set to 3 (exception state tracking)
+        ///    - FUN_004087d0() @ 0x004087d0 (local_30, local_40) adds effects directory
+        ///    - CExoString___CExoString() destroys local_30
+        ///    - local_c._0_1_ set to 2 (exception state tracking)
+        ///    - CExoString___CExoString() destroys local_40
+        /// 9. MODULES resource directory management:
+        ///    - CExoString__CExoString() @ 0x00630a90 creates string from "MODULES:" in local_40
+        ///    - local_c._0_1_ set to 4 (exception state tracking)
+        ///    - FUN_00408a30() @ 0x00408a30 (DAT_008283c0 @ 0x008283c0, local_40) adds MODULES directory
+        ///    - local_c = CONCAT31(local_c._1_3_, 2) (exception state tracking)
+        ///    - CExoString___CExoString() destroys local_40
+        /// 10. Module resource existence check:
+        ///     - FUN_00406e70() @ 0x00406e70 (local_30, local_38) converts CExoString to CResRef
+        ///     - FUN_00408df0() @ 0x00408df0 (DAT_008283c0, local_30, 0x7db, null) checks for MOD type
+        ///       - Calls CExoResMan__GetKeyEntry() internally
+        ///       - 0x7db = MOD resource type constant
+        ///     - If MOD not found (iVar1 == 0):
+        ///       - FUN_00406e70() reconstructs CResRef from local_38
+        ///       - FUN_00408df0() (DAT_008283c0, local_30, 0xbba, null) checks for RIM type
+        ///         - 0xbba = RIM resource type constant
+        ///       - If RIM also not found: FUN_00630d10() @ 0x00630d10 (local_38, "001ebo") reassigns default module
+        /// 11. Resource directory cleanup:
+        ///     - CExoString__CExoString() creates string from "MODULES:" in local_30
+        ///     - local_c._0_1_ set to 5 (exception state tracking)
+        ///     - FUN_00408b00() @ 0x00408b00 (DAT_008283c0, local_30) removes MODULES directory
+        ///     - local_c._0_1_ set to 2 (exception state tracking)
+        ///     - CExoString___CExoString() destroys local_30
+        /// 12. Module loader allocation and creation:
+        ///     - operator_new() @ 0x0076d9f6 allocates 0x15f0 (5616) bytes, stored in local_40[0]
+        ///     - local_c._0_1_ set to 6 (exception state tracking)
+        ///     - If allocation succeeds (local_40[0] != null):
+        ///       - FUN_0074a700() @ 0x0074a700 (local_40[0], *(undefined4 *)((int)this + 0x1c), local_38)
+        ///         - Creates and initializes module loader with module name "001ebo"
+        ///         - Takes GUI manager from *(undefined4 *)((int)this + 0x1c)
+        ///       - piVar2 set to return value
+        ///     - Else: piVar2 set to null
+        /// 13. Panel registration: FUN_0040bf90() @ 0x0040bf90
+        ///     - Parameters: *(void **)((int)this + 0x1c) (GUI manager), piVar2 (panel), 2, 1
+        ///     - local_c._0_1_ set to 2 (exception state tracking)
+        /// 14. Sound/music initialization: FUN_00621ab0() @ 0x00621ab0
+        ///     - Parameters: DAT_008283c4 @ 0x008283c4, DAT_007c5474 @ 0x007c5474, 0
+        ///     - Calls FUN_00624380() internally if first parameter is not null
+        /// 15. Panel flags update: *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xfffffe7f | 0x200
+        ///     - Clears bit 0x80, sets bit 0x200 (panel active flag)
+        /// 16. Server state reset: FUN_006394b0() @ 0x006394b0
+        ///     - Parameter: *(int *)(DAT_008283d4 + 4) (server pointer)
+        ///     - Sets *(undefined4 *)(*(int *)(param_1 + 4) + 0x280) = 0
+        /// 17. Cleanup:
+        ///     - local_c._0_1_ set to 1 (exception state tracking)
+        ///     - CExoString___CExoString() destroys local_38
+        ///     - local_c = (uint)local_c._1_3_ &lt;&lt; 8 (exception state tracking)
+        ///     - CExoString___CExoString() destroys local_20
+        ///     - local_c = 0xffffffff (exception state tracking)
+        ///     - FUN_00632000() @ 0x00632000 destroys context in local_44
+        /// 18. Post-processing check:
+        ///     - FUN_006387d0() @ 0x006387d0 (*(int *)(DAT_008283d4 + 4)) checks server state
+        ///     - If result != 0: calls FUN_00682b40() @ 0x00682b40 with server pointer
+        /// 19. Exception handler restoration: ExceptionList = local_14
+        ///
+        /// EXECUTION FLOW - swkotor2_aspyr.exe @ 0x00882230 (FUN_00882230):
+        /// 1. Structured exception handling setup:
+        ///    - LAB_00974a8b @ 0x00974a8b stored in puStack_c
+        ///    - ExceptionList saved to local_10
+        ///    - local_8 initialized to 0xffffffff (exception state tracking)
+        /// 2. Panel state validation:
+        ///    - Check *(uint *)((int)this + 0x48) &gt;&gt; 8 &amp; 3 != 2 (panel not already in active state)
+        ///    - Check *(int *)((int)this + 0x1c98) != 0 (panel field validation)
+        ///    - Check *(int *)(param_1 + 0x50) != 0 (control is active)
+        /// 3. Exception handler activation: ExceptionList = &amp;local_10
+        /// 4. Game time initialization: FUN_005ff000() @ 0x005ff000
+        ///    - Equivalent to FUN_0057a400() in swkotor2.exe
+        ///    - Calls GetSystemTimeAsFileTime() to capture current system time
+        /// 5. Module loading system initialization: FUN_00401bc0() @ 0x00401bc0
+        ///    - Parameter: DAT_00a1b4a4 @ 0x00a1b4a4 (CAppManager*)
+        ///    - Equivalent to FUN_00401380() in swkotor2.exe
+        /// 6. Context initialization: FUN_00736240() @ 0x00736240
+        ///    - Parameter: &amp;local_28
+        ///    - Equivalent to FUN_00631f70() in swkotor2.exe
+        /// 7. String construction:
+        ///    - local_8 set to 0 (exception state tracking)
+        ///    - FUN_00733540() creates empty string in local_20
+        ///    - local_8._0_1_ set to 1 (exception state tracking)
+        ///    - FUN_00733570() @ 0x00733570 creates string from "001ebo" @ 0x009a5ab0 in local_18
+        ///    - local_8._0_1_ set to 2 (exception state tracking)
+        /// 8. Effects resource directory loading:
+        ///    - FUN_00733570() creates string from "HD0:effects" in local_30
+        ///    - local_8._0_1_ set to 3 (exception state tracking)
+        ///    - FUN_00716da0() @ 0x00716da0 (local_38, local_30) adds effects directory
+        ///    - FUN_00733780() destroys local_38
+        ///    - local_8._0_1_ set to 2 (exception state tracking)
+        ///    - FUN_00733780() destroys local_30
+        /// 9. MODULES resource directory management:
+        ///    - FUN_00733570() creates string from "MODULES:" in local_40
+        ///    - local_8._0_1_ set to 4 (exception state tracking)
+        ///    - FUN_00711690() @ 0x00711690 (DAT_00a1b490 @ 0x00a1b490, local_40) adds MODULES directory
+        ///    - local_8 = CONCAT31(local_8._1_3_, 2) (exception state tracking)
+        ///    - FUN_00733780() destroys local_40
+        /// 10. Module resource existence check:
+        ///     - FUN_005564b0() performs initialization
+        ///     - FUN_00710810() @ 0x00710810 (local_50, local_18) converts CExoString to CResRef
+        ///     - FUN_00711ed0() @ 0x00711ed0 (DAT_00a1b490, local_50, 0x7db, null) checks for MOD type
+        ///       - 0x7db = MOD resource type constant
+        ///     - If MOD not found (iVar1 == 0):
+        ///       - FUN_00710810() reconstructs CResRef from local_18 in local_60
+        ///       - FUN_00711ed0() (DAT_00a1b490, local_60, 0xbba, null) checks for RIM type
+        ///         - 0xbba = RIM resource type constant
+        ///       - If RIM also not found: FUN_007338d0() @ 0x007338d0 (local_18, "001ebo") reassigns default module
+        /// 11. Resource directory cleanup:
+        ///     - FUN_00733570() creates string from "MODULES:" in local_68
+        ///     - local_8._0_1_ set to 5 (exception state tracking)
+        ///     - FUN_00711710() @ 0x00711710 (DAT_00a1b490, local_68) removes MODULES directory
+        ///     - local_8._0_1_ set to 2 (exception state tracking)
+        ///     - FUN_00733780() destroys local_68
+        /// 12. Module loader allocation and creation:
+        ///     - FUN_00556590() performs cleanup
+        ///     - FUN_00919723() allocates 0x15f0 (5616) bytes, stored in this_00
+        ///     - local_8._0_1_ set to 6 (exception state tracking)
+        ///     - If allocation succeeds (this_00 != null):
+        ///       - FUN_008f92b0() @ 0x008f92b0 (this_00, *(undefined4 *)((int)this + 0x1c), local_18)
+        ///         - Equivalent to FUN_0074a700() in swkotor2.exe
+        ///         - Creates and initializes module loader with module name "001ebo"
+        ///       - local_88 set to return value
+        ///     - Else: local_88 set to null
+        /// 13. Panel registration: FUN_00410530() @ 0x00410530
+        ///     - Parameters: *(void **)((int)this + 0x1c) (GUI manager), local_88 (panel), 2, 1
+        ///     - local_8._0_1_ set to 2 (exception state tracking)
+        /// 14. Sound/music initialization: FUN_0070bc60() @ 0x0070bc60
+        ///     - Parameters: DAT_00a1b494 @ 0x00a1b494, DAT_0099c2a8 @ 0x0099c2a8, 0
+        ///     - Equivalent to FUN_00621ab0() in swkotor2.exe
+        /// 15. Panel flags update:
+        ///     - *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xffffff7f (clears bit 0x80)
+        ///     - *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xfffffcff | 0x200 (sets bit 0x200)
+        /// 16. Server state reset: FUN_00741360() @ 0x00741360
+        ///     - Parameter: *(int *)(DAT_00a1b4a4 + 4) (server pointer)
+        ///     - Equivalent to FUN_006394b0() in swkotor2.exe
+        /// 17. Cleanup:
+        ///     - local_8._0_1_ set to 1 (exception state tracking)
+        ///     - FUN_00733780() destroys local_18
+        ///     - local_8 = (uint)local_8._1_3_ &lt;&lt; 8 (exception state tracking)
+        ///     - FUN_00733780() destroys local_20
+        ///     - local_8 = 0xffffffff (exception state tracking)
+        ///     - FUN_007362c0() @ 0x007362c0 destroys context in local_28
+        /// 18. Post-processing check:
+        ///     - FUN_0073f750() @ 0x0073f750 (*(int *)(DAT_00a1b4a4 + 4)) checks server state
+        ///     - If result != 0: calls FUN_007d21e0() @ 0x007d21e0 with server pointer
+        /// 19. Exception handler restoration: ExceptionList = local_10
+        ///
+        /// KEY FUNCTION DETAILS:
+        /// - CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0 (swkotor.exe):
+        ///   Captures system time via GetSystemTimeAsFileTime() and stores in global session start time variables.
+        /// - FUN_0057a400() @ 0x0057a400 (swkotor2.exe):
+        ///   Captures system time via GetSystemTimeAsFileTime() and stores in DAT_00828400/DAT_00828404.
+        /// - FUN_005ff000() @ 0x005ff000 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_0057a400(), captures system time for game session tracking.
+        /// - CAppManager::CreateServer() @ 0x00401380 (swkotor.exe):
+        ///   Creates and initializes CServerExoApp instance, calls StartServices() and Initialize().
+        /// - FUN_00401380() @ 0x00401380 (swkotor2.exe):
+        ///   Creates and initializes server instance, equivalent functionality to CAppManager::CreateServer().
+        /// - FUN_00401bc0() @ 0x00401bc0 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_00401380(), creates and initializes server instance.
+        /// - CExoResMan::AddResourceDirectory() @ 0x00408800 (swkotor.exe):
+        ///   Adds resource directory to resource manager via AddKeyTable(this, param_1, DIRECTORY, 0).
+        /// - FUN_00408a30() @ 0x00408a30 (swkotor2.exe):
+        ///   Equivalent to CExoResMan::AddResourceDirectory(), adds MODULES directory to resource manager.
+        /// - FUN_00711690() @ 0x00711690 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_00408a30(), adds MODULES directory to resource manager.
+        /// - CExoResMan::Exists() @ 0x00408bc0 (swkotor.exe):
+        ///   Checks if resource exists via GetKeyEntry(), returns non-zero if found.
+        /// - FUN_00408df0() @ 0x00408df0 (swkotor2.exe):
+        ///   Checks if resource exists via CExoResMan__GetKeyEntry(), takes resource type constant (0x7db for MOD, 0xbba for RIM).
+        /// - FUN_00711ed0() @ 0x00711ed0 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_00408df0(), checks resource existence with type constants.
+        /// - CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (swkotor.exe):
+        ///   Constructs class selection GUI panel with starting module name, allocates 0x1560 bytes.
+        /// - FUN_0074a700() @ 0x0074a700 (swkotor2.exe):
+        ///   Creates and initializes module loader, allocates 0x15f0 bytes, takes GUI manager and module name.
+        /// - FUN_008f92b0() @ 0x008f92b0 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_0074a700(), creates module loader with 0x15f0 byte allocation.
+        /// - CSWGuiManager::AddPanel() @ 0x0040bc70 (swkotor.exe):
+        ///   Adds panel to GUI manager, plays sound if requested, updates panel flags, calls OnPanelAdded callback.
+        /// - FUN_0040bf90() @ 0x0040bf90 (swkotor2.exe):
+        ///   Equivalent to CSWGuiManager::AddPanel(), adds panel to GUI manager.
+        /// - FUN_00410530() @ 0x00410530 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_0040bf90(), adds panel to GUI manager.
+        /// - CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (swkotor.exe):
+        ///   Manages sound system state transitions, handles pause/resume, mute/unmute operations.
+        /// - FUN_00621ab0() @ 0x00621ab0 (swkotor2.exe):
+        ///   Calls FUN_00624380() if first parameter is not null, handles sound/music initialization.
+        /// - FUN_0070bc60() @ 0x0070bc60 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_00621ab0(), handles sound/music initialization.
+        /// - FUN_00630d10() @ 0x00630d10 (swkotor2.exe):
+        ///   CExoString assignment operator, reassigns string value, handles memory allocation if needed.
+        /// - FUN_007338d0() @ 0x007338d0 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_00630d10(), reassigns string value.
+        /// - FUN_006394b0() @ 0x006394b0 (swkotor2.exe):
+        ///   Resets server state field at offset 0x280 to 0.
+        /// - FUN_00741360() @ 0x00741360 (swkotor2_aspyr.exe):
+        ///   Equivalent to FUN_006394b0(), resets server state.
+        ///
+        /// STRUCTURE OFFSETS:
+        /// - CSWGuiMainMenu panel offset: this->panel (swkotor.exe)
+        /// - Panel bit_flags offset: (this->panel).bit_flags (swkotor.exe), *(uint *)((int)this + 0x48) (swkotor2.exe, swkotor2_aspyr.exe)
+        /// - Panel manager offset: (this->panel).manager (swkotor.exe), *(undefined4 *)((int)this + 0x1c) (swkotor2.exe, swkotor2_aspyr.exe)
+        /// - Panel field validation: this->field20_0x140c (swkotor.exe), *(int *)((int)this + 0x18f4) (swkotor2.exe), *(int *)((int)this + 0x1c98) (swkotor2_aspyr.exe)
+        /// - Control is_active offset: param_1->is_active (swkotor.exe), *(int *)(param_1 + 0x50) (swkotor2.exe, swkotor2_aspyr.exe)
+        ///
+        /// MEMORY ALLOCATION SIZES:
+        /// - CSWGuiClassSelection: 0x1560 (5472) bytes (swkotor.exe)
+        /// - Module loader: 0x15f0 (5616) bytes (swkotor2.exe, swkotor2_aspyr.exe)
+        ///
+        /// EXECUTABLE-SPECIFIC DIFFERENCES:
+        /// - swkotor.exe uses "END_M01AA" as default starting module, swkotor2.exe and swkotor2_aspyr.exe use "001ebo"
+        /// - swkotor.exe creates CSWGuiClassSelection panel, swkotor2.exe and swkotor2_aspyr.exe create module loader directly
+        /// - swkotor.exe includes INI initialization step, swkotor2.exe and swkotor2_aspyr.exe do not
+        /// - swkotor.exe includes explicit sound mode setting, swkotor2.exe and swkotor2_aspyr.exe use different sound initialization
+        /// - swkotor2.exe and swkotor2_aspyr.exe include effects resource directory loading step, swkotor.exe does not
+        /// - Panel state validation bit masks differ: 0x600/0x400 (swkotor.exe) vs 0x300/0x200 (swkotor2.exe, swkotor2_aspyr.exe)
+        /// - swkotor2_aspyr.exe uses different function names but equivalent functionality to swkotor2.exe
+        /// - swkotor2_aspyr.exe panel state check uses bit shift: *(uint *)((int)this + 0x48) &gt;&gt; 8 &amp; 3 != 2
+        /// - swkotor2_aspyr.exe panel flags update includes two-step operation: first clears 0x80, then sets 0x200
         /// 4. Module loading system initialization: FUN_00401380() @ 0x00401380 (DAT_008283d4 @ 0x008283d4)
         /// 5. Context initialization: FUN_00631f70() @ 0x00631f70 (local_44)
         /// 6. String construction:
