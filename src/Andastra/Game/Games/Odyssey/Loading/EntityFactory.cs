@@ -16,17 +16,18 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// </summary>
     /// <remarks>
     /// Entity Factory System:
-    /// - Main entry point: LoadEntitiesFromGIT @ (K1: LoadGIT @ 0x0050dd80, TSL: LoadEntitiesFromGIT @ 0x004e9440) - Main entity creation system that loads all entity types from GIT file
-    ///   - K1 (swkotor.exe): LoadGIT @ 0x0050dd80 calls LoadCreatures @ 0x00504a70 to load creatures from "Creature List"
-    ///   - TSL (swkotor2.exe): LoadEntitiesFromGIT @ 0x004e9440 calls LoadCreaturesFromGIT @ 0x004dfbb0, LoadPlaceablesFromGIT @ 0x004e5d80, and other entity loaders
-    /// - Creature loading: LoadCreatureFromGIT @ (K1: LoadCreature @ 0x00500350, TSL: LoadCreatureFromGIT @ 0x005223a0) - Loads creature instance data from GIT struct
-    ///   - K1: LoadCreatures @ 0x00504a70 iterates "Creature List", creates CSWSCreature objects, calls LoadCreature @ 0x00500350 or LoadFromTemplate @ 0x005026d0
-    ///   - TSL: LoadCreaturesFromGIT @ 0x004dfbb0 iterates "Creature List", creates creature objects (0x1220 bytes), calls LoadCreatureFromGIT @ 0x005223a0
-    ///   - LoadCreatureFromGIT @ 0x005223a0: Reads AreaId, loads template via FUN_005fb0f0, sets creature properties (DetectMode, StealthMode, CreatureSize, etc.)
-    /// - Placeable loading: LoadPlaceablesFromGIT @ (K1: LoadPlaceables @ 0x0050a7b0, TSL: LoadPlaceablesFromGIT @ 0x004e5d80) - Loads placeables from "Placeable List"
-    /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
-    /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
-    /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
+    /// - LoadCreaturesFromGIT @ (K1: CSWSArea::LoadCreatures @ 0x00504a70, TSL: LoadCreaturesFromGIT @ 0x004dfbb0) - Main entity creation system that loads creatures from GIT "Creature List"
+    /// - CreateCreatureFromTemplate: Creates creature entities from UTC template ResRefs
+    ///   - K1 (swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
+    ///     - Function signature: LoadCreature(CSWSCreature* this, CResGFF* param_1, CResStruct* param_2, int param_3)
+    ///     - Called from LoadCreatures @ 0x00504a70 and LoadLimboCreatures @ 0x004c8c70
+    ///     - CSWSCreatureStats::ReadStatsFromGff @ 0x00560e60 - Reads creature stats from GFF (called by LoadCreature)
+    ///     - CSWSCreature::ReadItemsFromGff @ 0x004ffda0 - Reads creature inventory items from GFF
+    ///   - TSL (swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
+    ///     - Calls LoadCreatureTemplateData @ 0x005fb0f0 to load creature data from GFF structure
+    ///     - Located via string references: "TemplateResRef" @ 0x007bd00c
+    /// - Located via string references: "TemplateResRef" @ 0x007bd00c (TSL), "TemplateResRef" @ 0x00747494 (K1)
+    /// - "ScriptHeartbeat" @ 0x007beeb0, "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
     ///   - Original implementation: Loads UTC GFF structure, reads fields in specific order:
     ///     - FirstName, LastName, Description (localized strings)
     ///     - IsPC, Tag, Conversation (ResRef)
@@ -64,9 +65,9 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// </remarks>
     public class EntityFactory
     {
-        // ObjectId assignment system: FUN_004e5920 @ (K1: TODO: Find this address, TSL: 0x004e5920) reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
+        // ObjectId assignment system (K1: CSWSArea::LoadCreatures @ 0x00504a70, TSL: LoadCreaturesFromGIT @ 0x004dfbb0)
         // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
-        // Original implementation: FUN_004e5920 @ 0x004e5920 (TSL) reads ObjectId field from GIT struct with default 0x7f000000 (OBJECT_INVALID)
+        // Original implementation: FUN_004e5920 @ 0x004e5920 (TSL) reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
         // ObjectIds should be unique across all entities. Use high range (1000000+) to avoid conflicts with World.CreateEntity counter
         private uint _nextObjectId = 1000000;
 
@@ -81,8 +82,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
         /// <summary>
         /// Reads ObjectId from GIT struct if present, otherwise generates new one.
-        /// Based on FUN_00412d40 @ (K1: TODO: Find this address, TSL: 0x00412d40) which reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
-        /// Called by LoadCreaturesFromGIT @ 0x004dfbb0 (TSL) and LoadCreatures @ 0x00504a70 (K1) to read ObjectId from each creature instance in GIT "Creature List"
+        /// Based on FUN_00412d40 (TSL) / CResGFF::ReadFieldDWORD (K1) which reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
         /// </summary>
         private uint GetObjectIdFromGit(GFFStruct gitStruct)
         {
@@ -100,10 +100,9 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a creature from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: LoadCreatureFromGIT @ 0x005223a0 loads creature instance data from GIT struct.
-        /// Loads AreaId from GFF at offset 0x90 (via FUN_00412d40 with "AreaId" field name).
+        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads creature instance data from GIT struct.
+        /// Loads AreaId from GFF at offset 0x90 (via 0x00412d40 with "AreaId" field name).
         /// Located via string reference: "AreaId" @ 0x007bef48
-        /// Called by LoadCreaturesFromGIT @ 0x004dfbb0 after creating creature object (0x1220 bytes) and initializing with ObjectId
         /// </remarks>
         [CanBeNull]
         public IEntity CreateCreatureFromGit(GFFStruct gitStruct, Module module)
@@ -238,10 +237,39 @@ namespace Andastra.Game.Games.Odyssey.Loading
         }
 
         /// <summary>
-        /// Loads creature template from UTC.
+        /// Loads creature template from UTC GFF file.
         /// </summary>
+        /// <remarks>
+        /// Based on original engine implementations:
+        /// - K1 (swkotor.exe): CSWSCreature::LoadCreature @ 0x00500350 - Main UTC GFF parser entry point
+        ///   - Function signature: LoadCreature(CSWSCreature* this, CResGFF* param_1, CResStruct* param_2, int param_3)
+        ///   - Called from LoadCreatures @ 0x00504a70 and LoadLimboCreatures @ 0x004c8c70
+        ///   - CSWSCreatureStats::ReadStatsFromGff @ 0x00560e60 - Reads creature stats from GFF (called by LoadCreature)
+        /// - TSL (swkotor2.exe): LoadCreatureFromTemplate @ 0x005261b0 - Loads creature template from UTC file
+        ///   - Calls LoadCreatureTemplateData @ 0x005fb0f0 to load creature data from GFF structure
+        ///   - Located via string references: "TemplateResRef" @ 0x007bd00c
+        /// 
+        /// Original implementation loads UTC GFF structure and reads fields in specific order:
+        /// - Core Identity: Tag, FirstName, LastName, Comment, Conversation
+        /// - Appearance: Appearance_Type, PortraitId, Gender, Race, SubraceIndex, BodyVariation, TextureVar, SoundSetFile
+        /// - Stats: Str, Dex, Con, Int, Wis, Cha, NaturalAC, ChallengeRating, PerceptionRange
+        /// - Health: CurrentHitPoints, MaxHitPoints, HitPoints, ForcePoints, MaxForcePoints, CurrentForce
+        /// - Classes: ClassList (Class, ClassLevel, SpellsPerDayList)
+        /// - Skills: SkillList (Rank)
+        /// - Feats: FeatList (Feat)
+        /// - Special Abilities: SpecAbilityList
+        /// - Flags: IsPC, Plot, Interruptable, Disarmable, NotReorienting, PartyInteract, NoPermDeath, Min1HP
+        /// - TSL-only: Hologram, IgnoreCrePath, MultiplierSet, BlindSpot
+        /// - Saves: willbonus, fortbonus, refbonus
+        /// - Scripts: ScriptHeartbeat, ScriptOnNotice, ScriptAttacked, ScriptDamaged, ScriptDeath, ScriptDialogue, etc.
+        /// - Inventory: ItemList, Equip_ItemList
+        /// - Experience: Experience, LevelUpStack
+        /// - Alignment: GoodEvil, LawfulChaotic
+        /// - WalkRate: MovementRate/WalkRate
+        /// </remarks>
         private void LoadCreatureTemplate(Entity entity, Module module, string templateResRef)
         {
+            // swkotor.exe: 0x00500350 @ 0x00500350, swkotor2.exe: 0x005261b0 @ 0x005261b0
             ModuleResource utcResource = module.Creature(templateResRef);
             if (utcResource == null)
             {
@@ -262,25 +290,63 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
             GFFStruct root = utcGff.Root;
 
-            // Tag (if not set from GIT)
+            // Core Identity fields
+            // swkotor.exe: 0x00500350 loads Tag field from UTC template
             if (string.IsNullOrEmpty(entity.Tag))
             {
                 entity.Tag = GetStringField(root, "Tag");
             }
 
-            // Store template data for components
             entity.SetData("TemplateResRef", templateResRef);
+            entity.SetData("Comment", GetStringField(root, "Comment"));
             entity.SetData("FirstName", GetLocStringField(root, "FirstName"));
             entity.SetData("LastName", GetLocStringField(root, "LastName"));
-            entity.SetData("RaceId", GetIntField(root, "Race", 0)); // Race field in UTC
+            entity.SetData("Description", GetLocStringField(root, "Description"));
+
+            // Conversation field (dialogue ResRef for BeginConversation)
+            // swkotor.exe: 0x0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
+            string conversation = GetResRefField(root, "Conversation");
+            if (!string.IsNullOrEmpty(conversation))
+            {
+                entity.SetData("Conversation", conversation);
+            }
+
+            // Appearance & Visuals
+            // swkotor.exe: 0x00560e60 (ReadStatsFromGff) loads appearance fields
             entity.SetData("Appearance_Type", GetIntField(root, "Appearance_Type", 0));
-            entity.SetData("FactionID", GetIntField(root, "FactionID", 0));
+            entity.SetData("PortraitId", GetIntField(root, "PortraitId", 0));
+            entity.SetData("Gender", GetIntField(root, "Gender", 0));
+            entity.SetData("RaceId", GetIntField(root, "Race", 0)); // Race field in UTC
+            entity.SetData("SubraceIndex", GetIntField(root, "SubraceIndex", 0));
+            entity.SetData("BodyVariation", GetIntField(root, "BodyVariation", 0));
+            entity.SetData("TextureVar", GetIntField(root, "TextureVar", 0));
+            entity.SetData("SoundSetFile", GetIntField(root, "SoundSetFile", 0));
+            entity.SetData("PaletteID", GetIntField(root, "PaletteID", 0));
+            entity.SetData("BodyBag", GetIntField(root, "BodyBag", 0));
+
+            // Core Stats & Attributes
+            // swkotor.exe: 0x00560e60 (ReadStatsFromGff) loads ability scores
+            entity.SetData("Str", GetIntField(root, "Str", 10));
+            entity.SetData("Dex", GetIntField(root, "Dex", 10));
+            entity.SetData("Con", GetIntField(root, "Con", 10));
+            entity.SetData("Int", GetIntField(root, "Int", 10));
+            entity.SetData("Wis", GetIntField(root, "Wis", 10));
+            entity.SetData("Cha", GetIntField(root, "Cha", 10));
+            entity.SetData("NaturalAC", GetIntField(root, "NaturalAC", 0));
+            entity.SetData("ChallengeRating", root.Exists("ChallengeRating") ? root.GetSingle("ChallengeRating") : 0f);
+            entity.SetData("PerceptionRange", GetIntField(root, "PerceptionRange", 0));
+            entity.SetData("BlindSpot", root.Exists("BlindSpot") ? root.GetSingle("BlindSpot") : 0f); // TSL only
+
+            // Health & Force Points
             entity.SetData("CurrentHitPoints", GetIntField(root, "CurrentHitPoints", 1));
             entity.SetData("MaxHitPoints", GetIntField(root, "MaxHitPoints", 1));
+            entity.SetData("HitPoints", GetIntField(root, "HitPoints", 1)); // Base HP
             entity.SetData("ForcePoints", GetIntField(root, "ForcePoints", 0));
             entity.SetData("MaxForcePoints", GetIntField(root, "MaxForcePoints", 0));
+            entity.SetData("CurrentForce", GetIntField(root, "CurrentForce", 0));
 
-            // Load class list from UTC Classes field
+            // Class List
+            // swkotor.exe: 0x00500350 loads ClassList from UTC template
             if (root.Exists("ClassList"))
             {
                 GFFList classList = root.GetList("ClassList");
@@ -301,15 +367,107 @@ namespace Andastra.Game.Games.Odyssey.Loading
                 }
             }
 
-            // Attributes
-            entity.SetData("Str", GetIntField(root, "Str", 10));
-            entity.SetData("Dex", GetIntField(root, "Dex", 10));
-            entity.SetData("Con", GetIntField(root, "Con", 10));
-            entity.SetData("Int", GetIntField(root, "Int", 10));
-            entity.SetData("Wis", GetIntField(root, "Wis", 10));
-            entity.SetData("Cha", GetIntField(root, "Cha", 10));
+            // Skill List
+            if (root.Exists("SkillList"))
+            {
+                GFFList skillList = root.GetList("SkillList");
+                if (skillList != null)
+                {
+                    var skills = new List<int>();
+                    for (int i = 0; i < skillList.Count; i++)
+                    {
+                        GFFStruct skillStruct = skillList[i];
+                        if (skillStruct != null)
+                        {
+                            int rank = GetIntField(skillStruct, "Rank", 0);
+                            skills.Add(rank);
+                        }
+                    }
+                    entity.SetData("SkillList", skills);
+                }
+            }
+
+            // Feat List
+            if (root.Exists("FeatList"))
+            {
+                GFFList featList = root.GetList("FeatList");
+                if (featList != null)
+                {
+                    var feats = new List<int>();
+                    for (int i = 0; i < featList.Count; i++)
+                    {
+                        GFFStruct featStruct = featList[i];
+                        if (featStruct != null)
+                        {
+                            int feat = GetIntField(featStruct, "Feat", 0);
+                            feats.Add(feat);
+                        }
+                    }
+                    entity.SetData("FeatList", feats);
+                }
+            }
+
+            // Special Ability List
+            if (root.Exists("SpecAbilityList"))
+            {
+                GFFList specAbilityList = root.GetList("SpecAbilityList");
+                if (specAbilityList != null)
+                {
+                    var specAbilities = new List<int>();
+                    for (int i = 0; i < specAbilityList.Count; i++)
+                    {
+                        GFFStruct specAbilityStruct = specAbilityList[i];
+                        if (specAbilityStruct != null)
+                        {
+                            int ability = GetIntField(specAbilityStruct, "Spell", 0);
+                            specAbilities.Add(ability);
+                        }
+                    }
+                    entity.SetData("SpecAbilityList", specAbilities);
+                }
+            }
+
+            // Combat & Behavior Flags
+            entity.SetData("FactionID", GetIntField(root, "FactionID", 0));
+            entity.SetData("IsPC", GetIntField(root, "IsPC", 0) != 0);
+            entity.SetData("Plot", GetIntField(root, "Plot", 0) != 0);
+            entity.SetData("Interruptable", GetIntField(root, "Interruptable", 0) != 0);
+            entity.SetData("Disarmable", GetIntField(root, "Disarmable", 0) != 0);
+            entity.SetData("NotReorienting", GetIntField(root, "NotReorienting", 0) != 0);
+            entity.SetData("PartyInteract", GetIntField(root, "PartyInteract", 0) != 0);
+            entity.SetData("NoPermDeath", GetIntField(root, "NoPermDeath", 0) != 0);
+            entity.SetData("Min1HP", GetIntField(root, "Min1HP", 0) != 0);
+            entity.SetData("Hologram", GetIntField(root, "Hologram", 0) != 0); // TSL only
+            entity.SetData("IgnoreCrePath", GetIntField(root, "IgnoreCrePath", 0) != 0); // TSL only
+            entity.SetData("MultiplierSet", GetIntField(root, "MultiplierSet", 0)); // TSL only
+
+            // Save Bonuses
+            entity.SetData("willbonus", GetIntField(root, "willbonus", 0));
+            entity.SetData("fortbonus", GetIntField(root, "fortbonus", 0));
+            entity.SetData("refbonus", GetIntField(root, "refbonus", 0));
+
+            // Experience & Progression
+            entity.SetData("Experience", GetIntField(root, "Experience", 0));
+            entity.SetData("SkillPoints", GetIntField(root, "SkillPoints", 0));
+
+            // Alignment
+            entity.SetData("GoodEvil", GetIntField(root, "GoodEvil", 50));
+            entity.SetData("LawfulChaotic", GetIntField(root, "LawfulChaotic", 50));
+
+            // Movement
+            entity.SetData("WalkRate", GetIntField(root, "WalkRate", 0));
+            if (root.Exists("MovementRate"))
+            {
+                entity.SetData("MovementRate", GetIntField(root, "MovementRate", 0));
+            }
+
+            // Additional TSL fields
+            entity.SetData("PCLevelAtSpawn", GetIntField(root, "PCLevelAtSpawn", 0));
+            entity.SetData("AssignedPup", GetIntField(root, "AssignedPup", 0));
+            entity.SetData("PlayerCreated", GetIntField(root, "PlayerCreated", 0) != 0);
 
             // Scripts
+            // swkotor.exe: 0x0050c510 @ 0x0050c510 loads script hooks from UTC template
             SetEntityScripts(entity, root, new Dictionary<string, ScriptEvent>
             {
                 { "ScriptAttacked", ScriptEvent.OnPhysicalAttacked },
@@ -324,18 +482,78 @@ namespace Andastra.Game.Games.Odyssey.Loading
                 { "ScriptRested", ScriptEvent.OnRested },
                 { "ScriptSpawn", ScriptEvent.OnSpawn },
                 { "ScriptSpellAt", ScriptEvent.OnSpellCastAt },
-                { "ScriptUserDefine", ScriptEvent.OnUserDefined }
+                { "ScriptUserDefine", ScriptEvent.OnUserDefined },
+                { "ScriptEndDialogu", ScriptEvent.OnEndDialogue }
             });
 
-            // Load ScriptDialogue as Conversation property (dialogue ResRef for BeginConversation)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
+            // Load ScriptDialogue as Conversation property if Conversation field not set
             // ScriptDialogue ResRef is the dialogue file (DLG) used for conversations with this creature
-            string scriptDialogue = GetResRefField(root, "ScriptDialogue");
-            if (!string.IsNullOrEmpty(scriptDialogue))
+            if (string.IsNullOrEmpty(conversation))
             {
-                entity.SetData("Conversation", scriptDialogue);
-                entity.SetData("ScriptDialogue", scriptDialogue);
+                string scriptDialogue = GetResRefField(root, "ScriptDialogue");
+                if (!string.IsNullOrEmpty(scriptDialogue))
+                {
+                    entity.SetData("Conversation", scriptDialogue);
+                    entity.SetData("ScriptDialogue", scriptDialogue);
+                }
             }
+
+            // Inventory Items (ItemList)
+            // swkotor.exe: 0x004ffda0 @ 0x004ffda0 (ReadItemsFromGff) reads creature inventory items from GFF
+            if (root.Exists("ItemList"))
+            {
+                GFFList itemList = root.GetList("ItemList");
+                if (itemList != null)
+                {
+                    var items = new List<string>();
+                    for (int i = 0; i < itemList.Count; i++)
+                    {
+                        GFFStruct itemStruct = itemList[i];
+                        if (itemStruct != null)
+                        {
+                            string itemResRef = GetResRefField(itemStruct, "InventoryRes");
+                            if (!string.IsNullOrEmpty(itemResRef))
+                            {
+                                items.Add(itemResRef);
+                            }
+                        }
+                    }
+                    entity.SetData("ItemList", items);
+                }
+            }
+
+            // Equipped Items (Equip_ItemList)
+            // swkotor.exe: 0x004ffda0 @ 0x004ffda0 (ReadItemsFromGff) reads equipped items from Equip_ItemList
+            if (root.Exists("Equip_ItemList"))
+            {
+                GFFList equipItemList = root.GetList("Equip_ItemList");
+                if (equipItemList != null)
+                {
+                    var equipItems = new Dictionary<int, string>();
+                    for (int i = 0; i < equipItemList.Count; i++)
+                    {
+                        GFFStruct equipItemStruct = equipItemList[i];
+                        if (equipItemStruct != null)
+                        {
+                            string itemResRef = GetResRefField(equipItemStruct, "InventoryRes");
+                            int slot = GetIntField(equipItemStruct, "Slot", 0);
+                            if (!string.IsNullOrEmpty(itemResRef))
+                            {
+                                equipItems[slot] = itemResRef;
+                            }
+                        }
+                    }
+                    entity.SetData("Equip_ItemList", equipItems);
+                }
+            }
+
+            // Additional fields
+            entity.SetData("Gold", GetIntField(root, "Gold", 0));
+            entity.SetData("ItemComponent", GetIntField(root, "ItemComponent", 0));
+            entity.SetData("Chemicals", GetIntField(root, "Chemicals", 0));
+            entity.SetData("Deity", GetStringField(root, "Deity"));
+            entity.SetData("Subrace", GetStringField(root, "Subrace"));
+            entity.SetData("StartingPackage", GetIntField(root, "StartingPackage", 0));
         }
 
         /// <summary>
@@ -422,14 +640,14 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("Static", GetIntField(root, "Static", 0) != 0);
 
             // Load TSL-specific fields (KotOR2 only)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
+            // Based on FUN_00584f40 @ 0x00584f40 (TSL) which loads Min1HP and NotBlastable from UTD template
             // Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only), "NotBlastable" (UInt8/Byte, KotOR2 only)
             // Original implementation: These fields do not exist in swkotor.exe (KotOR1)
             entity.SetData("Min1HP", GetIntField(root, "Min1HP", 0) != 0);
             entity.SetData("NotBlastable", GetIntField(root, "NotBlastable", 0) != 0);
 
             // Load Conversation field (dialogue ResRef for BeginConversation)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00580330 @ 0x00580330 saves door data including Conversation field
+            // Based on FUN_00580330 @ 0x00580330 (TSL) which saves door data including Conversation field
             // Located via string reference: "Conversation" @ 0x007c1abc
             string conversation = GetResRefField(root, "Conversation");
             if (!string.IsNullOrEmpty(conversation))
@@ -456,7 +674,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             });
 
             // Load BWM hooks from door walkmesh (DWK)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Doors have walkmesh files (DWK) with hook vectors defining interaction points
+            // Doors have walkmesh files (DWK) with hook vectors defining interaction points
             // Located via string references: "USE1", "USE2" hook vectors in BWM format
             // Original implementation: Loads DWK file for door model, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
             LoadBWMHooks(entity, module, templateResRef, true);
@@ -466,8 +684,8 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a placeable from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: [LoadPlaceablesFromGIT] @ (K1: TODO: Find this address via string reference "Placeable List" in swkotor.exe, TSL: 0x004e5d80) - load placeable instances from GIT "Placeable List"
-        /// - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
+        /// Based on swkotor2.exe: LoadPlaceablesFromGIT @ (K1: CSWSArea::LoadPlaceables @ 0x0050a7b0, TSL: LoadPlaceablesFromGIT @ 0x004e5d80) - load placeable instances from GIT "Placeable List"
+        /// - Located via string reference: "Placeable List" @ (K1: TODO: Find this address via string search in swkotor.exe, TSL: 0x007bd260)
         /// - Function signature: `undefined4 __thiscall LoadPlaceablesFromGIT(void *this, void *param_1, uint *param_2, void *param_3, int param_4)`
         /// - Original implementation (from decompiled 0x004e5d80):
         ///   - Iterates through "Placeable List" GFF list field
@@ -649,7 +867,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             });
 
             // Load BWM hooks from placeable walkmesh (PWK)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeables have walkmesh files (PWK) with hook vectors defining interaction points
+            // Placeables have walkmesh files (PWK) with hook vectors defining interaction points
             // Located via string references: "USE1", "USE2" hook vectors in BWM format
             // Original implementation: Loads PWK file for placeable model, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
             LoadBWMHooks(entity, module, templateResRef, false);
@@ -688,7 +906,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("TemplateResRef", templateResRef);
 
             // Create ItemComponent from UTI template data
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item component creation from UTI template
+            // Item component creation from UTI template (K1: CSWSArea::LoadItems @ 0x00504de0, TSL: FUN_004e01a0 @ 0x004e01a0)
             // Located via string references: "ItemComponent" @ 0x007c41e4, "BaseItem" @ 0x007c0a78
             // Original implementation: Items loaded from UTI templates have ItemComponent with BaseItem, Properties, Charges, etc.
             var itemComponent = new BaseItemComponent
@@ -710,7 +928,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.SetData("Cursed", GetIntField(root, "Cursed", 0) != 0);
 
             // Load item properties from PropertiesList
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties loaded from UTI PropertiesList array
+            // Item properties loaded from UTI PropertiesList array (K1: CSWSArea::LoadItems @ 0x00504de0, TSL: FUN_004e01a0 @ 0x004e01a0)
             // Located via string references: "PropertiesList" @ 0x007c2f3c, "PropertyName" @ 0x007beb58
             // Original implementation: Each property entry has PropertyName, Subtype, CostTable, CostValue, Param1, Param1Value
             if (root.Exists("PropertiesList"))
@@ -1169,7 +1387,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
         /// <summary>
         /// Loads BWM hook vectors from door/placeable walkmesh files (DWK/PWK).
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Objects have walkmesh files with hook vectors defining interaction points
+        /// Objects have walkmesh files with hook vectors defining interaction points
         /// Located via string references: "USE1", "USE2" hook vectors in BWM format
         /// Original implementation: Loads DWK/PWK file, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
         /// </summary>
