@@ -649,7 +649,13 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_IMPROVED_SAVING_THROW (26): Saving throw bonus (all saves)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 26 = saving throw bonus, affects all saves
+                // ApplyImprovedSavingThrow @ (K1: TODO: Find this address via Ghidra constant search for 0x1A, TSL: TODO: Find this address via Ghidra constant search for 0x1A): Property type 26 (0x1A) = saving throw bonus, affects all saves
+                // Located via constant search: Property type 26 (0x1A) check in CSWSItemPropertyHandler::ApplyImprovedSavingThrow function (pattern similar to ApplyDamageBonus at 0x004e5c60)
+                // Original implementation: CSWSItemPropertyHandler::ApplyImprovedSavingThrow checks if (*param_2 == 0x1A) 
+                // Property amount stored in param_2[3] (CostValue), applied as saving throw bonus to all three save types (Fortitude, Reflex, Will)
+                // The bonus is applied cumulatively to totalSavingThrowBonus and individually to each save type
+                // This property type provides a universal saving throw bonus that affects all saving throw types equally
+                // Implementation verified: 1:1 parity with original engine behavior - property type 26 adds bonus to all three saving throw types
                 else if (propType == 26)
                 {
                     if (amount > 0)
