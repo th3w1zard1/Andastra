@@ -3573,10 +3573,25 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Line of sight checks are performed during perception updates.
-        /// The original engine uses walkmesh raycasting to determine if creatures can see each other.
-        /// Non-walkable faces (walls, obstacles) block line of sight, while walkable faces (ground)
-        /// do not block line of sight.
+        /// swkotor.exe: CSWSArea::ClearLineOfSight @ 0x0050c330 - Line of sight checks are performed during perception updates.
+        /// Called from CSWSCreature::DoPerceptionUpdateOnCreature @ 0x00502ac0 (line 152) during creature perception updates.
+        /// The original engine uses walkmesh raycasting via NoNonWalkPolysDetailed to determine if creatures can see each other.
+        /// Non-walkable faces (walls, obstacles) block line of sight, while walkable faces (ground) do not block line of sight.
+        /// 
+        /// Function signature: void CSWSArea::ClearLineOfSight(CSWSArea *this, Vector *param_1, Vector *param_2, Vector *param_3, ulong *param_4, ulong param_5, ulong param_6, int param_7, int param_8)
+        /// - param_1: Starting point (Vector*) - eye position of subject creature
+        /// - param_2: Ending point (Vector*) - eye position of target creature  
+        /// - param_3: Output hit point (Vector*) - where raycast hit
+        /// - param_4: Output hit distance (ulong*) - distance to hit point
+        /// - param_5: Source object ID (ulong) - object to ignore in raycast
+        /// - param_6: Target object ID (ulong) - object to ignore in raycast
+        /// - param_7: Flags (int) - additional flags
+        /// - param_8: Additional flags (int)
+        /// 
+        /// Eye positions are calculated with eye height offset (FLOAT_0073f414, approximately 1.5 units) along Z axis.
+        /// The function performs walkmesh raycast and checks if non-walkable faces block the line of sight.
+        /// 
+        /// swkotor2.exe: TSL equivalent function needs to be located (may use different function name or address).
         /// 
         /// Located via cross-reference: Perception systems use TestLineOfSight to check visibility
         /// between creatures. The original engine performs similar checks during AI perception updates.
