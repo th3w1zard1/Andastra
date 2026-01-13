@@ -14,8 +14,8 @@ namespace Andastra.Runtime.Content.Interfaces
     /// </summary>
     /// <remarks>
     /// Game Resource Provider Interface:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
-    /// - Located via string references: "Resource" @ 0x007c14d4, resource table management functions
+    /// - CExoResMan::GetKeyEntry @ (K1: 0x00407230, TSL: 0x00407300) resource loading system
+    /// - Located via string references: "Resource" @ (K1: 0x0074c318, TSL: 0x007c14d4), resource table management functions
     /// - Resource precedence: OVERRIDE > MODULE > SAVE > TEXTUREPACKS > CHITIN > HARDCODED
     /// - Original implementation: Unified interface for accessing game resources with automatic precedence resolution
     /// - Resource lookup: Searches providers in precedence order until resource found

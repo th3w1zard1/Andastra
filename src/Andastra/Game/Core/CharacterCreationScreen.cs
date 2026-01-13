@@ -1093,7 +1093,7 @@ namespace Andastra.Game.Core
             _previewEntity.AddComponent<CreatureComponent>(creatureComponent);
 
             // Add renderable component
-            var renderableComponent = new OdysseyRenderableComponent();
+            var renderableComponent = new BaseRenderableComponent();
             renderableComponent.Visible = true;
             // Model will be resolved by ModelResolver based on appearance
             _previewEntity.AddComponent<IRenderableComponent>(renderableComponent);

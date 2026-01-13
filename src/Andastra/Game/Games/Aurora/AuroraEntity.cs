@@ -315,7 +315,7 @@ namespace Andastra.Game.Games.Aurora
             // AppearanceRow: Index into appearance.2da for creature appearance customization (Appearance_Type field)
             if (!HasComponent<IRenderableComponent>())
             {
-                var renderableComponent = new Components.AuroraRenderableComponent();
+                var renderableComponent = new BaseRenderableComponent();
                 renderableComponent.Owner = this;
                 AddComponent<IRenderableComponent>(renderableComponent);
             }

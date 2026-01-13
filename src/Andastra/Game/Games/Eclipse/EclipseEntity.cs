@@ -318,7 +318,7 @@ namespace Andastra.Game.Games.Eclipse
             // Renderable data is loaded from entity templates and appearance.2da table
             if (!HasComponent<IRenderableComponent>())
             {
-                var renderableComponent = new EclipseRenderableComponent();
+                var renderableComponent = new BaseRenderableComponent();
                 AddComponent<IRenderableComponent>(renderableComponent);
             }
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
+using Andastra.Runtime.Graphics.Common.Structs;
 
 namespace Andastra.Runtime.Graphics.MonoGame.Backends
 {
@@ -32,9 +33,9 @@ namespace Andastra.Runtime.Graphics.MonoGame.Backends
         private double _gpuTimestampPeriod;
         private bool _gpuTimestampsSupported;
 
-        public GraphicsBackend BackendType
+        public GraphicsBackendType BackendType
         {
-            get { return GraphicsBackend.Vulkan; }
+            get { return GraphicsBackendType.Vulkan; }
         }
 
         public GraphicsCapabilities Capabilities

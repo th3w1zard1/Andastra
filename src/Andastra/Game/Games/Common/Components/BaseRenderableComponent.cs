@@ -31,15 +31,16 @@ namespace Andastra.Game.Games.Common.Components
     /// - Visibility control: All engines support visibility toggling for scripting, cutscenes, stealth, invisibility effects
     /// - Async loading: All engines support async model loading with IsLoaded flag to track loading state
     /// 
-    /// Engine-specific differences (handled in subclasses):
+    /// Engine-specific differences (handled conditionally):
     /// - Model file format details (MDL/MDX vs engine-specific formats)
     /// - Texture file formats (TPC vs DDS vs engine-specific)
     /// - Appearance.2da column names and structure (may vary slightly)
     /// - Model loading implementation details (synchronous vs async patterns)
     /// - Memory management and caching strategies
+    /// - Engine-specific renderable component classes (OdysseyRenderableComponent, AuroraRenderableComponent, EclipseRenderableComponent) have been merged
     /// </remarks>
     [PublicAPI]
-    public abstract class BaseRenderableComponent : IRenderableComponent
+    public class BaseRenderableComponent : IRenderableComponent
     {
         private string _modelResRef;
         private bool _isLoaded;
@@ -150,6 +151,17 @@ namespace Andastra.Game.Games.Common.Components
         /// Called when the model resource reference changes.
         /// Engine-specific implementations can override to handle model reloading.
         /// </summary>
+        /// <remarks>
+        /// Common across all engines: Called when ModelResRef property changes.
+        /// 
+        /// Engine-specific details:
+        /// - Odyssey: Triggers MDL model reloading. Model reloading handled by model loading system.
+        ///   MDL/MDX files reloaded when ModelResRef changes.
+        /// - Aurora: Triggers MDL model reloading via CExoResMan. Model reloading handled by CExoResMan resource manager.
+        ///   MDL/MDX files reloaded when ModelResRef changes. CNWSCreature::LoadAppearance called to reload model data.
+        /// - Eclipse: Triggers GR2/MMH model reloading. Model reloading handled by Eclipse resource manager.
+        ///   GR2/MMH files reloaded when ModelResRef changes. BioWare::Creature::LoadModel called to reload model data.
+        /// </remarks>
         protected virtual void OnModelResRefChanged()
         {
             // Base implementation does nothing - engine-specific implementations can override
@@ -159,6 +171,14 @@ namespace Andastra.Game.Games.Common.Components
         /// <summary>
         /// Called when the component is attached to an entity.
         /// </summary>
+        /// <remarks>
+        /// Common across all engines: Called when component is attached to an entity.
+        /// 
+        /// Engine-specific details:
+        /// - Odyssey: Odyssey-specific attachment logic can be added if needed.
+        /// - Aurora: Aurora-specific attachment logic can be added if needed.
+        /// - Eclipse: Eclipse-specific attachment logic can be added if needed. May need to integrate with PhysX collision system for model-based collision.
+        /// </remarks>
         public virtual void OnAttach()
         {
             // Base implementation does nothing - engine-specific implementations can override
@@ -167,6 +187,15 @@ namespace Andastra.Game.Games.Common.Components
         /// <summary>
         /// Called when the component is detached from an entity.
         /// </summary>
+        /// <remarks>
+        /// Common across all engines: Called when component is detached from an entity.
+        /// 
+        /// Engine-specific details:
+        /// - Odyssey: Clean up MDL model resources if needed.
+        /// - Aurora: Clean up MDL model resources if needed. CExoResMan resources released when component is detached.
+        /// - Eclipse: Clean up GR2/MMH model resources if needed. Eclipse resource manager resources released when component is detached.
+        ///   PhysX collision shapes may need to be cleaned up if model-based collision is used.
+        /// </remarks>
         public virtual void OnDetach()
         {
             // Base implementation does nothing - engine-specific implementations can override

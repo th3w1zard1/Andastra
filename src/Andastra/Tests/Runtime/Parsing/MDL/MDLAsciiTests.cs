@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using Xunit;
 using FluentAssertions;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 using System.Numerics;
 
 namespace Andastra.Tests.Runtime.Parsing.MDL

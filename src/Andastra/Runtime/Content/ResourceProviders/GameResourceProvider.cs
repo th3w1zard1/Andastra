@@ -20,10 +20,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
     /// </summary>
     /// <remarks>
     /// Game Resource Provider:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
-    /// - Located via string references: "Resource" @ 0x007c14d4 (resource field)
-    /// - Resource table errors: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
-    /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124 (duplicate resource key error)
+    /// - CExoResMan::GetKeyEntry @ (K1: 0x00407230, TSL: 0x00407300) resource loading system
+    /// - Located via string references: "Resource" @ (K1: 0x0074c318, TSL: 0x007c14d4) (resource field)
+    /// - Resource table errors: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ (K1: 0x0073e0d8, TSL: 0x007b6078)
+    /// - "CExoKeyTable::AddKey: Duplicate Resource " @ (K1: 0x0073e184, TSL: 0x007b6124) (duplicate resource key error)
     /// - Original implementation: Wraps BioWare.NET.Extract for resource access
     /// - Resource lookup: Uses installation resource system to locate files in archives (RIM, ERF, BIF, MOD)
     /// - Module context: Sets current module for module-specific resource lookups (module RIMs loaded first)
@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         /// </summary>
         /// <remarks>
         /// Resource enumeration implementation:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource enumeration system (CExoKeyTable resource table iteration)
+        /// - CExoResMan::GetKeyEntry @ (K1: 0x00407230, TSL: 0x00407300) resource enumeration system (CExoKeyTable resource table iteration)
         /// - Scans all archives and directories in precedence order: OVERRIDE > MODULES > CHITIN > TEXTUREPACKS > STREAMS > RIMS
         /// - Uses HashSet to track unique resources (duplicates from lower-priority locations are ignored)
         /// - Archive types scanned: ERF, MOD, RIM, BIF (via chitin.key), patch.erf (K1 only)
@@ -461,7 +461,8 @@ namespace Andastra.Runtime.Content.ResourceProviders
         /// <remarks>
         /// This method provides synchronous resource loading by ResRef and ResourceType parameters.
         /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Resource lookup uses CExoKeyTable for resource resolution.
+        /// CExoResMan::GetKeyEntry @ (K1: 0x00407230, TSL: 0x00407300): Resource lookup uses CExoKeyTable for resource resolution.
+        /// Searches through key tables in precedence order: override directory → ERF files → RIM files → chitin.key/BIF files.
         /// </remarks>
         public byte[] LoadResource(BioWare.NET.Common.ResRef resRef, ResourceType resourceType)
         {
