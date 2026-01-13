@@ -20,6 +20,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey;
 using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Aurora;
 using Andastra.Game.Games.Aurora.Components;
@@ -103,6 +104,8 @@ namespace Andastra.Game.Games.Engines.Common
                 if (resourceProvider is GameResourceProvider gameResourceProvider)
                 {
                     _installation = gameResourceProvider.Installation;
+                    // TODO: STUB - Create internal loader (Loading.ModuleLoader functionality should be merged directly into unified ModuleLoader)
+                    _odysseyInternalLoader = new Andastra.Game.Games.Odyssey.Loading.ModuleLoader(_installation);
                 }
                 else
                 {
@@ -254,10 +257,46 @@ namespace Andastra.Game.Games.Engines.Common
             }
         }
 
-        // TODO: STUB - Odyssey module loading implementation
-        // Merge from OdysseyModuleLoader and Odyssey/Loading/ModuleLoader.cs
+        // Odyssey module loading implementation
+        // Merged from OdysseyModuleLoader (uses Loading.ModuleLoader internally - TODO: fully merge Loading.ModuleLoader functionality)
         private async Task LoadModuleOdysseyAsync(string moduleName, [CanBeNull] Action<float> progressCallback)
         {
+            // Load module using internal loader (Loading.ModuleLoader)
+            // TODO: STUB - Loading.ModuleLoader functionality (857 lines) should be merged directly into this method
+            _currentRuntimeModule = _odysseyInternalLoader.LoadModule(moduleName);
+
+            // Update module name
+            _currentModuleName = moduleName;
+
+            // Set current area (first area in module, or entry area)
+            if (_currentRuntimeModule != null)
+            {
+                var areasList = _currentRuntimeModule.Areas.ToList();
+                if (areasList.Count > 0)
+                {
+                    _currentArea = areasList[0];
+                }
+                else if (!string.IsNullOrEmpty(_currentRuntimeModule.EntryArea))
+                {
+                    // Load entry area if not already loaded
+                    RuntimeArea entryArea = _odysseyInternalLoader.LoadArea(
+                        new BioWare.NET.Common.Module(moduleName, _installation),
+                        _currentRuntimeModule.EntryArea);
+                    if (entryArea != null)
+                    {
+                        _currentRuntimeModule.AddArea(entryArea);
+                        _currentArea = entryArea;
+                    }
+                }
+            }
+
+            // Set navigation mesh from current area
+            if (_currentArea is RuntimeArea runtimeArea && runtimeArea.NavigationMesh != null)
+            {
+                _currentNavigationMesh = runtimeArea.NavigationMesh as NavigationMesh;
+            }
+
+            progressCallback?.Invoke(1.0f);
             await Task.CompletedTask;
         }
 
