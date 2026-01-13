@@ -257,7 +257,7 @@ namespace Andastra.Game.Stride.Graphics
                     return _inputManager.IsMouseButtonDown(Stride.Input.MouseButton.Middle);
                 case GraphicsMouseButton.XButton1:
                     return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended1);
-                case MouseButton.XButton2:
+                case GraphicsMouseButton.XButton2:
                     return _inputManager.IsMouseButtonDown(global::Stride.Input.MouseButton.Extended2);
                 default:
                     return false;

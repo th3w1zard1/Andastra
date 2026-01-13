@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
@@ -10,6 +11,16 @@ using Stride.Graphics;
 
 namespace Andastra.Game.Stride.Graphics
 {
+    /// <summary>
+    /// Vertex structure for position and color.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct VertexPositionColor
+    {
+        public System.Numerics.Vector3 Position;
+        public uint Color; // Packed color as uint
+    }
+
     /// <summary>
     /// Stride implementation of IRoomMeshRenderer.
     /// </summary>
@@ -48,7 +59,7 @@ namespace Andastra.Game.Stride.Graphics
 
             // Extract geometry from MDL
             var meshData = new StrideRoomMeshData();
-            var vertices = new List<Andastra.Runtime.Graphics.VertexPositionColor>();
+            var vertices = new List<VertexPositionColor>();
             var indices = new List<int>();
 
             // Extract basic geometry from the first trimesh node
@@ -95,7 +106,7 @@ namespace Andastra.Game.Stride.Graphics
             Clear();
         }
 
-        private void ExtractBasicGeometry(MDL mdl, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void ExtractBasicGeometry(MDL mdl, List<VertexPositionColor> vertices, List<int> indices)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -114,7 +125,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        private void ExtractNodeGeometry(MDLNode node, Matrix4x4 parentTransform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void ExtractNodeGeometry(MDLNode node, Matrix4x4 parentTransform, List<VertexPositionColor> vertices, List<int> indices)
         {
             if (node == null)
             {
@@ -171,7 +182,7 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        private void ExtractMeshGeometry(MDLMesh mesh, Matrix4x4 transform, List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void ExtractMeshGeometry(MDLMesh mesh, Matrix4x4 transform, List<VertexPositionColor> vertices, List<int> indices)
         {
             if (mesh == null || mesh.Vertices == null || mesh.Faces == null)
             {
@@ -179,7 +190,7 @@ namespace Andastra.Game.Stride.Graphics
             }
 
             int baseVertexIndex = vertices.Count;
-            Andastra.Runtime.Graphics.Color meshColor = Andastra.Runtime.Graphics.Color.Gray;
+            uint meshColor = 0xFF808080; // Gray color as packed uint (ARGB)
 
             // Transform and add vertices
             foreach (System.Numerics.Vector3 vertex in mesh.Vertices)
@@ -189,7 +200,7 @@ namespace Andastra.Game.Stride.Graphics
                 var transformedVec = System.Numerics.Vector4.Transform(vertexVec, transform);
                 var transformedPos = new System.Numerics.Vector3(transformedVec.X, transformedVec.Y, transformedVec.Z);
 
-                vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(transformedPos, meshColor));
+                vertices.Add(new VertexPositionColor { Position = transformedPos, Color = meshColor });
             }
 
             // Add faces as indices
@@ -210,20 +221,20 @@ namespace Andastra.Game.Stride.Graphics
             }
         }
 
-        private void CreatePlaceholderBox(List<Andastra.Runtime.Graphics.VertexPositionColor> vertices, List<int> indices)
+        private void CreatePlaceholderBox(List<VertexPositionColor> vertices, List<int> indices)
         {
             float size = 5f;
-            Andastra.Runtime.Graphics.Color color = Andastra.Runtime.Graphics.Color.Gray;
+            uint color = 0xFF808080; // Gray color as packed uint (ARGB)
 
             // 8 vertices of a box
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, -size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, -size, size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, -size, size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(size, size, size), color));
-            vertices.Add(new Andastra.Runtime.Graphics.VertexPositionColor(new System.Numerics.Vector3(-size, size, size), color));
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(-size, -size, -size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(size, -size, -size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(size, size, -size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(-size, size, -size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(-size, -size, size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(size, -size, size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(size, size, size), Color = color });
+            vertices.Add(new VertexPositionColor { Position = new System.Numerics.Vector3(-size, size, size), Color = color });
 
             // 12 triangles (2 per face, 6 faces)
             // Front face
