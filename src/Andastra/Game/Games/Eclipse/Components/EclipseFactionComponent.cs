@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Game.Games.Eclipse.Systems;
 using Andastra.Game.Games.Common.Components;
+using Andastra.Game.Games.Common.Systems;
 
 namespace Andastra.Game.Games.Eclipse.Components
 {
