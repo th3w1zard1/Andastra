@@ -21,7 +21,7 @@ namespace Andastra.Game.Games.Odyssey
     ///
     /// Based on reverse engineering of:
     /// - swkotor.exe: Walkmesh loading and navigation functions
-    /// - swkotor2.exe: Walkmesh projection (FUN_004f5070 @ 0x004f5070)
+    /// - swkotor2.exe: Walkmesh projection (0x004f5070 @ 0x004f5070)
     /// - swkotor2.exe: Line-of-sight raycast (UpdateCreatureMovement @ 0x0054be70) - performs walkmesh raycasts for visibility checks
     /// - Walkmesh binary format: Vertices, faces, adjacency information
     ///
@@ -34,13 +34,8 @@ namespace Andastra.Game.Games.Odyssey
     /// - Surface material walkability based on surfacemat.2da
     /// - Same walkmesh data structures and algorithms
     ///
-    /// Game-specific implementations:
-    /// - Kotor1NavigationMesh: swkotor.exe specific function addresses and behavior
-    /// - Kotor2NavigationMesh: swkotor2.exe specific function addresses and behavior
-    ///
-    /// Note: Function addresses and game-specific behavior differences are documented
-    /// in the game-specific subclasses (Kotor1NavigationMesh, Kotor2NavigationMesh).
-    /// This class contains only functionality that is identical between both games.
+    /// Note: Function addresses differ between K1 (swkotor.exe) and K2 (swkotor2.exe), but behavior is identical.
+    /// This unified class handles both games since the walkmesh format and algorithms are the same.
     /// </remarks>
     [PublicAPI]
     public class OdysseyNavigationMesh : BaseNavigationMesh
@@ -116,7 +111,7 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Based on walkmesh projection logic in swkotor2.exe.
         /// Checks if point can be projected onto a walkable triangle.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Find face at point using FindFaceAt (2D projection)
         /// 2. Check if face is walkable
@@ -145,50 +140,50 @@ namespace Andastra.Game.Games.Odyssey
         /// Projects a point onto the walkmesh surface.
         /// </summary>
         /// <remarks>
-        /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
-        /// 
+        /// Based on 0x004f5070 @ 0x004f5070 in swkotor2.exe.
+        ///
         /// Ghidra analysis (swkotor2.exe: 0x004f5070):
-        /// - Signature: `float10 __thiscall FUN_004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
+        /// - Signature: `float10 __thiscall 0x004f5070(void *param_1, float *param_2, int param_3, int *param_4, int *param_5)`
         /// - param_1: Walkmesh object pointer (this)
         /// - param_2: Input point (float[3] = x, y, z)
         /// - param_3: Projection mode (0 = 3D projection, 1 = 2D projection)
         /// - param_4: Output face index pointer (optional, can be null)
         /// - param_5: Additional parameter (used for 2D projection)
         /// - Returns: Height (float10) at projected point
-        /// 
+        ///
         /// Algorithm:
-        /// 1. Calls FUN_004f4260 to find face at point (uses AABB tree or brute force)
+        /// 1. Calls 0x004f4260 to find face at point (uses AABB tree or brute force)
         /// 2. If face found (iVar1 != 0):
-        ///    - If param_3 != 0: Calls FUN_0055b210 for 2D projection (XZ plane)
-        ///    - Otherwise: Calls FUN_0055b1d0 for 3D projection (full 3D plane)
+        ///    - If param_3 != 0: Calls 0x0055b210 for 2D projection (XZ plane)
+        ///    - Otherwise: Calls 0x0055b1d0 for 3D projection (full 3D plane)
         /// 3. Returns height at projected point
-        /// 
-        /// FUN_004f4260 (FindFaceAt):
+        ///
+        /// 0x004f4260 (FindFaceAt):
         /// - Searches for face containing point using AABB tree or brute force
         /// - Checks point against faces with vertical tolerance (_DAT_007b56f8)
         /// - Returns face pointer or null
-        /// 
-        /// FUN_0055b1d0 (3D Projection):
+        ///
+        /// 0x0055b1d0 (3D Projection):
         /// - Projects point onto 3D plane of face
         /// - Uses face normal and plane equation
         /// - Returns height (Z coordinate) at projected point
-        /// 
-        /// FUN_0055b210 (2D Projection):
+        ///
+        /// 0x0055b210 (2D Projection):
         /// - Projects point onto XZ plane (2D projection)
         /// - Uses barycentric coordinates for height interpolation
         /// - Returns height (Z coordinate) at projected point
-        /// 
+        ///
         /// Called from:
         /// - UpdateCreatureMovement @ 0x0054be70 (line-of-sight and pathfinding)
-        /// - FUN_00553970 @ 0x00553970 (creature movement)
-        /// - FUN_005522e0 @ 0x005522e0 (entity positioning)
-        /// - FUN_004dc300 @ 0x004dc300 (area transition projection)
-        /// - FUN_00517d50 @ 0x00517d50 (AI pathfinding)
+        /// - 0x00553970 @ 0x00553970 (creature movement)
+        /// - 0x005522e0 @ 0x005522e0 (entity positioning)
+        /// - 0x004dc300 @ 0x004dc300 (area transition projection)
+        /// - 0x00517d50 @ 0x00517d50 (AI pathfinding)
         /// - And 29 other call sites throughout the engine
-        /// 
+        ///
         /// This implementation:
-        /// - Uses FindFaceAt to locate face (equivalent to FUN_004f4260)
-        /// - Projects point onto face plane using barycentric interpolation (equivalent to FUN_0055b1d0)
+        /// - Uses FindFaceAt to locate face (equivalent to 0x004f4260)
+        /// - Projects point onto face plane using barycentric interpolation (equivalent to 0x0055b1d0)
         /// - Returns projected position and height
         /// </remarks>
         public override bool ProjectToWalkmesh(Vector3 point, out Vector3 result, out float height)
@@ -196,7 +191,7 @@ namespace Andastra.Game.Games.Odyssey
             result = point;
             height = point.Y;
 
-            // Find face at point (equivalent to FUN_004f4260)
+            // Find face at point (equivalent to 0x004f4260)
             int faceIndex = FindFaceAt(point);
             if (faceIndex < 0)
             {
@@ -214,7 +209,7 @@ namespace Andastra.Game.Games.Odyssey
             Vector3 v2 = _vertices[_faceIndices[baseIdx + 1]];
             Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
 
-            // Project point onto face plane (equivalent to FUN_0055b1d0 - 3D projection)
+            // Project point onto face plane (equivalent to 0x0055b1d0 - 3D projection)
             // Calculate face normal
             Vector3 edge1 = v2 - v1;
             Vector3 edge2 = v3 - v1;
@@ -265,8 +260,8 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Returns the walkable height at the given X,Z coordinates.
         /// Returns false if point is not over walkable surface.
-        /// 
-        /// Based on FUN_004f5070 @ 0x004f5070 in swkotor2.exe.
+        ///
+        /// Based on 0x004f5070 @ 0x004f5070 in swkotor2.exe.
         public override Vector3? ProjectPoint(Vector3 point)
         {
             if (ProjectToWalkmesh(point, out Vector3 result, out float height))
@@ -301,14 +296,14 @@ namespace Andastra.Game.Games.Odyssey
         /// <remarks>
         /// Tests if line segment between points doesn't intersect unwalkable geometry.
         /// Used for AI perception and projectile collision.
-        /// 
+        ///
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
         /// The original implementation:
         /// 1. Performs a raycast from start to end position
         /// 2. If a hit is found, checks if the hit face is walkable (walkable faces don't block line of sight)
         /// 3. Also checks if the hit point is very close to the destination (within tolerance) - if so, line of sight is considered clear
         /// 4. Returns true if no obstruction or if the obstruction is walkable/close to destination
-        /// 
+        ///
         /// This implementation matches the behavior used by:
         /// - Perception system for AI visibility checks
         /// - Projectile collision detection
@@ -354,7 +349,7 @@ namespace Andastra.Game.Games.Odyssey
         /// Based on swkotor.exe and swkotor2.exe walkmesh pathfinding system.
         /// Implements A* pathfinding algorithm over face adjacency graph.
         /// Uses face centers as waypoints and applies path smoothing for natural movement.
-        /// 
+        ///
         /// Algorithm:
         /// 1. Find start and goal faces
         /// 2. Validate both are walkable
@@ -362,7 +357,7 @@ namespace Andastra.Game.Games.Odyssey
         /// 4. Run A* search over face adjacency graph
         /// 5. Reconstruct path from face sequence
         /// 6. Apply path smoothing using line-of-sight checks
-        /// 
+        ///
         /// Based on reverse engineering of:
         /// - swkotor.exe: Walkmesh pathfinding functions
         /// - swkotor2.exe: A* pathfinding implementation on walkmesh adjacency
