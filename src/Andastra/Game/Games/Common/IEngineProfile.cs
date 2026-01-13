@@ -18,7 +18,7 @@ namespace Andastra.Game.Games.Common
     /// - All engines implement table configuration (ITableConfig) for 2DA table schemas
     /// - All engines support feature detection via SupportsFeature() method
     /// - All engines identify themselves via GameType property (e.g., "K1", "K2", "NWN", "DAO")
-    /// - See BaseEngineProfile for detailed reverse engineering documentation
+    /// - See BaseEngineProfile for detailed verified components documentation
     /// </remarks>
     public interface IEngineProfile
     {
