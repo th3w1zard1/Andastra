@@ -5142,12 +5142,15 @@ namespace Andastra.Game.Games.Odyssey
                 string tag = entityStruct.Exists("Tag") ? (entityStruct.GetString("Tag") ?? "") : null;
 
                 // Create entity with ObjectId, ObjectType, and Tag
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x005fb0f0 @ 0x005fb0f0 creates entities from save data
+                // swkotor2.exe: 0x005fb0f0 @ 0x005fb0f0 creates entities from save data
+                // swkotor.exe: TODO: Find equivalent function address for entity creation from save data
                 // Entity creation: ObjectId, ObjectType, Tag are required for entity creation
                 // Located via string references:
-                // - "ObjectId"   ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bce5c))
-                // - "ObjectType" ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bd00c))
-                // - "Tag"        ([TODO: Data address] @ (K1: TODO: Find this address, TSL: 0x007bd00c))
+                // - "ObjectId"   @ (K1: 0x00744c24, TSL: 0x007bce5c)
+                //   - K1 usage: SaveNode @ 0x004afea0 (line 12), LoadNode @ 0x004b0290 (line 35)
+                //   - TSL usage: FUN_004e28c0 @ 0x004e2962 (serialization), FUN_005fb0f0 (deserialization)
+                // - "ObjectType" @ (K1: TODO: Find this address, TSL: 0x007bd00c)
+                // - "Tag"        @ (K1: TODO: Find this address, TSL: 0x007bd00c)
                 OdysseyEntity entity = new OdysseyEntity(objectId, objectType, tag);
 
                 // Initialize all components based on ObjectType
