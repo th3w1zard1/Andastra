@@ -468,6 +468,14 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// - Unknown function calls: swkotor.exe: Not used. swkotor2.exe @ FUN_006394b0 @ 0x006394b0 (parameter: *(int *)(DAT_008283d4 + 4)). swkotor2_aspyr.exe @ FUN_00741360 @ 0x00741360 (parameter: *(int *)(DAT_00a1b4a4 + 4))
         /// - Post-cleanup checks: swkotor.exe: Not used. swkotor2.exe @ FUN_006387d0 @ 0x006387d0 (returns *(undefined4 *)(*(int *)(DAT_008283d4 + 4) + 0x40)), @ FUN_00682b40 @ 0x00682b40 (clears memory at offset 0xf88, 33 bytes). swkotor2_aspyr.exe @ FUN_0073f750 @ 0x0073f750 (returns *(undefined4 *)(*(int *)(DAT_00a1b4a4 + 4) + 0x40)), @ FUN_007d21e0 @ 0x007d21e0 (clears memory at offset 0xf88, 33 bytes)
         ///
+        /// DATA STRUCTURES AND MEMORY LAYOUTS:
+        /// - CExoString structure: swkotor.exe/swkotor2.exe/swkotor2_aspyr.exe: Contains c_string pointer (char*) and length field (size_t), used for module names and resource directory paths
+        /// - CResRef structure: swkotor.exe/swkotor2.exe/swkotor2_aspyr.exe: Resource reference structure (16 bytes), constructed from CExoString for resource existence checks
+        /// - CSWGuiClassSelection structure: swkotor.exe: Allocated size 0x1560 (5472 bytes) @ operator_new @ 0x006fa7e6. swkotor2.exe: Allocated size 0x15f0 (5616 bytes) @ operator_new @ 0x0076d9f6. swkotor2_aspyr.exe: Allocated size 0x15f0 (5616 bytes) @ FUN_00919723 @ 0x00919723
+        /// - Exception handling structures: swkotor.exe: FrameHandler_0072e2f3 @ 0x0072e2f3, ExceptionList saved/restored. swkotor2.exe: LAB_007a3adb @ 0x007a3adb, ExceptionList saved/restored. swkotor2_aspyr.exe: LAB_00974a8b @ 0x00974a8b, ExceptionList saved/restored
+        /// - Panel state structure offsets: swkotor.exe: panel.bit_flags checked at offset 0x0, field20_0x140c at offset 0x140c. swkotor2.exe: bit_flags at offset 0x48, field at offset 0x18f4. swkotor2_aspyr.exe: bit_flags at offset 0x48, field at offset 0x1c98
+        /// - FILETIME storage: swkotor.exe: PTR__g_nCurrentSessionStartFILETIME_007a3a20 @ 0x007a3a20 (dwLowDateTime), DAT_007a3a24 @ 0x007a3a24 (dwHighDateTime). swkotor2.exe: DAT_00828400 @ 0x00828400 (dwLowDateTime), DAT_00828404 @ 0x00828404 (dwHighDateTime). swkotor2_aspyr.exe: Equivalent FILETIME storage locations (addresses not explicitly documented in execution flow)
+        ///
         /// PANEL FLAG CONSTANTS:
         /// - 0x600 (1536): Bit mask for panel state flags (swkotor.exe @ 0x0067afce)
         /// - 0x400 (1024): Panel active/visible flag (swkotor.exe @ 0x0067afd3, 0x0067b14f)
