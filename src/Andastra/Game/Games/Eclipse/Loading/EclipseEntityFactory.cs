@@ -218,7 +218,7 @@ namespace Andastra.Game.Games.Eclipse.Loading
         ///   - EclipseStatsComponent: HP (maps to Health), Attributes, Saves
         ///   - EclipseFactionComponent: FactionID
         ///   - EclipseScriptHooksComponent: Script event hooks
-        ///   - EclipseRenderableComponent: Appearance_Type
+        ///   - BaseRenderableComponent: Appearance_Type
         /// - Located via string references: "TemplateResRef" @ 0x00af4f00 (daorigins.exe), "TemplateResRef" @ 0x00bf2538 (DragonAge2.exe)
         /// - Original implementation: Loads UTC GFF, reads creature properties, creates entity with components
         /// </remarks>
@@ -319,7 +319,7 @@ namespace Andastra.Game.Games.Eclipse.Loading
         /// Based on daorigins.exe and DragonAge2.exe: Component initialization from templates
         /// - Applies template data to EclipseStatsComponent (HP, Attributes, Saves)
         /// - Applies template data to EclipseFactionComponent (FactionID)
-        /// - Applies template data to EclipseRenderableComponent (Appearance_Type)
+        /// - Applies template data to BaseRenderableComponent (Appearance_Type)
         /// - Located via string references: Component initialization from template data
         /// - Original implementation: Components read template data from entity data storage
         /// </remarks>
@@ -393,7 +393,7 @@ namespace Andastra.Game.Games.Eclipse.Loading
                 }
             }
 
-            // Apply appearance to EclipseRenderableComponent
+            // Apply appearance to BaseRenderableComponent
             IRenderableComponent renderableComponent = entity.GetComponent<IRenderableComponent>();
             if (renderableComponent != null)
             {

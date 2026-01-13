@@ -288,7 +288,7 @@ namespace Andastra.Runtime.Core.Module
                     IEntity waypoint = _world.GetEntityByTag(waypointTag, 0);
                     if (waypoint != null)
                     {
-                        Interfaces.Components.ITransformComponent transform = waypoint.GetComponent<Interfaces.Components.ITransformComponent>();
+                        ITransformComponent transform = waypoint.GetComponent<ITransformComponent>();
                         if (transform != null)
                         {
                             // Get facing from transform component or entity
@@ -451,8 +451,8 @@ namespace Andastra.Runtime.Core.Module
             IEnumerable<IEntity> creatures = _world.GetEntitiesOfType(ObjectType.Creature);
             foreach (IEntity creature in creatures)
             {
-                Interfaces.Components.ITransformComponent transform = creature.GetComponent<Interfaces.Components.ITransformComponent>();
-                Interfaces.Components.IStatsComponent stats = creature.GetComponent<Interfaces.Components.IStatsComponent>();
+                ITransformComponent transform = creature.GetComponent<ITransformComponent>();
+                IStatsComponent stats = creature.GetComponent<IStatsComponent>();
 
                 if (transform != null)
                 {
@@ -471,7 +471,7 @@ namespace Andastra.Runtime.Core.Module
             IEnumerable<IEntity> placeables = _world.GetEntitiesOfType(ObjectType.Placeable);
             foreach (IEntity placeable in placeables)
             {
-                Interfaces.Components.IPlaceableComponent placeableComp = placeable.GetComponent<Interfaces.Components.IPlaceableComponent>();
+                IPlaceableComponent placeableComp = placeable.GetComponent<IPlaceableComponent>();
                 if (placeableComp != null)
                 {
                     state.Placeables.Add(new PlaceableState
@@ -487,7 +487,7 @@ namespace Andastra.Runtime.Core.Module
             IEnumerable<IEntity> doors = _world.GetEntitiesOfType(ObjectType.Door);
             foreach (IEntity door in doors)
             {
-                Interfaces.Components.IDoorComponent doorComp = door.GetComponent<Interfaces.Components.IDoorComponent>();
+                IDoorComponent doorComp = door.GetComponent<IDoorComponent>();
                 if (doorComp != null)
                 {
                     state.Doors.Add(new DoorState
@@ -505,7 +505,7 @@ namespace Andastra.Runtime.Core.Module
         /// <summary>
         /// Restores module state.
         /// </summary>
-        private void RestoreSavedModuleState(Runtime.Core.Interfaces.IModule module, SavedModuleState state)
+        private void RestoreSavedModuleState(Interfaces.IModule module, SavedModuleState state)
         {
             // Restore creature states
             foreach (CreatureState creatureState in state.Creatures)
@@ -513,8 +513,8 @@ namespace Andastra.Runtime.Core.Module
                 IEntity creature = _world.GetEntityByTag(creatureState.Tag, 0);
                 if (creature != null)
                 {
-                    Interfaces.Components.ITransformComponent transform = creature.GetComponent<Interfaces.Components.ITransformComponent>();
-                    Interfaces.Components.IStatsComponent stats = creature.GetComponent<Interfaces.Components.IStatsComponent>();
+                    ITransformComponent transform = creature.GetComponent<ITransformComponent>();
+                    IStatsComponent stats = creature.GetComponent<IStatsComponent>();
 
                     if (transform != null)
                     {
@@ -542,7 +542,7 @@ namespace Andastra.Runtime.Core.Module
                 IEntity placeable = _world.GetEntityByTag(placeableState.Tag, 0);
                 if (placeable != null)
                 {
-                    Interfaces.Components.IPlaceableComponent placeableComp = placeable.GetComponent<Interfaces.Components.IPlaceableComponent>();
+                    IPlaceableComponent placeableComp = placeable.GetComponent<IPlaceableComponent>();
                     if (placeableComp != null)
                     {
                         placeableComp.IsOpen = placeableState.IsOpen;
@@ -557,7 +557,7 @@ namespace Andastra.Runtime.Core.Module
                 IEntity door = _world.GetEntityByTag(doorState.Tag, 0);
                 if (door != null)
                 {
-                    Interfaces.Components.IDoorComponent doorComp = door.GetComponent<Interfaces.Components.IDoorComponent>();
+                    IDoorComponent doorComp = door.GetComponent<IDoorComponent>();
                     if (doorComp != null)
                     {
                         doorComp.IsOpen = doorState.IsOpen;
@@ -622,7 +622,7 @@ namespace Andastra.Runtime.Core.Module
 
             foreach (IEntity member in partyMembers)
             {
-                Interfaces.Components.ITransformComponent transform = member.GetComponent<Interfaces.Components.ITransformComponent>();
+                ITransformComponent transform = member.GetComponent<ITransformComponent>();
                 if (transform != null)
                 {
                     // Position party members in a line perpendicular to facing direction
@@ -649,7 +649,7 @@ namespace Andastra.Runtime.Core.Module
                 IEntity player = _world.GetEntityByTag("Player", 0);
                 if (player != null)
                 {
-                    Interfaces.Components.ITransformComponent transform = player.GetComponent<Interfaces.Components.ITransformComponent>();
+                    ITransformComponent transform = player.GetComponent<ITransformComponent>();
                     if (transform != null)
                     {
                         transform.Position = position;
@@ -759,14 +759,14 @@ namespace Andastra.Runtime.Core.Module
             {
                 if (!string.IsNullOrEmpty(movies[i]))
                 {
-                    System.Console.WriteLine("[ModuleTransitionSystem] Playing movie '{0}' ({1}/{2})", movies[i], i + 1, movies.Length);
+                    Console.WriteLine("[ModuleTransitionSystem] Playing movie '{0}' ({1}/{2})", movies[i], i + 1, movies.Length);
 
                     // Play movie (blocking until completion)
                     // If playback fails, log error and continue with next movie
                     bool success = await _moviePlayer.PlayMovie(movies[i], cancellationToken);
                     if (!success)
                     {
-                        System.Console.WriteLine("[ModuleTransitionSystem] Movie playback failed for '{0}', continuing with next movie", movies[i]);
+                        Console.WriteLine("[ModuleTransitionSystem] Movie playback failed for '{0}', continuing with next movie", movies[i]);
                     }
                 }
             }
@@ -776,7 +776,7 @@ namespace Andastra.Runtime.Core.Module
     /// <summary>
     /// Module state data.
     /// </summary>
-    public class SavedSavedModuleState
+    public class SavedModuleState
     {
         public List<CreatureState> Creatures { get; set; }
         public List<PlaceableState> Placeables { get; set; }

@@ -9,6 +9,7 @@ using BioWare.NET.Resource.Formats.MDL;
 using BioWare.NET.Resource.Formats.MDLData;
 using BioWare.NET.Common;
 using BioWare.NET.Resource;
+using MDLModel = BioWare.NET.Resource.Formats.MDL.MDL;
 using System.Numerics;
 
 namespace Andastra.Tests.Runtime.Parsing.MDL

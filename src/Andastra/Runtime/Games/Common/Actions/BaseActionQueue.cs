@@ -36,12 +36,12 @@ namespace Andastra.Runtime.Games.Common.Actions
         protected int _lastInstructionCount;
         protected int _accumulatedInstructionCount;
 
-        protected BaseActionQueue()
+        public BaseActionQueue()
         {
             _queue = new LinkedList<IAction>();
         }
 
-        protected BaseActionQueue(IEntity owner) : this()
+        public BaseActionQueue(IEntity owner) : this()
         {
             _owner = owner;
         }

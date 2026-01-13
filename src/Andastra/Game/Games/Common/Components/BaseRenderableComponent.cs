@@ -54,7 +54,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <summary>
         /// Initializes a new instance of the base renderable component.
         /// </summary>
-        protected BaseRenderableComponent()
+        public BaseRenderableComponent()
         {
             _modelResRef = string.Empty;
             _isLoaded = false;

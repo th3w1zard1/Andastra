@@ -49,7 +49,7 @@ namespace Andastra.Runtime.Games.Common
     /// All engine-specific function addresses, memory offsets, and implementation details are in subclasses.
     /// Cross-engine verified components  is required to verify commonality before moving code to base class.
     /// </remarks>
-    public abstract class BaseTimeManager : ITimeManager
+    public class BaseTimeManager : ITimeManager
     {
         /// <summary>
         /// Default fixed timestep (60 Hz = 1/60 second).
@@ -131,7 +131,10 @@ namespace Andastra.Runtime.Games.Common
         /// Common across all engines: Typically 1/60 second (60 Hz).
         /// Engine-specific subclasses may override to return different values if needed.
         /// </remarks>
-        public abstract float FixedTimestep { get; }
+        public virtual float FixedTimestep
+        {
+            get { return DefaultFixedTimestep; }
+        }
 
         /// <summary>
         /// Gets the current simulation time in seconds.
@@ -236,7 +239,7 @@ namespace Andastra.Runtime.Games.Common
         /// <summary>
         /// Initializes a new instance of the BaseTimeManager class.
         /// </summary>
-        protected BaseTimeManager()
+        public BaseTimeManager()
         {
             _timeScale = 1.0f;
             _isPaused = false;

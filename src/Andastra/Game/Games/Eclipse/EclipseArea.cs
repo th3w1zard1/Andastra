@@ -14477,21 +14477,6 @@ technique ColorGrading
                 Indices = new List<int>();
             }
         }
-
-        /// <summary>
-        /// Modifying geometry requires navigation mesh updates if walkable areas are affected.
-        /// </summary>
-        public bool RequiresNavigationMeshUpdate => _modificationType == GeometryModificationType.Destroyed;
-
-        /// <summary>
-        /// Modifying geometry requires physics updates (collision shapes, debris).
-        /// </summary>
-        public bool RequiresPhysicsUpdate => true;
-
-        /// <summary>
-        /// Modifying geometry does not require lighting updates unless explosions create light.
-        /// </summary>
-        public bool RequiresLightingUpdate => false;
     }
 
     /// <summary>

@@ -103,7 +103,7 @@ namespace Andastra.Game.Games.Common.Components
         /// <summary>
         /// Initializes a new instance of the base item component.
         /// </summary>
-        protected BaseItemComponent()
+        public BaseItemComponent()
         {
             _properties = new List<ItemProperty>();
             _upgrades = new List<ItemUpgrade>();

@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Core.Actions
     /// Item categories are determined from the itemclass string column in baseitems.2da.
     /// These categories determine item behavior and usage effects.
     /// </remarks>
-    private enum ItemCategory
+    internal enum ItemCategory
     {
         Unknown,
         Weapon,
@@ -743,7 +743,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Property types 0-58 map to various effects (ability bonuses, AC, damage, etc.)
         /// </remarks>
         [CanBeNull]
-        private Combat.Effect ConvertPropertyToEffectHardcoded(ItemProperty property)
+        private Effect ConvertPropertyToEffectHardcoded(ItemProperty property)
         {
             int propType = property.PropertyType;
             int costValue = property.CostValue;
@@ -758,10 +758,10 @@ namespace Andastra.Runtime.Core.Actions
             {
                 if (subtype >= 0 && subtype <= 5)
                 {
-                    Enums.Ability ability = (Enums.Ability)subtype;
+                    Ability ability = (Ability)subtype;
                     if (amount > 0)
                     {
-                        return Combat.Effect.AbilityModifier(ability, amount, 0);
+                        return Effect.AbilityModifier(ability, amount, 0);
                     }
                 }
             }
