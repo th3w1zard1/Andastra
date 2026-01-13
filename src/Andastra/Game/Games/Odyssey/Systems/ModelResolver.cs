@@ -34,7 +34,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
     ///   - ["ModelType"]         @ (K1: TODO: Find this address, TSL: 0x007c4568) - model type field variant
     ///   - ["MODEL01"]             @ (K1: TODO: Find this address, TSL: 0x007c4b48) - model variation fields,
     ///   - ["MODEL02"]             @ (K1: TODO: Find this address, TSL: 0x007c4b34) - model variation fields,
-    ///   - ["MODEL03"]             @ (K1: TODO: Find this address, TSL: 0x007c4b20) - model variation fields
+    ///   - ["MODEL03"]             @ (K1: 0x0074b8ec, TSL: 0x007c4b20) - model variation fields
     /// - Model loading errors:
     ///   - ["CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ (K1: TODO: Find this address, TSL: 0x007c82fc) - model loading error
     ///   - ["CSWCCreatureAppearance::CreateBTypeBody(): Failed to load model '%s'." @ (K1: TODO: Find this address, TSL: 0x007cdc40) - model loading error
