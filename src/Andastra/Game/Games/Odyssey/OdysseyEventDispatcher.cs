@@ -1314,8 +1314,9 @@ namespace Andastra.Game.Games.Odyssey
         /// <param name="entity">The entity to unlock (door or placeable).</param>
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT unlocks door/placeable and fires OnUnlock script
-        /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xc, line 81)
+        /// CServerAIMaster::AddEventAbsoluteTime @ (K1: 0x004af630 case 0xc, line 78-79), DispatchEvent @ (TSL: 0x004dcfb0 case 0xc, line 83-84): EVENT_UNLOCK_OBJECT unlocks door/placeable and fires OnUnlock script
+        /// Located via string references: "EVENT_UNLOCK_OBJECT" @ (K1: 0x00744afc, TSL: 0x007bcd34)
+        /// Original implementation: Sets IsLocked=false on door/placeable component, fires OnUnlock script event (CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED = 0x1d)
         /// </remarks>
         private void HandleUnlockObjectEvent(IEntity entity, IWorld world)
         {
@@ -1326,9 +1327,9 @@ namespace Andastra.Game.Games.Odyssey
             if (doorComponent != null)
             {
                 // Unlock the door
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT sets IsLocked=false
-                // Located via string references: "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc)
-                // Original implementation: Unlocks door, fires OnUnlock script
+                // CServerAIMaster::AddEventAbsoluteTime @ (K1: 0x004af630 case 0xc, line 78-79), DispatchEvent @ (TSL: 0x004dcfb0 case 0xc, line 83-84): EVENT_UNLOCK_OBJECT sets IsLocked=false
+                // Located via string references: "EVENT_UNLOCK_OBJECT" @ (K1: 0x00744afc, TSL: 0x007bcd34)
+                // Original implementation: Unlocks door by setting IsLocked=false, fires OnUnlock script event
                 if (doorComponent.IsLocked)
                 {
                     doorComponent.Unlock();
@@ -1340,8 +1341,8 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Fire OnUnlock script event
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when door is unlocked
-                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d), "OnUnlock" @ 0x007c1a00, "ScriptOnUnlock" @ 0x007c1a00
+                // CServerAIMaster::AddEventAbsoluteTime @ (K1: 0x004af630), DispatchEvent @ (TSL: 0x004dcfb0 case 0x1d, line 220-221): CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when door is unlocked
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ (TSL: 0x007bc72c, 0x1d), "OnUnlock" @ (TSL: 0x007c1a28)
                 // Original implementation: OnUnlock script fires on door entity after door is unlocked
                 // Script fires regardless of whether door was already unlocked (allows scripts to react to unlock attempts)
                 world.EventBus.FireScriptEvent(entity, ScriptEvent.OnUnlock, null);
@@ -1354,9 +1355,9 @@ namespace Andastra.Game.Games.Odyssey
             if (placeableComponent != null)
             {
                 // Unlock the placeable
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT sets IsLocked=false
-                // Located via string references: "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc)
-                // Original implementation: Unlocks placeable, fires OnUnlock script
+                // CServerAIMaster::AddEventAbsoluteTime @ (K1: 0x004af630 case 0xc, line 78-79), DispatchEvent @ (TSL: 0x004dcfb0 case 0xc, line 83-84): EVENT_UNLOCK_OBJECT sets IsLocked=false
+                // Located via string references: "EVENT_UNLOCK_OBJECT" @ (K1: 0x00744afc, TSL: 0x007bcd34)
+                // Original implementation: Unlocks placeable by setting IsLocked=false, fires OnUnlock script event
                 if (placeableComponent.IsLocked)
                 {
                     placeableComponent.Unlock();
@@ -1368,8 +1369,8 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Fire OnUnlock script event
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when placeable is unlocked
-                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d)
+                // CServerAIMaster::AddEventAbsoluteTime @ (K1: 0x004af630), DispatchEvent @ (TSL: 0x004dcfb0 case 0x1d, line 220-221): CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when placeable is unlocked
+                // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ (TSL: 0x007bc72c, 0x1d), "OnUnlock" @ (TSL: 0x007c1a28)
                 // Original implementation: OnUnlock script fires on placeable entity after placeable is unlocked
                 // Script fires regardless of whether placeable was already unlocked (allows scripts to react to unlock attempts)
                 world.EventBus.FireScriptEvent(entity, ScriptEvent.OnUnlock, null);
