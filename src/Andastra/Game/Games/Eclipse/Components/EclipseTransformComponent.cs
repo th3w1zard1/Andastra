@@ -15,6 +15,7 @@ namespace Andastra.Game.Games.Eclipse.Components
     /// - Transform serialization/deserialization handled by EclipseEntity (not component-level)
     /// - Eclipse coordinate system: Y-up, positions in meters, facing in radians (0 = +X axis, counter-clockwise)
     /// - Transform component attached to all entities in EclipseEntity.AttachCommonComponents
+    /// - Engine-specific transform component classes have been merged into BaseTransformComponent
     /// </remarks>
     public class EclipseTransformComponent : BaseTransformComponent
     {

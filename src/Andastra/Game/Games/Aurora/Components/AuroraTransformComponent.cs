@@ -1,5 +1,4 @@
 using System.Numerics;
-using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Common.Components;
 
 namespace Andastra.Game.Games.Aurora.Components
@@ -19,6 +18,7 @@ namespace Andastra.Game.Games.Aurora.Components
     /// - Orientation stored in GFF structures as XOrientation, YOrientation, ZOrientation
     /// - Aurora coordinate system: Y-up, positions in meters, facing in radians (0 = +X axis, counter-clockwise)
     /// - Transform component attached to all entities in AuroraEntity.AttachCommonComponents
+    /// - Engine-specific transform component classes have been merged into BaseTransformComponent
     /// </remarks>
     public class AuroraTransformComponent : BaseTransformComponent
     {

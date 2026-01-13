@@ -374,6 +374,30 @@ namespace Andastra.Game.Games.Common.Components
 
             return angleDiff <= fovRadians / 2f;
         }
+
+        /// <summary>
+        /// Gets the up direction vector (Odyssey-specific: Z axis in KOTOR).
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Returns Vector3.UnitZ for KOTOR's coordinate system.
+        /// Common across all engines: Y-up coordinate system, but Odyssey uses Z for up vector in some contexts.
+        /// </remarks>
+        public virtual Vector3 Up
+        {
+            get { return Vector3.UnitZ; }
+        }
+
+        /// <summary>
+        /// Facing direction in degrees (Odyssey-specific convenience property).
+        /// </summary>
+        /// <remarks>
+        /// Odyssey-specific: Convenience property for working with degrees instead of radians.
+        /// </remarks>
+        public virtual float FacingDegrees
+        {
+            get { return Facing * (180f / (float)Math.PI); }
+            set { Facing = value * ((float)Math.PI / 180f); }
+        }
     }
 }
 
