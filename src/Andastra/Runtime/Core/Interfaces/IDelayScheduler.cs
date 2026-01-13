@@ -15,9 +15,11 @@ namespace Andastra.Runtime.Core.Interfaces
     /// - DelayCommand implementation: Stores action + delay time, executes when delay expires
     /// 
     /// Engine-specific implementations:
-    /// - Odyssey: OdysseyDelayScheduler (swkotor.exe, swkotor2.exe) - float-based time
-    /// - Aurora: AuroraDelayScheduler (nwmain.exe) - calendar day/time of day system
-    /// - Eclipse: EclipseDelayScheduler (daorigins.exe, DragonAge2.exe) - float-based time
+    /// - Single implementation: BaseDelayScheduler (Andastra.Game.Games.Common) handles all engines
+    ///   - Engine-specific delay scheduler classes (OdysseyDelayScheduler, AuroraDelayScheduler, EclipseDelayScheduler) have been merged
+    ///   - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand system (float-based time)
+    ///   - Aurora: Based on nwmain.exe ExecuteCommandDelayCommand (uses float-based time for simplicity)
+    ///   - Eclipse: Based on daorigins.exe/DragonAge2.exe delay systems (float-based time)
     /// - Infinity: InfinityDelayScheduler (, ) - float-based time
     /// 
     /// Base implementation: BaseDelayScheduler (Runtime.Games.Common) provides common functionality.

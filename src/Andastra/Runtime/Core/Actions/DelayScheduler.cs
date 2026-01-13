@@ -9,9 +9,8 @@ namespace Andastra.Runtime.Core.Actions
     /// <remarks>
     /// This class is maintained for backward compatibility with existing code.
     /// New code should use engine-specific implementations:
-    /// - OdysseyDelayScheduler for Odyssey engine (Runtime.Games.Odyssey)
-    /// - AuroraDelayScheduler for Aurora engine (Runtime.Games.Aurora)
-    /// - EclipseDelayScheduler for Eclipse engine (Runtime.Games.Eclipse)
+    /// - BaseDelayScheduler (Andastra.Game.Games.Common) - Single implementation for all engines
+    ///   - Engine-specific delay scheduler classes have been merged into BaseDelayScheduler
     /// - InfinityDelayScheduler for  (Runtime.Games.Infinity)
     /// 
     /// This implementation uses Odyssey-style delay scheduling (float-based time).

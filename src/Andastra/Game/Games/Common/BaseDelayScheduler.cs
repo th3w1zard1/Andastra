@@ -13,7 +13,23 @@ namespace Andastra.Game.Games.Common
     /// - Delayed actions execute in order based on schedule time
     /// - Actions are queued to target entity's action queue when delay expires
     /// - Entity validation: Checks if target entity is still valid before executing delayed action
-    /// 
+    ///
+    /// All engine-specific delay scheduler classes (OdysseyDelayScheduler, AuroraDelayScheduler, EclipseDelayScheduler)
+    /// have been merged into this base class since their implementations are identical.
+    ///
+    /// Engine-Specific Details (Documented):
+    /// - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand system
+    ///   - "DelayCommand" @ 0x007be900 (swkotor2.exe: NWScript DelayCommand function)
+    ///   - Uses game simulation time to track when actions should execute
+    ///   - STORE_STATE opcode in NCS VM stores stack/local state for DelayCommand semantics
+    /// - Aurora: Based on nwmain.exe DelayCommand system
+    ///   - ExecuteCommandDelayCommand @ 0x1405159a0 (nwmain.exe: NWScript DelayCommand function)
+    ///   - Original uses CServerAIMaster::AddEventDeltaTime with calendar day/time of day
+    ///   - This implementation uses float-based time for simplicity (matches Odyssey/Eclipse)
+    /// - Eclipse: Based on daorigins.exe/DragonAge2.exe delay systems
+    ///   - Similar to Odyssey: Uses float-based time system
+    ///   - DelayCommand functionality schedules actions to execute after specified delay
+    ///
     /// Common functionality across all engines:
     /// - Schedule actions with a delay
     /// - Update scheduler to process due actions
@@ -22,19 +38,19 @@ namespace Andastra.Game.Games.Common
     /// - Priority queue sorted by execution time
     /// - Entity validation before execution
     /// - Action queue integration
-    /// 
-    /// Engine-specific implementations handle:
-    /// - Time calculation (float-based vs calendar day/time of day)
-    /// - Event storage structure (simple queue vs AI master event system)
-    /// - Integration with engine-specific systems
     /// </remarks>
-    public abstract class BaseDelayScheduler : IDelayScheduler
+    public class BaseDelayScheduler : IDelayScheduler
     {
         protected readonly List<DelayedAction> _delayedActions;
+        private float _currentTime;
 
-        protected BaseDelayScheduler()
+        /// <summary>
+        /// Initializes a new instance of the BaseDelayScheduler.
+        /// </summary>
+        public BaseDelayScheduler()
         {
             _delayedActions = new List<DelayedAction>();
+            _currentTime = 0;
         }
 
         /// <summary>
@@ -48,13 +64,75 @@ namespace Andastra.Game.Games.Common
         /// <param name="delaySeconds">Delay in seconds before action executes.</param>
         /// <param name="action">Action to execute after delay.</param>
         /// <param name="target">Target entity for the action.</param>
-        public abstract void ScheduleDelay(float delaySeconds, IAction action, IEntity target);
+        /// <remarks>
+        /// Common implementation across all engines: Calculate execute time and insert into priority queue.
+        ///
+        /// Engine-Specific Details:
+        /// - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand implementation
+        /// - Aurora: Based on nwmain.exe ExecuteCommandDelayCommand @ 0x1405159a0
+        ///   - Original converts float seconds to calendar day/time of day, but this implementation uses float time
+        /// - Eclipse: Based on daorigins.exe/DragonAge2.exe delay systems (similar to Odyssey)
+        /// </remarks>
+        public virtual void ScheduleDelay(float delaySeconds, IAction action, IEntity target)
+        {
+            if (action == null || target == null)
+            {
+                return;
+            }
+
+            float executeTime = _currentTime + delaySeconds;
+
+            var delayed = new DelayedAction
+            {
+                ExecuteTime = executeTime,
+                Action = action,
+                Target = target
+            };
+
+            InsertDelayedAction(delayed);
+        }
 
         /// <summary>
         /// Updates the scheduler and fires any due actions.
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update.</param>
-        public abstract void Update(float deltaTime);
+        /// <remarks>
+        /// Common implementation across all engines: Advance time and process due actions.
+        ///
+        /// Engine-Specific Details:
+        /// - Odyssey: Based on swkotor.exe/swkotor2.exe DelayCommand scheduler implementation
+        ///   - Processes delayed actions in order based on execution time
+        ///   - Uses game simulation time to track when actions should execute
+        /// - Aurora: Based on nwmain.exe CServerAIMaster event processing
+        ///   - Original processes events when calendar day/time of day is reached
+        ///   - This implementation uses float-based time for simplicity
+        /// - Eclipse: Based on daorigins.exe/DragonAge2.exe delay scheduler
+        ///   - Processes delayed actions in order based on execution time (same as Odyssey)
+        /// </remarks>
+        public virtual void Update(float deltaTime)
+        {
+            _currentTime += deltaTime;
+
+            // Process all actions that are due
+            // All engines: Actions execute in order (sorted by executeTime)
+            // Actions are queued to target entity's action queue when delay expires
+            while (_delayedActions.Count > 0 && _delayedActions[0].ExecuteTime <= _currentTime)
+            {
+                DelayedAction delayed = _delayedActions[0];
+                _delayedActions.RemoveAt(0);
+
+                ExecuteDelayedAction(delayed);
+            }
+        }
+
+        /// <summary>
+        /// Resets the current time (for testing).
+        /// </summary>
+        public virtual void Reset()
+        {
+            ClearAll();
+            _currentTime = 0;
+        }
 
         /// <summary>
         /// Clears all delayed actions for a specific entity.
