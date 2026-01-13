@@ -746,20 +746,24 @@ namespace Andastra.Runtime.Core.Camera
                 return false;
             }
 
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+            // swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree for "camerahook" nodes
             // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
             // Original implementation:
+            //   - Iterates through all nodes in model by index using GetNodeByIndex (0x006c21c0)
+            //   - For each node, calls virtual function at offset 0x10c with "camerahook" string to search for child nodes
+            //   - When found, creates new object (0x3c bytes) and calls constructor via FUN_004ccf70
+            //   - Then invokes callback at offset 0x7c with the found node
+            //   - Used by dialogue camera system to locate camera hook attachment points on character models
+            // This implementation:
             //   - Searches MDL model node tree recursively for nodes named "camerahook{N}" (e.g., "camerahook1", "camerahook2")
             //   - Uses format string "camerahook%d" to construct node name from hookIndex
-            //   - Queries model via 0x006c21c0 @ 0x006c21c0 to get node by index
-            //   - Calls virtual function at offset 0x10c with "camerahook" string to find node by name
             //   - Verifies node is a dummy node (NodeType = 1, NODE_HAS_HEADER flag only)
             //   - Transforms node's local position to world space using entity's transform matrix
             //   - Returns world-space position of the camera hook node
             // Implementation: Full MDL node lookup with recursive search, dummy node validation, and world-space transform
 
             // Construct camera hook node name (format: "camerahook{N}")
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Format string "camerahook%d" @ 0x007d0448
+            // swkotor2.exe: Format string "camerahook%d" @ 0x007d0448 - Used to construct camera hook node names
             string hookNodeName = string.Format("camerahook{0}", hookIndex);
 
             // Try to get MDL model from entity
@@ -903,8 +907,9 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Recursively searches for a node by name in the MDL node tree.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x006c6020 searches MDL node tree recursively
-        /// Original implementation: Calls virtual function at offset 0x10c with node name string
+        /// swkotor2.exe: 0x006c6020 (SearchMDLNodeTreeForCameraHook) - Searches MDL node tree recursively
+        /// Original implementation: Iterates through nodes by index using GetNodeByIndex (0x006c21c0), then calls virtual function at offset 0x10c with node name string to search for child nodes
+        /// This implementation uses iterative depth-first search for equivalent behavior with better stack safety
         /// </summary>
         private MDLNodeData FindNodeByName(MDLNodeData rootNode, string nodeName)
         {
