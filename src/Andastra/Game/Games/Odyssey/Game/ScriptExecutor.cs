@@ -16,15 +16,16 @@ using VM = Andastra.Game.Scripting.VM;
 namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
-    /// Base Odyssey Engine script executor implementation.
+    /// Unified Odyssey Engine script executor implementation for KOTOR 1 and KOTOR 2 (TSL).
+    /// Uses OdysseyEngineApi with conditional logic based on game type.
     /// </summary>
     /// <remarks>
-    /// Base Odyssey Script Executor:
-    /// - Common script execution logic shared between KOTOR1 and KOTOR2
+    /// Odyssey Script Executor:
+    /// - Unified implementation for both KOTOR1 and KOTOR2
     /// - Inherits from BaseScriptExecutor (Runtime.Games.Common) with Odyssey-specific resource loading
     /// - Uses Installation resource system for NCS bytecode loading
-    /// - Supports both swkotor.exe (KOTOR1) and swkotor2.exe (KOTOR2) via engine API parameter
-    /// - Game-specific behavior is handled by engine API (Kotor1 vs TheSithLords)
+    /// - Supports both swkotor.exe (KOTOR1) and swkotor2.exe (KOTOR2) via OdysseyEngineApi parameter
+    /// - Game-specific behavior is handled by OdysseyEngineApi (conditional logic based on BioWareGame enum)
     ///
     /// Common Odyssey script execution features:
     /// - NCS file format: Compiled NWScript bytecode with "NCS " signature, "V1.0" version string
@@ -52,7 +53,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Based on NCS VM execution in vendor/PyKotor/wiki/NCS-File-Format.md
     /// - Event types: Comprehensive mapping from 0x0 (ON_HEARTBEAT) to 0x26 (ON_DESTROYPLAYERCREATURE)
     /// </remarks>
-    public abstract class OdysseyScriptExecutor : BaseScriptExecutor
+    public class OdysseyScriptExecutor : BaseScriptExecutor
     {
         private readonly Installation _installation;
         private readonly IGameServicesContext _servicesContext;
@@ -169,66 +170,6 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             return context;
-        }
-
-    }
-
-    /// <summary>
-    /// KOTOR 1 (swkotor.exe) script executor implementation.
-    /// </summary>
-    /// <remarks>
-    /// KOTOR 1 Script Executor:
-    /// - Based on swkotor.exe script execution system
-    /// - Uses Kotor1 engine API (~850 engine functions, function IDs 0-849)
-    /// - KOTOR1-specific features: Pazaak, Swoop Racing, Turret minigames
-    /// - Does not support: Influence system, Prestige Classes, Combat Forms, Item Crafting
-    ///
-    /// Based on reverse engineering of:
-    /// - swkotor.exe: Script execution functions
-    /// - Script execution: 0x004dcfb0 @ 0x004dcfb0 (similar to KOTOR2 but with K1-specific behavior)
-    /// - ExecuteScript NWScript function: Different implementation than KOTOR2 (doesn't use _runScriptVar)
-    /// - Located via string references: KOTOR1-specific script event type definitions
-    /// </remarks>
-    public class Kotor1ScriptExecutor : OdysseyScriptExecutor
-    {
-        public Kotor1ScriptExecutor([NotNull] IWorld world, [NotNull] IEngineApi engineApi, [NotNull] IScriptGlobals globals, [NotNull] Installation installation, [CanBeNull] IGameServicesContext servicesContext = null)
-            : base(world, engineApi, globals, installation, servicesContext)
-        {
-            // Validate that engine API is OdysseyEngineApi with K1 game type
-            if (!(engineApi is EngineApi.OdysseyEngineApi odysseyApi) || !odysseyApi.Game.IsK1())
-            {
-                throw new ArgumentException("Kotor1ScriptExecutor requires OdysseyEngineApi with K1 game type", nameof(engineApi));
-            }
-        }
-    }
-
-    /// <summary>
-    /// KOTOR 2: The Sith Lords (swkotor2.exe) script executor implementation.
-    /// </summary>
-    /// <remarks>
-    /// KOTOR 2 Script Executor:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script execution system
-    /// - Uses TheSithLords engine API (~950 engine functions, function IDs 0-949)
-    /// - TSL-specific features: Influence system, Prestige Classes, Combat Forms, Item Crafting
-    /// - Enhanced script execution with additional context support
-    ///
-    /// Based on reverse engineering of:
-    /// - swkotor2.exe: DispatchScriptEvent @ 0x004dd730, 0x004dcfb0 @ 0x004dcfb0
-    /// - Script execution: Enhanced script execution with instruction budget tracking
-    /// - ExecuteScript NWScript function: Uses _runScriptVar for script variable support
-    /// - Located via string references: TSL-specific script event type definitions
-    /// - Event types: Comprehensive mapping from 0x0 (ON_HEARTBEAT) to 0x26 (ON_DESTROYPLAYERCREATURE)
-    /// </remarks>
-    public class Kotor2ScriptExecutor : OdysseyScriptExecutor
-    {
-        public Kotor2ScriptExecutor([NotNull] IWorld world, [NotNull] IEngineApi engineApi, [NotNull] IScriptGlobals globals, [NotNull] Installation installation, [CanBeNull] IGameServicesContext servicesContext = null)
-            : base(world, engineApi, globals, installation, servicesContext)
-        {
-            // Validate that engine API is OdysseyEngineApi with TSL game type
-            if (!(engineApi is EngineApi.OdysseyEngineApi odysseyApi) || !odysseyApi.Game.IsTSL())
-            {
-                throw new ArgumentException("Kotor2ScriptExecutor requires OdysseyEngineApi with TSL game type", nameof(engineApi));
-            }
         }
     }
 }

@@ -251,11 +251,8 @@ namespace Andastra.Game.Games.Odyssey.Game
             BioWareGame gameType = _settings.Game == KotorGame.K1 ? BioWareGame.K1 : BioWareGame.K2;
             _engineApi = new OdysseyEngineApi(gameType);
 
-            // Initialize script executor with game-specific subclass
-            // Based on swkotor.exe (KOTOR1) vs swkotor2.exe (KOTOR2) script execution differences
-            _scriptExecutor = _settings.Game == KotorGame.K1
-                ? (OdysseyScriptExecutor)new Kotor1ScriptExecutor(_world, _engineApi, _globals, _installation)
-                : (OdysseyScriptExecutor)new Kotor2ScriptExecutor(_world, _engineApi, _globals, _installation);
+            // Initialize script executor (unified OdysseyScriptExecutor handles both K1 and TSL)
+            _scriptExecutor = new OdysseyScriptExecutor(_world, _engineApi, _globals, _installation, _gameServicesContext);
 
             // Initialize trigger system with script firing callback
             _triggerSystem = new TriggerSystem(_world, FireScriptEvent);
