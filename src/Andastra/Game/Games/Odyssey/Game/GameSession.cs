@@ -407,46 +407,145 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// </summary>
         /// <param name="characterData">Optional character creation data. If provided, player entity will be created from this data. If null, a default player entity will be created.</param>
         /// <remarks>
-        /// Based on exhaustive verified components of swkotor.exe (K1) and swkotor2.exe (K2):
+        /// Low-level implementation documentation for New Game button handler across all executables.
+        /// All addresses documented for swkotor.exe, swkotor2.exe, and swkotor2_aspyr.exe.
         ///
-        /// KOTOR 1 (swkotor.exe) - 0x0067afb0 @ 0x0067afb0 (New Game Button Handler):
-        /// - Similar flow but loads "END_M01AA" (Endar Spire - Command Module)
-        /// - Located via string reference: "END_M01AA" @ 0x00752f58
-        /// - Original implementation: 0x005e5a90(aiStack_2c,"END_M01AA") sets module name
+        /// Entry Point Functions:
+        /// - swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0
+        /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00
+        /// - swkotor2_aspyr.exe: FUN_00882230 @ 0x00882230
         ///
-        /// KOTOR 2 (swkotor2.exe) - 0x006d0b00 @ 0x006d0b00 (New Game Button Handler):
-        /// - Called when "New Game" button is clicked after character creation completes
-        /// - Located via string reference: "001ebo" @ 0x007cc028 (prologue module name)
-        /// - Main menu handler (0x006d2350 @ 0x006d2350) sets up button event handler at line 89:
-        ///   0x0041a340((void *)((int)this + 0x40c),0x27,this,0x6d0b00); // 0x27 = hover event
-        ///   0x0041a340((void *)((int)this + 0x40c),0,this,0x6d1160); // 0 = click event
-        /// - Complete flow from 0x006d0b00:
-        ///   1. Line 23: 0x0057a400() - Initialize game time/system time
-        ///   2. Line 24: 0x00401380(DAT_008283d4) - Initialize module loading system
-        ///      - 0x00401380 @ 0x00401380: Module initialization function
-        ///      - Prepares game state for module loading, sets up module loading context
-        ///   3. Line 29: 0x00630a90(local_38,"001ebo") - Set default starting module to "001ebo"
-        ///      - "001ebo" is the prologue module (Ebon Hawk Interior, playing as T3-M4)
-        ///   4. Line 31: 0x00630a90(local_40,"HD0:effects") - Load HD0:effects directory
-        ///      - HD0:effects is a directory alias for effects resources
-        ///   5. Lines 43-50: Check for alternative modules before using default:
-        ///      - 0x00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db
-        ///      - If 0x7db fails: 0x00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba
-        ///      - If both fail: 0x00630d10(local_38,"001ebo") - Fallback to "001ebo"
-        ///   6. Line 62: 0x0074a700(local_40[0],*(undefined4 *)((int)this + 0x1c),local_38) - Create and load module
-        ///      - 0x0074a700 @ 0x0074a700: Module loader/creator function
-        ///      - Takes module name ("001ebo") and creates/loads the module into game world
+        /// String References:
+        /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58
+        /// - Module name "001ebo": swkotor2.exe @ 0x007cc028, swkotor2_aspyr.exe @ 0x009a5ab0
+        /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c, swkotor2.exe @ 0x007b58b4, swkotor2_aspyr.exe @ 0x00993e50
+        /// - Resource directory "HD0:effects": swkotor2.exe @ 0x007cc01c, swkotor2_aspyr.exe @ 0x009a5aa4
+        ///
+        /// Execution Flow (swkotor.exe @ 0x0067afb0):
+        /// 1. Structured exception handling setup: FrameHandler_0072e2f3 @ 0x0072e2f3, ExceptionList registration
+        /// 2. Panel state validation: Check (this->panel).bit_flags &amp; 0x600 != 0x400, this->field20_0x140c != 0, param_1->is_active != 0
+        /// 3. Session reset: CSWPartyTable::ResetCurrentSessionStartTim() @ 0x00563cf0
+        /// 4. INI initialization: CExoIni::CExoIni() @ 0x005e6750 (temporary object in param_1 stack location)
+        /// 5. String construction: CExoString::CExoString() @ 0x005b3190 (empty), CExoString::CExoString() @ 0x005e5a90 (from "END_M01AA" @ 0x00752f58)
+        /// 6. Resource directory management:
+        ///    - CExoString::CExoString() @ 0x005e5a90 (from "MODULES:" @ 0x0073d90c)
+        ///    - CExoResMan::AddResourceDirectory() @ 0x00408800 (ExoResMan @ 0x007a39e8, "MODULES:")
+        ///    - CExoString::~CExoString() @ 0x005e5c20
+        /// 7. Module resource existence check:
+        ///    - CResRef::CResRef() @ 0x00406d60 (from CExoString "END_M01AA")
+        ///    - CExoResMan::Exists() @ 0x00408bc0 (ExoResMan, CResRef, MOD type, null)
+        ///    - If MOD not found: CResRef::CResRef() @ 0x00406d60, CExoResMan::Exists() @ 0x00408bc0 (RIM type)
+        ///    - If both fail: CExoString::operator=() @ 0x005e5140 (reassign "END_M01AA")
+        /// 8. Resource directory cleanup:
+        ///    - CExoString::CExoString() @ 0x005e5a90 (from "MODULES:")
+        ///    - CExoResMan::RemoveResourceDirectory() @ 0x004088d0 (ExoResMan, "MODULES:")
+        ///    - CExoString::~CExoString() @ 0x005e5c20
+        /// 9. GUI panel allocation and creation:
+        ///    - operator_new() @ 0x006fa7e6 (0x1560 bytes)
+        ///    - If allocation succeeds: CSWGuiClassSelection::CSWGuiClassSelection() @ 0x006dc3c0 (allocated memory, (this->panel).manager, module name CExoString)
+        /// 10. Panel registration: CSWGuiManager::AddPanel() @ 0x0040bc70 ((this->panel).manager, panel, 2, 1)
+        /// 11. Sound mode: CExoSoundInternal::SetSoundMode() @ 0x005d5e80 (ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec)
+        /// 12. Panel flags: (this->panel).bit_flags = (this->panel).bit_flags &amp; 0xfffffcff | 0x400
+        /// 13. Cleanup: CExoString destructors, CExoIni::~CExoIni() @ 0x005e67e0, ExceptionList restoration
+        ///
+        /// Execution Flow (swkotor2.exe @ 0x006d0b00):
+        /// 1. Structured exception handling setup: LAB_007a3adb @ 0x007a3adb, ExceptionList registration
+        /// 2. Panel state validation: Check *(uint *)((int)this + 0x48) &amp; 0x300 != 0x200, *(int *)((int)this + 0x18f4) != 0, *(int *)(param_1 + 0x50) != 0
+        /// 3. Game time initialization: FUN_0057a400() @ 0x0057a400
+        /// 4. Module loading system initialization: FUN_00401380() @ 0x00401380 (DAT_008283d4 @ 0x008283d4)
+        /// 5. Context initialization: FUN_00631f70() @ 0x00631f70 (local_44)
+        /// 6. String construction:
+        ///    - CExoString::CExoString_empty() @ 0x005ff130 (local_20)
+        ///    - CExoString::CExoString() @ 0x00630a90 (local_38, "001ebo" @ 0x007cc028)
+        ///    - CExoString::CExoString() @ 0x00630a90 (local_40, "HD0:effects" @ 0x007cc01c)
+        /// 7. Effects resource directory loading:
+        ///    - FUN_004087d0() @ 0x004087d0 (local_30, local_40 "HD0:effects")
+        ///    - CExoString::~CExoString() @ 0x00630c20 (local_30, local_40)
+        /// 8. MODULES: resource directory management:
+        ///    - CExoString::CExoString() @ 0x00630a90 (local_40, "MODULES:" @ 0x007b58b4)
+        ///    - FUN_00408a30() @ 0x00408a30 (DAT_008283c0 @ 0x008283c0, local_40 "MODULES:")
+        ///    - CExoString::~CExoString() @ 0x00630c20 (local_40)
+        /// 9. Module resource existence check with alternative codes:
+        ///    - FUN_00406e70() @ 0x00406e70 (local_30, local_38 "001ebo")
+        ///    - FUN_00408df0() @ 0x00408df0 (DAT_008283c0, local_30, 0x7db (2011), null)
+        ///    - If 0x7db fails: FUN_00406e70() @ 0x00406e70, FUN_00408df0() @ 0x00408df0 (0xbba (3002))
+        ///    - If both fail: FUN_00630d10() @ 0x00630d10 (local_38, "001ebo" @ 0x007cc028)
+        /// 10. MODULES: resource directory cleanup:
+        ///     - CExoString::CExoString() @ 0x00630a90 (local_30, "MODULES:" @ 0x007b58b4)
+        ///     - FUN_00408b00() @ 0x00408b00 (DAT_008283c0, local_30)
+        ///     - CExoString::~CExoString() @ 0x00630c20 (local_30)
+        /// 11. Module object allocation and creation:
+        ///     - operator_new() @ 0x0076d9f6 (0x15f0 bytes)
+        ///     - If allocation succeeds: FUN_0074a700() @ 0x0074a700 (allocated memory, *(undefined4 *)((int)this + 0x1c), local_38 module name)
+        /// 12. Panel registration: FUN_0040bf90() @ 0x0040bf90 (*(void **)((int)this + 0x1c), module object, 2, 1)
+        /// 13. Sound system: FUN_00621ab0() @ 0x00621ab0 (DAT_008283c4 @ 0x008283c4, DAT_007c5474 @ 0x007c5474, 0)
+        /// 14. Panel flags: *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xfffffe7f | 0x200
+        /// 15. Module system: FUN_006394b0() @ 0x006394b0 (*(int *)(DAT_008283d4 + 4))
+        /// 16. Cleanup: CExoString destructors, FUN_00632000() @ 0x00632000 (local_44), ExceptionList restoration
+        /// 17. Post-execution check: FUN_006387d0() @ 0x006387d0 (*(int *)(DAT_008283d4 + 4)), if non-zero: FUN_00682b40() @ 0x00682b40
+        ///
+        /// Execution Flow (swkotor2_aspyr.exe @ 0x00882230):
+        /// 1. Structured exception handling setup: LAB_00974a8b @ 0x00974a8b, ExceptionList registration
+        /// 2. Panel state validation: Check *(uint *)((int)this + 0x48) >> 8 &amp; 3 != 2, *(int *)((int)this + 0x1c98) != 0, *(int *)(param_1 + 0x50) != 0
+        /// 3. Game time initialization: FUN_005ff000() @ 0x005ff000
+        /// 4. Module loading system initialization: FUN_00401bc0() @ 0x00401bc0 (DAT_00a1b4a4 @ 0x00a1b4a4)
+        /// 5. Context initialization: FUN_00736240() @ 0x00736240 (local_28)
+        /// 6. String construction:
+        ///    - FUN_00733540() @ 0x00733540 (local_20)
+        ///    - FUN_00733570() @ 0x00733570 (local_18, "001ebo" @ 0x009a5ab0)
+        ///    - FUN_00733570() @ 0x00733570 (local_30, "HD0:effects" @ 0x009a5aa4)
+        /// 7. Effects resource directory loading:
+        ///    - FUN_00716da0() @ 0x00716da0 (local_38, local_30 "HD0:effects")
+        ///    - FUN_00733780() @ 0x00733780 (local_38, local_30)
+        /// 8. MODULES: resource directory management:
+        ///    - FUN_00733570() @ 0x00733570 (local_40, "MODULES:" @ 0x00993e50)
+        ///    - FUN_00711690() @ 0x00711690 (DAT_00a1b490 @ 0x00a1b490, local_40 "MODULES:")
+        ///    - FUN_00733780() @ 0x00733780 (local_40)
+        /// 9. Module resource existence check with alternative codes:
+        ///    - FUN_005564b0() @ 0x005564b0
+        ///    - FUN_00710810() @ 0x00710810 (local_50, local_18 "001ebo")
+        ///    - FUN_00711ed0() @ 0x00711ed0 (DAT_00a1b490, local_50, 0x7db (2011), null)
+        ///    - If 0x7db fails: FUN_00710810() @ 0x00710810 (local_60, local_18), FUN_00711ed0() @ 0x00711ed0 (0xbba (3002))
+        ///    - If both fail: FUN_007338d0() @ 0x007338d0 (local_18, "001ebo" @ 0x009a5ab0)
+        /// 10. MODULES: resource directory cleanup:
+        ///     - FUN_00733570() @ 0x00733570 (local_68, "MODULES:" @ 0x00993e50)
+        ///     - FUN_00711710() @ 0x00711710 (DAT_00a1b490, local_68)
+        ///     - FUN_00733780() @ 0x00733780 (local_68)
+        /// 11. Module object allocation and creation:
+        ///     - FUN_00556590() @ 0x00556590
+        ///     - FUN_00919723() @ 0x00919723 (0x15f0 bytes)
+        ///     - If allocation succeeds: FUN_008f92b0() @ 0x008f92b0 (allocated memory, *(undefined4 *)((int)this + 0x1c), local_18 module name)
+        /// 12. Panel registration: FUN_00410530() @ 0x00410530 (*(void **)((int)this + 0x1c), module object, 2, 1)
+        /// 13. Sound system: FUN_0070bc60() @ 0x0070bc60 (DAT_00a1b494 @ 0x00a1b494, DAT_0099c2a8 @ 0x0099c2a8, 0)
+        /// 14. Panel flags: *(uint *)((int)this + 0x48) = *(uint *)((int)this + 0x48) &amp; 0xffffff7f, then | 0x200
+        /// 15. Module system: FUN_00741360() @ 0x00741360 (*(int *)(DAT_00a1b4a4 + 4))
+        /// 16. Cleanup: FUN_00733780() destructors, FUN_007362c0() @ 0x007362c0 (local_28), ExceptionList restoration
+        /// 17. Post-execution check: FUN_0073f750() @ 0x0073f750 (*(int *)(DAT_00a1b4a4 + 4)), if non-zero: FUN_007d21e0() @ 0x007d21e0
+        ///
+        /// Constants:
+        /// - Module resource type code 0x7db (2011): Used in all three executables for MOD resource type checks
+        ///   - swkotor.exe: Referenced at 0x0067b077 within OnNewGamePicked
+        ///   - swkotor2.exe: Referenced at 0x006d0c22 within OnNewGameButtonClicked
+        ///   - swkotor2_aspyr.exe: Referenced at 0x00882347 within FUN_00882230
+        /// - Module resource type code 0xbba (3002): Used in swkotor2.exe and swkotor2_aspyr.exe for RIM resource type checks
+        ///   - swkotor2.exe: Referenced at 0x006d0c4b within OnNewGameButtonClicked
+        ///   - swkotor2_aspyr.exe: Referenced at 0x0088236d within FUN_00882230
+        /// - Allocation sizes: swkotor.exe uses 0x1560 bytes, swkotor2.exe and swkotor2_aspyr.exe use 0x15f0 bytes
+        ///
+        /// Data References:
+        /// - swkotor.exe: ExoResMan @ 0x007a39e8, ExoSound @ 0x007a39ec, DAT_0074c5ec @ 0x0074c5ec
+        /// - swkotor2.exe: DAT_008283c0 @ 0x008283c0, DAT_008283c4 @ 0x008283c4, DAT_008283d4 @ 0x008283d4, DAT_007c5474 @ 0x007c5474
+        /// - swkotor2_aspyr.exe: DAT_00a1b490 @ 0x00a1b490, DAT_00a1b494 @ 0x00a1b494, DAT_00a1b4a4 @ 0x00a1b4a4, DAT_0099c2a8 @ 0x0099c2a8
+        ///
+        /// Function Call Chains:
+        /// - swkotor.exe: Referenced from CSWGuiMainMenu constructor/initialization @ 0x0067c682, 0x0067c6f0
+        /// - swkotor2.exe: Referenced from FUN_006d2350 (main menu handler) @ 0x006d258b, 0x006d260c
+        /// - swkotor2_aspyr.exe: Referenced from FUN_00880740 (main menu handler) @ 0x00880b45, 0x00880c3d
         ///
         /// Module Selection Logic:
-        /// - Default: K1 = "end_m01aa", K2 = "001ebo"
-        /// - Alternative modules checked via codes 0x7db and 0xbba (K2 only, meaning unknown)
-        /// - If alternatives don't exist, falls back to default
-        ///
-        /// Module Initialization Sequence:
-        /// 1. 0x00401380: Initialize module loading system (prepare game state)
-        /// 2. Load HD0:effects directory (effects resources)
-        /// 3. Determine starting module (check alternatives, fallback to default)
-        /// 4. 0x0074a700: Create and load module object
+        /// - swkotor.exe: Default module "END_M01AA", checks MOD then RIM resource types, no alternative codes
+        /// - swkotor2.exe: Default module "001ebo", checks 0x7db (MOD) then 0xbba (RIM) alternative codes, fallback to "001ebo"
+        /// - swkotor2_aspyr.exe: Default module "001ebo", checks 0x7db (MOD) then 0xbba (RIM) alternative codes, fallback to "001ebo"
         /// 5. Module loads areas, entities, scripts, etc.
         ///
         /// Character Creation Flow:
