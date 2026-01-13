@@ -257,13 +257,13 @@ namespace Andastra.Game.Stride.Graphics
             
             // Apply sprite effects to UV coordinates if needed
             // Note: This calculation is done but not used since SpriteBatch doesn't support it
-            if ((effects & SpriteEffects.FlipHorizontally) != 0)
+            if ((effects & GraphicsSpriteEffects.FlipHorizontally) != 0)
             {
                 float temp = u1;
                 u1 = u2;
                 u2 = temp;
             }
-            if ((effects & SpriteEffects.FlipVertically) != 0)
+            if ((effects & GraphicsSpriteEffects.FlipVertically) != 0)
             {
                 float temp = v1;
                 v1 = v2;
@@ -320,11 +320,11 @@ namespace Andastra.Game.Stride.Graphics
         private StrideGraphics.SpriteEffects ConvertSpriteEffects(GraphicsSpriteEffects effects)
         {
             StrideGraphics.SpriteEffects result = StrideGraphics.SpriteEffects.None;
-            if ((effects & SpriteEffects.FlipHorizontally) != 0)
+            if ((effects & GraphicsSpriteEffects.FlipHorizontally) != 0)
             {
                 result |= StrideGraphics.SpriteEffects.FlipHorizontally;
             }
-            if ((effects & SpriteEffects.FlipVertically) != 0)
+            if ((effects & GraphicsSpriteEffects.FlipVertically) != 0)
             {
                 result |= StrideGraphics.SpriteEffects.FlipVertically;
             }

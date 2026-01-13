@@ -1142,7 +1142,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
                 // Draw character as sprite using font texture and glyph coordinates
                 // Based on xoreos: texturefont.cpp render() - draws each character as textured quad
-                Draw(fontTexture, destRect, sourceRect, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+                Draw(fontTexture, destRect, sourceRect, color, 0.0f, Runtime.Graphics.Vector2.Zero, SpriteEffects.None, 0.0f);
 
                 // Advance position for next character
                 // Based on xoreos: texturefont.cpp - advances X position by character width + spacing

@@ -201,7 +201,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
 
             // Query entities within preload distance
             // Use ObjectType.All to get all entity types that might have resources
-            IEnumerable<IEntity> nearbyEntities = _world.GetEntitiesInRadius(position, distance, ObjectType.All);
+            IEnumerable<IEntity> nearbyEntities = _world.GetEntitiesInRadius(position, distance, Runtime.Core.Enums.ObjectType.All);
 
             // Extract resource references from entities and prioritize based on direction
             var resourcePriorities = new List<ResourcePriority>();
@@ -214,7 +214,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
                 }
 
                 // Calculate priority based on distance and direction
-                Andastra.Runtime.Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Andastra.Runtime.Core.Interfaces.Components.ITransformComponent>();
+                Andastra.Runtime.Core.Interfaces.Components.ITransformComponent transform = entity.GetComponent<Runtime.Core.Interfaces.Components.ITransformComponent>();
                 if (transform == null)
                 {
                     continue;
@@ -369,7 +369,7 @@ namespace Andastra.Game.Graphics.MonoGame.Rendering
         /// <remarks>
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) appearance data structure:
         /// - appearance.2da contains ModelA, ModelB (model variants), TexA, TexB (texture variants)
-        /// - Model resolution: FUN_005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
+        /// - Model resolution: 0x005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
         /// - Appearance data accessed via GameDataManager.GetAppearance() in Odyssey engine
         /// - Uses reflection to access engine-specific GameDataManager implementations
         /// </remarks>
