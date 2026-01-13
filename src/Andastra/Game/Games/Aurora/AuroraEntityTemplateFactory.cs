@@ -117,7 +117,7 @@ namespace Andastra.Game.Games.Aurora
             // Based on nwmain.exe: CNWSCreature constructor creates creature with ObjectId
             // ObjectId assignment: Sequential uint32 starting from 1000000 (high range to avoid conflicts)
             uint objectId = GetNextObjectId();
-            var entity = new AuroraEntity(objectId, ObjectType.Creature);
+            var entity = new AuroraEntity(objectId, Andastra.Runtime.Core.Enums.ObjectType.Creature);
 
             // Set position and facing
             // Based on nwmain.exe: Position stored as XPosition, YPosition, ZPosition in GIT

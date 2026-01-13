@@ -186,7 +186,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                 // Parse GUI file using GUIReader
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                GUI gui = guiReader.Load();
+                BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -845,7 +845,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 {
                     float alpha = panel.Alpha;
                     XnaColor tint = Microsoft.Xna.Framework.Color.White * alpha;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -857,7 +857,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     Texture2D pixel = GetPixelTexture();
                     float alpha = panel.Alpha;
                     XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, (byte)(bgColor.A * alpha));
-                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
         }
@@ -897,7 +897,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (button.Border != null && !button.Border.Fill.IsBlank())
@@ -906,7 +906,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -917,7 +917,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 {
                     Texture2D pixel = GetPixelTexture();
                     XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -959,7 +959,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1003,7 +1003,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1262,7 +1262,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (protoItem.Border != null && !protoItem.Border.Fill.IsBlank())
@@ -1271,7 +1271,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -1282,7 +1282,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 {
                     Texture2D pixel = GetPixelTexture();
                     XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1358,7 +1358,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (scrollbarBgTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(scrollbarBgTexture, new XnaRectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)scrollbarSize.Y), tint);
+                    _spriteBatch.Draw(scrollbarBgTexture, new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)scrollbarSize.Y), tint);
                 }
             }
 
@@ -1381,7 +1381,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
 
                     // Render thumb
                     XnaColor thumbTint = Microsoft.Xna.Framework.Color.White;
-                    XnaRectangle thumbRect = new XnaRectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
+                    Microsoft.Xna.Framework.Rectangle thumbRect = new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)thumbY, (int)scrollbarSize.X, (int)thumbHeight);
                     _spriteBatch.Draw(thumbTexture, thumbRect, thumbTint);
                 }
             }
@@ -1394,12 +1394,12 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 {
                     // Render up arrow (top of scrollbar)
                     float upArrowSize = Math.Min(20.0f, scrollbarSize.Y * 0.1f);
-                    XnaRectangle upArrowRect = new XnaRectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)upArrowSize);
+                    Microsoft.Xna.Framework.Rectangle upArrowRect = new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)scrollbarPosition.Y, (int)scrollbarSize.X, (int)upArrowSize);
                     _spriteBatch.Draw(arrowTexture, upArrowRect, Microsoft.Xna.Framework.Color.White);
 
                     // Render down arrow (bottom of scrollbar)
                     float downArrowY = scrollbarPosition.Y + scrollbarSize.Y - upArrowSize;
-                    XnaRectangle downArrowRect = new XnaRectangle((int)scrollbarPosition.X, (int)downArrowY, (int)scrollbarSize.X, (int)upArrowSize);
+                    Microsoft.Xna.Framework.Rectangle downArrowRect = new Microsoft.Xna.Framework.Rectangle((int)scrollbarPosition.X, (int)downArrowY, (int)scrollbarSize.X, (int)upArrowSize);
                     _spriteBatch.Draw(arrowTexture, downArrowRect, Microsoft.Xna.Framework.Color.White);
                 }
             }
@@ -1417,7 +1417,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1433,7 +1433,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     if (progressTexture != null)
                     {
                         XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                        _spriteBatch.Draw(progressTexture, new XnaRectangle((int)position.X, (int)position.Y, fillWidth, (int)size.Y), tint);
+                        _spriteBatch.Draw(progressTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, fillWidth, (int)size.Y), tint);
                     }
                 }
             }
@@ -1476,7 +1476,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (checkBox.Border != null && !checkBox.Border.Fill.IsBlank())
@@ -1485,7 +1485,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else
@@ -1496,7 +1496,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 {
                     Texture2D pixel = GetPixelTexture();
                     XnaColor tint = new Microsoft.Xna.Framework.Color(bgColor.R, bgColor.G, bgColor.B, bgColor.A);
-                    _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1558,7 +1558,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 int checkmarkY = (int)(position.Y + (size.Y - checkmarkSize) / 2);
 
                 XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                _spriteBatch.Draw(checkmarkTexture, new XnaRectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
+                _spriteBatch.Draw(checkmarkTexture, new Microsoft.Xna.Framework.Rectangle(checkmarkX, checkmarkY, checkmarkSize, checkmarkSize), tint);
             }
             else
             {
@@ -1630,7 +1630,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             // Handle single pixel case
             if (x0 == x1 && y0 == y1)
             {
-                _spriteBatch.Draw(pixel, new XnaRectangle(x0, y0, 1, 1), color);
+                _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle(x0, y0, 1, 1), color);
                 return;
             }
 
@@ -1640,7 +1640,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
             int halfThickness = (int)Math.Ceiling(thickness / 2.0f);
 
             // Source rectangle for pixel texture
-            XnaRectangle sourceRect = new XnaRectangle(0, 0, 1, 1);
+            Microsoft.Xna.Framework.Rectangle sourceRect = new Microsoft.Xna.Framework.Rectangle(0, 0, 1, 1);
 
             // Use Bresenham's line algorithm for the main line
             int absDx = Math.Abs(x1 - x0);
@@ -1661,13 +1661,13 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     {
                         int px = (int)Math.Round(x + perpX * t);
                         int py = (int)Math.Round(y + perpY * t);
-                        _spriteBatch.Draw(pixel, new XnaRectangle(px, py, 1, 1), sourceRect, color);
+                        _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle(px, py, 1, 1), sourceRect, color);
                     }
                 }
                 else
                 {
                     // Single pixel line
-                    _spriteBatch.Draw(pixel, new XnaRectangle(x, y, 1, 1), sourceRect, color);
+                    _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle(x, y, 1, 1), sourceRect, color);
                 }
 
                 // Check if we've reached the end point
@@ -1706,7 +1706,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
 
@@ -1897,7 +1897,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 // Render without rotation (simpler and faster)
                 _spriteBatch.Draw(
                     thumbTexture,
-                    new XnaRectangle((int)thumbPosition.X, (int)thumbPosition.Y, (int)thumbSize.X, (int)thumbSize.Y),
+                    new Microsoft.Xna.Framework.Rectangle((int)thumbPosition.X, (int)thumbPosition.Y, (int)thumbSize.X, (int)thumbSize.Y),
                     null,
                     thumbTint,
                     0.0f,
@@ -1919,7 +1919,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 if (fillTexture != null)
                 {
                     XnaColor tint = Microsoft.Xna.Framework.Color.White;
-                    _spriteBatch.Draw(fillTexture, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                    _spriteBatch.Draw(fillTexture, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
                 }
             }
             else if (control.Color.A > 0)
@@ -1927,7 +1927,7 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                 // Render solid color background
                 Texture2D pixel = GetPixelTexture();
                 XnaColor tint = new Microsoft.Xna.Framework.Color(control.Color.R, control.Color.G, control.Color.B, control.Color.A);
-                _spriteBatch.Draw(pixel, new XnaRectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
+                _spriteBatch.Draw(pixel, new Microsoft.Xna.Framework.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), tint);
             }
         }
 
@@ -2160,8 +2160,8 @@ namespace Andastra.Game.Graphics.MonoGame.GUI
                     // Render character glyph
                     _spriteBatch.Draw(
                         fontTexture,
-                        new XnaRectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
-                        new XnaRectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight),
+                        new Microsoft.Xna.Framework.Rectangle((int)currentX, (int)currentY, (int)g.Width, (int)g.Height),
+                        new Microsoft.Xna.Framework.Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight),
                         color);
 
                     currentX += g.Width + font.SpacingR;
