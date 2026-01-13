@@ -411,30 +411,28 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// All addresses documented for swkotor.exe, swkotor2.exe, and swkotor2_aspyr.exe.
         ///
         /// ENTRY POINT FUNCTIONS:
-        /// - swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0
-        /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00 (registered by FUN_006d2350 @ 0x006d2350 via FUN_0041a340 @ 0x0041a340 with event type 0x27 at line 89)
-        /// - swkotor2_aspyr.exe: FUN_00882230 @ 0x00882230
+        /// - swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0 (member function of CSWGuiMainMenu class, called directly from GUI event system)
+        /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00 (registered by FUN_006d2350 @ 0x006d2350 via FUN_0041a340 @ 0x0041a340 with event type 0x27 at line 89, also registered with event type 0x2d at line 96)
+        /// - swkotor2_aspyr.exe: FUN_00882230 @ 0x00882230 (equivalent entry point function, called from GUI event system)
         ///
-        /// EVENT HANDLER REGISTRATION (swkotor2.exe only):
-        /// - Main menu handler: FUN_006d2350 @ 0x006d2350 (constructor/initializer)
-        /// - Event registration function: FUN_0041a340 @ 0x0041a340 (registers event handlers with event type and callback address)
-        /// - New Game button hover event (0x27): Registered at FUN_006d2350 line 89, callback @ 0x006d0b00
-        /// - New Game button click event (0x2d): Registered at FUN_006d2350 line 96, callback @ 0x006d0b00
+        /// EVENT HANDLER REGISTRATION:
+        /// - swkotor.exe: Direct function call from GUI system (no explicit event registration function used)
+        /// - swkotor2.exe: Main menu handler FUN_006d2350 @ 0x006d2350 (constructor/initializer) registers handlers via FUN_0041a340 @ 0x0041a340 (event registration function that manages event handler table, searches existing handlers by event type, adds new handlers or updates existing ones). New Game button hover event (0x27): Registered at FUN_006d2350 line 89, callback @ 0x006d0b00. New Game button click event (0x2d): Registered at FUN_006d2350 line 96, callback @ 0x006d0b00
+        /// - swkotor2_aspyr.exe: Event registration handled through equivalent GUI system (no explicit registration function address available in this context)
         ///
         /// STRING REFERENCES:
-        /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58 (referenced at 0x0067b01b, 0x0067b0b9)
-        /// - Module name "001ebo": swkotor2.exe @ 0x007cc028 (referenced at 0x006d0b7d, 0x006d0c5e), swkotor2_aspyr.exe @ 0x009a5ab0 (referenced at 0x008822ba, 0x00882385)
-        /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c (referenced at 0x0067b033, 0x0067b0c7), swkotor2.exe @ 0x007b58b4 (referenced at 0x006d0bdc, 0x006d0c6c), swkotor2_aspyr.exe @ 0x00993e50
-        /// - Resource directory "HD0:effects": swkotor2.exe @ 0x007cc01c (referenced at 0x006d0b95), swkotor2_aspyr.exe @ 0x009a5aa4 (referenced at 0x008822cb)
+        /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58 (referenced at 0x0067b01b in CExoString::CExoString constructor call, referenced at 0x0067b0b9 in CExoString::operator= fallback assignment). swkotor2.exe: Not used (uses "001ebo" instead). swkotor2_aspyr.exe: Not used (uses "001ebo" instead).
+        /// - Module name "001ebo": swkotor.exe: Not used (uses "END_M01AA" instead). swkotor2.exe @ 0x007cc028 (referenced at 0x006d0b7d in CExoString::CExoString constructor call with "001ebo", referenced at 0x006d0c5e in FUN_00630d10 fallback assignment). swkotor2_aspyr.exe @ 0x009a5ab0 (referenced at 0x008822ba in FUN_00733570 constructor call with "001ebo", referenced at 0x00882385 in FUN_007338d0 fallback assignment)
+        /// - Resource directory "MODULES:": swkotor.exe @ 0x0073d90c (referenced at 0x0067b033 in CExoString::CExoString constructor for AddResourceDirectory call, referenced at 0x0067b0c7 in CExoString::CExoString constructor for RemoveResourceDirectory call). swkotor2.exe @ 0x007b58b4 (referenced at 0x006d0bdc in CExoString::CExoString constructor for FUN_00408a30 call, referenced at 0x006d0c6c in CExoString::CExoString constructor for FUN_00408b00 call). swkotor2_aspyr.exe @ 0x00993e50 (referenced in FUN_00733570 constructor calls for FUN_00711690 and FUN_00711710 operations)
+        /// - Resource directory "HD0:effects": swkotor.exe: Not used. swkotor2.exe @ 0x007cc01c (referenced at 0x006d0b95 in CExoString::CExoString constructor call, used in FUN_004087d0 for resource directory addition). swkotor2_aspyr.exe @ 0x009a5aa4 (referenced at 0x008822cb in FUN_00733570 constructor call, used in FUN_00716da0 for resource directory addition)
         ///
         /// GLOBAL DATA REFERENCES:
-        /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8 (used in CExoResMan::AddResourceDirectory @ 0x00408800, CExoResMan::Exists @ 0x00408bc0, CExoResMan::RemoveResourceDirectory @ 0x004088d0)
-        /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80)
-        /// - DAT_008283d4 (CAppManager*): swkotor2.exe @ 0x008283d4 (used in FUN_00401380 @ 0x00401380, FUN_006394b0 @ 0x006394b0), swkotor2_aspyr.exe @ 0x00a1b4a4 (used in FUN_00401bc0 @ 0x00401bc0, FUN_00741360 @ 0x00741360)
-        /// - DAT_008283c0 (CExoResMan*): swkotor2.exe @ 0x008283c0 (used in FUN_00408a30 @ 0x00408a30, FUN_00408df0 @ 0x00408df0, FUN_00408b00 @ 0x00408b00), swkotor2_aspyr.exe @ 0x00a1b490 (used in FUN_00711690 @ 0x00711690, FUN_00711ed0 @ 0x00711ed0, FUN_00711710 @ 0x00711710)
-        /// - DAT_008283c4 (void*): swkotor2.exe @ 0x008283c4 (used in FUN_00621ab0 @ 0x00621ab0), swkotor2_aspyr.exe @ 0x00a1b494 (used in FUN_0070bc60 @ 0x0070bc60)
-        /// - DAT_0074c5ec (int): swkotor.exe @ 0x0074c5ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80)
-        /// - DAT_007c5474 (int): swkotor2.exe @ 0x007c5474 (used in FUN_00621ab0 @ 0x00621ab0), swkotor2_aspyr.exe @ 0x0099c2a8 (used in FUN_0070bc60 @ 0x0070bc60)
+        /// - ExoResMan (CExoResMan*): swkotor.exe @ 0x007a39e8 (used in CExoResMan::AddResourceDirectory @ 0x00408800, CExoResMan::Exists @ 0x00408bc0, CExoResMan::RemoveResourceDirectory @ 0x004088d0). swkotor2.exe: Equivalent global at DAT_008283c0 @ 0x008283c0. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b490 @ 0x00a1b490
+        /// - ExoSound (CExoSound*): swkotor.exe @ 0x007a39ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). swkotor2.exe: Equivalent global at DAT_008283c4 @ 0x008283c4. swkotor2_aspyr.exe: Equivalent global at DAT_00a1b494 @ 0x00a1b494
+        /// - CAppManager* global: swkotor.exe: Not used in New Game handler context. swkotor2.exe @ DAT_008283d4 @ 0x008283d4 (used in FUN_00401380 @ 0x00401380 for module loading system initialization, used in FUN_006394b0 @ 0x006394b0 for unknown function call). swkotor2_aspyr.exe @ DAT_00a1b4a4 @ 0x00a1b4a4 (used in FUN_00401bc0 @ 0x00401bc0 for module loading system initialization, used in FUN_00741360 @ 0x00741360 for unknown function call)
+        /// - CExoResMan* global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoResMan @ 0x007a39e8 instead. swkotor2.exe @ DAT_008283c0 @ 0x008283c0 (used in FUN_00408a30 @ 0x00408a30 for AddResourceDirectory equivalent, used in FUN_00408df0 @ 0x00408df0 for Exists equivalent, used in FUN_00408b00 @ 0x00408b00 for RemoveResourceDirectory equivalent). swkotor2_aspyr.exe @ DAT_00a1b490 @ 0x00a1b490 (used in FUN_00711690 @ 0x00711690 for AddResourceDirectory equivalent, used in FUN_00711ed0 @ 0x00711ed0 for Exists equivalent, used in FUN_00711710 @ 0x00711710 for RemoveResourceDirectory equivalent)
+        /// - Sound system global (swkotor2/swkotor2_aspyr): swkotor.exe: Uses ExoSound @ 0x007a39ec instead. swkotor2.exe @ DAT_008283c4 @ 0x008283c4 (used in FUN_00621ab0 @ 0x00621ab0 for SetSoundMode equivalent). swkotor2_aspyr.exe @ DAT_00a1b494 @ 0x00a1b494 (used in FUN_0070bc60 @ 0x0070bc60 for SetSoundMode equivalent)
+        /// - Sound mode constant: swkotor.exe @ DAT_0074c5ec @ 0x0074c5ec (used in CExoSoundInternal::SetSoundMode @ 0x005d5e80). swkotor2.exe @ DAT_007c5474 @ 0x007c5474 (used in FUN_00621ab0 @ 0x00621ab0). swkotor2_aspyr.exe @ DAT_0099c2a8 @ 0x0099c2a8 (used in FUN_0070bc60 @ 0x0070bc60)
         ///
         /// RESOURCE TYPE CONSTANTS:
         /// - MOD (Module): 0x7db (2011 decimal) - Used in swkotor2.exe @ 0x006d0c22 (FUN_00408df0 call), swkotor2_aspyr.exe @ 0x008822d1 (FUN_00711ed0 call). swkotor.exe uses MOD type constant via CExoResMan::Exists() @ 0x00408bc0 with MOD parameter (no explicit constant value, uses ResourceType enum).
