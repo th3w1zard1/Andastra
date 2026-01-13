@@ -9,13 +9,15 @@ namespace Andastra.Runtime.Core.Interfaces
     /// <remarks>
     /// Event Bus Interface:
     /// - Common interface for event bus implementations across all BioWare engines
-    /// - Engine-specific implementations:
-    ///   - Odyssey: OdysseyEventBus (Runtime.Games.Odyssey) - based on swkotor.exe/swkotor2.exe
-    ///   - Aurora: AuroraEventBus (Runtime.Games.Aurora) - based on nwmain.exe/nwn2main.exe
-    ///   - Eclipse: EclipseEventBus (Runtime.Games.Eclipse) - based on daorigins.exe/DragonAge2.exe//
-    ///   - Infinity: InfinityEventBus (Runtime.Games.Infinity) - based on  executables
-    /// - All implementations inherit from BaseEventBus (Runtime.Games.Common) which contains common functionality
-    /// - Based on reverse engineering of event systems across all BioWare engines
+    /// - Single implementation: BaseEventBus (Andastra.Game.Games.Common) handles all engines
+    ///   - Engine-specific event bus classes (OdysseyEventBus, AuroraEventBus, EclipseEventBus) have been merged
+    ///   - All engines use the same BaseEventBus implementation with engine-specific documentation
+    ///   - Odyssey: Based on swkotor.exe/swkotor2.exe event dispatching (0x004dcfb0)
+    ///   - Aurora: Based on nwmain.exe/nwn2main.exe event systems (CServerAIMaster::AddEventDeltaTime)
+    ///   - Eclipse: Based on daorigins.exe/DragonAge2.exe event systems (UnrealScript BioEventDispatcher)
+    ///   - Infinity: Future implementation will use BaseEventBus
+    /// - BaseEventBus contains all common functionality and engine-specific documentation
+    /// - Based on verified components of event systems across all BioWare engines
     /// - Located via string references: Script event constants (EVENT_ON_*, CSWSSCRIPTEVENT_EVENTTYPE_*)
     /// - Subscribe/Unsubscribe: Register/unregister event handlers for specific event types
     /// - Publish: Immediately dispatches event to all subscribers (synchronous)
