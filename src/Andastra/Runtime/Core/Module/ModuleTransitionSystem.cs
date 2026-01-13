@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Core.Module
     ///   * ["ModuleRunning"] @ (K1: TODO: Find this address, TSL: 0x007bdd58) - module running flag
     ///   * ["MODULES:"] @ (K1: TODO: Find this address, TSL: 0x007b58b4) - module debug prefix
     ///   * [":MODULES"] @ (K1: TODO: Find this address, TSL: 0x007be258) - module path prefix
-    ///   * ["LIVE%d:MODULES\"] @ (K1: TODO: Find this address, TSL: 0x007be680) - module path format
+    ///   * ["LIVE%d:MODULES\"] @ (K1: 0x007458c4, TSL: 0x007be680) - module path format
     ///   * [".\modules"] @ (K1: TODO: Find this address, TSL: 0x007c6bcc) - module directory
     ///   * ["d:\modules"] @ (K1: TODO: Find this address, TSL: 0x007c6bd8) - module directory
     ///   * ["MODULES"] @ (K1: TODO: Find this address, TSL: 0x007c6bc4) - modules constant
