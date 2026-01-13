@@ -19,7 +19,7 @@ namespace Andastra.Game.Games.Odyssey
     /// - Maps event IDs to string names for debugging
     /// - Routes events to appropriate handlers based on type
     ///
-    /// Based on reverse engineering of:
+    /// Based on verified components of:
     /// - swkotor.exe: Event dispatching functions (KOTOR 1)
     /// - swkotor2.exe: DispatchEvent @ 0x004dcfb0 (KOTOR 2)
     /// - Event types: AREA_TRANSITION (0x1a), REMOVE_FROM_AREA (4), etc. (common across both games)
@@ -498,7 +498,7 @@ namespace Andastra.Game.Games.Odyssey
         ///    f. Return loaded area
         /// 4. If ModuleLoader is not available, return null (area streaming disabled)
         ///
-        /// Based on reverse engineering of:
+        /// Based on verified components of:
         /// - swkotor2.exe: Area loading during transitions (0x004e26d0 @ 0x004e26d0)
         /// - swkotor.exe: Similar area loading system (KOTOR 1)
         /// - Area resources: ARE (properties), GIT (instances), LYT (layout), VIS (visibility)
@@ -845,8 +845,25 @@ namespace Andastra.Game.Games.Odyssey
         /// Adds an entity to a target area.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity addition to area
+        /// AddToArea @ (K1: CSWSPlaceable::AddToArea @ 0x00587170, TSL: AddToArea @ 0x00589ce0): Entity addition to area
         /// Calls area's AddEntityToArea method.
+        /// 
+        /// Original engine behavior (based on Ghidra analysis):
+        /// - K1 (swkotor.exe): Entity-type-specific AddToArea methods (e.g., CSWSPlaceable::AddToArea @ 0x00587170)
+        ///   - Removes entity from current area first (RemoveFromArea)
+        ///   - Sets entity's area reference (CSWSObject::SetArea)
+        ///   - Sets entity's position (CSWSObject::SetPosition)
+        ///   - Reads properties from 2DA files (PreciseUse, Hostile from placeables.2da)
+        ///   - Adds entity to area's object list
+        /// - TSL (swkotor2.exe): Unified AddToArea @ 0x00589ce0 for all entity types
+        ///   - Removes entity from current area first (FUN_00587000)
+        ///   - Sets entity's area reference and position (FUN_00504660, FUN_00506580)
+        ///   - Reads properties from GFF/2DA (PreciseUse, Hostile, ModelName)
+        ///   - Handles model loading and positioning (FUN_00406190, FUN_005571b0)
+        ///   - Adds entity to area's object list (FUN_004e9690)
+        /// 
+        /// This implementation delegates to BaseArea.AddEntityToArea which calls OdysseyArea.AddEntityToArea,
+        /// which adds entities to type-specific collections (_creatures, _placeables, _doors, etc.).
         /// </remarks>
         private void AddEntityToTargetArea(IArea targetArea, IEntity entity)
         {
