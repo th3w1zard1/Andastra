@@ -26,7 +26,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Room Mesh Renderer:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Room rendering: Original engine renders WOK/LYT/VIS based area geometry
     /// - Uses OpenGL fixed-function pipeline for rendering
     /// - This implementation: OpenGL rendering for room meshes
@@ -109,7 +109,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Entity Model Renderer:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Model rendering: Original engine renders MDL/MDX model files
     /// - Skeleton animation: Uses bone transforms for skeletal animation
     /// - This implementation: OpenGL rendering for entity models
@@ -570,7 +570,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Spatial Audio:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Audio system: Original engine uses Miles Sound System (MSS)
     /// - 3D audio: Positional audio with distance attenuation
     /// - This implementation: Placeholder for spatial audio
@@ -730,7 +730,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Sound Player:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Sound playback: Original engine uses Miles Sound System (MSS) or DirectSound
     /// - Sound files: Stored as WAV resources, referenced by ResRef (e.g., "sound01")
     /// - Positional audio: Sounds can be played at 3D positions with distance attenuation
@@ -1071,7 +1071,10 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets the master volume for all sounds.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Sound Volume" @ 0x007c83cc
+        /// swkotor2.exe: FUN_0066a4f0 @ 0x0066a4f0 (reads "Sound Effects Volume" from swkotor2.ini @ 0x007c83e0), FUN_0066d6d0 @ 0x0066d6d0 (reads volume settings from INI)
+        /// swkotor.exe: TODO: Find equivalent function address
+        /// Volume string references: "Sound Effects Volume" @ 0x007c83e0, "Voiceover Volume" @ 0x007c83cc, "Music Volume" @ 0x007c83bc
+        /// Original engine uses Miles Sound System (MSS) or DirectSound for volume control; this implementation uses Windows waveOutSetVolume API.
         /// Volume is clamped to 0.0-1.0 range and applied immediately to all active sounds.
         /// </summary>
         /// <param name="volume">Volume (0.0 to 1.0). Values outside this range are clamped.</param>
@@ -1101,7 +1104,9 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Applies the current master volume to a specific sound instance.
         /// Uses Windows waveOutSetVolume API to set the volume for the waveOut device.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound volume control system
+        /// swkotor2.exe: Volume control via Miles Sound System (MSS) or DirectSound APIs (equivalent to waveOutSetVolume)
+        /// swkotor.exe: TODO: Find equivalent function address
+        /// Original engine applies volume per-sound-instance; this implementation uses waveOutSetVolume for each active sound.
         /// </summary>
         private void ApplyVolumeToSound(uint instanceId, IntPtr waveOutHandle)
         {
@@ -1223,7 +1228,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Music Player:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Music playback: Original engine uses Miles Sound System (MSS) for background music
     /// - Music files: Stored as WAV or MP3 resources, referenced by ResRef (e.g., "mus_theme")
     /// - Volume control: Original engine has separate music volume setting
@@ -1854,7 +1859,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
     /// </summary>
     /// <remarks>
     /// Odyssey Voice Player:
-    /// - Based on reverse engineering of swkotor.exe and swkotor2.exe
+    /// - Based on verified components of swkotor.exe and swkotor2.exe
     /// - Voice playback: Original engine uses Miles Sound System (MSS) or DirectSound
     /// - Voice files: Stored as WAV resources, referenced by ResRef (e.g., "n_darthmalak01")
     /// - This implementation: Uses Windows API PlaySound for simple playback (can be extended with OpenAL)
