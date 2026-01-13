@@ -458,8 +458,12 @@ namespace Andastra.Runtime.Core.Navigation
     /// 2. For each edge, find if any other triangle has the same two vertices (in either order)
     /// 3. If found, link them bidirectionally (triangle A's edge points to triangle B, and vice versa)
     /// 
-    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Adjacency is computed during walkmesh loading, not stored in BWM files.
-    /// However, BWM files can contain precomputed adjacency data for WOK files.
+    /// Adjacency computation during walkmesh loading:
+    /// - Adjacency is computed during walkmesh loading for PWK/DWK files (not stored in BWM files)
+    /// - However, BWM files can contain precomputed adjacency data for WOK files
+    /// - Original implementation: Adjacency computation occurs during LoadMesh @ 0x00596670 (K1: swkotor.exe, CSWCollisionMesh::LoadMesh)
+    /// - For TSL (swkotor2.exe), equivalent function addresses require Ghidra analysis
+    /// - Note: The exact function that computes adjacency (likely inside LoadMesh or a function it calls) requires reverse engineering analysis to identify
     /// 
     /// SURFACE MATERIALS:
     /// Each triangle has a material number (0-30) that tells what kind of surface it is.
@@ -1264,8 +1268,12 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Adjacency is computed during walkmesh loading, not stored in BWM files.
-        /// However, BWM files can contain precomputed adjacency data for WOK files.
+        /// Adjacency computation during walkmesh loading:
+        /// - Adjacency is computed during walkmesh loading for PWK/DWK files (not stored in BWM files)
+        /// - However, BWM files can contain precomputed adjacency data for WOK files
+        /// - Original implementation: Adjacency computation occurs during LoadMesh @ 0x00596670 (K1: swkotor.exe, CSWCollisionMesh::LoadMesh)
+        /// - For TSL (swkotor2.exe), equivalent function addresses require Ghidra analysis
+        /// - Note: The exact function that computes adjacency (likely inside LoadMesh or a function it calls) requires reverse engineering analysis to identify
         /// 
         /// The original engine computes adjacency by:
         /// 1. Building an edge-to-face mapping (similar to this implementation)
@@ -2800,20 +2808,27 @@ namespace Andastra.Runtime.Core.Navigation
         /// 2. Collision Detection: Characters are prevented from standing on non-walkable faces
         /// 3. Height Calculation: ProjectToSurface only works on walkable faces
         /// 
-        /// HOW PROJECTTOSURFACE WORKS ([TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address)):
+        /// HOW PROJECTTOSURFACE WORKS (WalkmeshProjectToSurface @ (K1: TODO: Find this address, TSL: 0x004f5070)):
         /// 
-        /// ProjectToSurface is based on 0x0055b1d0 @ 0x0055b1d0 and 0x005761f0 @ 0x005761f0.
+        /// ProjectToSurface is based on WalkmeshGetHeight @ (K1: TODO: Find this address, TSL: 0x0055b1d0) and WalkmeshFindFaceAtPoint @ (K1: TODO: Find this address, TSL: 0x005761f0).
         /// 
-        /// 0x0055b1d0 @ 0x0055b1d0 (Height Calculation Entry Point):
+        /// WalkmeshProjectToSurface @ (K1: TODO: Find this address, TSL: 0x004f5070) - Main Entry Point:
+        /// - Main function for projecting 3D points onto walkmesh surface
+        /// - Called from movement systems (UpdateCreatureMovement @ 0x0054be70), pathfinding, and spell targeting
+        /// - Line 8: Calls WalkmeshFindFaceAtPoint (0x004f4260) to find face containing point
+        /// - Line 17: If face found, calls WalkmeshGetHeight (0x0055b1d0) to calculate height
+        /// - Returns height as float10 (extended precision float)
+        /// 
+        /// WalkmeshGetHeight @ (K1: TODO: Find this address, TSL: 0x0055b1d0) - Height Calculation Entry Point:
         /// - Takes a 3D point (x, y, z) and finds the height at that (x, y) position
         /// - Line 10: Checks if AABB tree exists (offset 0x3c in walkmesh structure)
         ///   - If tree doesn't exist, returns _DAT_007b56fc (special value indicating no height)
         /// - Line 12: Calls 0x00576640 with AABB tree pointer, point coordinates, and flag
         /// - 0x00576640 finds the triangle containing the point and calculates height
         /// 
-        /// 0x005761f0 @ 0x005761f0 (Find Face for Height Calculation):
+        /// WalkmeshFindFaceAtPoint @ (K1: TODO: Find this address, TSL: 0x005761f0) - Find Face for Height Calculation:
         /// - Finds which triangle contains a given (x, y) point
-        /// - This function is called by 0x00576640 when calculating height at a point
+        /// - This function is called by WalkmeshCalculateHeightFromFace (0x00576640) when calculating height at a point
         /// - Line 14: Calls 0x00557540 to transform point coordinates (if needed)
         ///   - 0x00557540 may apply coordinate system transformations or offsets
         ///   - The transformed point is stored in local_2c (x) and local_28 (y)
@@ -2860,9 +2875,9 @@ namespace Andastra.Runtime.Core.Navigation
         ///   - The small offset (typically 0.01 units) moves the point slightly, which helps catch these edge cases
         ///   - This is especially important for points on the boundary between two triangles
         /// 
-        /// 0x00576640 @ 0x00576640 (Calculate Height from Face):
+        /// WalkmeshCalculateHeightFromFace @ (K1: TODO: Find this address, TSL: 0x00576640) - Calculate Height from Face:
         /// - Calculates the height at a point after finding which triangle contains it
-        /// - Line 17: Calls 0x005761f0 to find the face containing the point
+        /// - Line 17: Calls WalkmeshFindFaceAtPoint (0x005761f0) to find the face containing the point
         /// - Line 18: If face not found (iVar1 == -1):
         ///   - Line 19: Returns _DAT_007c14e4 (special value indicating no height found)
         /// - Lines 21-23: Prepares parameters for plane equation calculation:
@@ -2887,7 +2902,7 @@ namespace Andastra.Runtime.Core.Navigation
         ///   - Calculates z = (-d - a*x - b*y) / c
         /// - This is faster than 0x00576640 because it skips the face-finding step
         /// 
-        /// 0x004d6b10 @ 0x004d6b10 (Plane Equation Height Calculation):
+        /// WalkmeshPlaneEquationHeight @ (K1: TODO: Find this address, TSL: 0x004d6b10) - Plane Equation Height Calculation:
         /// - The core function that calculates height from plane equation
         /// - Takes: triangle normal vector (3 floats), plane distance (1 float), point (x, y)
         /// - Line 7: Checks if normal.Z (c component) is very close to 0:
@@ -3625,7 +3640,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Projects a point onto the walkmesh surface. Finds the height of the ground at a given (x, y) position.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0055b1d0 @ 0x0055b1d0 and 0x0055b210 @ 0x0055b210.
+        /// WalkmeshGetHeight @ (K1: TODO: Find this address, TSL: 0x0055b1d0) and WalkmeshGetHeightWithFace @ (K1: TODO: Find this address, TSL: 0x0055b210).
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
@@ -3679,18 +3694,18 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// 0x0055b1d0 @ 0x0055b1d0 (3D point height):
+        /// WalkmeshGetHeight @ (K1: TODO: Find this address, TSL: 0x0055b1d0) - 3D point height:
         /// - Takes a 3D point and finds height at that (x, y) position
-        /// - Uses 0x005761f0 @ 0x005761f0 to find face containing point
-        /// - Then uses 0x00576640 @ 0x00576640 to calculate height
-        /// - Original: 0x0055b1d0 calls 0x00576640 (line 12)
+        /// - Uses WalkmeshFindFaceAtPoint (0x005761f0) to find face containing point
+        /// - Then uses WalkmeshCalculateHeightFromFace (0x00576640) to calculate height
+        /// - Original: WalkmeshGetHeight calls WalkmeshCalculateHeightFromFace (line 12)
         /// 
-        /// 0x0055b210 @ 0x0055b210 (2D point height with known face):
+        /// WalkmeshGetHeightWithFace @ (K1: TODO: Find this address, TSL: 0x0055b210) - 2D point height with known face:
         /// - Takes a 2D point (x, y) and a face index (already known)
         /// - Directly calculates height without finding face first
         /// - Faster when you already know which triangle contains the point
-        /// - Uses 0x00575050 @ 0x00575050 to calculate height
-        /// - Original: 0x0055b210 calls 0x00575050 (line 11)
+        /// - Uses WalkmeshGetHeightWithKnownFace (0x00575050) to calculate height
+        /// - Original: WalkmeshGetHeightWithFace calls WalkmeshGetHeightWithKnownFace (line 11)
         /// 
         /// 0x004d6b10 @ 0x004d6b10 (plane equation height calculation):
         /// - Input: normal vector (a, b, c), plane distance (d), point (x, y)
