@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Core.Module
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948
     /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258, "MODULES" @ 0x007c6bc4 (module directory paths)
     /// - ".\modules" @ 0x007c6bcc, "d:\modules" @ 0x007c6bd8, ":modules" @ 0x007cc0d8 (module directory variants)
-    /// - "LIVE%d:MODULES\" @ 0x007be680 (live module directory format)
+    /// - "LIVE%d:MODULES\" @ (K1: 0x007458c4, TSL: 0x007be680) (live module directory format)
     /// - "LASTMODULE" @ 0x007be1d0 (last loaded module reference)
     /// - "modulesave" @ 0x007bde20 (module save reference), "module000" @ 0x007cb9cc (default module name)
     /// - "Module: %s" @ 0x007c79c8 (module debug message)
