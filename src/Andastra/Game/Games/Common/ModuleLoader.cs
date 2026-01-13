@@ -301,8 +301,137 @@ namespace Andastra.Game.Games.Engines.Common
         }
 
         // TODO: STUB - Aurora module loading implementation
-        // Merge from AuroraModuleLoader.cs
+        // Merge from AuroraModuleLoader.cs (2085 lines - helper methods need to be merged)
         private async Task LoadModuleAuroraAsync(string moduleName, [CanBeNull] Action<float> progressCallback)
+        {
+            progressCallback?.Invoke(0.0f);
+
+            // Check if module exists
+            if (!HasModule(moduleName))
+            {
+                throw new InvalidOperationException($"Module '{moduleName}' does not exist or cannot be loaded");
+            }
+
+            // Unload current module if one is loaded
+            if (_currentModuleName != null)
+            {
+                UnloadModule();
+            }
+
+            try
+            {
+                // Load Module.ifo (module information file)
+                progressCallback?.Invoke(0.1f);
+                // TODO: STUB - Implement LoadModuleInfoAsync helper method (merge from AuroraModuleLoader.cs:365)
+                _currentModuleInfo = await LoadModuleInfoAuroraAsync(moduleName);
+                if (_currentModuleInfo == null)
+                {
+                    throw new InvalidOperationException($"Failed to load Module.ifo for module '{moduleName}'");
+                }
+
+                // Set current module context for resource lookups
+                _auroraResourceProvider.SetCurrentModule(moduleName);
+
+                // Load HAK files (hak packs)
+                progressCallback?.Invoke(0.2f);
+                // TODO: STUB - Implement LoadHakFilesAsync helper method (merge from AuroraModuleLoader.cs:491)
+                await LoadHakFilesAuroraAsync(moduleName);
+
+                // Get entry area from Module.ifo
+                // TODO: STUB - Implement GetEntryAreaResRef helper method (merge from AuroraModuleLoader.cs)
+                string entryAreaResRef = GetEntryAreaResRefAurora(_currentModuleInfo);
+                if (string.IsNullOrEmpty(entryAreaResRef))
+                {
+                    throw new InvalidOperationException($"Module '{moduleName}' has no entry area specified");
+                }
+
+                // Load entry area ARE file
+                progressCallback?.Invoke(0.3f);
+                // TODO: STUB - Implement LoadAreaFileAsync helper method (merge from AuroraModuleLoader.cs:699)
+                byte[] areData = await LoadAreaFileAuroraAsync(entryAreaResRef);
+                if (areData == null)
+                {
+                    throw new InvalidOperationException($"Failed to load ARE file for area '{entryAreaResRef}'");
+                }
+
+                // Load entry area GIT file
+                progressCallback?.Invoke(0.5f);
+                // TODO: STUB - Implement LoadGitFileAsync helper method (merge from AuroraModuleLoader.cs:734)
+                byte[] gitData = await LoadGitFileAuroraAsync(entryAreaResRef);
+                if (gitData == null)
+                {
+                    throw new InvalidOperationException($"Failed to load GIT file for area '{entryAreaResRef}'");
+                }
+
+                // Create Aurora area from ARE and GIT data
+                progressCallback?.Invoke(0.6f);
+                _currentAuroraArea = new AuroraArea(entryAreaResRef, areData, gitData);
+
+                // Set navigation mesh from area
+                if (_currentAuroraArea.NavigationMesh != null)
+                {
+                    _currentNavigationMesh = _currentAuroraArea.NavigationMesh as NavigationMesh;
+                }
+
+                // Spawn entities from GIT (creatures, placeables, doors, triggers, waypoints)
+                progressCallback?.Invoke(0.7f);
+                // TODO: STUB - Implement SpawnEntitiesFromGitAsync helper method (merge from AuroraModuleLoader.cs:790)
+                await SpawnEntitiesFromGitAuroraAsync(_currentAuroraArea, gitData);
+
+                // Set current module/area
+                _currentModuleName = moduleName;
+                _currentArea = _currentAuroraArea;
+
+                // Trigger module load scripts (OnModuleLoad, OnClientEnter)
+                progressCallback?.Invoke(0.95f);
+                // TODO: STUB - Implement TriggerModuleLoadScriptsAsync helper method (merge from AuroraModuleLoader.cs:2126)
+                await TriggerModuleLoadScriptsAuroraAsync(moduleName);
+
+                progressCallback?.Invoke(1.0f);
+            }
+            catch (Exception ex)
+            {
+                // Clean up on error
+                UnloadModule();
+                throw new InvalidOperationException($"Failed to load module '{moduleName}': {ex.Message}", ex);
+            }
+        }
+
+        // TODO: STUB - Aurora helper methods (merge from AuroraModuleLoader.cs - 2085 lines total)
+        private async Task<GFFStruct> LoadModuleInfoAuroraAsync(string moduleName)
+        {
+            await Task.CompletedTask;
+            return null;
+        }
+
+        private async Task LoadHakFilesAuroraAsync(string moduleName)
+        {
+            await Task.CompletedTask;
+        }
+
+        private string GetEntryAreaResRefAurora(GFFStruct moduleInfo)
+        {
+            return null;
+        }
+
+        private async Task<byte[]> LoadAreaFileAuroraAsync(string areaResRef)
+        {
+            await Task.CompletedTask;
+            return null;
+        }
+
+        private async Task<byte[]> LoadGitFileAuroraAsync(string areaResRef)
+        {
+            await Task.CompletedTask;
+            return null;
+        }
+
+        private async Task SpawnEntitiesFromGitAuroraAsync(AuroraArea area, byte[] gitData)
+        {
+            await Task.CompletedTask;
+        }
+
+        private async Task TriggerModuleLoadScriptsAuroraAsync(string moduleName)
         {
             await Task.CompletedTask;
         }
