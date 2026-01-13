@@ -637,7 +637,10 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_DAMAGE_BONUS (11): Damage bonus
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 11 = damage bonus, amount = bonus value
+                // ApplyDamageBonus @ (K1: 0x004e5c60, TSL: TODO: Find this address): Property type 11 = damage bonus, amount = bonus value
+                // Located via constant search: Property type 11 (0xb) check at 0x004e5cf8 in ApplyDamageBonus function
+                // Original implementation: CSWSItemPropertyHandler::ApplyDamageBonus checks if (*param_2 == 0xb) at line 41
+                // Property amount stored in param_2[3] (CostValue), applied as damage bonus effect to item
                 else if (propType == 11)
                 {
                     if (amount > 0)
