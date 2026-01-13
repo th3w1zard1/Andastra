@@ -1,281 +1,100 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using Andastra.Game.Games.Aurora.Systems;
-using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
+using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
 namespace Andastra.Runtime.Core.AI
 {
     /// <summary>
-    /// AI controller for NPCs.
+    /// Legacy AI controller wrapper for Runtime.Core compatibility.
+    /// Wraps the unified AIControllerSystem for use in World.cs and other Runtime.Core code.
     /// </summary>
     /// <remarks>
-    /// AI Controller:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) AI system
-    /// - Located via string references: "OnHeartbeat" @ 0x007beeb0 (heartbeat script field), "Heartbeat" @ 0x007c1a90
-    /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bc9a4 (heartbeat script event type, 0x0)
-    /// - "HeartbeatInterval" @ 0x007c38e8 (heartbeat timing interval field)
-    /// - "AIState" @ 0x007c4090 (AI state field), "AISTATE" @ 0x007c81f8 (AI state constant)
-    /// - Debug: "    AI Level: " @ 0x007cb174 (AI debug output)
-    /// - Original implementation: 0x005226d0 @ 0x005226d0 saves heartbeat script and interval
-    /// - Heartbeat timing: Default 6.0 seconds between heartbeat script executions (HeartbeatInterval field)
-    /// - AI behavior: NPCs process action queues, execute heartbeat scripts, and respond to combat
-    /// - Combat AI: NPCs attack nearest enemy when in combat (default combat behavior)
-    /// - Perception AI: NPCs respond to perception events (OnPerception, OnNotice) from PerceptionSystem
-    /// - Action queue: NPCs populate action queues based on AI state (combat, idle, following)
-    /// - Default behavior: If no actions queued, NPCs idle or follow party leader
-    /// - Pathfinding failure: "k_def_pathfail01" @ 0x007c52fc (default pathfinding failure script)
+    /// Legacy AI Controller:
+    /// - Maintains backward compatibility with Runtime.Core.World class
+    /// - Uses unified AIControllerSystem internally with EngineFamily.Unknown (default behavior)
+    /// - Wraps EventBus.FireScriptEvent for script event firing
+    /// - This class is kept for backward compatibility but delegates to AIControllerSystem
+    /// - Original implementation merged into Runtime.Games.Common.AIControllerSystem
     /// </remarks>
-    public class AIController
+    public class AIController : BaseAIControllerSystem
     {
-        private const float DefaultHeartbeatInterval = 6.0f; // seconds
-
-        private readonly IWorld _world;
-        private readonly CombatSystem _combatSystem;
-        private readonly Dictionary<IEntity, AIState> _aiStates;
+        private readonly AIControllerSystem _aiControllerSystem;
 
         public AIController(IWorld world, CombatSystem combatSystem)
+            : base(world)
         {
-            _world = world ?? throw new ArgumentNullException("world");
-            _combatSystem = combatSystem ?? throw new ArgumentNullException("combatSystem");
-            _aiStates = new Dictionary<IEntity, AIState>();
+            if (combatSystem == null)
+            {
+                throw new ArgumentNullException(nameof(combatSystem));
+            }
+
+            // Create unified AIControllerSystem with EngineFamily.Unknown (default behavior)
+            // Fire script events via EventBus
+            _aiControllerSystem = new AIControllerSystem(
+                world,
+                EngineFamily.Unknown,
+                (entity, scriptEvent, target) =>
+                {
+                    if (world.EventBus != null)
+                    {
+                        world.EventBus.FireScriptEvent(entity, scriptEvent, target);
+                    }
+                });
         }
 
         /// <summary>
         /// Updates AI for all NPCs.
         /// </summary>
         /// <param name="deltaTime">Time since last frame in seconds.</param>
-        public void Update(float deltaTime)
+        public override void Update(float deltaTime)
         {
-            foreach (IEntity entity in _world.GetAllEntities())
-            {
-                // Only process NPCs (not player-controlled)
-                if (IsPlayerControlled(entity))
-                {
-                    continue;
-                }
-
-                UpdateAI(entity, deltaTime);
-            }
+            // Delegate to unified system
+            _aiControllerSystem.Update(deltaTime);
         }
 
         /// <summary>
-        /// Updates AI for a single entity.
+        /// Fires heartbeat script for a creature.
+        /// Implemented for abstract method requirement - actual work done by unified system.
         /// </summary>
-        private void UpdateAI(IEntity creature, float deltaTime)
+        protected override void FireHeartbeatScript(IEntity creature)
         {
-            // Skip if in conversation
-            if (IsInConversation(creature))
-            {
-                return;
-            }
-
-            // Get or create AI state
-            if (!_aiStates.TryGetValue(creature, out AIState state))
-            {
-                state = new AIState();
-                _aiStates[creature] = state;
-            }
-
-            // Process action queue first
-            IActionQueueComponent actionQueue = creature.GetComponent<IActionQueueComponent>();
-            if (actionQueue != null)
-            {
-                actionQueue.Update(creature, deltaTime);
-                if (actionQueue.CurrentAction != null)
-                {
-                    return; // Still processing action
-                }
-            }
-
-            // Update heartbeat timer
-            state.TimeSinceHeartbeat += deltaTime;
-
-            // Execute heartbeat script
-            if (state.TimeSinceHeartbeat >= DefaultHeartbeatInterval)
-            {
-                state.TimeSinceHeartbeat = 0f;
-                ExecuteHeartbeatScript(creature);
-            }
-
-            // Default combat behavior
-            if (_combatSystem.IsInCombat(creature))
-            {
-                IEntity nearestEnemy = FindNearestEnemy(creature);
-                if (nearestEnemy != null && actionQueue != null)
-                {
-                    actionQueue.Add(new ActionAttack(nearestEnemy.ObjectId));
-                }
-            }
+            // Implementation not needed - unified system handles this via Update()
+            // This is only here to satisfy abstract method requirement
         }
 
         /// <summary>
-        /// Checks if entity is player-controlled.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player control detection
-        /// Located via string references: "IsPC" @ 0x007c4090, "GetIsPC" @ NWScript function
-        /// Original implementation: Checks entity flags and party membership to determine if player-controlled
+        /// Checks perception for a creature.
+        /// Implemented for abstract method requirement - actual work done by unified system.
         /// </summary>
-        private bool IsPlayerControlled(IEntity entity)
+        protected override void CheckPerception(IEntity creature)
         {
-            if (entity == null)
-            {
-                return false;
-            }
-
-            // Check if entity has IsPC flag set
-            if (entity is Core.Entities.Entity concreteEntity && concreteEntity.GetData<bool>("IsPC", false))
-            {
-                return true;
-            }
-
-            // Check if entity tag indicates player character
-            string tag = entity.Tag ?? string.Empty;
-            if (tag.Equals("Player", StringComparison.OrdinalIgnoreCase) ||
-                tag.Equals("PC", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            // Check if entity is in party and is player-controlled
-            // Party members can be player-controlled if they're the active party leader
-            return false;
+            // Implementation not needed - unified system handles this via Update()
+            // This is only here to satisfy abstract method requirement
         }
 
         /// <summary>
-        /// Checks if entity is in conversation.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Dialogue state tracking
-        /// Located via string references: "DialogueActive" @ 0x007c38e0, "InConversation" @ 0x007c38e4
-        /// Original implementation: Tracks active dialogue state per entity to prevent AI during conversations
+        /// Handles combat AI for a creature.
+        /// Implemented for abstract method requirement - actual work done by unified system.
         /// </summary>
-        private bool IsInConversation(IEntity entity)
+        protected override void HandleCombatAI(IEntity creature)
         {
-            if (entity == null)
-            {
-                return false;
-            }
-
-            // Check if entity has dialogue active flag
-            if (entity is Core.Entities.Entity concreteEntity && concreteEntity.GetData<bool>("InConversation", false))
-            {
-                return true;
-            }
-
-            // Check if entity has active dialogue component or dialogue state
-            // Dialogue system would set this flag when conversation starts
-            return false;
-        }
-
-        /// <summary>
-        /// Executes heartbeat script for entity.
-        /// </summary>
-        private void ExecuteHeartbeatScript(IEntity entity)
-        {
-            IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
-            if (scriptHooks != null)
-            {
-                string script = scriptHooks.GetScript(ScriptEvent.OnHeartbeat);
-                if (!string.IsNullOrEmpty(script))
-                {
-                    // Execute heartbeat script with entity as owner
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Heartbeat script execution
-                    // Located via string references: "OnHeartbeat" @ 0x007beeb0, "Heartbeat" @ 0x007c1a90
-                    // Original implementation: 0x005226d0 @ 0x005226d0 executes heartbeat scripts every 6 seconds
-                    if (_world.EventBus != null)
-                    {
-                        _world.EventBus.FireScriptEvent(entity, ScriptEvent.OnHeartbeat, null);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Finds nearest enemy for entity.
-        /// </summary>
-        private IEntity FindNearestEnemy(IEntity creature)
-        {
-            IFactionComponent faction = creature.GetComponent<IFactionComponent>();
-            if (faction == null)
-            {
-                return null;
-            }
-
-            IEntity nearest = null;
-            float nearestDist = float.MaxValue;
-
-            // Get all creatures in perception range
-            IPerceptionComponent perception = creature.GetComponent<IPerceptionComponent>();
-            float range = perception != null ? perception.SightRange : 20.0f;
-
-            ITransformComponent creatureTransform = creature.GetComponent<ITransformComponent>();
-            if (creatureTransform == null)
-            {
-                return null;
-            }
-
-            IEnumerable<IEntity> nearbyEntities = _world.GetEntitiesInRadius(creatureTransform.Position, range, ObjectType.Creature);
-
-            foreach (IEntity other in nearbyEntities)
-            {
-                if (other == creature || !other.IsValid)
-                {
-                    continue;
-                }
-
-                // Check if hostile
-                if (!faction.IsHostile(other))
-                {
-                    continue;
-                }
-
-                // Check if alive
-                IStatsComponent stats = other.GetComponent<IStatsComponent>();
-                if (stats != null && stats.CurrentHP <= 0)
-                {
-                    continue;
-                }
-
-                // Check distance
-                ITransformComponent otherTransform = other.GetComponent<ITransformComponent>();
-                if (otherTransform == null)
-                {
-                    continue;
-                }
-                float dist = Vector3.Distance(creatureTransform.Position, otherTransform.Position);
-                if (dist < nearestDist)
-                {
-                    nearest = other;
-                    nearestDist = dist;
-                }
-            }
-
-            return nearest;
+            // Implementation not needed - unified system handles this via Update()
+            // This is only here to satisfy abstract method requirement
         }
 
         /// <summary>
         /// Clears AI state for an entity (when destroyed).
+        /// Legacy method for backward compatibility.
         /// </summary>
         public void ClearAIState(IEntity entity)
         {
-            _aiStates.Remove(entity);
+            // Delegate to unified system
+            _aiControllerSystem.OnEntityDestroyed(entity);
         }
-
-        public static implicit operator AIController(AuroraAIController v)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    /// <summary>
-    /// AI state for an entity.
-    /// </summary>
-    internal class AIState
-    {
-        public float TimeSinceHeartbeat { get; set; }
     }
 }
 
