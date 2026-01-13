@@ -22,7 +22,7 @@ namespace Andastra.Game.Games.Odyssey.Profiles
     /// - Directory paths: ".\modules" @ 0x007c6bcc, ".\override" @ 0x007c6bd4, ".\saves" @ 0x007c6b0c
     /// - "MODULES:" @ 0x007b58b4, ":MODULES" @ 0x007be258, "MODULES" @ 0x007c6bc4 (module directory paths)
     /// - "d:\modules" @ 0x007c6bd8, ":modules" @ 0x007cc0d8 (module directory variants)
-    /// - "LIVE%d:MODULES\" @ 0x007be680 (live module directory format)
+    /// - "LIVE%d:MODULES\" @ (K1: 0x007458c4, TSL: 0x007be680) (live module directory format)
     /// - Original implementation: Defines KOTOR 2 specific configuration (resource paths, 2DA tables, NWScript functions)
     /// - NWScript functions: K2 has ~950 engine functions (function IDs 0-949)
     /// - Resource paths: Uses K2-specific texture pack files (swpc_tex_gui.erf, swpc_tex_tpa.erf)
