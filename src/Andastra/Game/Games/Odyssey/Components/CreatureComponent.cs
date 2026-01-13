@@ -259,7 +259,7 @@ namespace Andastra.Game.Games.Odyssey.Components
 
         /// <summary>
         /// Gets base attack bonus using classes.2da for accurate calculation.
-        /// Based on reverse engineering of swkotor.exe, swkotor2.exe:
+        /// Based on verified components of swkotor.exe, swkotor2.exe:
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
@@ -268,7 +268,7 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// <param name="gameDataManager">GameDataManager to look up class data and attack bonus tables.</param>
         /// <returns>Total base attack bonus from all class levels, or simplified calculation if game data unavailable.</returns>
         /// <remarks>
-        /// Based on reverse engineering of swkotor.exe, swkotor2.exe:
+        /// Based on verified components of swkotor.exe, swkotor2.exe:
         /// - swkotor2.exe: 0x005d63d0 @ 0x005d63d0 reads "attackbonustable" column from classes.2da
         /// - Attack bonus tables are named like "cls_atk_jedi_guardian" (referenced in classes.2da)
         /// - Each attack bonus table has rows for each level (row 0 = level 1, row 1 = level 2, etc.)
@@ -916,6 +916,32 @@ namespace Andastra.Game.Games.Odyssey.Components
         /// Combat round state.
         /// </summary>
         public CombatRoundState CombatState { get; set; }
+
+        /// <summary>
+        /// Whether creature is currently in stealth mode.
+        /// </summary>
+        /// <remarks>
+        /// swkotor2.exe: StealthMode stored at offset +0x511 as byte (boolean)
+        /// - 0x00542bf0 @ 0x00542bf0 sets StealthMode: *(char *)((int)this + 0x511) = param_1
+        /// - 0x005143a0 @ 0x005143a0 checks StealthMode: if (*(char *)((int)this + 0x511) == '\x01')
+        /// - 0x005226d0 @ 0x005226d0 (SerializeCreature_K2) saves StealthMode to GFF as byte field "StealthMode"
+        /// - 0x005223a0 @ 0x005223a0 loads StealthMode from GFF field "StealthMode" and sets at offset +0x511
+        /// - Stealth mode allows creatures to avoid detection, gain stealth XP, lose stealth on damage
+        /// - TSL only feature (not present in K1)
+        /// </remarks>
+        public bool StealthMode { get; set; }
+
+        /// <summary>
+        /// Whether creature is currently in detect mode.
+        /// </summary>
+        /// <remarks>
+        /// swkotor2.exe: DetectMode stored at offset +0x510 as byte (boolean)
+        /// - 0x00542bd0 @ 0x00542bd0 sets DetectMode: *(char *)((int)this + 0x510) = param_1
+        /// - 0x005226d0 @ 0x005226d0 (SerializeCreature_K2) saves DetectMode to GFF as byte field "DetectMode"
+        /// - 0x005223a0 @ 0x005223a0 loads DetectMode from GFF field "DetectMode" and sets at offset +0x510
+        /// - Detect mode allows creatures to detect stealthed enemies
+        /// </remarks>
+        public bool DetectMode { get; set; }
 
         #endregion
     }

@@ -6056,7 +6056,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
         ///
         /// Function ID: 509 (NWScript routine ID, 0x1fd)
         ///
-        /// Ghidra Reverse Engineering Findings:
+        /// Ghidra verified components Findings:
         /// - swkotor.exe: Function ID 509 referenced at 0x0041c54a and 0x0041c554 (function registration/dispatch setup)
         /// - swkotor2.exe: Function ID 509 referenced at 0x0041bf2a and 0x0041bf34 (identical pattern)
         /// - Module transition script: "Mod_Transition" @ 0x00745b68 (swkotor.exe), @ 0x007be8f0 (swkotor2.exe)
@@ -7855,33 +7855,47 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
 
         // Remote/stealth functions (TSL only)
         /// <summary>
-        /// IsStealthed(object oTarget) - Returns TRUE if target is stealthed (has invisibility effect)
+        /// IsStealthed(object oTarget) - Returns TRUE if target is stealthed (StealthMode flag is set)
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stealth system (TSL only)
+        /// swkotor2.exe: IsStealthed routine ID 834 (TSL only)
         /// Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
         /// "StealthXPCurrent" @ 0x007bd1d8, "StealthXPMax" @ 0x007bd1ec, "StealthXPLoss" @ 0x007bd1c8
         /// "STEALTHXP" @ 0x007bdf08, "setstealth" @ 0x007c79fc
         /// GUI: "LBL_STEALTH" @ 0x007c8c0c, "LBL_STEALTHXP" @ 0x007ccd7c, "TB_STEALTH" @ 0x007cd1dc
-        /// Original implementation: Checks if entity has Invisibility effect active
+        /// Original implementation: Checks StealthMode byte at offset +0x511 in creature structure
+        /// - 0x00542bf0 @ 0x00542bf0 sets StealthMode: *(char *)((int)this + 0x511) = param_1
+        /// - 0x005143a0 @ 0x005143a0 checks StealthMode: if (*(char *)((int)this + 0x511) == '\x01')
+        /// - 0x005226d0 @ 0x005226d0 (SerializeCreature_K2) saves StealthMode to GFF as byte field "StealthMode"
+        /// - 0x005223a0 @ 0x005223a0 loads StealthMode from GFF field "StealthMode" and sets at offset +0x511
         /// Stealth system: Entities with stealth can avoid detection, gain stealth XP, lose stealth on damage
+        /// Returns 0 for non-creatures or if StealthMode is not set
         /// </remarks>
         private Variable Func_IsStealthed(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // IsStealthed(object oTarget) - returns TRUE if target is stealthed (has invisibility effect)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stealth system (TSL only)
-            // Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
-            // Original implementation: Checks if entity has Invisibility effect active
+            // IsStealthed(object oTarget) - returns TRUE if target is stealthed (StealthMode flag is set)
+            // swkotor2.exe: Checks StealthMode byte at offset +0x511 in creature structure
+            // Original implementation: Returns 1 if *(char *)((int)this + 0x511) == '\x01', else 0
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
             IEntity entity = ResolveObject(objectId, ctx);
 
-            if (entity == null || ctx.World == null || ctx.World.EffectSystem == null)
+            if (entity == null)
             {
                 return Variable.FromInt(0);
             }
 
-            // Check if entity has Invisibility effect (stealth)
-            bool isStealthed = ctx.World.EffectSystem.HasEffect(entity, EffectType.Invisibility);
+            // Check if entity is a creature and has StealthMode flag set
+            // swkotor2.exe: IsStealthed checks StealthMode byte at offset +0x511
+            // Returns 0 for non-creatures (per NSS documentation: "This function will return 0 for any non-creature")
+            Components.CreatureComponent creatureComp = entity.GetComponent<Components.CreatureComponent>();
+            if (creatureComp == null)
+            {
+                return Variable.FromInt(0);
+            }
+
+            // Check StealthMode flag (stored as byte at offset +0x511 in original engine)
+            // 0x005143a0 @ 0x005143a0 checks: if (*(char *)((int)this + 0x511) == '\x01')
+            bool isStealthed = creatureComp.StealthMode;
             return Variable.FromInt(isStealthed ? 1 : 0);
         }
 
