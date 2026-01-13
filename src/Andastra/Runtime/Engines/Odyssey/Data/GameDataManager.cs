@@ -115,11 +115,25 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             {
                 RowIndex = appearanceType,
                 Label = row.Label(),
+                ModelType = row.GetString("modeltype"),
                 ModelA = row.GetString("modela"),
                 ModelB = row.GetString("modelb"),
+                ModelC = row.GetString("modelc"),
+                ModelD = row.GetString("modeld"),
+                ModelE = row.GetString("modele"),
+                ModelF = row.GetString("modelf"),
+                ModelG = row.GetString("modelg"),
+                ModelH = row.GetString("modelh"),
+                ModelI = row.GetString("modeli"),
+                ModelJ = row.GetString("modelj"),
+                ModelK = row.GetString("modelk"),
+                ModelL = row.GetString("modell"),
+                ModelM = row.GetString("modelm"),
+                ModelN = row.GetString("modeln"),
                 TexA = row.GetString("texa"),
                 TexB = row.GetString("texb"),
                 Race = row.GetString("race"),
+                RacialType = row.GetInteger("racialtype") ?? 0,
                 WalkSpeed = row.GetFloat("walkdist") ?? 1.75f,
                 RunSpeed = row.GetFloat("rundist") ?? 4.0f,
                 PerceptionRange = row.GetFloat("perspace") ?? 20.0f,
@@ -924,6 +938,18 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             public string ModelType { get; set; }
             public string ModelA { get; set; }
             public string ModelB { get; set; }
+            public string ModelC { get; set; }
+            public string ModelD { get; set; }
+            public string ModelE { get; set; }
+            public string ModelF { get; set; }
+            public string ModelG { get; set; }
+            public string ModelH { get; set; }
+            public string ModelI { get; set; }
+            public string ModelJ { get; set; }
+            public string ModelK { get; set; }
+            public string ModelL { get; set; }
+            public string ModelM { get; set; }
+            public string ModelN { get; set; }
             public string TexA { get; set; }
             public string TexB { get; set; }
             public string Race { get; set; }
@@ -937,6 +963,34 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             public float Height { get; set; }
             public int SizeCategory { get; set; }
             public float HitRadius { get; set; }
+
+            /// <summary>
+            /// Gets the model ResRef for the specified body variation index.
+            /// </summary>
+            /// <param name="bodyVariation">Body variation index (0 = ModelA, 1 = ModelB, ..., 13 = ModelN).</param>
+            /// <returns>Model ResRef or null if not found.</returns>
+            [CanBeNull]
+            public string GetModelByVariation(int bodyVariation)
+            {
+                switch (bodyVariation)
+                {
+                    case 0: return ModelA;
+                    case 1: return ModelB;
+                    case 2: return ModelC;
+                    case 3: return ModelD;
+                    case 4: return ModelE;
+                    case 5: return ModelF;
+                    case 6: return ModelG;
+                    case 7: return ModelH;
+                    case 8: return ModelI;
+                    case 9: return ModelJ;
+                    case 10: return ModelK;
+                    case 11: return ModelL;
+                    case 12: return ModelM;
+                    case 13: return ModelN;
+                    default: return ModelA; // Fallback to ModelA for out-of-range variations
+                }
+            }
         }
 
         /// <summary>
