@@ -24,7 +24,7 @@ namespace Andastra.Game.Stride.Graphics
         private SamplerStateDescription[] _currentSamplerStates;
         private bool _stateDirty;
         private PipelineStateKey _lastPipelineStateKey;
-        private StrideViewport _currentViewport;
+        private GraphicsViewport _currentViewport;
 
         /// <summary>
         /// Pipeline state cache key for tracking state combinations.
@@ -113,24 +113,12 @@ namespace Andastra.Game.Stride.Graphics
                     var presentParams = _device.Presenter?.Description;
                     if (presentParams != null)
                     {
-                        _currentViewport = new GraphicsViewport
-                        {
-                            X = 0,
-                            Y = 0,
-                            Width = presentParams.BackBufferWidth,
-                            Height = presentParams.BackBufferHeight
-                        };
+                        _currentViewport = new GraphicsViewport(0, 0, presentParams.BackBufferWidth, presentParams.BackBufferHeight, 0.0f, 1.0f);
                     }
                     else
                     {
                         // Fallback to a default viewport
-                        _currentViewport = new GraphicsViewport
-                        {
-                            X = 0,
-                            Y = 0,
-                            Width = 1920,
-                            Height = 1080
-                        };
+                        _currentViewport = new GraphicsViewport(0, 0, 1920, 1080, 0.0f, 1.0f);
                     }
                 }
                 return _currentViewport;
