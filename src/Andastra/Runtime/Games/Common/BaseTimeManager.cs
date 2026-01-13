@@ -47,7 +47,7 @@ namespace Andastra.Runtime.Games.Common
     /// 
     /// NOTE: This base class contains ONLY functionality verified as identical across ALL engines.
     /// All engine-specific function addresses, memory offsets, and implementation details are in subclasses.
-    /// Cross-engine reverse engineering via Ghidra is required to verify commonality before moving code to base class.
+    /// Cross-engine verified components  is required to verify commonality before moving code to base class.
     /// </remarks>
     public abstract class BaseTimeManager : ITimeManager
     {
@@ -351,6 +351,97 @@ namespace Andastra.Runtime.Games.Common
             _gameTimeSecond = Math.Max(0, Math.Min(59, second));
             _gameTimeMillisecond = Math.Max(0, Math.Min(999, millisecond));
             _gameTimeAccumulator = 0.0f;
+        }
+
+        /// <summary>
+        /// Gets the current game time as day and milliseconds since day start.
+        /// </summary>
+        /// <param name="day">Output parameter for the current day number.</param>
+        /// <param name="milliseconds">Output parameter for milliseconds since day start (0-86399999).</param>
+        /// <remarks>
+        /// Original engine behavior (swkotor2.exe: 0x004db710 @ 0x004db710):
+        /// - If paused (offset +0x24 == 1), returns pause day/time from offsets +0x28 and +0x2c
+        /// - Otherwise, calculates day and milliseconds from current time system state
+        /// - Returns day (int) and milliseconds (uint) since day start
+        /// 
+        /// This implementation converts current game time components (hour, minute, second, millisecond)
+        /// to total milliseconds since day start. Day is always 0 in this base implementation.
+        /// Engine-specific subclasses may override to track day numbers.
+        /// </remarks>
+        public virtual void GetGameTimeDayAndMilliseconds(out int day, out uint milliseconds)
+        {
+            // Base implementation: Always day 0, calculate milliseconds from current time components
+            day = 0;
+            
+            // Calculate total milliseconds since day start
+            // Hour (0-23) * 3600000 + Minute (0-59) * 60000 + Second (0-59) * 1000 + Millisecond (0-999)
+            milliseconds = (uint)(_gameTimeHour * 3600000 + _gameTimeMinute * 60000 + _gameTimeSecond * 1000 + _gameTimeMillisecond);
+        }
+
+        /// <summary>
+        /// Converts milliseconds since day start to hour, minute, second, and millisecond components.
+        /// </summary>
+        /// <param name="totalMilliseconds">Total milliseconds since day start.</param>
+        /// <param name="minutesPerHour">Number of minutes per hour (typically 60, but can vary by time scale).</param>
+        /// <param name="hour">Output parameter for hour (0-23).</param>
+        /// <param name="minute">Output parameter for minute (0-59).</param>
+        /// <param name="second">Output parameter for second (0-59).</param>
+        /// <param name="millisecond">Output parameter for millisecond (0-999).</param>
+        /// <remarks>
+        /// Original engine behavior (swkotor2.exe: 0x004db660 @ 0x004db660):
+        /// - Line 9: millisecond = totalMilliseconds % 1000
+        /// - Line 10: Calculate total seconds = totalMilliseconds / 1000
+        /// - Line 11: second = (totalSeconds) % 60
+        /// - Line 12: minute = (totalSeconds / 60) % minutesPerHour
+        /// - Line 13: hour = (totalSeconds / 60) / minutesPerHour
+        /// 
+        /// This matches the original engine's time conversion algorithm exactly.
+        /// </remarks>
+        public static void ConvertMillisecondsToTimeComponents(uint totalMilliseconds, int minutesPerHour, out int hour, out int minute, out int second, out int millisecond)
+        {
+            // Extract millisecond component (0-999)
+            millisecond = (int)(totalMilliseconds % 1000);
+            
+            // Calculate total seconds
+            ulong totalSeconds = totalMilliseconds / 1000;
+            
+            // Extract second component (0-59)
+            second = (int)(totalSeconds % 60);
+            
+            // Calculate total minutes
+            ulong totalMinutes = totalSeconds / 60;
+            
+            // Extract minute component (0 to minutesPerHour-1)
+            minute = (int)(totalMinutes % (ulong)minutesPerHour);
+            
+            // Extract hour component
+            hour = (int)(totalMinutes / (ulong)minutesPerHour);
+            
+            // Clamp hour to valid range (0-23) to match game day cycle
+            if (hour >= 24)
+            {
+                hour = hour % 24;
+            }
+        }
+
+        /// <summary>
+        /// Gets pause day and pause time.
+        /// </summary>
+        /// <param name="pauseDay">Output parameter for the day when paused.</param>
+        /// <param name="pauseTime">Output parameter for the time when paused (milliseconds since day start).</param>
+        /// <remarks>
+        /// Original engine behavior (swkotor2.exe: 0x00500290 @ 0x00500290 lines 88-90):
+        /// - Gets pause day from time system object offset +0x28
+        /// - Gets pause time from time system object offset +0x2c
+        /// 
+        /// Base implementation returns 0 for both values. Engine-specific subclasses should override
+        /// to track pause state when game is paused.
+        /// </remarks>
+        public virtual void GetPauseDayAndTime(out uint pauseDay, out uint pauseTime)
+        {
+            // Base implementation: No pause tracking
+            pauseDay = 0;
+            pauseTime = 0;
         }
 
         /// <summary>

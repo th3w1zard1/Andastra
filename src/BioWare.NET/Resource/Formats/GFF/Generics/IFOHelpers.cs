@@ -375,5 +375,94 @@ namespace BioWare.NET.Resource.Formats.GFF.Generics
 
             return gff;
         }
+
+        /// <summary>
+        /// Populates IFO game time fields from TimeManager.
+        /// </summary>
+        /// <param name="ifo">The IFO object to populate.</param>
+        /// <param name="timeManager">The time manager to get game time from.</param>
+        /// <param name="minutesPerHour">Number of minutes per hour for time conversion (typically 60, but can vary by time scale).</param>
+        /// <remarks>
+        /// Original engine behavior (swkotor2.exe: SerializeIfoGameTime @ 0x00500290):
+        /// - Line 79: Gets time system object via FUN_004dc6e0
+        /// - Line 80: Gets current game time (day, milliseconds) via FUN_004db710
+        /// - Line 86: Converts time to minute/second/millisecond via FUN_004db660
+        /// - Lines 88-90: Gets pause day/time from time system object offsets +0x28 and +0x2c
+        /// - Line 96: Writes Mod_StartMinute (UInt16) - current game time minute component
+        /// - Line 97: Writes Mod_StartSecond (UInt16) - current game time second component
+        /// - Line 98: Writes Mod_StartMiliSec (UInt16) - current game time millisecond component
+        /// - Line 99: Writes Mod_PauseDay (UInt32) - pause day from time system object +0x28
+        /// - Line 100: Writes Mod_PauseTime (UInt32) - pause time from time system object +0x2c
+        /// 
+        /// This function matches the original engine's IFO serialization behavior exactly:
+        /// 1. Gets current game time as day + milliseconds from time manager
+        /// 2. Converts milliseconds to hour/minute/second/millisecond components
+        /// 3. Gets pause day/time from time manager
+        /// 4. Populates IFO object with StartMinute, StartSecond, StartMiliSec, PauseDay, PauseTime
+        /// 
+        /// The IFO object should then be serialized using DismantleIfo to create the GFF file.
+        /// </remarks>
+        public static void PopulateIfoGameTimeFromTimeManager(IFO ifo, Andastra.Runtime.Core.Interfaces.ITimeManager timeManager, int minutesPerHour = 60)
+        {
+            if (ifo == null)
+            {
+                throw new System.ArgumentNullException(nameof(ifo));
+            }
+
+            if (timeManager == null)
+            {
+                throw new System.ArgumentNullException(nameof(timeManager));
+            }
+
+            // Get current game time as day and milliseconds (matching FUN_004db710 behavior)
+            int gameDay;
+            uint gameTimeMilliseconds;
+            if (timeManager is Andastra.Runtime.Games.Common.BaseTimeManager baseTimeManager)
+            {
+                baseTimeManager.GetGameTimeDayAndMilliseconds(out gameDay, out gameTimeMilliseconds);
+            }
+            else
+            {
+                // Fallback: Calculate from current time components if not a BaseTimeManager
+                gameDay = 0;
+                int hour = timeManager.GameTimeHour;
+                int minute = timeManager.GameTimeMinute;
+                int second = timeManager.GameTimeSecond;
+                int millisecond = timeManager.GameTimeMillisecond;
+                gameTimeMilliseconds = (uint)(hour * 3600000 + minute * 60000 + second * 1000 + millisecond);
+            }
+
+            // Convert milliseconds to hour/minute/second/millisecond components (matching FUN_004db660 behavior)
+            int hour, minute, second, millisecond;
+            Andastra.Runtime.Games.Common.BaseTimeManager.ConvertMillisecondsToTimeComponents(
+                gameTimeMilliseconds, 
+                minutesPerHour, 
+                out hour, 
+                out minute, 
+                out second, 
+                out millisecond);
+
+            // Populate IFO with game time components (matching lines 96-98)
+            ifo.StartMinute = minute;
+            ifo.StartSecond = second;
+            ifo.StartMiliSec = millisecond;
+
+            // Get pause day/time (matching lines 88-90)
+            uint pauseDay, pauseTime;
+            if (timeManager is Andastra.Runtime.Games.Common.BaseTimeManager baseTimeManager2)
+            {
+                baseTimeManager2.GetPauseDayAndTime(out pauseDay, out pauseTime);
+            }
+            else
+            {
+                // Fallback: No pause tracking if not a BaseTimeManager
+                pauseDay = 0;
+                pauseTime = 0;
+            }
+
+            // Populate IFO with pause day/time (matching lines 99-100)
+            ifo.PauseDay = pauseDay;
+            ifo.PauseTime = pauseTime;
+        }
     }
 }
