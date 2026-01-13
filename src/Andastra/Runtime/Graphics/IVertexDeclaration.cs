@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Vertex Declaration Interface:
-    /// - Based on swkotor2.exe DirectX vertex format system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX vertex format system
     /// - Located via string references: "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO option)
     /// - "glVertexAttrib4fvNV" @ 0x007b7d24, "glVertexAttrib3fvNV" @ 0x007b7d38, "glVertexAttrib2fvNV" @ 0x007b7d4c
     /// - Original implementation: DirectX 8/9 flexible vertex format (FVF) or vertex declarations

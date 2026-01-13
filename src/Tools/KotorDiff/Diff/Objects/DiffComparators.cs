@@ -2,11 +2,11 @@
 // Original: class DiffComparator(ABC, Generic[T]): ... class BytesDiffComparator, GFFDiffComparator, TwoDADiffComparator, TLKDiffComparator, LIPDiffComparator
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.LIP;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Common;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff.Objects
@@ -115,7 +115,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing GffDiff.Compare method
-                var compareResult = Andastra.Parsing.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
+                var compareResult = BioWare.NET.Diff.GffDiff.Compare(leftGff.Root, rightGff.Root);
 
                 DiffType diffType = compareResult.Differences.Count == 0 ? DiffType.Identical : DiffType.Modified;
 
@@ -176,8 +176,8 @@ namespace KotorDiff.Diff.Objects
                 // Use StructuredDiffEngine for 2DA comparison
                 var structuredEngine = new StructuredDiffEngine();
                 var result = structuredEngine.Compare2DA(
-                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, Andastra.Parsing.Common.ResourceType.TwoDA),
-                    Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, Andastra.Parsing.Common.ResourceType.TwoDA),
+                    BioWare.NET.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(left2da, BioWare.NET.Common.ResourceType.TwoDA),
+                    BioWare.NET.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(right2da, BioWare.NET.Common.ResourceType.TwoDA),
                     leftId,
                     rightId);
 
@@ -222,7 +222,7 @@ namespace KotorDiff.Diff.Objects
                 }
 
                 // Use the existing TlkDiff.Compare method
-                var compareResult = Andastra.Parsing.Diff.TlkDiff.Compare(leftTlk, rightTlk);
+                var compareResult = BioWare.NET.Diff.TlkDiff.Compare(leftTlk, rightTlk);
 
                 var entryDiffs = new List<TLKEntryDiff>();
 

@@ -9,7 +9,7 @@ using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
 
-namespace Andastra.Runtime.Graphics.Common.Backends
+namespace Andastra.Game.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for Odyssey engine graphics backends.
@@ -677,7 +677,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// <summary>
         /// Initializes the graphics backend.
         /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
-        /// Based on swkotor2.exe: FUN_00461c50 @ 0x00461c50
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00461c50 @ 0x00461c50
         /// </summary>
         /// <param name="width">Initial window width.</param>
         /// <param name="height">Initial window height.</param>
@@ -726,7 +726,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends
         /// Creates the Odyssey window and OpenGL context.
         /// Override in derived classes for game-specific initialization.
         /// Based on swkotor.exe: FUN_0044dab0 @ 0x0044dab0
-        /// Based on swkotor2.exe: FUN_00461c50 @ 0x00461c50
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00461c50 @ 0x00461c50
         /// </summary>
         protected virtual bool CreateOdysseyWindowAndContext()
         {

@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.BWM;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Games.Eclipse;
+using Andastra.Game.Games.Eclipse;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Loading
+namespace Andastra.Game.Games.Eclipse.Loading
 {
     /// <summary>
     /// Factory for creating EclipseNavigationMesh from BWM walkmesh data.

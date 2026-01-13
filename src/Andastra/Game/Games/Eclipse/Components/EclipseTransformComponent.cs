@@ -1,7 +1,7 @@
 using System.Numerics;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Eclipse.Components
+namespace Andastra.Game.Games.Eclipse.Components
 {
     /// <summary>
     /// Eclipse Engine (Dragon Age) specific transform component implementation.

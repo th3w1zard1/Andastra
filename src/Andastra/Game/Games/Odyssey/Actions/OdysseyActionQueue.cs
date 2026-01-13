@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Actions;
+using Andastra.Game.Games.Common.Actions;
 
-namespace Andastra.Runtime.Games.Odyssey.Actions
+namespace Andastra.Game.Games.Odyssey.Actions
 {
     /// <summary>
     /// Action queue implementation for Odyssey engine (swkotor.exe, swkotor2.exe).

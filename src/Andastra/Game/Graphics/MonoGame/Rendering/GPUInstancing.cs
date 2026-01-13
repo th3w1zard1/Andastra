@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// GPU instancing system for rendering multiple copies of the same mesh efficiently.
@@ -19,7 +19,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// GPU Instancing (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Original implementation: KOTOR renders each object with individual draw calls
     /// - Original engine: DirectX 8/9 era, hardware instancing not widely available/supported
     /// - Original rendering: Each entity/model rendered separately with individual draw calls

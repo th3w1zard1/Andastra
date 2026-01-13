@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Core.Enums
     /// </summary>
     /// <remarks>
     /// Action Type Enum:
-    /// - Based on swkotor2.exe action system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) action system
     /// - Located via string references: "ActionType" @ 0x007bf7f8, "ActionList" @ 0x007bebdc
     /// - Original implementation: Action types stored in GFF ActionList structures
     /// - Action types correspond to NWScript action functions (ActionMoveToLocation, ActionAttack, etc.)

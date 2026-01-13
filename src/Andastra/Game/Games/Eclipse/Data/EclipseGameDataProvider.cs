@@ -1,9 +1,9 @@
 using System;
-using Andastra.Parsing.Installation;
-using Andastra.Runtime.Games.Common;
+using BioWare.NET.Extract.Installation;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Data
+namespace Andastra.Game.Games.Eclipse.Data
 {
     /// <summary>
     /// Eclipse-specific implementation of IGameDataProvider.

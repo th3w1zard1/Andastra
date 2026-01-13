@@ -1,19 +1,19 @@
 using System;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Enums;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Unified game launcher that supports all BioWare engine families.
     /// </summary>
     /// <remarks>
     /// Unified Game Launcher:
-    /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Original implementation: Determines game type, initializes engine, creates game session, runs game loop
     /// - This implementation: Unified launcher for all BioWare engines (Odyssey, Aurora, Eclipse, Infinity)
     /// - Maps BioWareGame enum to appropriate engine instances via EngineFactory

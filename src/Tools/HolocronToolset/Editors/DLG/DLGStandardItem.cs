@@ -25,7 +25,7 @@ using System.Windows.Threading;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 
 /// <summary>
 /// Represents a standard item in the DLG tree model.

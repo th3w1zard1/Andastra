@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Engines.Common;
 
-namespace Andastra.Runtime.Engines.Eclipse.Profiles
+namespace Andastra.Game.Engines.Eclipse.Profiles
 {
     /// <summary>
     /// Base class for Eclipse engine resource configuration.

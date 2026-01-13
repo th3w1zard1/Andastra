@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Common.Script;
+using BioWare.NET.Common.Script;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -12,7 +12,7 @@ using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Runtime.Engines.Odyssey.EngineApi
+namespace Andastra.Game.Engines.Odyssey.EngineApi
 {
     /// <summary>
     /// KOTOR 2 (TSL) engine API implementation.
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
     /// </summary>
     /// <remarks>
     /// KOTOR 2 Engine API (TSL NWScript Functions):
-    /// - Based on swkotor2.exe NWScript engine API implementation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript engine API implementation
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
     /// - Original implementation: TSL adds ~100 additional engine functions beyond K1's ~850 functions
     /// - Function IDs: K1 functions 0-799 are shared, TSL adds functions 800+ (total ~950 functions)
@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// GetInfluence(int nNPC) - Returns influence value for NPC (0-100)
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Influence system (TSL only)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
         /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
         /// "BaseInfluence" @ 0x007bf6fc, "Influence" @ 0x007c4f78
         /// GUI: "LBL_INFLUENCE_RECV" @ 0x007c8b38, "LBL_INFLUENCE_LOST" @ 0x007c8b0c
@@ -144,7 +144,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         private Variable Func_GetInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // GetInfluence(int nNPC) - returns influence value for NPC (0-100)
-            // Based on swkotor2.exe: Influence system (TSL only)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
             // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
             // Original implementation: Reads influence from PARTYTABLE.res GFF structure
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
@@ -172,7 +172,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// SetInfluence(int nNPC, int nInfluence) - Sets influence value for NPC (0-100)
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Influence system (TSL only)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
         /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
         /// Original implementation: Writes influence to PARTYTABLE.res GFF structure (PT_NPC_INFLUENCE field)
         /// Influence value clamped to 0-100 range
@@ -180,7 +180,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         private Variable Func_SetInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // SetInfluence(int nNPC, int nInfluence) - sets influence value for NPC (0-100)
-            // Based on swkotor2.exe: Influence system (TSL only)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
             // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
             // Original implementation: Writes influence to PARTYTABLE.res GFF structure
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// ModifyInfluence(int nNPC, int nModifier) - Modifies influence value for NPC by modifier amount
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Influence system (TSL only)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
         /// Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
         /// Original implementation: Reads current influence, adds modifier, writes back to PARTYTABLE.res GFF
         /// Influence value clamped to 0-100 range after modification
@@ -214,7 +214,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         private Variable Func_ModifyInfluence(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // ModifyInfluence(int nNPC, int nModifier) - modifies influence value for NPC by modifier amount
-            // Based on swkotor2.exe: Influence system (TSL only)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Influence system (TSL only)
             // Located via string references: "PT_INFLUENCE" @ 0x007c1788, "PT_NPC_INFLUENCE" @ 0x007c1774
             // Original implementation: Reads current influence, adds modifier, writes back to GFF
             int npcIndex = args.Count > 0 ? args[0].AsInt() : 0;
@@ -297,13 +297,13 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 }
 
                 // Create entity from template using EntityFactory
-                // Based on swkotor2.exe: AddAvailableNPCByTemplate implementation
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AddAvailableNPCByTemplate implementation
                 // Located via string references: "TemplateResRef" @ 0x007bd00c, entity creation from UTC templates
                 // Original implementation: Creates creature from UTC template and adds to available party members
                 // Ghidra analysis: FUN_0057bd70 @ 0x0057bd70 saves party data, FUN_0057dcd0 @ 0x0057dcd0 loads party data
                 // EntityFactory accessed via ModuleLoader.EntityFactory property
                 // Get current module from ModuleLoader
-                Andastra.Parsing.Installation.Module module = moduleLoader.GetCurrentModule();
+                BioWare.NET.Extract.Installation.Module module = moduleLoader.GetCurrentModule();
                 if (module != null)
                 {
                     // Get spawn position (use player position or default)
@@ -321,7 +321,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                     }
 
                     // Create creature from template using EntityFactory
-                    // Based on swkotor2.exe: EntityFactory.CreateCreatureFromTemplate creates creature from UTC template
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory.CreateCreatureFromTemplate creates creature from UTC template
                     // Located via string references: "TemplateResRef" @ 0x007bd00c, "Creature template '%s' doesn't exist.\n" @ 0x007bf78c
                     // Original implementation: Loads UTC GFF template, creates entity with template data, registers in world
                     Loading.EntityFactory entityFactory = moduleLoader.EntityFactory;
@@ -401,7 +401,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// IsStealthed(object oTarget) - Returns TRUE if target is stealthed (has invisibility effect)
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Stealth system (TSL only)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stealth system (TSL only)
         /// Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
         /// "StealthXPCurrent" @ 0x007bd1d8, "StealthXPMax" @ 0x007bd1ec, "StealthXPLoss" @ 0x007bd1c8
         /// "STEALTHXP" @ 0x007bdf08, "setstealth" @ 0x007c79fc
@@ -412,7 +412,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         private Variable Func_IsStealthed(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // IsStealthed(object oTarget) - returns TRUE if target is stealthed (has invisibility effect)
-            // Based on swkotor2.exe: Stealth system (TSL only)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stealth system (TSL only)
             // Located via string references: "StealthMode" @ 0x007bf690, "StealthXPEnabled" @ 0x007bd1b4
             // Original implementation: Checks if entity has Invisibility effect active
             uint objectId = args.Count > 0 ? args[0].AsObjectId() : ObjectSelf;
@@ -432,7 +432,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// GetStealthXPEnabled() - Returns TRUE if stealth XP is enabled for the current area
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetStealthXPEnabled @ routine ID 836
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetStealthXPEnabled @ routine ID 836
         /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
         /// Ghidra analysis: FUN_004e26d0 @ 0x004e26d0 reads "StealthXPEnabled" from AreaProperties GFF structure
         /// Stored at object offset +0x2f4 as byte (boolean) in area properties
@@ -441,7 +441,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         private Variable Func_GetStealthXPEnabled(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
             // Get stealth XP enabled state from current area
-            // Based on swkotor2.exe: FUN_004e26d0 @ 0x004e26d0 reads StealthXPEnabled from AreaProperties GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e26d0 @ 0x004e26d0 reads StealthXPEnabled from AreaProperties GFF
             // Located via string references: "StealthXPEnabled" @ 0x007bd1b4
             // Original implementation: Reads boolean from AreaProperties GFF structure at offset +0x2f4
             if (ctx.World != null && ctx.World.CurrentArea != null)
@@ -455,7 +455,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// SetStealthXPEnabled(int nEnabled) - Sets whether stealth XP is enabled for the current area
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: SetStealthXPEnabled @ routine ID 837
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SetStealthXPEnabled @ routine ID 837
         /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
         /// Ghidra analysis: FUN_004e11d0 @ 0x004e11d0 writes "StealthXPEnabled" to AreaProperties GFF structure
         /// Stored at object offset +0x2f4 as byte (boolean) in area properties
@@ -466,7 +466,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             int enabled = args.Count > 0 ? args[0].AsInt() : 1;
 
             // Set stealth XP enabled state in current area
-            // Based on swkotor2.exe: FUN_004e11d0 @ 0x004e11d0 writes StealthXPEnabled to AreaProperties GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e11d0 @ 0x004e11d0 writes StealthXPEnabled to AreaProperties GFF
             // Located via string references: "StealthXPEnabled" @ 0x007bd1b4
             // Original implementation: Writes boolean to AreaProperties GFF structure at offset +0x2f4
             if (ctx.World != null && ctx.World.CurrentArea != null)
@@ -481,7 +481,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// ShowUpgradeScreen(object oItem, object oCharacter, int nDisableItemCreation, int nDisableUpgrade, string sOverride2DA) - Displays the upgrade screen where the player can modify weapons and armor
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0 (routine ID 850)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ShowUpgradeScreen @ 0x00680cb0 (routine ID 850)
         /// Located via string references: "upgradeitems_p" @ 0x007d09e4, "BTN_UPGRADEITEM" @ 0x007d09d4
         /// "BTN_UPGRADEITEMS" @ 0x007d0b58, "BTN_CREATEITEMS" @ 0x007d0b48, "upgradesel_p" (upgrade selection screen)
         /// Original implementation:
@@ -500,7 +500,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         ///   - Upgrade availability checks (skill requirements)
         ///   - Item creation success rates (higher skills = better success)
         ///   - Upgrade application skill checks (skill requirements for applying upgrades)
-        ///   Based on swkotor2.exe: Character skills stored in IStatsComponent, accessed via GetSkillRank()
+        ///   [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills stored in IStatsComponent, accessed via GetSkillRank()
         ///   Skills extracted when character is set via BaseUpgradeScreen.ExtractCharacterSkills()
         ///   Original implementation: Character skills were NOT IMPLEMENTED in original ShowUpgradeScreen
         /// - If nDisableItemCreation = TRUE, then the player will not be able to access the item creation screen
@@ -514,7 +514,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         {
             // ShowUpgradeScreen(object oItem = OBJECT_INVALID, object oCharacter = OBJECT_INVALID,
             //                   int nDisableItemCreation = FALSE, int nDisableUpgrade = FALSE, string sOverride2DA = "")
-            // Based on swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ShowUpgradeScreen @ 0x00680cb0
             uint item = args.Count > 0 ? args[0].AsObjectId() : ObjectInvalid;
             uint character = args.Count > 1 ? args[1].AsObjectId() : ObjectInvalid;
             int disableItemCreation = args.Count > 2 ? args[2].AsInt() : 0;
@@ -633,7 +633,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// GetFeatAcquired(int nFeat, object oCreature=OBJECT_SELF) - Returns whether creature has access to a feat, even if unusable
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetFeatAcquired function (TSL only, function ID 783)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetFeatAcquired function (TSL only, function ID 783)
         /// Located via string references: Feat acquisition checking (separate from usability)
         /// Original implementation: Checks if creature has the feat in their feat list, regardless of daily limits or restrictions
         /// Returns TRUE if creature has the feat (even if exhausted or restricted)

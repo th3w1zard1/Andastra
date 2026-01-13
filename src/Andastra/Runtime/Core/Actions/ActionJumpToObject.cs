@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Jump To Object Action:
-    /// - Based on swkotor2.exe ActionJumpToObject NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionJumpToObject NWScript function
     /// - Located via string references: "JumpToObject" action type (ACTION_TYPE_JUMP_TO_OBJECT constant), "Position" @ 0x007bef70 (position field)
     /// - Original implementation: Instantly teleports entity to target object's position and facing without movement animation
     /// - Used for scripted movement (cutscenes, scripted sequences), following behavior, teleportation effects
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Jump to target's position and facing
-            // Based on swkotor2.exe: ActionJumpToObject implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionJumpToObject implementation
             // Located via string references: "JumpToObject" action type, "Position" @ 0x007bef70
             // Original implementation: Instantly teleports entity to target object's position and facing
             // Used for scripted movement, cutscenes, following behavior

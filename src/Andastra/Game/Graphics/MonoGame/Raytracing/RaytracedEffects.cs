@@ -3,7 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Raytracing
+namespace Andastra.Game.Graphics.MonoGame.Raytracing
 {
     /// <summary>
     /// High-level raytraced visual effects coordinator.

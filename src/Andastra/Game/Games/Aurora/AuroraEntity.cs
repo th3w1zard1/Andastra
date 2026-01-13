@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Andastra.Parsing.Formats.GFF;
+using BioWare.NET.Resource.Formats.GFF;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Components;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Aurora.Components;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) specific entity implementation.

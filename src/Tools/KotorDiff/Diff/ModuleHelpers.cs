@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Formats.Capsule;
+using BioWare.NET.Installation;
+using BioWare.NET.Resource.Formats.Capsule;
 
 namespace KotorDiff.Diff
 {
@@ -281,7 +281,7 @@ namespace KotorDiff.Diff
                 {
                     return new CompositeModuleCapsule(filePath);
                 }
-                return new Andastra.Parsing.Formats.Capsule.Capsule(filePath);
+                return new BioWare.NET.Resource.Formats.Capsule.Capsule(filePath);
             }
             catch (Exception e)
             {

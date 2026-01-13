@@ -9,14 +9,14 @@ using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 
-namespace Andastra.Runtime.Games.Odyssey.Input
+namespace Andastra.Game.Games.Odyssey.Input
 {
     /// <summary>
     /// KOTOR 2: The Sith Lords (swkotor2.exe) specific player input handler.
     /// </summary>
     /// <remarks>
     /// K2 Player Input Handler:
-    /// - Based on swkotor2.exe input system reverse engineering via Ghidra MCP
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) input system reverse engineering via Ghidra MCP
     /// - Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
     /// - "EnableHardwareMouse" @ 0x007c71c8, "Enable Mouse Teleporting To Buttons" @ 0x007c85a8
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLICKED" @ 0x007bc704, "OnClick" @ 0x007c1a20
@@ -65,14 +65,14 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// <param name="hoveredEntity">The entity under the cursor.</param>
         /// <returns>The appropriate cursor mode.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - K2 has Combat Forms which can affect cursor display (attack cursor variations)
         /// - FUN_005226d0 @ 0x005226d0 processes input and determines cursor mode
         /// - K2-specific: Combat forms (Juyo, Makashi, etc.) affect cursor appearance when hovering over hostile targets
         /// - Combat forms are stored as "ActiveCombatForm" in entity data (int value matching CombatForm enum)
         /// - Lightsaber forms (258-264) affect attack cursor display
         /// - Force forms (265-268) do not affect cursor display (use standard Attack cursor)
-        /// - Based on swkotor2.exe: Combat forms are tracked in entity stats/combat state
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Combat forms are tracked in entity stats/combat state
         /// - Original implementation: swkotor2.exe checks active combat form when determining attack cursor
         /// </remarks>
         protected override CursorMode DetermineCursorMode(IEntity hoveredEntity)
@@ -129,7 +129,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// </summary>
         /// <returns>The active combat form, or None if no form is active or leader is not available.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - Combat forms are stored as "ActiveCombatForm" in entity data
         /// - GetIsFormActive NWScript function checks if specific form is active
         /// - Form values match CombatForm enum constants (258-268 for lightsaber/force forms)
@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
             }
 
             // Get active combat form from entity data (stored as "ActiveCombatForm")
-            // Based on swkotor2.exe: ActiveCombatForm is stored as int in entity data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActiveCombatForm is stored as int in entity data
             // Located via string references: GetIsFormActive function checks "ActiveCombatForm" data
             if (leader.HasData("ActiveCombatForm"))
             {
@@ -169,7 +169,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// </summary>
         /// <returns>The attack range for the current weapon.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - K2 has prestige classes which can affect weapon proficiency and range
         /// - Combat forms can affect attack range in some cases
         /// - Base weapon range calculation is similar to K1, but with K2-specific modifiers
@@ -185,7 +185,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
             }
 
             // Get equipped weapon from main hand (slot 4)
-            // Based on swkotor2.exe: INVENTORY_SLOT_RIGHTWEAPON = 4
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): INVENTORY_SLOT_RIGHTWEAPON = 4
             // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
             // Original implementation: Gets equipped weapon from right hand slot
             IInventoryComponent inventory = leader.GetComponent<IInventoryComponent>();
@@ -212,7 +212,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
             }
 
             // Get base item ID from weapon component and look up attack range from baseitems.2da
-            // Based on swkotor2.exe weapon system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) weapon system
             // Located via string references: "WeaponType" in baseitems.2da, "maxattackrange" column
             // Original implementation: Reads maxattackrange from baseitems.2da using BaseItem ID
             // xoreos implementation: Item::getMaxAttackRange() @ vendor/xoreos/src/engines/kotorbase/item.cpp:74
@@ -225,7 +225,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
                 if (baseItemId >= 0)
                 {
                     // Read maxattackrange from baseitems.2da using GameDataProvider
-                    // Based on swkotor2.exe: Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
                     float maxAttackRange = World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
                     if (maxAttackRange > 0.0f)
                     {
@@ -236,7 +236,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
                     }
 
                     // Fallback: Check if ranged weapon to use default ranged range
-                    // Based on swkotor2.exe: Ranged weapons have longer default range than melee
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ranged weapons have longer default range than melee
                     // Read rangedweapon flag from baseitems.2da to determine if ranged
                     int rangedWeapon = (int)World.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
                     if (rangedWeapon != 0)
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// <param name="entity">The entity to check.</param>
         /// <returns>True if the entity is hostile.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - K2 has an Influence system that can affect faction relationships
         /// - Party member influence can change how NPCs react (hostile/friendly)
         /// - Base hostility check is similar to K1, but with K2-specific influence modifiers
@@ -332,7 +332,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// </summary>
         /// <returns>The FactionManager instance, or null if not available.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - FactionManager is accessible through entity components or world context
         /// - FactionComponent has reference to FactionManager for reputation lookups
         /// - Original implementation: FactionManager is stored in GameSession and accessible through components
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Games.Odyssey.Input
         /// <param name="targetEntity">The target entity to check influence effects for.</param>
         /// <returns>The reputation modifier (-20 to +20) based on party influence.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - Influence system affects how NPCs react to the party
         /// - Each active party member's influence (0-100, 50 = neutral) contributes to reputation modifier
         /// - High influence (80-100): Positive modifier (makes NPCs more friendly)

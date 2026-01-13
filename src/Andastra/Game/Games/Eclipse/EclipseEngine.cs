@@ -1,13 +1,13 @@
 using System;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Common;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Games.Eclipse;
+using Andastra.Game.Games.Eclipse;
 
-namespace Andastra.Runtime.Engines.Eclipse
+namespace Andastra.Game.Engines.Eclipse
 {
     /// <summary>
     /// Abstract base class for Eclipse Engine implementations (Dragon Age series).

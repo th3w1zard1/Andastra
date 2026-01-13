@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.MDL;
@@ -171,7 +171,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Gets the player entity from the world.
-        /// Based on swkotor2.exe: Player entity lookup for camera reset
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity lookup for camera reset
         /// Reverse engineered from swkotor2.exe: When dialogue ends (EndConversation @ 0x007c38e0), camera resets to chase mode following player
         /// Located via string references: "Player" @ 0x007be628, "PlayerList" @ 0x007bdcf4, "GetPlayerList" @ 0x007bdd00
         /// Original implementation: Returns player entity for camera to follow after dialogue ends
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Core.Camera
             }
 
             // Strategy 1: Try to find entity by tag "Player" (Odyssey engine pattern)
-            // Based on swkotor2.exe: Player entity is tagged "Player" @ 0x007be628
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity is tagged "Player" @ 0x007be628
             // Located via string references: "Player" @ 0x007be628, "Mod_PlayerList" @ 0x007be060
             // Original implementation: Player entity is stored in module player list and tagged "Player"
             IEntity playerEntity = _world.GetEntityByTag("Player", 0);
@@ -210,7 +210,7 @@ namespace Andastra.Runtime.Core.Camera
             }
 
             // Strategy 3: Search through all entities for one marked as player
-            // Based on swkotor2.exe: Player entity has IsPlayer data flag set to true
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity has IsPlayer data flag set to true
             // Original implementation: Player entity is marked with IsPlayer flag during creation
             foreach (IEntity entity in _world.GetAllEntities())
             {
@@ -633,7 +633,7 @@ namespace Andastra.Runtime.Core.Camera
         private Vector3 ApplyCollision(Vector3 target, Vector3 idealPosition)
         {
             // Camera collision using walkmesh
-            // Based on swkotor2.exe camera collision system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) camera collision system
             // Located via string references: Camera collision checks
             // Original implementation: Raycasts from target to camera position, moves camera closer if blocked
             if (_world.CurrentArea != null)
@@ -676,7 +676,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Sets the camera facing direction (yaw angle in radians).
-        /// Based on swkotor2.exe: Camera facing control for scripted camera movements
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera facing control for scripted camera movements
         /// </summary>
         /// <param name="facing">Facing angle in radians (0 = north, PI/2 = east, PI = south, -PI/2 = west)</param>
         public void SetFacing(float facing)
@@ -718,7 +718,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Gets the world-space position of a camera hook on an entity.
-        /// Based on swkotor2.exe: Camera hook lookup system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera hook lookup system
         /// Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
         /// Original implementation: Searches MDL node tree for nodes named "camerahook{N}" and returns world-space position
         /// Camera hooks are MDL dummy nodes (NodeType = 1) with names like "camerahook1", "camerahook2", etc.
@@ -745,7 +745,7 @@ namespace Andastra.Runtime.Core.Camera
                 return false;
             }
 
-            // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
             // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
             // Original implementation:
             //   - Searches MDL model node tree recursively for nodes named "camerahook{N}" (e.g., "camerahook1", "camerahook2")
@@ -758,7 +758,7 @@ namespace Andastra.Runtime.Core.Camera
             // Implementation: Full MDL node lookup with recursive search, dummy node validation, and world-space transform
 
             // Construct camera hook node name (format: "camerahook{N}")
-            // Based on swkotor2.exe: Format string "camerahook%d" @ 0x007d0448
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Format string "camerahook%d" @ 0x007d0448
             string hookNodeName = string.Format("camerahook{0}", hookIndex);
 
             // Try to get MDL model from entity
@@ -788,7 +788,7 @@ namespace Andastra.Runtime.Core.Camera
                     }
 
                     // Transform node position to world space
-                    // Based on swkotor2.exe: Node transform calculation for world-space positioning
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Node transform calculation for world-space positioning
                     // Original implementation: Combines node's local transform with entity's world transform
                     Vector3 nodeWorldPosition = TransformNodeToWorldSpace(hookNode, mdlModel.RootNode, transform);
 
@@ -872,7 +872,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Gets the MDL model for an entity.
-        /// Based on swkotor2.exe: Model loading for camera hook lookup
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Model loading for camera hook lookup
         /// </summary>
         private MDLModel GetEntityMDLModel(IEntity entity)
         {
@@ -902,7 +902,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Recursively searches for a node by name in the MDL node tree.
-        /// Based on swkotor2.exe: FUN_006c6020 searches MDL node tree recursively
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006c6020 searches MDL node tree recursively
         /// Original implementation: Calls virtual function at offset 0x10c with node name string
         /// </summary>
         private MDLNodeData FindNodeByName(MDLNodeData rootNode, string nodeName)
@@ -944,7 +944,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Transforms a node's local position to world space.
-        /// Based on swkotor2.exe: Node transform calculation for world-space positioning
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Node transform calculation for world-space positioning
         /// Original implementation: Combines node's local transform with entity's world transform
         /// </summary>
         private Vector3 TransformNodeToWorldSpace(MDLNodeData node, MDLNodeData rootNode, Interfaces.Components.ITransformComponent entityTransform)
@@ -1106,7 +1106,7 @@ namespace Andastra.Runtime.Core.Camera
 
         /// <summary>
         /// Sets camera position and look-at using camera hooks.
-        /// Based on swkotor2.exe: Camera hook-based positioning for dialogue animations
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera hook-based positioning for dialogue animations
         /// </summary>
         /// <param name="cameraHookEntity">Entity with camera hook (camera position).</param>
         /// <param name="cameraHookIndex">Camera hook index on camera hook entity.</param>
@@ -1285,7 +1285,7 @@ namespace Andastra.Runtime.Core.Camera
 
     /// <summary>
     /// Defines a dialogue camera animation with hook support.
-    /// Based on swkotor2.exe: Camera animation system for dialogues
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera animation system for dialogues
     /// Located via string references: "CameraAnimation" @ 0x007c3460
     /// Original implementation: Camera animations are scripted camera movements using camera hooks or predefined angles
     /// </summary>

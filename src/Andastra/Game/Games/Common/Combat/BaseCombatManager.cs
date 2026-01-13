@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common.Combat
+namespace Andastra.Game.Games.Common.Combat
 {
     /// <summary>
     /// Abstract base class for combat managers across all engines.

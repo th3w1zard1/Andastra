@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Odyssey.Collision
+namespace Andastra.Game.Games.Odyssey.Collision
 {
     /// <summary>
     /// KOTOR 1 (swkotor.exe) specific creature collision detection.

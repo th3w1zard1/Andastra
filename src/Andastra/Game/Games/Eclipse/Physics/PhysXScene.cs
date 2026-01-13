@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Physics
+namespace Andastra.Game.Games.Eclipse.Physics
 {
     /// <summary>
     /// PhysX scene descriptor for configuring PhysX scene creation.

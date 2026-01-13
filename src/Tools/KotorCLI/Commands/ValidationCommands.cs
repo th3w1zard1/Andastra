@@ -1,7 +1,7 @@
 using System;
 using System.CommandLine;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Installation;
+using BioWare.NET.Resource;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -80,7 +80,7 @@ namespace KotorCLI.Commands
                     // Try to load and validate the 2DA structure
                     try
                     {
-                        var twoDA = Andastra.Parsing.Formats.TwoDA.TwoDA.FromBytes(result.Data);
+                        var twoDA = BioWare.NET.Resource.Formats.TwoDA.TwoDA.FromBytes(result.Data);
                         logger.Info($"  Valid 2DA structure: {twoDA.GetWidth()} columns x {twoDA.GetHeight()} rows");
 
                         // Show first few headers if available

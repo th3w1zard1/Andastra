@@ -3,7 +3,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.Graphics.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IGraphicsDevice.

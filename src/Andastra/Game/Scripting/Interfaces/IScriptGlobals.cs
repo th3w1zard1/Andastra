@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Scripting.Interfaces
+namespace Andastra.Game.Scripting.Interfaces
 {
     /// <summary>
     /// Persistent script state - global and local variables.
     /// </summary>
     /// <remarks>
     /// Script Globals Interface:
-    /// - Based on swkotor2.exe script variable system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script variable system
     /// - Located via string references: "GLOBALVARS" @ 0x007c27bc (save file global variables GFF field name)
     /// - "Global" @ 0x007c29b0 (global constant), "GLOBAL" @ 0x007c7550 (global constant uppercase)
     /// - "RIMS:GLOBAL" @ 0x007c7544 (global RIM directory path), "globalcat" @ 0x007bddd0 (global catalog field)

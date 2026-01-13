@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Video.Bink;
 

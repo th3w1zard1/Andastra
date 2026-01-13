@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Dynamic batching system for batching small, frequently changing objects.
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Dynamic Batching System (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: "renderorder" @ 0x007bab50 (render order sorting for batching)
     /// - "Apropagaterender" @ 0x007bb10f (render propagation), "renderbmlmtype" @ 0x007bb26c
     /// - OpenGL draw functions: glDrawArrays, glDrawElements (used for batched rendering)

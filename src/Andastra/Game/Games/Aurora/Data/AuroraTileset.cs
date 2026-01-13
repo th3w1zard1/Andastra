@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.SET;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.SET;
 using Andastra.Runtime.Content.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora.Data
+namespace Andastra.Game.Games.Aurora.Data
 {
     /// <summary>
     /// Represents an Aurora Engine tileset loaded from a SET file.

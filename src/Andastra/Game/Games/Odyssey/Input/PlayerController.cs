@@ -7,14 +7,14 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Input
+namespace Andastra.Game.Engines.Odyssey.Input
 {
     /// <summary>
     /// Handles player input and movement using click-to-move with pathfinding.
     /// </summary>
     /// <remarks>
     /// Player Controller (Input) - Odyssey-specific:
-    /// - Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 (movement handling), CExoInputInternal input system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 (movement handling), CExoInputInternal input system
     /// - Located via string references: "Input" @ 0x007c2520, "Mouse" @ 0x007cb908, "DirectInput8Create" @ 0x0080a6ac
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CClientExoAppInternal::ProcessInput, HandleLMouseDown, HandleRMouseDown, Input_WalkToWayPoint - similar click-to-move system

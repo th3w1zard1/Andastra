@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.Audio
+namespace Andastra.Game.Graphics.MonoGame.Audio
 {
     /// <summary>
     /// Spatial audio system for 3D sound positioning.
@@ -19,7 +19,7 @@ namespace Andastra.Runtime.MonoGame.Audio
     /// </summary>
     /// <remarks>
     /// Spatial Audio System:
-    /// - Based on swkotor2.exe audio system (modern 3D enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) audio system (modern 3D enhancement)
     /// - Located via string references: "SoundList" @ 0x007bd080, "SoundResRef" @ 0x007b5f70, "Sound" @ 0x007bc500
     /// - 3D audio settings: "2D3DBias" @ 0x007c612c, "2D3D Bias" @ 0x007c71f8 (2D/3D audio bias)
     /// - "3D Provider Filter" @ 0x007c6164, "Number 3D Voices" @ 0x007c7258

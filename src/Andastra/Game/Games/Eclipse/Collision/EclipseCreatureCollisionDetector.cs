@@ -2,7 +2,7 @@ using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Eclipse.Collision
+namespace Andastra.Game.Games.Eclipse.Collision
 {
     /// <summary>
     /// Base class for Eclipse-specific creature collision detection.

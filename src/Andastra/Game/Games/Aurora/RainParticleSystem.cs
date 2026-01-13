@@ -5,7 +5,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Rain particle system for Aurora engine weather rendering.

@@ -4,9 +4,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Installation;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Installation;
 
 namespace KotorDiff.Diff
 {

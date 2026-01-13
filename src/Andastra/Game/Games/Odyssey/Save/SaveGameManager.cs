@@ -5,16 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Save;
-using Andastra.Runtime.Games.Common.Save;
+using Andastra.Game.Games.Common.Save;
 
-namespace Andastra.Runtime.Games.Odyssey.Save
+namespace Andastra.Game.Games.Odyssey.Save
 {
     /// <summary>
     /// Odyssey Engine (KotOR/KotOR2) save game manager implementation.
@@ -77,7 +77,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
         /// <remarks>
         /// Odyssey-specific implementation:
         /// - Uses ERF archive format with "MOD V1.0" signature
-        /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
         /// </remarks>
         public override async Task<bool> SaveGameAsync(SaveGameData saveData, string saveName, CancellationToken ct = default)
         {
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             try
             {
                 // Auto-generate save number if not set (0 or negative)
-                // Based on swkotor2.exe: Save numbers are auto-incremented
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Save numbers are auto-incremented
                 // Original implementation: Scans existing saves to find highest number, then increments
                 if (saveData.SaveNumber <= 0)
                 {
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 }
 
                 // Create save directory using common format (shared with Aurora)
-                // Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
                 // Original implementation: Constructs path using format "%06d - %s" (save number and name)
                 // Path format: "SAVES:\{saveNumber:06d} - {saveName}\SAVEGAME"
                 // Located via string reference: "%06d - %s" @ 0x007be298
@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 erf.SetData("PARTYTABLE", ResourceType.GFF, partyData);
 
                 // 4. Save per-module state ([module]_s.rim)
-                // Based on swkotor2.exe: Module state saved as ERF archive containing area state GFF files
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state saved as ERF archive containing area state GFF files
                 // Original implementation: Each visited area has its state saved (entity positions, door/placeable states, etc.)
                 // CreateModuleStateERF saves all area states to GFF format and packages them in ERF archive
                 string moduleRimName = saveData.CurrentModule + "_s";
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
         /// <remarks>
         /// Odyssey-specific implementation:
         /// - Loads ERF archive format with "MOD V1.0" signature
-        /// - Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
         /// - Original implementation: Accepts save name and constructs path using format "%06d - %s"
         /// - Supports both formatted names ("000001 - SaveName") and plain names (for backward compatibility)
         /// </remarks>
@@ -295,7 +295,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                         GFF nfoGff = DeserializeGFF(nfoData);
 
                         // Parse save number and name from directory name using common logic
-                        // Based on swkotor2.exe: Format "%06d - %s" (6-digit number - name)
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Format "%06d - %s" (6-digit number - name)
                         // Uses common parsing methods from BaseSaveGameManager (shared with Aurora)
                         int saveNumber = ParseSaveNumberFromDirectory(saveName);
                         string displayName = ParseSaveNameFromDirectory(saveName);
@@ -357,7 +357,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             var gff = new GFF();
             var root = gff.Root;
 
-            // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
             // Located via string reference: "savenfo" @ 0x007be1f0
             // Original implementation (from decompiled FUN_004eb750):
             // Creates GFF with "NFO " signature and "V2.0" version
@@ -423,7 +423,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             SetIntField(root, "LIVECONTENT", liveContent);
 
             // LIVE1-9 - Live content entry strings (up to 9 entries)
-            // Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
             // Original implementation stores LIVE1-9 as string fields in NFO GFF
             if (saveData.LiveContentStrings != null)
             {
@@ -451,7 +451,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             var gff = new GFF();
             var root = gff.Root;
 
-            // Based on swkotor2.exe: FUN_005ac670 @ 0x005ac670
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac670 @ 0x005ac670
             // GLOB GFF structure: VariableList array with VariableName, VariableType, VariableValue
             var varList = new GFFList();
             root.SetList("VariableList", varList);
@@ -503,7 +503,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             var gff = new GFF();
             var root = gff.Root;
 
-            // Based on swkotor2.exe: FUN_0057bd70 @ 0x0057bd70
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057bd70 @ 0x0057bd70
             // PT GFF structure: PartyList array with party member data
             var partyList = new GFFList();
             root.SetList("PartyList", partyList);
@@ -556,7 +556,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             var root = gff.Root;
 
             // Save area-specific state (entity positions, door states, etc.)
-            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves entity states to GFF format
             // Located via string references: Entity state serialization in save system
             // Original implementation: Saves entity positions, door/placeable states, HP, local variables, etc.
             if (areaState != null)
@@ -782,7 +782,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
             }
 
             // Load LIVE1-9 strings
-            // Based on swkotor2.exe: FUN_00707290 @ 0x00707290 loads LIVE1-9 from NFO GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00707290 @ 0x00707290 loads LIVE1-9 from NFO GFF
             if (saveData.LiveContentStrings == null)
             {
                 saveData.LiveContentStrings = new List<string>();
@@ -913,7 +913,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
         private void LoadModuleStateERF(ERF erf, SaveGameData saveData)
         {
             // Load area states from module RIM
-            // Based on swkotor2.exe: Module state loading from [module]_s.rim ERF archive
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state loading from [module]_s.rim ERF archive
             // Located via string references: Module state loading in save system
             // Original implementation: Iterates through ARE resources in module RIM, loads each area state
             // Each ARE resource contains GFF data with entity positions, door/placeable states, etc.
@@ -1208,7 +1208,7 @@ namespace Andastra.Runtime.Games.Odyssey.Save
                 return;
             }
 
-            // Use Andastra.Parsing GFF API
+            // Use BioWare.NET GFF API
             gffStruct.SetString(fieldName, value ?? "");
         }
 

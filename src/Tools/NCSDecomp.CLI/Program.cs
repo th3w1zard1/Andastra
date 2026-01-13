@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using NcsDecompiler = Andastra.Parsing.NCS.Core.Decompiler.NcsDecompiler;
+using NcsDecompiler = BioWare.NET.NCS.Core.Decompiler.NcsDecompiler;
 
 namespace NCSDecomp.CLI
 {

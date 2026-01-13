@@ -1,7 +1,7 @@
 using System;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Render quality presets for common performance profiles.
@@ -16,7 +16,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Quality Presets:
-    /// - Based on swkotor2.exe graphics options system (modern quality preset enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) graphics options system (modern quality preset enhancement)
     /// - Located via string references: "LowQuality" @ 0x007c4a0c (low quality flag)
     /// - "Texture Quality" @ 0x007c7528 (texture quality setting)
     /// - "Graphics Options" @ 0x007b56a8 (graphics options menu)

@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Input Manager Interface:
-    /// - Based on swkotor2.exe input system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) input system
     /// - Original implementation: Uses DirectInput8 (DINPUT8.dll @ 0x0080a6c0, DirectInput8Create @ 0x0080a6ac)
     /// - Located via string references: "CExoInputInternal" (exoinputinternal.cpp @ 0x007c64dc)
     /// - Input class: "CExoInputInternal::GetEvents() Invalid InputClass parameter" @ 0x007c64f4

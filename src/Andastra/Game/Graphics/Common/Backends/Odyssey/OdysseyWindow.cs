@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine window implementation.

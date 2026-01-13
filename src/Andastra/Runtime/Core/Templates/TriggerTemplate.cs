@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Templates
     /// </summary>
     /// <remarks>
     /// Trigger Template:
-    /// - Based on swkotor2.exe trigger system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) trigger system
     /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
     /// - "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "EVENT_LEFT_TRIGGER" @ 0x007bcdf4
     /// - "OnTrapTriggered" @ 0x007c1a34, "CB_TRIGGERS" @ 0x007d29c8
@@ -117,7 +117,7 @@ namespace Andastra.Runtime.Core.Templates
             }
 
             // Apply script hooks
-            // Based on swkotor2.exe: Trigger script hooks from UTT template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Trigger script hooks from UTT template
             // Located via string references: "ScriptOnEnter" @ 0x007c1a10, "ScriptOnExit" @ 0x007c1a0c, "OnTrapTriggered" @ 0x007c1a34
             // Original implementation: FUN_005226d0 @ 0x005226d0 loads trigger script hooks from UTT template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();

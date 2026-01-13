@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Andastra.Runtime.MonoGame.Culling
+namespace Andastra.Game.Graphics.MonoGame.Culling
 {
     /// <summary>
     /// Distance-based culling system.
@@ -12,7 +12,7 @@ namespace Andastra.Runtime.MonoGame.Culling
     /// </summary>
     /// <remarks>
     /// Distance Culling System:
-    /// - Based on swkotor2.exe rendering optimization system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering optimization system
     /// - Located via string references: Distance-based rendering optimizations
     /// - Original implementation: KOTOR culls distant objects to maintain performance
     /// - Distance thresholds: Per-object-type maximum render distances

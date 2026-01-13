@@ -141,7 +141,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// </summary>
         /// <param name="bonus">AC bonus to add</param>
         /// <remarks>
-        /// Based on swkotor2.exe: AC effects modify total AC calculation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AC effects modify total AC calculation
         /// Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
         /// Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
         /// </remarks>
@@ -158,7 +158,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// </summary>
         /// <param name="bonus">Attack bonus to add</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Attack effects modify total attack bonus
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack effects modify total attack bonus
         /// Located via string references: "EffectAttackIncrease" @ routine 118
         /// Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
         /// </remarks>

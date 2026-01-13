@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Attack Action:
-    /// - Based on swkotor2.exe attack action system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) attack action system
     /// - Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4, "OnMeleeAttacked" @ 0x007c1a5c
     /// - "ScriptAttacked" @ 0x007bee80 (script hook for attack events)
     /// - Attack-related fields: "AttackList" @ 0x007bf9f0, "AttackID" @ 0x007bfa88, "CurrentAttack" @ 0x007bfa94
@@ -162,7 +162,7 @@ namespace Andastra.Runtime.Core.Actions
             int targetAC = targetStats.ArmorClass;
 
             // Fire OnPhysicalAttacked script event on target (fires regardless of hit/miss)
-            // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
             // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c
             // "ScriptAttacked" @ 0x007bee80 (script ResRef field in creature template)
             // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target when attacked
@@ -177,7 +177,7 @@ namespace Andastra.Runtime.Core.Actions
             if (attackRoll == 20 || (attackRoll != 1 && attackRoll + attackBonus >= targetAC))
             {
                 // Hit - deal damage
-                // Based on swkotor2.exe: Damage calculation includes weapon damage + strength modifier
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Damage calculation includes weapon damage + strength modifier
                 // Original engine: Base weapon damage + strength modifier + effect bonuses
                 int damage = 1 + rand.Next(0, 8); // 1d8 base damage (simplified - should use weapon damage)
                 targetStats.CurrentHP -= damage;
@@ -195,7 +195,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Fire OnDamaged script event on target
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70
                 // ScriptDamaged script is loaded from creature template and executed when damage is dealt
                 // FUN_005226d0 @ 0x005226d0 saves ScriptDamaged field, FUN_0050c510 @ 0x0050c510 loads ScriptDamaged field

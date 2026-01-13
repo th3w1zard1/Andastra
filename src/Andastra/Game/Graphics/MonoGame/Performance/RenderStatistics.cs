@@ -1,6 +1,6 @@
 using System;
 
-namespace Andastra.Runtime.MonoGame.Performance
+namespace Andastra.Game.Graphics.MonoGame.Performance
 {
     /// <summary>
     /// Render statistics for performance monitoring and debugging.

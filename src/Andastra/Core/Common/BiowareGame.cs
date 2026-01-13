@@ -3,7 +3,7 @@ namespace Andastra.Core.Common
     // Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/common/misc.py:250-285
     // Original: class BioWareGame(IntEnum):
     // Extended to support all BioWare engine games: Odyssey (KOTOR), Aurora (NWN), Eclipse (DA/ME), Infinity (BG/IWD/PST)
-    // This enum is kept in Andastra.Parsing for backward compatibility with patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
+    // This enum is kept in BioWare.NET for backward compatibility with patcher tools (HoloPatcher.NET, HolocronToolset, NCSDecomp, KotorDiff)
     /// <summary>
     /// Represents which BioWare engine BioWareGame / platform variant.
     /// </summary>

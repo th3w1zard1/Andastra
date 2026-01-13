@@ -1,10 +1,10 @@
 using System;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Runtime.Games.Common;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora.Data
+namespace Andastra.Game.Games.Aurora.Data
 {
     /// <summary>
     /// Aurora-specific implementation of IGameDataProvider.

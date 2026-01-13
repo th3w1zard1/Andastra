@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Entities
     /// </summary>
     /// <remarks>
     /// Entity System:
-    /// - Based on swkotor2.exe entity system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity system
     /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
     /// - "AreaId" @ 0x007bef48 (entity area association)
     /// - Original engine: Entities have ObjectId (uint32), Tag (string), ObjectType (enum), AreaId (uint32)
@@ -52,7 +52,7 @@ namespace Andastra.Runtime.Core.Entities
     /// </remarks>
     public class Entity : IEntity
     {
-        // Based on swkotor2.exe: ObjectId assignment system
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ObjectId assignment system
         // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
         // Original implementation: ObjectId is unique 32-bit identifier assigned sequentially
         // OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001, OBJECT_TYPE_INVALID = 0x7F000002
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the entity position in world space.
-        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves XPosition, YPosition, ZPosition
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves XPosition, YPosition, ZPosition
         /// Synchronized with TransformComponent if present.
         /// </summary>
         public Vector3 Position
@@ -136,7 +136,7 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the entity facing angle in radians.
-        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves XOrientation, YOrientation, ZOrientation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves XOrientation, YOrientation, ZOrientation
         /// Synchronized with TransformComponent if present.
         /// </summary>
         public float Facing
@@ -169,7 +169,7 @@ namespace Andastra.Runtime.Core.Entities
 
         /// <summary>
         /// Gets or sets the area ID this entity belongs to.
-        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// </summary>
         public uint AreaId { get; set; }

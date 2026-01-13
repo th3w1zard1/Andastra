@@ -301,7 +301,7 @@ namespace Andastra.Runtime.Games.Common
         /// Returns the ModuleId assigned to a module, or 0 if module is not registered.
         /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
         /// Common across all engines: Modules use fixed ObjectId (0x7F000002) for script references
-        /// Based on swkotor2.exe: Module object ID constant
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module object ID constant
         /// Located via string references: "GetModule" NWScript function, module object references
         /// </remarks>
         public virtual uint GetModuleId(Andastra.Runtime.Core.Interfaces.IModule module)

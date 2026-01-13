@@ -1,15 +1,15 @@
 using System;
-using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Scripting.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) script executor implementation.

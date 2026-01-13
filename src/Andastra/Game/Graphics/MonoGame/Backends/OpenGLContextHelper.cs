@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Andastra.Runtime.MonoGame.Backends
+namespace Andastra.Game.Graphics.MonoGame.Backends
 {
     /// <summary>
     /// Platform-specific helper for creating temporary OpenGL contexts for availability detection.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// GPU memory budget system for managing VRAM usage.
@@ -17,7 +17,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// GPU Memory Budget:
-    /// - Based on swkotor2.exe memory management system (modern GPU memory enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) memory management system (modern GPU memory enhancement)
     /// - Located via string references: Memory management functions handle resource allocation
     /// - "GlobalMemoryStatus" @ 0x0080afa4 (Windows memory status API)
     /// - OpenGL memory: wglAllocateMemoryNV, wglFreeMemoryNV (OpenGL memory management)

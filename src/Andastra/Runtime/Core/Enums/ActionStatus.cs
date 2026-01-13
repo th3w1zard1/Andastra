@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Core.Enums
     /// </summary>
     /// <remarks>
     /// Action Status Enum:
-    /// - Based on swkotor2.exe action execution system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) action execution system
     /// - Actions return status after Update() call: InProgress (continue), Complete (done), Failed (abort)
     /// - Action queue processes actions sequentially: current action updates until Complete or Failed
     /// - InProgress: Action continues execution (called again next frame)

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Common
+namespace Andastra.Game.Engines.Common
 {
     /// <summary>
     /// Base interface for game session management across all engines.
@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Engines.Common
     /// Cross-Engine Reverse Engineering Analysis:
     /// 
     /// Common Module State Management Pattern (VERIFIED across Odyssey and Aurora):
-    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006caab0 @ 0x006caab0 (server command parser)
     ///   - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     ///   - Decompiled code shows three distinct module states:
     ///     - State 0 = Idle (no module loaded) - Line 181: ":: Server mode: Idle.\n"

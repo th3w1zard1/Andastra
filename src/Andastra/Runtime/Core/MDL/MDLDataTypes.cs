@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.MDL
     /// </summary>
     /// <remarks>
     /// MDL Data Types:
-    /// - Based on swkotor2.exe MDL/MDX file format
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) MDL/MDX file format
     /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, model loading functions
     /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models, parses MDL vertex/face data
     /// - Original implementation: MDL file format uses Vector3 (position/normal), Vector2 (UV), Color (vertex colors)

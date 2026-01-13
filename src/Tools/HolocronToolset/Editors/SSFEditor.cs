@@ -8,9 +8,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource.Formats.SSF;
+using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

@@ -7,7 +7,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// System for detecting entity entry/exit into trigger volumes.
@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// </summary>
     /// <remarks>
     /// Trigger System:
-    /// - Based on swkotor2.exe trigger system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) trigger system
     /// - Located via string references: "Trigger" @ 0x007bc51c, "TriggerList" @ 0x007bd254
     /// - "$tItrigger" @ 0x007bb979 (trigger variable name), "CB_TRIGGERS" @ 0x007d29c8 (trigger checkbox GUI)
     /// - Script events: "OnEnter" @ 0x007c1d40, "OnExit" @ 0x007c1d30 (trigger script event hooks)

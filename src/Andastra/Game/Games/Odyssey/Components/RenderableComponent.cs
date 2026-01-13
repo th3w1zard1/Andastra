@@ -1,10 +1,10 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey engine-specific implementation of renderable component for entities that can be rendered with 3D models.

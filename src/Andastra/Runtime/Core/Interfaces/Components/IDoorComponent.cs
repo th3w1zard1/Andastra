@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// Transition Destination:
         /// - Common across all engines that support door transitions
         /// - Based on nwmain.exe: CNWSDoor::LoadDoor loads TransitionDestin field from GIT
-        /// - Based on swkotor2.exe: FUN_005838d0 @ 0x005838d0 reads TransitionDestination from UTD template
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005838d0 @ 0x005838d0 reads TransitionDestination from UTD template
         /// - Located via string references: "TransitionDestin" @ 0x007bd7a4 (swkotor2.exe), "TransitionDestin" in GIT format
         /// - Original implementation: TransitionDestin/TransitionDestination specifies waypoint tag where party spawns after transition
         /// - For module transitions: Waypoint tag in destination module where party spawns
@@ -116,7 +116,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// Conversation file (dialogue ResRef).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00580330 @ 0x00580330 saves door data including Conversation field
         /// Located via string reference: "Conversation" @ 0x007c1abc
         /// Original implementation: Conversation field in UTD template contains dialogue ResRef
         /// </remarks>
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// <summary>
         /// Applies damage to the door (for bashing).
         /// Reduces HP by damage amount (minus hardness), destroys door if HP reaches 0.
-        /// Based on swkotor2.exe: Door bashing damage application
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door bashing damage application
         /// </summary>
         /// <param name="damage">The amount of damage to apply.</param>
         void ApplyDamage(int damage);
@@ -153,7 +153,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// <summary>
         /// Applies damage to the door with a specific damage type.
         /// Reduces HP by damage amount (minus hardness), destroys door if HP reaches 0.
-        /// Based on swkotor2.exe: Door bashing damage application with damage type checking
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door bashing damage application with damage type checking
         /// </summary>
         /// <param name="damage">The amount of damage to apply.</param>
         /// <param name="damageType">The type of damage being applied.</param>

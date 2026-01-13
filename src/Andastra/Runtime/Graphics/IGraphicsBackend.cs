@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Graphics Backend Interface:
-    /// - Based on swkotor2.exe graphics initialization system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) graphics initialization system
     /// - Located via string references: "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064
     /// - "Render Window" @ 0x007b5680, "render" @ 0x007bab34, "renderorder" @ 0x007bab50
     /// - Original game uses DirectX 8/9 for rendering (D3D8.dll, D3D9.dll)

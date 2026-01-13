@@ -5,7 +5,7 @@ using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
 
-namespace Andastra.Runtime.MonoGame.Remix
+namespace Andastra.Game.Graphics.MonoGame.Remix
 {
     /// <summary>
     /// NVIDIA RTX Remix bridge for path-traced rendering.

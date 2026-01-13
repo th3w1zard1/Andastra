@@ -1,13 +1,13 @@
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Scripting.Interfaces
+namespace Andastra.Game.Scripting.Interfaces
 {
     /// <summary>
     /// Execution context for a script run.
     /// </summary>
     /// <remarks>
     /// Script Execution Context Interface:
-    /// - Based on swkotor2.exe script execution context system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script execution context system
     /// - Located via string references: Script execution functions maintain context for each script run
     /// - NCS VM: NCS file format "NCS " signature @ offset 0, "V1.0" version @ offset 4, 0x42 marker @ offset 8, instructions start @ offset 0x0D
     /// - OBJECT_SELF: Set to caller entity ObjectId (constant 0x7F000001, used in NWScript GetObjectSelf function)

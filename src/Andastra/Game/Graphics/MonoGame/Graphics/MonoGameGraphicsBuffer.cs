@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of GraphicsBuffer for structured data.

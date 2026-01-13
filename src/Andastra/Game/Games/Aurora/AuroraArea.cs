@@ -5,24 +5,24 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Scene;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Aurora.Scene;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora Engine (NWN) specific area implementation.
@@ -707,7 +707,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onEnter = Andastra.Parsing.Common.ResRef.FromBlank();
+                    _onEnter = BioWare.NET.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnExit"))
@@ -716,7 +716,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onExit = Andastra.Parsing.Common.ResRef.FromBlank();
+                    _onExit = BioWare.NET.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnHeartbeat"))
@@ -725,7 +725,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onHeartbeat = Andastra.Parsing.Common.ResRef.FromBlank();
+                    _onHeartbeat = BioWare.NET.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("OnUserDefined"))
@@ -734,7 +734,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _onUserDefined = Andastra.Parsing.Common.ResRef.FromBlank();
+                    _onUserDefined = BioWare.NET.Common.ResRef.FromBlank();
                 }
 
                 // Read tileset and tile layout
@@ -745,7 +745,7 @@ namespace Andastra.Runtime.Games.Aurora
                 }
                 else
                 {
-                    _tileset = Andastra.Parsing.Common.ResRef.FromBlank();
+                    _tileset = BioWare.NET.Common.ResRef.FromBlank();
                 }
 
                 if (root.Exists("Width"))
@@ -879,11 +879,11 @@ namespace Andastra.Runtime.Games.Aurora
             _currentFogColor = _sunFogColor;
             _currentFogAmount = _sunFogAmount;
 
-            _onEnter = Andastra.Parsing.Common.ResRef.FromBlank();
-            _onExit = Andastra.Parsing.Common.ResRef.FromBlank();
-            _onHeartbeat = Andastra.Parsing.Common.ResRef.FromBlank();
-            _onUserDefined = Andastra.Parsing.Common.ResRef.FromBlank();
-            _tileset = Andastra.Parsing.Common.ResRef.FromBlank();
+            _onEnter = BioWare.NET.Common.ResRef.FromBlank();
+            _onExit = BioWare.NET.Common.ResRef.FromBlank();
+            _onHeartbeat = BioWare.NET.Common.ResRef.FromBlank();
+            _onUserDefined = BioWare.NET.Common.ResRef.FromBlank();
+            _tileset = BioWare.NET.Common.ResRef.FromBlank();
             _width = 0;
             _height = 0;
             _flags = 0;
@@ -929,7 +929,7 @@ namespace Andastra.Runtime.Games.Aurora
             // ResRef field - based on line 59: WriteFieldCResRef("ResRef")
             if (!string.IsNullOrEmpty(_resRef))
             {
-                ResRef resRefObj = Andastra.Parsing.Common.ResRef.FromString(_resRef);
+                ResRef resRefObj = BioWare.NET.Common.ResRef.FromString(_resRef);
                 root.SetResRef("ResRef", resRefObj);
             }
 
@@ -955,10 +955,10 @@ namespace Andastra.Runtime.Games.Aurora
 
             // Script hooks - set to empty ResRefs if not specified
             // Based on lines 51-57: WriteFieldCResRef("OnEnter", "OnExit", "OnHeartbeat", "OnUserDefined")
-            root.SetResRef("OnEnter", Andastra.Parsing.Common.ResRef.FromBlank());
-            root.SetResRef("OnExit", Andastra.Parsing.Common.ResRef.FromBlank());
-            root.SetResRef("OnHeartbeat", Andastra.Parsing.Common.ResRef.FromBlank());
-            root.SetResRef("OnUserDefined", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnEnter", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnExit", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", BioWare.NET.Common.ResRef.FromBlank());
 
             // Lighting defaults - based on lines 61-65: WriteFieldDWORD/BYTE for lighting
             root.SetUInt32("SunAmbientColor", 0);
@@ -1007,7 +1007,7 @@ namespace Andastra.Runtime.Games.Aurora
             root.SetUInt8("PlayerVsPlayer", 0);
 
             // Tileset - based on line 97: WriteFieldCResRef("Tileset")
-            root.SetResRef("Tileset", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("Tileset", BioWare.NET.Common.ResRef.FromBlank());
 
             // Comments - based on line 30: WriteFieldCExoString("Comments")
             root.SetString("Comments", "");
@@ -1570,7 +1570,7 @@ namespace Andastra.Runtime.Games.Aurora
                 // Read tileset resref from root struct (needed for surface material lookup)
                 // Based on ARE format: Tileset is CResRef
                 // We read this here so it's available for tile surface material lookup
-                Andastra.Parsing.Common.ResRef tilesetResRef = Andastra.Parsing.Common.ResRef.FromBlank();
+                BioWare.NET.Common.ResRef tilesetResRef = BioWare.NET.Common.ResRef.FromBlank();
                 if (root.Exists("Tileset"))
                 {
                     tilesetResRef = root.GetResRef("Tileset");

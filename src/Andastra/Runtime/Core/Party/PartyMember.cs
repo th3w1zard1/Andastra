@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Party
     /// </summary>
     /// <remarks>
     /// Party Member:
-    /// - Based on swkotor2.exe party system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) party system
     /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
     /// - Party member fields: "PT_MEMBERS" @ 0x007c1844, "PT_MEMBER_ID" @ 0x007c1834, "PT_NUM_MEMBERS" @ 0x007c1850
     /// - Party state stored in PARTYTABLE.res GFF file (see SaveSerializer FUN_0057dcd0 @ 0x0057dcd0)

@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Odyssey.Components;
@@ -13,14 +13,14 @@ using JetBrains.Annotations;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
-namespace Andastra.Runtime.Engines.Odyssey.Loading
+namespace Andastra.Game.Engines.Odyssey.Loading
 {
     /// <summary>
     /// Factory for creating runtime entities from GFF templates.
     /// </summary>
     /// <remarks>
     /// Entity Factory System:
-    /// - Based on swkotor2.exe entity creation system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity creation system
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
     /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
     /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
@@ -61,7 +61,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
     /// </remarks>
     public class EntityFactory
     {
-        // Based on swkotor2.exe: ObjectId assignment system
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ObjectId assignment system
         // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
         // Original implementation: FUN_004e5920 @ 0x004e5920 reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
         // ObjectIds should be unique across all entities. Use high range (1000000+) to avoid conflicts with World.CreateEntity counter
@@ -78,7 +78,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
         /// <summary>
         /// Reads ObjectId from GIT struct if present, otherwise generates new one.
-        /// Based on swkotor2.exe: FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
         /// </summary>
         private uint GetObjectIdFromGit(GFFStruct gitStruct)
         {
@@ -313,7 +313,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             });
 
             // Load ScriptDialogue as Conversation property (dialogue ResRef for BeginConversation)
-            // Based on swkotor2.exe: FUN_0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0050c510 @ 0x0050c510 loads ScriptDialogue field from UTC template
             // ScriptDialogue ResRef is the dialogue file (DLG) used for conversations with this creature
             string scriptDialogue = GetResRefField(root, "ScriptDialogue");
             if (!string.IsNullOrEmpty(scriptDialogue))
@@ -398,14 +398,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             entity.SetData("Static", GetIntField(root, "Static", 0) != 0);
 
             // Load TSL-specific fields (KotOR2 only)
-            // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
             // Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only), "NotBlastable" (UInt8/Byte, KotOR2 only)
             // Original implementation: These fields do not exist in swkotor.exe (KotOR1)
             entity.SetData("Min1HP", GetIntField(root, "Min1HP", 0) != 0);
             entity.SetData("NotBlastable", GetIntField(root, "NotBlastable", 0) != 0);
 
             // Load Conversation field (dialogue ResRef for BeginConversation)
-            // Based on swkotor2.exe: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00580330 @ 0x00580330 saves door data including Conversation field
             // Located via string reference: "Conversation" @ 0x007c1abc
             string conversation = GetResRefField(root, "Conversation");
             if (!string.IsNullOrEmpty(conversation))
@@ -432,7 +432,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             });
 
             // Load BWM hooks from door walkmesh (DWK)
-            // Based on swkotor2.exe: Doors have walkmesh files (DWK) with hook vectors defining interaction points
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Doors have walkmesh files (DWK) with hook vectors defining interaction points
             // Located via string references: "USE1", "USE2" hook vectors in BWM format
             // Original implementation: Loads DWK file for door model, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
             LoadBWMHooks(entity, module, templateResRef, true);
@@ -528,7 +528,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             });
 
             // Load BWM hooks from placeable walkmesh (PWK)
-            // Based on swkotor2.exe: Placeables have walkmesh files (PWK) with hook vectors defining interaction points
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeables have walkmesh files (PWK) with hook vectors defining interaction points
             // Located via string references: "USE1", "USE2" hook vectors in BWM format
             // Original implementation: Loads PWK file for placeable model, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
             LoadBWMHooks(entity, module, templateResRef, false);
@@ -567,7 +567,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             entity.SetData("TemplateResRef", templateResRef);
 
             // Create ItemComponent from UTI template data
-            // Based on swkotor2.exe: Item component creation from UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item component creation from UTI template
             // Located via string references: "ItemComponent" @ 0x007c41e4, "BaseItem" @ 0x007c0a78
             // Original implementation: Items loaded from UTI templates have ItemComponent with BaseItem, Properties, Charges, etc.
             var itemComponent = new OdysseyItemComponent
@@ -589,7 +589,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             entity.SetData("Cursed", GetIntField(root, "Cursed", 0) != 0);
 
             // Load item properties from PropertiesList
-            // Based on swkotor2.exe: Item properties loaded from UTI PropertiesList array
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties loaded from UTI PropertiesList array
             // Located via string references: "PropertiesList" @ 0x007c2f3c, "PropertyName" @ 0x007beb58
             // Original implementation: Each property entry has PropertyName, Subtype, CostTable, CostValue, Param1, Param1Value
             if (root.Exists("PropertiesList"))
@@ -1003,7 +1003,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
         /// <summary>
         /// Loads BWM hook vectors from door/placeable walkmesh files (DWK/PWK).
-        /// Based on swkotor2.exe: Objects have walkmesh files with hook vectors defining interaction points
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Objects have walkmesh files with hook vectors defining interaction points
         /// Located via string references: "USE1", "USE2" hook vectors in BWM format
         /// Original implementation: Loads DWK/PWK file, extracts RelativeHook1/RelativeHook2 or AbsoluteHook1/AbsoluteHook2
         /// </summary>
@@ -1037,7 +1037,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                     if (bwmResource != null)
                     {
                         object bwmData = bwmResource.Resource();
-                        if (bwmData != null && bwmData is Andastra.Parsing.Formats.BWM.BWM bwm)
+                        if (bwmData != null && bwmData is BioWare.NET.Resource.Formats.BWM.BWM bwm)
                         {
                             // Extract hook vectors
                             // Prefer absolute hooks if available (world space), otherwise use relative hooks + entity position
@@ -1090,7 +1090,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                     if (bwmResource != null)
                     {
                         object bwmData = bwmResource.Resource();
-                        if (bwmData != null && bwmData is Andastra.Parsing.Formats.BWM.BWM bwm)
+                        if (bwmData != null && bwmData is BioWare.NET.Resource.Formats.BWM.BWM bwm)
                         {
                             // Extract hook vectors (same logic as doors)
                             System.Numerics.Vector3 hook1 = System.Numerics.Vector3.Zero;

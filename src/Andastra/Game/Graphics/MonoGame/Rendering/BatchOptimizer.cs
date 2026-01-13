@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Batch optimizer for automatic batch size tuning.

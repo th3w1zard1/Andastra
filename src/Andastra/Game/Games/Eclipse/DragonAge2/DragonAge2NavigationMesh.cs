@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Eclipse;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Eclipse;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.DragonAge2
+namespace Andastra.Game.Games.Eclipse.DragonAge2
 {
     /// <summary>
     /// Dragon Age 2 (DragonAge2.exe) specific navigation mesh implementation.

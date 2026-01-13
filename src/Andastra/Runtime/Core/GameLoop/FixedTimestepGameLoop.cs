@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Core.GameLoop
     /// </summary>
     /// <remarks>
     /// Fixed-Timestep Game Loop:
-    /// - Based on swkotor2.exe game loop implementation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game loop implementation
     /// - Located via string references: "frameStart" @ 0x007ba698 (frame start marker), "frameEnd" @ 0x007ba668 (frame end marker)
     /// - "TimeElapsed" @ 0x007bed5c (time elapsed field), "GameTime" @ 0x007c1a78 (game time field)
     /// - "GameTimeScale" @ 0x007c1a80 (game time scaling factor), "TIMEPLAYED" @ 0x007be1c4 (time played field)
@@ -109,7 +109,7 @@ namespace Andastra.Runtime.Core.GameLoop
             // Heartbeat processing is done in AI controller Update()
 
             // Process action queues (budget-limited)
-            // Based on swkotor2.exe: Script budget enforcement per frame
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script budget enforcement per frame
             // Located via string references: Script execution budget limits per frame
             // Original implementation: Enforces MaxScriptBudget (1000 instructions) per frame to prevent lockups
             // Instruction count tracking: Accumulates instruction count from all script executions

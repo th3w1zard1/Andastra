@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 
-namespace Andastra.Runtime.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Engines.Odyssey.Dialogue
 {
     /// <summary>
-    /// Dialogue loader implementation using Andastra.Parsing DLG format.
-    /// Converts Andastra.Parsing.Resource.Generics.DLG.DLG to Andastra.Runtime.Core.Dialogue.RuntimeDialogue.
+    /// Dialogue loader implementation using BioWare.NET DLG format.
+    /// Converts BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG to Andastra.Runtime.Core.Dialogue.RuntimeDialogue.
     /// </summary>
     /// <remarks>
     /// Dialogue Loader:
-    /// - Based on swkotor2.exe dialogue loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) dialogue loading system
     /// - Located via string references: "ScriptDialogue" @ 0x007bee40 (dialogue script hook), "ScriptEndDialogue" @ 0x007bede0 (end dialogue script hook)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (dialogue event type), "OnDialog" @ 0x007c1a04 (on dialogue script)
     /// - "OnEndDialogue" @ 0x007c1f60 (on end dialogue script), "Dialog" @ 0x007c24c0 (dialog field)
@@ -28,7 +28,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     /// - DLG file format: GFF with "DLG " signature containing dialogue tree data
     /// - Dialogue entries (NPC lines) and replies (player options) linked by indices
     /// - Scripts, conditions, and voice-over data embedded in dialogue nodes
-    /// - Based on Andastra.Parsing DLG format at src/Andastra/Parsing/Resource/Generics/DLG/DLG.cs
+    /// - Based on BioWare.NET DLG format at src/Andastra/Parsing/Resource/Generics/DLG/DLG.cs
     /// - Matching PyKotor implementation at Libraries/PyKotor/src/pykotor/resource/generics/dlg/base.py
     /// </remarks>
     public class KotorDialogueLoader : IDialogueLoader
@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             try
             {
                 byte[] data = _resourceProvider.GetResourceBytesAsync(
-                    new Andastra.Parsing.Resource.ResourceIdentifier(resRef, Andastra.Parsing.Common.ResourceType.DLG),
+                    new BioWare.NET.Resource.ResourceIdentifier(resRef, BioWare.NET.Common.ResourceType.DLG),
                     System.Threading.CancellationToken.None).Result;
 
                 if (data == null || data.Length == 0)
@@ -67,8 +67,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     return null;
                 }
 
-                // Parse DLG using Andastra.Parsing helper
-                DLG dlg = Andastra.Parsing.Resource.Generics.DLG.DLGHelper.ReadDlg(data);
+                // Parse DLG using BioWare.NET helper
+                DLG dlg = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper.ReadDlg(data);
 
                 // Convert to RuntimeDialogue
                 RuntimeDialogue runtimeDialogue = ConvertToRuntimeDialogue(dlg, resRef);
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         }
 
         /// <summary>
-        /// Converts Andastra.Parsing DLG to RuntimeDialogue.
+        /// Converts BioWare.NET DLG to RuntimeDialogue.
         /// </summary>
         private RuntimeDialogue ConvertToRuntimeDialogue(DLG dlg, string resRef)
         {

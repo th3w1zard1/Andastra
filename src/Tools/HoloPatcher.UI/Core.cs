@@ -6,15 +6,15 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Config;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Namespaces;
-using Andastra.Parsing.TSLPatcher;
-using Andastra.Parsing.Reader;
-using Andastra.Parsing.Uninstall;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Config;
+using BioWare.NET.Installation;
+using BioWare.NET.Common.Logger;
+using BioWare.NET.Namespaces;
+using BioWare.NET.TSLPatcher;
+using BioWare.NET.Reader;
+using BioWare.NET.Uninstall;
 using JetBrains.Annotations;
 using HoloPatcher.UI.Update;
 #if WINDOWS
@@ -26,7 +26,7 @@ namespace HoloPatcher.UI
 
     /// <summary>
     /// Core functionality for HoloPatcher.
-    /// Equivalent to holopatcher/Andastra.Parsing.py
+    /// Equivalent to holopatcher/BioWare.NET.py
     /// </summary>
     public static class Core
     {

@@ -1,10 +1,10 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Game.Games.Common.Components;
+using Andastra.Game.Games.Odyssey.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
+namespace Andastra.Game.Games.Odyssey.Kotor2.Components
 {
     /// <summary>
     /// KOTOR 2 (swkotor2.exe) specific door component implementation.
@@ -109,7 +109,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// </summary>
         /// <remarks>
         /// TSL Door Initialization:
-        /// - Based on swkotor2.exe door system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door system
         /// - TSL-specific fields: Min1HP, NotBlastable (loaded from UTD template)
         /// - These fields are TSL-only and do not exist in KOTOR 1
         /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// </summary>
         /// <remarks>
         /// KOTOR 2 Module Transition Check:
-        /// - Based on swkotor2.exe door transition system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door transition system
         /// - swkotor2.exe: Door loading (DoorInitialization @ 0x005838d0 reads LinkedToModule and LinkedToFlags from UTD template)
         /// - swkotor2.exe: Door loading (DoorLoadingFunction @ 0x00580ed0 loads door properties including transition data)
         /// - swkotor2.exe: GIT loading (LoadDoorInstancesFromGIT @ 0x004e08e0 loads door instances from GIT with transition fields)
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
             get
             {
                 // KOTOR 2 uses LinkedToFlags bit 1 (0x1) = module transition flag
-                // Based on swkotor2.exe: DoorInitialization @ 0x005838d0, DoorEventHandling @ 0x004dcfb0
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DoorInitialization @ 0x005838d0, DoorEventHandling @ 0x004dcfb0
                 return (LinkedToFlags & 1) != 0 && !string.IsNullOrEmpty(LinkedToModule);
             }
         }
@@ -155,7 +155,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// </summary>
         /// <remarks>
         /// KOTOR 2 Area Transition Check:
-        /// - Based on swkotor2.exe door transition system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door transition system
         /// - swkotor2.exe: Door loading (DoorInitialization @ 0x005838d0 reads LinkedTo and LinkedToFlags from UTD template)
         /// - swkotor2.exe: Door loading (DoorLoadingFunction @ 0x00580ed0 loads door properties including transition data)
         /// - swkotor2.exe: GIT loading (LoadDoorInstancesFromGIT @ 0x004e08e0 loads door instances from GIT with transition fields)
@@ -173,7 +173,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
             get
             {
                 // KOTOR 2 uses LinkedToFlags bit 2 (0x2) = area transition flag
-                // Based on swkotor2.exe: DoorInitialization @ 0x005838d0, DoorEventHandling @ 0x004dcfb0
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DoorInitialization @ 0x005838d0, DoorEventHandling @ 0x004dcfb0
                 return (LinkedToFlags & 2) != 0 && !string.IsNullOrEmpty(LinkedTo);
             }
         }
@@ -183,7 +183,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// </summary>
         /// <remarks>
         /// KOTOR 2 Door Locking:
-        /// - Based on swkotor2.exe door locking system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door locking system
         /// - Located via string references: "OnLock" @ 0x007c1a28, "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd in FUN_004dcfb0)
         /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
         /// - Event dispatching: DoorEventHandling @ 0x004dcfb0 handles EVENT_LOCK_OBJECT (case 0xd, fires before script execution)
@@ -195,7 +195,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         public override void Lock()
         {
             // KOTOR 2 uses DoorEventHandling @ 0x004dcfb0 for lock events
-            // Based on swkotor2.exe: DoorEventHandling @ 0x004dcfb0 (case 0xd: EVENT_LOCK_OBJECT)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DoorEventHandling @ 0x004dcfb0 (case 0xd: EVENT_LOCK_OBJECT)
             base.Lock();
         }
 
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
         /// <param name="damageType">The type of damage being applied.</param>
         /// <remarks>
         /// KOTOR 2 Door Damage Application:
-        /// - Based on swkotor2.exe door damage system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door damage system
         /// - Located via string references: "gui_mp_bashdp" @ 0x007b5e04, "gui_mp_bashup" @ 0x007b5e14 (door bash GUI panels)
         /// - "gui_mp_bashd" @ 0x007b5e24, "gui_mp_bashu" @ 0x007b5e34 (door bash GUI elements)
         /// - swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP and NotBlastable from UTD template
@@ -231,7 +231,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
             }
 
             // TSL-specific: NotBlastable prevents explosive/force power damage
-            // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads NotBlastable from UTD template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00584f40 @ 0x00584f40 loads NotBlastable from UTD template
             // Original implementation: If NotBlastable is true, door cannot be damaged by explosives, grenades, or force powers
             // Blast damage types include: Fire (explosives/grenades), Sonic (sonic grenades), Electrical (electrical force powers),
             // DarkSide (dark side force powers), LightSide (light side force powers)
@@ -250,7 +250,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
                 if (isBlastDamage)
                 {
                     // Reject blast-type damage if NotBlastable flag is set
-                    // Based on swkotor2.exe: NotBlastable flag prevents door from being damaged by blast-type damage
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NotBlastable flag prevents door from being damaged by blast-type damage
                     // Original implementation: Door takes no damage from explosives, grenades, or force powers when NotBlastable is true
                     // Physical damage (bashing) is not affected by NotBlastable flag
                     return;
@@ -262,7 +262,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
             int newHP = System.Math.Max(0, HitPoints - actualDamage);
 
             // TSL-specific: Min1HP prevents door from dropping below 1 HP
-            // Based on swkotor2.exe: FUN_00584f40 @ 0x00584f40 loads Min1HP from UTD template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00584f40 @ 0x00584f40 loads Min1HP from UTD template
             // Original implementation: If Min1HP is true, door cannot be destroyed (HP clamped to 1)
             // Plot doors: Min1HP=1 makes door effectively indestructible
             if (Min1HP && newHP < 1)
@@ -273,7 +273,7 @@ namespace Andastra.Runtime.Games.Odyssey.Kotor2.Components
             HitPoints = newHP;
 
             // If door is destroyed (and Min1HP is false), mark as bashed and open
-            // Based on swkotor2.exe: DoorEventHandling @ 0x004dcfb0 processes door bash damage events
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DoorEventHandling @ 0x004dcfb0 processes door bash damage events
             if (HitPoints <= 0)
             {
                 IsBashed = true;

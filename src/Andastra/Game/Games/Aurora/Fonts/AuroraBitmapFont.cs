@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.TXI;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Runtime.Games.Common;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.TXI;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Graphics;
@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.Games.Aurora.Fonts
+namespace Andastra.Game.Games.Aurora.Fonts
 {
     /// <summary>
     /// Aurora engine (Neverwinter Nights) bitmap font implementation.

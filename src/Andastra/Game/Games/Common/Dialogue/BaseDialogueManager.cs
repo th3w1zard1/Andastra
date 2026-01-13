@@ -4,7 +4,7 @@ using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common.Dialogue
+namespace Andastra.Game.Games.Common.Dialogue
 {
     /// <summary>
     /// Abstract base class for dialogue managers across all engines.

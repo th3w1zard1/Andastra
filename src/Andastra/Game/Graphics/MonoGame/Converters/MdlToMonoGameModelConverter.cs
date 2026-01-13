@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.MDLData;
+using BioWare.NET.Resource.Formats.MDLData;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Converters
+namespace Andastra.Game.Graphics.MonoGame.Converters
 {
     /// <summary>
-    /// Converts Andastra.Parsing MDL model data to MonoGame Model.
+    /// Converts BioWare.NET MDL model data to MonoGame Model.
     /// Handles trimesh geometry, UV coordinates, and basic material references.
     /// </summary>
     /// <remarks>
     /// MDL to MonoGame Model Converter:
-    /// - Based on swkotor2.exe model loading system (modern MonoGame adaptation)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model loading system (modern MonoGame adaptation)
     /// - Located via string references: "Model" @ 0x007c1ca8, "ModelName" @ 0x007c1c8c
     /// - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
     /// - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "refModel" @ 0x007babe8
@@ -39,7 +39,7 @@ namespace Andastra.Runtime.MonoGame.Converters
     ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     /// - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) to ensure spell visuals work correctly
-    /// - Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
     /// - Original implementation: KOTOR loads MDL/MDX files and renders with DirectX 8/9 APIs
     /// - MDL format: Binary model format containing trimesh nodes, bones, animations
     /// - MDX format: Binary geometry format containing vertex positions, normals, UVs, indices
@@ -166,7 +166,7 @@ namespace Andastra.Runtime.MonoGame.Converters
         }
 
         /// <summary>
-        /// Converts a legacy Andastra.Parsing MDL model to MonoGame rendering structures.
+        /// Converts a legacy BioWare.NET MDL model to MonoGame rendering structures.
         /// 
         /// NOTE: For better performance, use MDLFastReader + MDLModelConverter instead.
         /// </summary>
@@ -222,7 +222,7 @@ namespace Andastra.Runtime.MonoGame.Converters
 
         private Matrix CreateNodeTransform(MDLNode node)
         {
-            // Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590
             // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
             // Otherwise spell visuals will not be correct
             // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error

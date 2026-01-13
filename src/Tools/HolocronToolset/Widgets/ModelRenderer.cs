@@ -5,16 +5,16 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia;
 using HolocronToolset.Data;
-using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Resource;
+using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Stride.Converters;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 using Stride.Core.Mathematics;
 using JetBrains.Annotations;
-using Andastra.Parsing.Formats.TPC;
+using BioWare.NET.Resource.Formats.TPC;
 
 namespace HolocronToolset.Widgets
 {
@@ -62,7 +62,7 @@ namespace HolocronToolset.Widgets
                 {
                     // Parse MDL starting after the 12-byte header (data[12:] in Python)
                     // This matches the Python implementation behavior
-                    _parsedModel = Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(
+                    _parsedModel = BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(
                         _mdlData, 12, 0, _mdxData, 0, 0);
 
                     // Convert to Stride rendering structures
@@ -356,7 +356,7 @@ namespace HolocronToolset.Widgets
 
                     // Get body model name from UTC using appearance.2da
                     // Matching PyKotor: Uses get_body_model() function to resolve model from UTC
-                    var (bodyModel, bodyTexture) = Andastra.Parsing.Tools.Creature.GetBodyModel(
+                    var (bodyModel, bodyTexture) = BioWare.NET.Tools.Creature.GetBodyModel(
                         _creatureToLoad,
                         _installation.Installation);
 

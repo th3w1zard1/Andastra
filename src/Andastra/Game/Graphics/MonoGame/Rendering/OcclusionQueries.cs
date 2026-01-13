@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Hardware occlusion query system for accurate occlusion culling.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Occlusion Query System (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: Original engine uses VIS file-based room visibility culling
     /// - Original implementation: KOTOR uses VIS (visibility) files for occlusion culling, not hardware occlusion queries
     /// - VIS files: Pre-computed room-to-room visibility relationships stored in VIS binary format

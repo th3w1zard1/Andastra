@@ -5,25 +5,25 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Diff;
-using Game = Andastra.Parsing.Common.BioWareGame;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.TLK;
-using Andastra.Parsing.Mods.NCS;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TwoDA;
-using Andastra.Parsing.Memory;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Tools;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Diff;
+using Game = BioWare.NET.Common.BioWareGame;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.NCS;
+using BioWare.NET.Resource.Formats.SSF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Installation;
+using BioWare.NET.TSLPatcher.Mods;
+using BioWare.NET.TSLPatcher.Mods.GFF;
+using BioWare.NET.TSLPatcher.Mods.TLK;
+using BioWare.NET.TSLPatcher.Mods.NCS;
+using BioWare.NET.TSLPatcher.Mods.SSF;
+using BioWare.NET.TSLPatcher.Mods.TwoDA;
+using BioWare.NET.TSLPatcher.Memory;
+using BioWare.NET.Resource;
+using BioWare.NET.Tools;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -96,7 +96,7 @@ namespace KotorDiff.Diff
             var offsets = new List<int>();
             try
             {
-                using (var reader = Andastra.Parsing.Common.BinaryReader.FromBytes(ncsData))
+                using (var reader = BioWare.NET.Common.BinaryReader.FromBytes(ncsData))
                 {
                     // Skip NCS header (13 bytes)
                     string signature = reader.ReadString(4);

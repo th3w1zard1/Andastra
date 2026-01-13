@@ -1,6 +1,6 @@
 using System;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.MDLData;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.MDLData;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Graphics
@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Room Mesh Renderer:
-    /// - Based on swkotor2.exe room mesh rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) room mesh rendering system
     /// - Located via string references: "roomcount" @ 0x007b96c0, "RoomName" @ 0x007bd484, "Rooms" @ 0x007bd490
     /// - "trimesh" @ 0x007bac30, "animmesh" @ 0x007bac24, "danglymesh" @ 0x007bac18 (mesh types in MDL)
     /// - "VISIBLEVALUE" @ 0x007b6a58, "%s/%s.VIS" @ 0x007b972c (VIS file for room visibility)

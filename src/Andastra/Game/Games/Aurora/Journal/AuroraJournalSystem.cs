@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Journal;
+using Andastra.Game.Games.Common.Journal;
 using Andastra.Runtime.Scripting.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora.Journal
+namespace Andastra.Game.Games.Aurora.Journal
 {
     /// <summary>
     /// Aurora-specific journal system implementation (nwmain.exe - Neverwinter Nights).

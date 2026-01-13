@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Entities
     /// </summary>
     /// <remarks>
     /// Odyssey Event Bus System:
-    /// - Based on swkotor2.exe event system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) event system
     /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles all object event dispatching
     /// - Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
     /// - Debug output: "DRF Event Added: %s(%s) %s(%s) %s %s\n" @ 0x007bc55c (event logging format)
@@ -270,7 +270,7 @@ namespace Andastra.Runtime.Core.Entities
 
         public void FireScriptEvent(IEntity entity, ScriptEvent eventType, IEntity triggerer = null)
         {
-            // Based on swkotor2.exe: Script event firing implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script event firing implementation
             // Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles all script event dispatching
             // Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
             // Original implementation: FUN_004dcfb0 formats event name from type (e.g., "EVENT_OPEN_OBJECT" for case 7),

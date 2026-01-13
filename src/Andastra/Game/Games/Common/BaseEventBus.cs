@@ -4,7 +4,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of event bus shared across all BioWare engines.

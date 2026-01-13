@@ -1,6 +1,6 @@
 using System;
 
-namespace Andastra.Runtime.MonoGame.PostProcessing
+namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 {
     /// <summary>
     /// Automatic exposure adaptation for HDR rendering.

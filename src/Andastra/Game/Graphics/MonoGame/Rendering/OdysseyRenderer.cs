@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.MonoGame.Backends;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
@@ -10,7 +10,7 @@ using Andastra.Runtime.MonoGame.Raytracing;
 using Andastra.Runtime.MonoGame.Remix;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Main Odyssey renderer coordinating all graphics systems.

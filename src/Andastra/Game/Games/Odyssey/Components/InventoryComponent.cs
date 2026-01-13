@@ -6,14 +6,14 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Component for managing entity inventory and equipped items.
     /// </summary>
     /// <remarks>
     /// Inventory Component:
-    /// - Based on swkotor2.exe inventory system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) inventory system
     /// - Located via string references: "Inventory" @ 0x007c2504 (inventory field), "InventoryRes" @ 0x007bf570 (inventory resource)
     /// - "InventorySlot" @ 0x007bf7d0 (inventory slot field), "=INVENTORY" @ 0x007c1927 (inventory GFF structure)
     /// - "GAMEINPROGRESS:INVENTORY" @ 0x007c1570 (inventory game state), "HasInventory" @ 0x007c1fb0 (has inventory flag)

@@ -3,7 +3,7 @@ using System.IO;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using Avalonia.Controls.Primitives;
 

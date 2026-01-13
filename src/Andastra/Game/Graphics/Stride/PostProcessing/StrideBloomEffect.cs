@@ -9,7 +9,7 @@ using Stride.Shaders;
 using Stride.Shaders.Compiler;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.PostProcessing
+namespace Andastra.Game.Stride.PostProcessing
 {
     /// <summary>
     /// Stride implementation of bloom post-processing effect.

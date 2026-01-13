@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Installation;
 
 namespace KotorDiff.Diff
 {
@@ -105,7 +105,7 @@ namespace KotorDiff.Diff
                 var results = new List<ComparableResource>();
                 try
                 {
-                    var capsule = new Andastra.Parsing.Formats.Capsule.Capsule(filePath.FullName);
+                    var capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(filePath.FullName);
                     foreach (var res in capsule)
                     {
                         string ext = res.ResType.Extension.ToLowerInvariant();

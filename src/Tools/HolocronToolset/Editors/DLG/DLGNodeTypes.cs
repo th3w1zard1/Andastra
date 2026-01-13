@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 
 namespace HolocronToolset.Editors.DLG
 {

@@ -1,8 +1,8 @@
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) specific transform component implementation.

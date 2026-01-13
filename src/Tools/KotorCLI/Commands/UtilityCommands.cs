@@ -4,14 +4,14 @@ using KotorCLI.Logging;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Resource.Formats.BIF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Resource.Formats.NCS;
+using BioWare.NET.Resource.Formats.BIF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource;
+using BioWare.NET.Common;
 using JetBrains.Annotations;
 
 namespace KotorCLI.Commands

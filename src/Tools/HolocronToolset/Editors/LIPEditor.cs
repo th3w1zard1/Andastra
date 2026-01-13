@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.LIP;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

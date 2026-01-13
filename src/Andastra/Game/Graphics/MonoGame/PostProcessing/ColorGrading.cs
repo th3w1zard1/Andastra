@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.PostProcessing
+namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 {
     /// <summary>
     /// Color grading system for artistic control.

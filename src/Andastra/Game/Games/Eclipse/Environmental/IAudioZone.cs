@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Runtime.Games.Eclipse;
+using Andastra.Game.Games.Eclipse;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Environmental
+namespace Andastra.Game.Games.Eclipse.Environmental
 {
     /// <summary>
     /// Interface for audio zone system in Eclipse engine.

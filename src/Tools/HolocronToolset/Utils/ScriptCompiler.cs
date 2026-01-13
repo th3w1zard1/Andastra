@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.NCS;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
 

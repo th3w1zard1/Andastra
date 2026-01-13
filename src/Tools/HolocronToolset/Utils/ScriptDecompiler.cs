@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.NCS;
+using BioWare.NET.Resource.Formats.NCS.Decomp;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
-using NcsFile = Andastra.Parsing.Formats.NCS.NCSDecomp.NcsFile;
+using NcsFile = BioWare.NET.Resource.Formats.NCS.Decomp.NcsFile;
 
 namespace HolocronToolset.Utils
 {

@@ -7,14 +7,14 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Combat;
 using Andastra.Runtime.Engines.Odyssey.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Manages encounter spawning when creatures enter encounter areas.
     /// </summary>
     /// <remarks>
     /// Encounter System:
-    /// - Based on swkotor2.exe encounter system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) encounter system
     /// - LoadEncounterList @ 0x004e01a0 - Loads encounter list from GIT GFF into area (located via "Encounter List" @ 0x007bd050)
     ///   - Iterates through "Encounter List" GFF list, reads ObjectId, TemplateResRef, position (XPosition, YPosition, ZPosition), geometry polygon, SpawnPointList. Creates encounter entities and adds to area. Validates encounter template exists, loads geometry and spawn points
     /// - SaveEncounterList @ 0x004e2be0 - Saves encounter list from area to GFF save data (located via "Encounter List" @ 0x007bd050)
@@ -48,7 +48,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         private readonly Loading.EntityFactory _entityFactory;
         private readonly Loading.ModuleLoader _moduleLoader;
         private readonly Func<IEntity, bool> _isPlayerCheck;
-        private readonly Func<Andastra.Parsing.Installation.Module> _getCurrentModule;
+        private readonly Func<BioWare.NET.Extract.Installation.Module> _getCurrentModule;
 
         public EncounterSystem(IWorld world, FactionManager factionManager)
         {
@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             _entityFactory = new Loading.EntityFactory();
         }
 
-        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<Andastra.Parsing.Installation.Module> getCurrentModule = null)
+        public EncounterSystem(IWorld world, FactionManager factionManager, Action<IEntity, ScriptEvent, IEntity> scriptExecutor, Loading.ModuleLoader moduleLoader, Func<IEntity, bool> isPlayerCheck = null, Func<BioWare.NET.Extract.Installation.Module> getCurrentModule = null)
             : this(world, factionManager)
         {
             _scriptExecutor = scriptExecutor;
@@ -320,7 +320,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 IEntity creature = null;
                 if (_moduleLoader != null && _getCurrentModule != null)
                 {
-                    Andastra.Parsing.Common.Module module = _getCurrentModule();
+                    BioWare.NET.Common.Module module = _getCurrentModule();
                     if (module != null)
                     {
                         creature = _entityFactory.CreateCreatureFromTemplate(
@@ -391,7 +391,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// </summary>
         /// <remarks>
         /// Creature Type Spawn Check:
-        /// - Based on swkotor2.exe encounter system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) encounter system
         /// - Original implementation: Checks if any spawned creature matches the template ResRef
         /// - SingleSpawn flag prevents spawning the same creature type multiple times
         /// </remarks>

@@ -1,21 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.ARE;
-using Andastra.Parsing.Resource.Generics.DLG;
-using Andastra.Parsing.Resource.Generics.UTC;
-using Andastra.Parsing.Resource.Generics.UTM;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.BWM;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.LYT;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF.Generics.ARE;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTM;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -26,29 +26,29 @@ using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Loading;
 using JetBrains.Annotations;
-using InstResourceResult = Andastra.Parsing.Installation.ResourceResult;
+using InstResourceResult = BioWare.NET.Extract.Installation.ResourceResult;
 using KotorVector3 = System.Numerics.Vector3;
-using MDLData = Andastra.Parsing.Formats.MDLData;
+using MDLData = BioWare.NET.Resource.Formats.MDLData;
 using OdyObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using OdysseyDoorComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyDoorComponent;
 using OdysseyNavigationMeshFactory = Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory;
 using OdysseyWaypointComponent = Andastra.Runtime.Games.Odyssey.Components.OdysseyWaypointComponent;
 using PlaceableComponent = Andastra.Runtime.Games.Odyssey.Components.PlaceableComponent;
-using ResRef = Andastra.Parsing.Common.ResRef;
+using ResRef = BioWare.NET.Common.ResRef;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using SoundComponent = Andastra.Runtime.Games.Odyssey.Components.SoundComponent;
 using Systems = Andastra.Runtime.Games.Odyssey.Systems;
 // Explicit type aliases to resolve ambiguity
 using SysVector3 = System.Numerics.Vector3;
 
-namespace Andastra.Runtime.Engines.Odyssey.Game
+namespace Andastra.Game.Engines.Odyssey.Game
 {
     /// <summary>
-    /// Loads modules from KOTOR game files using Andastra.Parsing resource infrastructure.
+    /// Loads modules from KOTOR game files using BioWare.NET resource infrastructure.
     /// </summary>
     /// <remarks>
     /// Module Loading Process (Odyssey-specific):
-    /// - Based on swkotor2.exe: Module loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loading system
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CNWSModule::LoadModule, CNWCModule::LoadModuleResources - similar module loading system, uses HAK files, different file formats
@@ -100,7 +100,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private VIS _currentVis;
 
         // EntityFactory for creating entities from templates
-        // Based on swkotor2.exe: EntityFactory creates runtime entities from GFF templates (UTC, UTP, UTD, etc.)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory creates runtime entities from GFF templates (UTC, UTP, UTD, etc.)
         // Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
         // Original implementation: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF
         // EntityFactory is cached per ModuleLoader instance to maintain ObjectId uniqueness
@@ -148,7 +148,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _world = world;
 
             // Initialize EntityFactory for creating entities from templates
-            // Based on swkotor2.exe: EntityFactory is created per ModuleLoader instance
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory is created per ModuleLoader instance
             // ObjectId assignment uses high range (1000000+) to avoid conflicts with World.CreateEntity counter
             _entityFactory = new Loading.EntityFactory();
 
@@ -174,10 +174,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         /// <summary>
-        /// Gets the current Andastra.Parsing Module for resource loading.
+        /// Gets the current BioWare.NET Module for resource loading.
         /// </summary>
         [CanBeNull]
-        public Andastra.Parsing.Installation.Module GetParsingModule()
+        public BioWare.NET.Extract.Installation.Module GetParsingModule()
         {
             if (_installation == null || string.IsNullOrEmpty(_currentModuleRoot))
             {
@@ -187,7 +187,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             try
             {
                 // Create a Module instance from the current module root
-                return new Andastra.Parsing.Installation.Module(_currentModuleRoot, _installation);
+                return new BioWare.NET.Extract.Installation.Module(_currentModuleRoot, _installation);
             }
             catch (Exception ex)
             {
@@ -200,7 +200,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Gets the current module (alias for GetParsingModule for API compatibility).
         /// </summary>
         [CanBeNull]
-        public Andastra.Parsing.Installation.Module GetCurrentModule()
+        public BioWare.NET.Extract.Installation.Module GetCurrentModule()
         {
             return GetParsingModule();
         }
@@ -210,7 +210,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// </summary>
         /// <remarks>
         /// Entity Factory System:
-        /// - Based on swkotor2.exe entity creation system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity creation system
         /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
         /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
         /// - Template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
@@ -299,7 +299,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Load a module by name.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe module loading system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading system
         /// Located via string references: "ModuleList" @ 0x007bdd3c, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
         /// Original implementation:
         /// 1. Sets up module directory path (MODULES:\{moduleName}\)
@@ -360,7 +360,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Fire OnModuleLoad script event
-            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD fires when module is loaded
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD fires when module is loaded
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c (0x14), "Mod_OnModLoad" @ IFO GFF
             // Original implementation: OnModuleLoad script fires on module after all resources are loaded and entities are spawned
             // Script execution is handled through EventBus subscriptions (ScriptExecutor listens to script events)
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 if (!string.IsNullOrEmpty(onModuleLoadScript))
                 {
                     // Create or get module entity for script execution
-                    // Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002 for script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with fixed ObjectId 0x7F000002 for script execution
                     // Module entity has IScriptHooksComponent for script execution, Tag set to module ResRef
                     IEntity moduleEntity = CreateOrGetModuleEntity(runtimeModule);
                     if (moduleEntity != null)
@@ -381,14 +381,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 }
 
                 // Fire OnModuleStart script event - fires after OnModuleLoad, before gameplay starts
-                // Based on swkotor2.exe: Module start script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module start script execution
                 // Located via string references: "OnModuleStart" script, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x15)
                 // Original implementation: OnModuleStart fires after OnModuleLoad, before gameplay starts
                 string onModuleStartScript = runtimeModule.GetScript(ScriptEvent.OnModuleStart);
                 if (!string.IsNullOrEmpty(onModuleStartScript))
                 {
                     // Use same module entity (created during OnModuleLoad, or create if OnModuleLoad didn't run)
-                    // Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002 for script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with fixed ObjectId 0x7F000002 for script execution
                     IEntity moduleEntity = CreateOrGetModuleEntity(runtimeModule);
                     if (moduleEntity != null)
                     {
@@ -405,7 +405,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// </summary>
         /// <remarks>
         /// Module Entity Creation:
-        /// Based on swkotor2.exe: Module object system for script execution
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module object system for script execution
         /// Located via string references: "Module" @ 0x007c1a70, "GetModule" NWScript function
         /// Original implementation:
         /// - Modules are special objects with fixed ObjectId 0x7F000002 (ModuleObjectId)
@@ -434,7 +434,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Check if module entity with fixed ObjectId already exists (canonical check)
-            // Based on swkotor2.exe: Module entity has fixed ObjectId 0x7F000002
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity has fixed ObjectId 0x7F000002
             // Note: ClearWorld() is called at the start of LoadModule, so this should usually be null,
             // but we check defensively in case the entity persists across module loads
             IEntity existingModuleEntity = _world.GetEntity(World.ModuleObjectId);
@@ -451,7 +451,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Create new module entity with fixed ObjectId
-            // Based on swkotor2.exe: Module entity created with ObjectId 0x7F000002
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with ObjectId 0x7F000002
             // Entity constructor: Entity(uint objectId, ObjectType objectType)
             var entity = new Entity(World.ModuleObjectId, OdyObjectType.Invalid);
             entity.World = _world;
@@ -462,7 +462,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             // Initialize components for module entity
             // Module entities need IScriptHooksComponent for script execution
-            // Based on swkotor2.exe: Module scripts require script hooks component
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
             Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
@@ -473,7 +473,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Load module scripts into script hooks component
-            // Based on swkotor2.exe: Module scripts (OnModuleLoad, OnModuleStart, etc.) stored in module entity
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts (OnModuleLoad, OnModuleStart, etc.) stored in module entity
             // This allows GetModule() NWScript function to access module scripts via GetScript()
             IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
@@ -503,7 +503,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Register module entity with world
-            // Based on swkotor2.exe: Module entity registered in world for GetEntityByTag and GetEntity lookups
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity registered in world for GetEntityByTag and GetEntity lookups
             // Module entity can be looked up by Tag (module ResRef) or by ObjectId (ModuleObjectId)
             _world.RegisterEntity(entity);
 
@@ -521,7 +521,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         // Load module IFO (module info) file
-        // Based on swkotor2.exe module loading
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading
         // Located via string reference: "Module" @ 0x007bc4e0
         // Original implementation: Loads "module.ifo" from MODULES:\{moduleName}\ directory
         // IFO contains: EntryArea, EntryX/Y/Z, ModName, DawnHour, DuskHour, ModuleDescription, etc.
@@ -588,7 +588,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         // Load module GIT (game instance template) file
-        // Based on swkotor2.exe module loading
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading
         // Located via string reference: "tmpgit" @ 0x007be618
         // Original implementation: Loads "{moduleName}.git" from MODULES:\{moduleName}\ directory
         // GIT contains: Creatures, Doors, Placeables, Triggers, Waypoints, Sounds, Stores, Encounters, Cameras
@@ -624,7 +624,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Loads walkmesh (WOK/BWM) files from LYT rooms and creates navigation mesh.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe walkmesh loading system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh loading system
         /// Located via string references: "walkmesh" pathfinding functions, "?nwsareapathfind.cpp" @ 0x007be3ff
         /// "BWM V1.0" @ 0x007c061c (BWM file signature)
         /// Original implementation:
@@ -659,7 +659,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Get Parsing Module for NavigationMeshFactory
-            Andastra.Parsing.Installation.Module parsingModule = GetParsingModule();
+            BioWare.NET.Extract.Installation.Module parsingModule = GetParsingModule();
             if (parsingModule == null)
             {
                 Console.WriteLine("[ModuleLoader] WARNING: Cannot get Parsing Module, creating placeholder navmesh");
@@ -711,7 +711,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 module.DuskHour = _currentIfo.DuskHour;
 
                 // Load module scripts from IFO
-                // Based on swkotor2.exe: Module scripts loaded from IFO GFF fields
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts loaded from IFO GFF fields
                 // Located via string references: "Mod_OnModLoad" @ IFO GFF, "Mod_OnModStart" @ IFO GFF
                 // Original implementation: IFO GFF contains Mod_OnModLoad and Mod_OnModStart ResRef fields
                 if (_currentIfo.OnLoad != null && !string.IsNullOrEmpty(_currentIfo.OnLoad.ToString()))
@@ -736,7 +736,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 }
 
                 // Load area list from Mod_Area_list field in IFO.
-                // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs.
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list contains ordered list of area ResRefs.
                 // Each entry in Mod_Area_list contains an Area_Name field with the area ResRef.
                 // This list is used for resolving transition targets by index (TransPendNextID).
                 // Stored during module loading to avoid re-reading the IFO file.
@@ -847,7 +847,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         // Spawn entities from GIT data
-        // Based on swkotor2.exe entity spawning system
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity spawning system
         // Original implementation: Iterates through GIT lists and creates runtime entities
         // Spawn order: Waypoints -> Doors -> Placeables -> Creatures -> Triggers -> Sounds -> Stores -> Encounters
         // Each entity gets: ObjectId, Tag, Position, Orientation, Template data, Local variables, Script hooks
@@ -913,7 +913,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Store camera states (cameras are not runtime entities, stored for save system)
-            // Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cameras are stored in GIT CameraList but not as runtime entities
             // Camera states are stored in RuntimeArea for save system compatibility
             RuntimeArea runtimeArea = area as RuntimeArea;
             if (runtimeArea != null && git.Cameras != null)
@@ -921,7 +921,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 foreach (GITCamera gitCamera in git.Cameras)
                 {
                     // Convert GITCamera to EntityState for save system
-                    // Based on swkotor2.exe: Camera states are stored with position and FOV
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera states are stored with position and FOV
                     var cameraState = new Andastra.Runtime.Core.Save.EntityState
                     {
                         Position = new SysVector3(gitCamera.Position.X, gitCamera.Position.Y, gitCamera.Position.Z),
@@ -942,7 +942,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         // Spawn waypoint from GIT instance data
-        // Based on swkotor2.exe waypoint spawning system
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) waypoint spawning system
         // Located via string references: "WaypointList" @ 0x007bd060, "Waypoint" @ 0x007bc510
         // Original implementation: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT WaypointList
         // - Reads waypoint struct from GIT WaypointList (StructID 5)
@@ -976,7 +976,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Load waypoint template (UTW) if ResRef is provided
-            // Based on swkotor2.exe: FUN_004e04a0 loads UTW template from TemplateResRef
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 loads UTW template from TemplateResRef
             // Original implementation: Loads UTW template, applies properties to waypoint entity
             if (!string.IsNullOrEmpty(waypoint.ResRef?.ToString()))
             {
@@ -984,7 +984,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Set waypoint component properties from GIT (GIT values override template values)
-            // Based on swkotor2.exe: GIT waypoint properties override UTW template properties
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GIT waypoint properties override UTW template properties
             // Original implementation: GIT MapNote, MapNoteEnabled, HasMapNote override template values
             OdysseyWaypointComponent waypointComponent = entity.GetComponent<OdysseyWaypointComponent>();
             if (waypointComponent != null)
@@ -1398,7 +1398,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     IPlaceableComponent placeableComponent = entity.GetComponent<IPlaceableComponent>();
                     if (placeableComponent != null)
                     {
-                        // Based on swkotor2.exe: Placeable appearance setting
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable appearance setting
                         // Located via string references: "AppearanceType" @ 0x007c84c8
                         // Original implementation: AppearanceType from UTP template sets placeable visual appearance
                         if (placeableComponent is PlaceableComponent kotorPlaceable)
@@ -1449,7 +1449,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     CreatureComponent creatureComponent = entity.GetComponent<CreatureComponent>();
                     if (creatureComponent != null)
                     {
-                        // Based on swkotor2.exe: Creature appearance setting
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Creature appearance setting
                         // Located via string references: "AppearanceType" @ 0x007c84c8, "Appearance_Type" @ 0x007c40f0
                         // Original implementation: AppearanceType from UTC template sets creature visual appearance (model selection)
                         creatureComponent.AppearanceType = utc.AppearanceId;
@@ -1498,7 +1498,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Loads UTW waypoint template and applies properties to entity.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe waypoint template loading
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) waypoint template loading
         /// Located via string references: "Waypoint template %s doesn't exist.\n" @ 0x007c0f24
         /// Original implementation: FUN_004e04a0 @ 0x004e04a0 loads UTW template from TemplateResRef
         /// - Loads UTW GFF file from installation
@@ -1517,7 +1517,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                     UTW utw = UTWHelpers.ConstructUtw(gff);
 
                     // Set entity tag from UTW (only if not already set from GIT)
-                    // Based on swkotor2.exe: GIT tag takes precedence over UTW tag
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GIT tag takes precedence over UTW tag
                     if (string.IsNullOrEmpty(entity.Tag) && !string.IsNullOrEmpty(utw.Tag))
                     {
                         entity.Tag = utw.Tag;
@@ -1537,7 +1537,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                         waypointComponent.TemplateResRef = utwResRef;
 
                         // Set map note properties from UTW (only if not already set from GIT)
-                        // Based on swkotor2.exe: GIT MapNote overrides UTW MapNote
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GIT MapNote overrides UTW MapNote
                         if (!waypointComponent.HasMapNote)
                         {
                             waypointComponent.HasMapNote = utw.HasMapNote;
@@ -1655,7 +1655,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _currentArea = runtimeArea;
 
             // Load waypoints from GIT if available (even if installation is null, GIT might have been loaded from another source)
-            // Based on swkotor2.exe: Waypoints are loaded from GIT WaypointList
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Waypoints are loaded from GIT WaypointList
             // Original implementation: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT
             // If GIT is available, spawn waypoints from GIT instead of creating placeholder
             if (_currentGit != null && _currentGit.Waypoints.Count > 0)

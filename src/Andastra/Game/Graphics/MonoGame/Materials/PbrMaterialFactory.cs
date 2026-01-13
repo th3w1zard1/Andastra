@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.MonoGame.Materials
+namespace Andastra.Game.Graphics.MonoGame.Materials
 {
     /// <summary>
     /// Factory for creating PBR materials from KOTOR material data.
@@ -149,7 +149,7 @@ namespace Andastra.Runtime.MonoGame.Materials
         /// <summary>
         /// Preloads all materials for a module.
         /// 
-        /// Based on swkotor2.exe module material loading system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module material loading system
         /// Located via string references: "glMaterialfv" @ swkotor2.exe:0x0080ad74
         /// Original implementation: Materials are loaded on-demand when models are rendered
         /// - Material data is stored in MDL file nodes (textures, colors, properties)
@@ -340,7 +340,7 @@ namespace Andastra.Runtime.MonoGame.Materials
         /// <summary>
         /// Extracts material information from MDL binary data.
         /// 
-        /// Based on swkotor2.exe MDL material structure
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) MDL material structure
         /// MDL file format: Materials are stored in trimesh nodes (nodeId & 32 != 0)
         /// Material data offsets (from node start):
         /// - Texture0 (diffuse): offset 168, 32 bytes (ASCII string)

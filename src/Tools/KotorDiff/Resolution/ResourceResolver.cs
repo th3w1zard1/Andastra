@@ -4,12 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Extract;
+using BioWare.NET.Extract.Capsule;
+using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Installation;
+using BioWare.NET.Resource;
 using KotorDiff.Diff;
 using KotorDiff.Logger;
 using JetBrains.Annotations;
@@ -49,7 +49,7 @@ namespace KotorDiff.Resolution
             ResourceIdentifier identifier,
             Action<string> logFunc = null,
             bool verbose = true,
-            Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>> resourceIndex = null)
+            Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>> resourceIndex = null)
         {
             if (logFunc == null)
             {
@@ -63,29 +63,29 @@ namespace KotorDiff.Resolution
             var chitinFiles = new List<string>();
 
             // Store FileResource instances for data retrieval
-            var resourceInstances = new Dictionary<string, Andastra.Parsing.Extract.FileResource>();
+            var resourceInstances = new Dictionary<string, BioWare.NET.Extract.FileResource>();
 
             try
             {
                 // Use index if provided (O(1) lookup), otherwise iterate (O(n) scan)
-                List<Andastra.Parsing.Extract.FileResource> fileResources;
+                List<BioWare.NET.Extract.FileResource> fileResources;
                 if (resourceIndex != null)
                 {
-                    fileResources = resourceIndex.ContainsKey(identifier) ? resourceIndex[identifier] : new List<Andastra.Parsing.Extract.FileResource>();
+                    fileResources = resourceIndex.ContainsKey(identifier) ? resourceIndex[identifier] : new List<BioWare.NET.Extract.FileResource>();
                 }
                 else
                 {
                     // Fallback: search installation using Resource method for each identifier
                     // This is slower but works when no index is provided
                     // In practice, resourceIndex should be provided for performance
-                    fileResources = new List<Andastra.Parsing.Extract.FileResource>();
+                    fileResources = new List<BioWare.NET.Extract.FileResource>();
                 }
 
                 // Categorize all instances by location
                 string installRoot = installation.Path;
 
                 // Group module files by their basename for proper composite handling
-                var moduleGroups = new Dictionary<string, List<(string filepath, Andastra.Parsing.Extract.FileResource resource)>>();
+                var moduleGroups = new Dictionary<string, List<(string filepath, BioWare.NET.Extract.FileResource resource)>>();
 
                 foreach (var fileResource in fileResources)
                 {
@@ -321,9 +321,9 @@ namespace KotorDiff.Resolution
         // Helper method to get all FileResources from an installation
         // In Python, Installation is iterable, but in C# we need to combine different sources
         // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/tslpatcher/diff/resolution.py:431-446
-        private static List<Andastra.Parsing.Extract.FileResource> GetAllFileResources(Installation installation)
+        private static List<BioWare.NET.Extract.FileResource> GetAllFileResources(Installation installation)
         {
-            var allResources = new List<Andastra.Parsing.Extract.FileResource>();
+            var allResources = new List<BioWare.NET.Extract.FileResource>();
 
             // Get Chitin resources (includes patch.erf for K1)
             allResources.AddRange(installation.CoreResources());
@@ -378,9 +378,9 @@ namespace KotorDiff.Resolution
         /// Build an index mapping ResourceIdentifier to all FileResource instances.
         /// This dramatically improves performance by avoiding O(n) scans for each resource.
         /// </summary>
-        public static Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>> BuildResourceIndex(Installation installation)
+        public static Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>> BuildResourceIndex(Installation installation)
         {
-            var index = new Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>>();
+            var index = new Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>>();
 
             // Get all resources from installation
             var allResources = GetAllFileResources(installation);
@@ -389,7 +389,7 @@ namespace KotorDiff.Resolution
                 var identifier = fileResource.Identifier;
                 if (!index.ContainsKey(identifier))
                 {
-                    index[identifier] = new List<Andastra.Parsing.Extract.FileResource>();
+                    index[identifier] = new List<BioWare.NET.Extract.FileResource>();
                 }
                 index[identifier].Add(fileResource);
             }

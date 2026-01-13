@@ -1,4 +1,4 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,10 +8,10 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
+using BioWare.NET;
 using System.Numerics;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

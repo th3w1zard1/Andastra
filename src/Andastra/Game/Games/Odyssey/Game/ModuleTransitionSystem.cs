@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Game
+namespace Andastra.Game.Engines.Odyssey.Game
 {
     /// <summary>
     /// Arguments for module transition events.
@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
     /// </summary>
     /// <remarks>
     /// Module Transition System:
-    /// - Based on swkotor2.exe module transition system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module transition system
     /// - Located via string references: "TransitionDestination" @ 0x007bd7a4, "LinkedToModule" @ 0x007bd7bc
     /// - "LinkedTo" @ 0x007bd798 (waypoint/door tag), "LinkedToFlags" @ 0x007bd788 (transition flags)
     /// - "LinkedToObject" @ 0x007c13a0 (object reference for transitions)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Systems
+namespace Andastra.Game.Games.Aurora.Systems
 {
     /// <summary>
     /// Manages faction relationships and hostility for Aurora engine (Neverwinter Nights, Neverwinter Nights 2).

@@ -4,21 +4,21 @@ using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Formats.GFF;
-using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
-using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Tools;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF;
+using UTCHelpers = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers;
+using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.RIM;
+using BioWare.NET.Tools;
 using HolocronToolset.Data;
 using HolocronToolset.Common;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using FileResource = Andastra.Parsing.Extract.FileResource;
-using Module = Andastra.Parsing.Common.Module;
+using FileResource = BioWare.NET.Extract.FileResource;
+using Module = BioWare.NET.Common.Module;
 
 namespace HolocronToolset.Dialogs
 {
@@ -464,10 +464,10 @@ namespace HolocronToolset.Dialogs
             }
             else if (restype == ResourceType.UTM)
             {
-                Andastra.Parsing.Resource.Generics.UTM.UTM utm = new Andastra.Parsing.Resource.Generics.UTM.UTM();
+                BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTM utm = new BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTM();
                 // UTM uses DismantleUtm + BytesGff pattern
-                GFF utmGff = Andastra.Parsing.Resource.Generics.UTM.UTMHelpers.DismantleUtm(utm, gameToUse);
-                return GFFAuto.BytesGff(utmGff, Andastra.Parsing.Resource.Generics.UTM.UTM.BinaryType);
+                GFF utmGff = BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTMHelpers.DismantleUtm(utm, gameToUse);
+                return GFFAuto.BytesGff(utmGff, BioWare.NET.Resource.Formats.GFF.Generics.UTM.UTM.BinaryType);
             }
             else if (restype == ResourceType.UTW)
             {
@@ -502,7 +502,7 @@ namespace HolocronToolset.Dialogs
                 }
 
                 string fileName = Path.GetFileName(filepath);
-                if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
+                if (BioWare.NET.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
                 {
                     // Handle ERF/MOD/SAV files
                     ERF erf;
@@ -536,7 +536,7 @@ namespace HolocronToolset.Dialogs
                     // Write ERF to file
                     ERFAuto.WriteErf(erf, filepath, outputFormat);
                 }
-                else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
+                else if (BioWare.NET.Tools.FileHelpers.IsRimFile(fileName))
                 {
                     // Handle RIM files
                     RIM rim;
@@ -646,7 +646,7 @@ namespace HolocronToolset.Dialogs
                         // Original: modelname: str = door.get_model(read_utd(resource.data()), self._installation)
                         // Original: self.set_render_model(modelname)
                         var utd = ResourceAutoHelpers.ReadUtd(resource.GetData());
-                        string modelName = Andastra.Parsing.Tools.Door.GetModel(utd, _installation.Installation);
+                        string modelName = BioWare.NET.Tools.Door.GetModel(utd, _installation.Installation);
                         SetRenderModel(modelName);
                     }
                     else if (resource.ResType == ResourceType.UTP && _globalSettings.ShowPreviewUTP)
@@ -654,7 +654,7 @@ namespace HolocronToolset.Dialogs
                         // Original: modelname: str = placeable.get_model(read_utp(resource.data()), self._installation)
                         // Original: self.set_render_model(modelname)
                         var utp = ResourceAutoHelpers.ReadUtp(resource.GetData());
-                        string modelName = Andastra.Parsing.Tools.Placeable.GetModel(utp, _installation.Installation);
+                        string modelName = BioWare.NET.Tools.Placeable.GetModel(utp, _installation.Installation);
                         SetRenderModel(modelName);
                     }
                     else if ((resource.ResType == ResourceType.MDL || resource.ResType == ResourceType.MDX) &&
@@ -667,21 +667,21 @@ namespace HolocronToolset.Dialogs
                             mdlData = data;
                             // Try to get MDX from same container
                             string fileName = Path.GetFileName(resource.FilePath);
-                            if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
+                            if (BioWare.NET.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
                             {
                                 // Original: erf = read_erf(resource.filepath())
                                 // Original: mdx_data = erf.get(resource.resname(), ResourceType.MDX)
                                 var erf = ERFAuto.ReadErf(resource.FilePath);
                                 mdxData = erf.Get(resource.ResName, ResourceType.MDX);
                             }
-                            else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
+                            else if (BioWare.NET.Tools.FileHelpers.IsRimFile(fileName))
                             {
                                 // Original: rim = read_rim(resource.filepath())
                                 // Original: mdx_data = rim.get(resource.resname(), ResourceType.MDX)
                                 var rim = RIMAuto.ReadRim(resource.FilePath);
                                 mdxData = rim.Get(resource.ResName, ResourceType.MDX);
                             }
-                            else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(fileName))
+                            else if (BioWare.NET.Tools.FileHelpers.IsBifFile(fileName))
                             {
                                 // Original: mdx_res: ResourceResult | None = self._installation.resource(resource.resname(), ResourceType.MDX)
                                 // Original: if mdx_res is not None: mdx_data = mdx_res.data
@@ -706,21 +706,21 @@ namespace HolocronToolset.Dialogs
                             mdxData = data;
                             // Try to get MDL from same container
                             string fileName = Path.GetFileName(resource.FilePath);
-                            if (Andastra.Parsing.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
+                            if (BioWare.NET.Tools.FileHelpers.IsAnyErfTypeFile(fileName))
                             {
                                 // Original: erf = read_erf(resource.filepath())
                                 // Original: mdl_data = erf.get(resource.resname(), ResourceType.MDL)
                                 var erf = ERFAuto.ReadErf(resource.FilePath);
                                 mdlData = erf.Get(resource.ResName, ResourceType.MDL);
                             }
-                            else if (Andastra.Parsing.Tools.FileHelpers.IsRimFile(fileName))
+                            else if (BioWare.NET.Tools.FileHelpers.IsRimFile(fileName))
                             {
                                 // Original: rim = read_rim(resource.filepath())
                                 // Original: mdl_data = rim.get(resource.resname(), ResourceType.MDL)
                                 var rim = RIMAuto.ReadRim(resource.FilePath);
                                 mdlData = rim.Get(resource.ResName, ResourceType.MDL);
                             }
-                            else if (Andastra.Parsing.Tools.FileHelpers.IsBifFile(fileName))
+                            else if (BioWare.NET.Tools.FileHelpers.IsBifFile(fileName))
                             {
                                 // Original: mdl_res: ResourceResult | None = self._installation.resource(resource.resname(), ResourceType.MDL)
                                 // Original: if mdl_res is not None: mdl_data = mdl_res.data

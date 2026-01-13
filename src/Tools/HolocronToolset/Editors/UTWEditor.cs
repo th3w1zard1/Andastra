@@ -1,10 +1,10 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 

@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Common.Script;
+using BioWare.NET.Common;
+using BioWare.NET.Common.Script;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Eclipse;
-using Andastra.Runtime.Games.Eclipse.Components;
-using Andastra.Runtime.Games.Eclipse.Loading;
+using Andastra.Game.Games.Eclipse;
+using Andastra.Game.Games.Eclipse.Components;
+using Andastra.Game.Games.Eclipse.Loading;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Eclipse.EngineApi
+namespace Andastra.Game.Engines.Eclipse.EngineApi
 {
     /// <summary>
     /// Base Eclipse Engine API implementation containing ONLY functions common between daorigins.exe and DragonAge2.exe.
@@ -504,7 +504,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             if (creature != null)
             {
                 // Register entity with world if not already registered
-                // Based on swkotor2.exe: Entities created from templates must be registered with world
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities created from templates must be registered with world
                 // Located via string references: Entity registration system
                 // Original implementation: World.RegisterEntity adds entity to world's entity collection
                 if (ctx.World.GetEntity(creature.ObjectId) == null)
@@ -2189,7 +2189,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// Original implementation: Checks if object is a module (special object type)
         /// Cross-engine: Common implementation for both daorigins.exe and DragonAge2.exe
         /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
-        /// Based on swkotor2.exe: Module object ID constant (common across all engines)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module object ID constant (common across all engines)
         /// Located via string references: "GetModule" NWScript function, module object references
         /// Common across all engines: Odyssey, Aurora, Eclipse, Infinity all use fixed module object ID (0x7F000002)
         /// </remarks>
@@ -2971,7 +2971,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             if (entity != null && entity.IsValid)
             {
                 // Get area from entity's AreaId
-                // Based on swkotor2.exe: Entity AreaId property
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId property
                 // Located via string references: "AreaId" @ 0x007bef48
                 // Original implementation: Entities store AreaId of area they belong to
                 if (entity.AreaId != 0)
@@ -3775,7 +3775,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
         /// Located via navigation mesh raycast functions - Eclipse uses walkmesh/navigation mesh for visibility
         /// Original implementation: Similar to PerceptionSystem line-of-sight checks via NavigationMesh.Raycast
         /// Uses eye height offsets (1.5 units above ground) to check visibility from entity eye level
-        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
         /// </remarks>
         private bool HasLineOfSight(Vector3 from, Vector3 to, IExecutionContext ctx)
         {
@@ -3786,7 +3786,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
 
             // Use eye height offsets for line-of-sight checks (matches PerceptionSystem behavior)
             // Eye position is 1.5 units above ground level - this represents where entities "see" from
-            // Based on swkotor2.exe: Line-of-sight raycast implementation uses eye height offsets
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Line-of-sight raycast implementation uses eye height offsets
             // Located via string references: "Raycast" @ navigation mesh functions
             // Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
             const float DefaultEyeHeight = 1.5f; // units above entity position
@@ -3813,7 +3813,7 @@ namespace Andastra.Runtime.Engines.Eclipse.EngineApi
             Vector3 normalizedDir = direction / distance;
 
             // Perform raycast to check for obstructions
-            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
             Vector3 hitPoint;
             int hitFace;
             if (ctx.World.CurrentArea.NavigationMesh.Raycast(fromEyePos, normalizedDir, distance, out hitPoint, out hitFace))

@@ -6,7 +6,7 @@ using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Remix;
 using Andastra.Runtime.MonoGame.Rendering;
 
-namespace Andastra.Runtime.MonoGame.Backends
+namespace Andastra.Game.Graphics.MonoGame.Backends
 {
     /// <summary>
     /// Factory for creating graphics backends with automatic fallback support.

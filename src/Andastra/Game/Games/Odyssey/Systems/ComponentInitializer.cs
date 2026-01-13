@@ -4,11 +4,10 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
-using Vector3 = System.Numerics.Vector3;
 
-namespace Andastra.Runtime.Games.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Initializes default components for entities based on their object type.
@@ -25,32 +24,22 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
     /// - Type-specific components are added based on ObjectType (CreatureComponent, DoorComponent, PlaceableComponent, etc.)
     ///
     /// Original Implementation (swkotor.exe):
-    /// - GIT loading: FUN_0050dd80 @ 0x0050dd80 loads GIT file and creates entities from lists
-    ///   - FUN_00504a70 @ 0x00504a70 creates creatures from "Creature List"
-    ///   - FUN_00504de0 @ 0x00504de0 creates doors from "Door List"
-    ///   - FUN_0050a0e0 @ 0x0050a0e0 creates placeables from "Placeable List"
-    ///   - FUN_0050a350 @ 0x0050a350 creates triggers from "Trigger List"
-    ///   - FUN_00505060 @ 0x00505060 creates encounters from "Encounter List"
-    ///   - FUN_00505360 @ 0x00505360 creates waypoints from "Waypoint List"
-    ///   - FUN_00505560 @ 0x00505560 creates sounds from "Sound List"
-    ///   - FUN_0050a7b0 @ 0x0050a7b0 creates stores from "Store List"
+    /// - GIT loading: [TODO: Function name] @ (K1: 0x0050dd80, TSL: 0x004e9440) - loads GIT file and creates entities from lists
+    ///   - [TODO: Function name] @ (K1: 0x00504a70, TSL: 0x004dff20) - creates creatures from "Creature List"
+    ///   - [TODO: Function name] @ (K1: 0x00504de0, TSL: 0x004e56b0) - creates doors from "Door List"
+    ///   - [TODO: Function name] @ (K1: 0x0050a0e0, TSL: 0x004e5920) - creates placeables from "Placeable List"
+    ///   - [TODO: Function name] @ (K1: 0x0050a350, TSL: 0x004e01a0) - creates triggers from "Trigger List"
+    ///   - [TODO: Function name] @ (K1: 0x00505060, TSL: 0x004e04a0) - creates encounters from "Encounter List"
+    ///   - [TODO: Function name] @ (K1: 0x00505360, TSL: 0x004e06a0) - creates waypoints from "Waypoint List"
+    ///   - [TODO: Function name] @ (K1: 0x00505560, TSL: 0x004e08e0) - creates sounds from "Sound List"
+    ///   - [TODO: Function name] @ (K1: 0x0050a7b0, TSL: 0x004e5d80) - creates stores from "Store List"
     /// - Creature template loading: Functions that load UTC templates initialize creature components
     /// - Component attachment: Components are attached during entity creation, not separately initialized
     ///
-    /// Original Implementation (swkotor2.exe):
-    /// - GIT loading: FUN_004e9440 @ 0x004e9440 loads GIT file and creates entities from lists
-    ///   - FUN_004dff20 @ 0x004dff20 creates creatures from "Creature List"
-    ///   - FUN_004e56b0 @ 0x004e56b0 creates doors from "Door List"
-    ///   - FUN_004e5920 @ 0x004e5920 creates placeables from "Placeable List"
-    ///   - FUN_004e01a0 @ 0x004e01a0 creates triggers from "Trigger List"
-    ///   - FUN_004e04a0 @ 0x004e04a0 creates waypoints from "Waypoint List"
-    ///   - FUN_004e06a0 @ 0x004e06a0 creates sounds from "Sound List"
-    ///   - FUN_004e5d80 @ 0x004e5d80 creates stores from "Store List"
-    ///   - FUN_004e08e0 @ 0x004e08e0 creates encounters from "Encounter List"
-    /// - Creature template loading: FUN_005fb0f0 @ 0x005fb0f0 loads creature data from UTC templates and initializes components
-    ///   - Called by FUN_005261b0 @ 0x005261b0 (creature creation from template)
-    ///   - Called by FUN_005223a0 @ 0x005223a0 (creature creation from GIT)
-    ///   - Called by FUN_00595ca0 @ 0x00595ca0 (player character creation)
+    /// - Creature template loading: [TODO: Function name] @ (K1: 0x00504a70, TSL: 0x005fb0f0) loads creature data from UTC templates and initializes components
+    ///   - Called by [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005261b0) (creature creation from template)
+    ///   - Called by [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005223a0) (creature creation from GIT)
+    ///   - Called by [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00595ca0) (player character creation)
     /// - Component attachment: Components are attached during entity creation, not separately initialized
     ///
     /// Common Patterns (both executables):
@@ -80,8 +69,8 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
         /// 6. ActionQueueComponent - Entities that can perform actions (creatures, doors, placeables)
         ///
         /// Based on:
-        /// - swkotor.exe: FUN_0050dd80 @ 0x0050dd80 (GIT loading), FUN_00504a70 @ 0x00504a70 (creature creation)
-        /// - swkotor2.exe: FUN_004e9440 @ 0x004e9440 (GIT loading), FUN_005fb0f0 @ 0x005fb0f0 (creature template loading)
+        /// - [TODO: Function name] @ (K1: 0x0050dd80, TSL: 0x004e9440) (GIT loading)
+        /// - [TODO: Function name] @ (K1: 0x00504a70, TSL: 0x005fb0f0) (creature creation)
         /// </remarks>
         /// <param name="entity">The entity to initialize components for.</param>
         public static void InitializeComponents([NotNull] IEntity entity)
@@ -97,7 +86,7 @@ namespace Andastra.Runtime.Games.Odyssey.Systems
                 var transform = new TransformComponent();
                 // Position and Facing will be set from template data during entity creation
                 // Default to zero if not set from template
-                transform.Position = System.Numerics.Vector3.Zero;
+                transform.Position = Vector3.Zero;
                 transform.Facing = 0.0f;
                 entity.AddComponent(transform);
             }

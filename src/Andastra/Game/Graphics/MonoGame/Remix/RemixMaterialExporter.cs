@@ -7,7 +7,7 @@ using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Materials;
 
-namespace Andastra.Runtime.MonoGame.Remix
+namespace Andastra.Game.Graphics.MonoGame.Remix
 {
     /// <summary>
     /// Exports materials in a format compatible with RTX Remix.
@@ -172,7 +172,7 @@ namespace Andastra.Runtime.MonoGame.Remix
             // Remix uses XXHash64 for material identification
             // Normalize the path to lowercase for consistent hashing
             string normalizedPath = texturePath.ToLowerInvariant();
-            // Use helper method to resolve XXHash64 conflict between Andastra.Parsing and Utility
+            // Use helper method to resolve XXHash64 conflict between BioWare.NET and Utility
             return ComputeXXHash64String(normalizedPath);
         }
 

@@ -1,20 +1,20 @@
 using System;
 using System.Threading.Tasks;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey
+namespace Andastra.Game.Engines.Odyssey
 {
     /// <summary>
     /// Odyssey Engine game session implementation for KOTOR 1/2.
     /// </summary>
     /// <remarks>
     /// Game Session System:
-    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser, handles module commands)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006caab0 @ 0x006caab0 (server command parser, handles module commands)
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "GameSession" @ 0x007be620
     /// - "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58 (module state tracking, referenced by FUN_006caab0)
     /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)

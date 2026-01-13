@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Vertex Buffer Interface:
-    /// - Based on swkotor2.exe DirectX vertex buffer system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX vertex buffer system
     /// - Located via string references: "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO option)
     /// - "glVertexArrayRangeNV" @ 0x007b7ce8, "glVertexAttrib4fvNV" @ 0x007b7d24, "glVertexAttrib3fvNV" @ 0x007b7d38
     /// - "glVertexAttrib2fvNV" @ 0x007b7d4c (OpenGL vertex array extensions)

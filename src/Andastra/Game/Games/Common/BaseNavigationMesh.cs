@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base class for navigation mesh implementations across all BioWare engines.

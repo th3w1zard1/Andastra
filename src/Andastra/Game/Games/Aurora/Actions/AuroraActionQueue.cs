@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Actions;
+using Andastra.Game.Games.Common.Actions;
 
-namespace Andastra.Runtime.Games.Aurora.Actions
+namespace Andastra.Game.Games.Aurora.Actions
 {
     /// <summary>
     /// Action queue implementation for Aurora engine (nwmain.exe, nwn2main.exe).

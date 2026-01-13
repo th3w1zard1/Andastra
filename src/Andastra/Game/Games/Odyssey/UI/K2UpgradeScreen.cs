@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource.Generics;
+using BioWare.NET;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
 
-namespace Andastra.Runtime.Engines.Odyssey.UI
+namespace Andastra.Game.Engines.Odyssey.UI
 {
     /// <summary>
     /// Upgrade screen implementation for KOTOR 2: TSL (swkotor2.exe).
     /// </summary>
     /// <remarks>
     /// K2 Upgrade Screen Implementation:
-    /// - Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 (constructor loads "upgradeitems_p")
-    /// - Based on swkotor2.exe: FUN_00730970 @ 0x00730970 (constructor loads "upcrystals" @ 0x00730c40)
-    /// - Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 (upgrade button click handler)
-    /// - Based on swkotor2.exe: FUN_00729640 @ 0x00729640 (ApplyUpgrade implementation)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 (constructor loads "upgradeitems_p")
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00730970 @ 0x00730970 (constructor loads "upcrystals" @ 0x00730c40)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 (upgrade button click handler)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 (ApplyUpgrade implementation)
     /// - Located via string references: "upgradeitems_p" @ 0x007d09e4, "upcrystals" @ 0x007d09c8
     /// - Uses "upgradeitems_p" for regular items (not "upgradeitems" like K1)
     /// - Uses "upcrystals" for lightsabers (same as K1)
@@ -46,7 +46,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <returns>Table name for regular item upgrades.</returns>
         /// <remarks>
         /// K2 uses "upgradeitems_p" (not "upgradeitems" like K1).
-        /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
         /// </remarks>
         protected override string GetRegularUpgradeTableName()
         {
@@ -58,7 +58,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// </summary>
         /// <returns>GUI name "upgradeitems_p".</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
         /// </remarks>
         protected override string GetUpgradeGuiName()
         {
@@ -74,7 +74,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <returns>True if upgrade was successful.</returns>
         /// <remarks>
         /// Apply Upgrade Logic (K2):
-        /// - Based on swkotor2.exe: FUN_00729640 @ 0x00729640 (ApplyUpgrade implementation)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 (ApplyUpgrade implementation)
         /// - Called from: FUN_0072e260 @ 0x0072e260 line 215
         /// - Original implementation:
         ///   1. Checks if upgrade item is already in upgrade list (offset 0x3d3c)
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Check if slot is already occupied
-            // Based on swkotor2.exe: FUN_00729640 @ 0x00729640 line 12 - checks upgrade list at offset 0x3d3c
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 12 - checks upgrade list at offset 0x3d3c
             var existingUpgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (existingUpgrade != null)
             {
@@ -122,7 +122,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Final skill check and success rate calculation before applying upgrade
-            // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
             // Skills are used to ensure character can successfully apply the upgrade
             // Higher skills improve success rate and may unlock additional upgrade options
             // swkotor2.exe: FUN_00729640 @ 0x00729640 - ApplyUpgrade implementation (no skill checks in original)
@@ -134,7 +134,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 if (upgradeUTITemplate != null)
                 {
                     // Calculate skill-based success rate for applying the upgrade
-                    // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
                     // Success rate calculation considers:
                     // - Character skill ranks (Repair, Security, Computer Use)
                     // - Upgrade complexity/difficulty (based on upgrade level, cost, properties)
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     double successRate = CalculateUpgradeSuccessRate(upgradeUTITemplate, item, upgradeSlot);
 
                     // Roll for success based on calculated success rate
-                    // Based on swkotor2.exe: Random number generation for skill checks (similar to combat rolls)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Random number generation for skill checks (similar to combat rolls)
                     // Uses d100 roll (0-99) compared against success rate percentage
                     System.Random random = new System.Random();
                     int roll = random.Next(0, 100); // Roll 0-99 (100 possible values)
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     if (roll >= successThreshold)
                     {
                         // Upgrade failed due to insufficient skills
-                        // Based on swkotor2.exe: Failed upgrades consume the upgrade item but don't apply
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Failed upgrades consume the upgrade item but don't apply
                         // This matches behavior where low skills can cause upgrade failures
                         // The upgrade item is still consumed from inventory (realistic failure scenario)
                         return false;
@@ -164,7 +164,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Get character inventory to find and remove upgrade item
-            // Based on swkotor2.exe: FUN_00729640 @ 0x00729640 line 24 - gets character from DAT_008283d4
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 24 - gets character from DAT_008283d4
             // DAT_008283d4 is a global structure that stores the current player character pointer
             // The function accesses the character at offset 0x18a8 within the upgrade screen object structure
             // Character retrieval uses common base class method
@@ -182,7 +182,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Find upgrade item in inventory
-            // Based on swkotor2.exe: FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
             IEntity upgradeItem = null;
             foreach (IEntity inventoryItem in characterInventory.GetAllItems())
             {
@@ -209,7 +209,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Check stack count and remove from inventory
-            // Based on swkotor2.exe: FUN_00729640 @ 0x00729640 line 18 - checks stack count at offset 0xb3
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 18 - checks stack count at offset 0xb3
             // Get stack count from item component
             // If stack count < 2, remove from inventory (FUN_0055f3a0)
             // If stack count >= 2, decrement stack (FUN_00569d60)
@@ -220,13 +220,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 if (stackSize < 2)
                 {
                     // Stack count is 1 or less - remove item completely from inventory
-                    // Based on swkotor2.exe: FUN_0055f3a0 @ 0x0055f3a0 - removes item from inventory
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055f3a0 @ 0x0055f3a0 - removes item from inventory
                     characterInventory.RemoveItem(upgradeItem);
                 }
                 else
                 {
                     // Stack count is 2 or more - decrement stack count by 1
-                    // Based on swkotor2.exe: FUN_00569d60 @ 0x00569d60 - decrements item stack
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00569d60 @ 0x00569d60 - decrements item stack
                     upgradeItemComponent.StackSize = stackSize - 1;
                 }
             }
@@ -237,8 +237,8 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Load upgrade item UTI template and apply properties
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
-            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
             if (upgradeUTI == null)
             {
@@ -247,7 +247,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Apply upgrade to item
-            // Based on swkotor2.exe: FUN_00729640 @ 0x00729640 line 57 - stores upgrade at offset 0x3d54
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00729640 @ 0x00729640 line 57 - stores upgrade at offset 0x3d54
             ItemUpgrade upgrade = new ItemUpgrade
             {
                 UpgradeType = upgradeSlot, // UpgradeType corresponds to slot index
@@ -257,12 +257,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             itemComponent.AddUpgrade(upgrade);
 
             // Track upgrade ResRef for removal
-            // Based on swkotor2.exe: Upgrade tracking system - stores ResRef for later removal
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Upgrade tracking system - stores ResRef for later removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             _upgradeResRefMap[upgradeKey] = upgradeResRef;
 
             // Apply upgrade properties to item
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - applies upgrade stats to item
             // Properties from upgrade UTI modify item stats (damage bonuses, AC bonuses, etc.)
             if (!ApplyUpgradeProperties(item, upgradeUTI))
             {
@@ -273,7 +273,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Recalculate item stats and update display
-            // Based on swkotor2.exe: Item stat recalculation after upgrade application
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stat recalculation after upgrade application
             // Recalculates item damage, AC, and other stats based on new properties
             RecalculateItemStats(item);
 
@@ -288,7 +288,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <returns>True if upgrade was removed.</returns>
         /// <remarks>
         /// Remove Upgrade Logic (K2):
-        /// - Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 lines 217-230 (removal logic)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 lines 217-230 (removal logic)
         /// - Original implementation:
         ///   1. Gets upgrade item from slot array (offset 0x3d54)
         ///   2. Removes upgrade from slot array (sets to 0)
@@ -317,7 +317,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Find upgrade in slot
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
             {
@@ -326,7 +326,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Get upgrade item ResRef from tracked upgrade data
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 218 - gets item from slot array
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 218 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             string upgradeResRef = null;
@@ -339,19 +339,19 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Load upgrade UTI template to remove properties
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
-            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
             itemComponent.RemoveUpgrade(upgrade);
 
             // Remove upgrade ResRef from tracking map
             _upgradeResRefMap.Remove(upgradeKey);
 
             // Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
             // Properties from upgrade UTI are removed to restore original item stats
             if (upgradeUTI != null)
             {
@@ -359,12 +359,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Recalculate item stats and update display
-            // Based on swkotor2.exe: Item stat recalculation after upgrade removal
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stat recalculation after upgrade removal
             // Recalculates item damage, AC, and other stats after removing upgrade properties
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 221 - returns to inventory using FUN_00567ce0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 221 - returns to inventory using FUN_00567ce0
             // Original implementation: FUN_00567ce0 @ 0x00567ce0 creates item entity from UTI template and adds to inventory
             // Located via string references: "CreateItem" @ 0x007d07c8, "ItemComponent" @ 0x007c41e4
             // Function signature: FUN_00567ce0(void *param_1, void *param_2, int param_3)
@@ -381,11 +381,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             if (!string.IsNullOrEmpty(upgradeResRef))
             {
                 // Get character entity using common base class method
-                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - gets character from upgrade screen object
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - gets character from upgrade screen object
                 IEntity character = base.GetCharacterEntity();
 
                 // Create upgrade item entity and add to inventory
-                // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item and adds to inventory
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - creates item and adds to inventory
                 // Uses base class method which implements the full creation and inventory addition logic
                 if (character != null)
                 {
@@ -405,7 +405,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <returns>Success rate as a percentage (0.0 to 1.0, where 1.0 = 100% success).</returns>
         /// <remarks>
         /// Skill-Based Success Rate Calculation (K2 Enhancement):
-        /// - Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
         /// - This is a comprehensive enhancement that adds skill-based success rate calculation
         /// - Success rate is calculated based on:
         ///   1. Character skill ranks (Repair, Security, Computer Use)
@@ -438,21 +438,21 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Get character skill ranks
-            // Based on swkotor2.exe: Skills stored in IStatsComponent, accessed via GetSkillRank()
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Skills stored in IStatsComponent, accessed via GetSkillRank()
             // KOTOR skills: 0=ComputerUse, 1=Demolitions, 2=Stealth, 3=Awareness, 4=Persuade, 5=Repair, 6=Security, 7=TreatInjury
             int repairSkill = GetCharacterSkillRank(5); // Repair skill - primary for upgrades
             int securitySkill = GetCharacterSkillRank(6); // Security skill - secondary for precision work
             int computerUseSkill = GetCharacterSkillRank(0); // Computer Use skill - tertiary for tech upgrades
 
             // Base success rate: 50% for untrained characters
-            // Based on swkotor2.exe: Base success rate for item creation/upgrading (NOT IMPLEMENTED in original)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base success rate for item creation/upgrading (NOT IMPLEMENTED in original)
             // This enhancement adds a base rate that improves with skills
             double baseSuccessRate = 0.5; // 50% base rate
 
             // Calculate skill bonus from primary skill (Repair)
             // Repair skill is the primary skill for most upgrades
             // Formula: skillRank * 0.02 (each rank adds 2% success rate, max 20 ranks = 40% bonus)
-            // Based on swkotor2.exe: Skill ranks typically range from 0-20 in KOTOR
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Skill ranks typically range from 0-20 in KOTOR
             double repairBonus = repairSkill * 0.02; // 2% per rank, max 40% at rank 20
 
             // Calculate skill bonus from secondary skill (Security)
@@ -470,12 +470,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Calculate upgrade complexity penalty
             // More complex upgrades are harder to apply successfully
-            // Based on swkotor2.exe: Upgrade complexity factors (NOT IMPLEMENTED in original)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Upgrade complexity factors (NOT IMPLEMENTED in original)
             double complexityPenalty = 0.0;
 
             // Factor 1: Upgrade Level complexity
             // Higher upgrade levels indicate more complex upgrades
-            // Based on swkotor2.exe: UpgradeLevel field in UTI template (0-10 typical range)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpgradeLevel field in UTI template (0-10 typical range)
             int upgradeLevel = upgradeUTI.UpgradeLevel;
             if (upgradeLevel > 0)
             {
@@ -485,7 +485,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Factor 2: Cost complexity
             // More expensive upgrades are typically more complex
-            // Based on swkotor2.exe: Cost field in UTI template (item value)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cost field in UTI template (item value)
             int upgradeCost = upgradeUTI.Cost;
             if (upgradeCost > 0)
             {
@@ -497,7 +497,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Factor 3: Property count complexity
             // More properties indicate more complex upgrades
-            // Based on swkotor2.exe: Properties array in UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Properties array in UTI template
             int propertyCount = upgradeUTI.Properties != null ? upgradeUTI.Properties.Count : 0;
             if (propertyCount > 0)
             {
@@ -508,13 +508,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Factor 4: Base item type complexity
             // Some item types are harder to upgrade than others
-            // Based on swkotor2.exe: BaseItem field in UTI template, baseitems.2da item types
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): BaseItem field in UTI template, baseitems.2da item types
             IItemComponent itemComponent = item != null ? item.GetComponent<IItemComponent>() : null;
             if (itemComponent != null)
             {
                 int baseItemId = itemComponent.BaseItem;
                 // Lightsabers and complex weapons are harder to upgrade
-                // Based on swkotor2.exe: Base item types from baseitems.2da
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item types from baseitems.2da
                 // Lightsabers (itemclass 15) and some advanced weapons have higher complexity
                 if (baseItemId >= 0)
                 {
@@ -530,7 +530,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Factor 5: Upgrade slot complexity
             // Higher slot indices may indicate more complex upgrade positions
-            // Based on swkotor2.exe: Upgrade slots 0-5 (K2 has 6 slots for lightsabers)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Upgrade slots 0-5 (K2 has 6 slots for lightsabers)
             if (upgradeSlot > 2)
             {
                 // Slots 3+ are more complex (additional 1% per slot above 2)
@@ -539,13 +539,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Calculate final success rate
             // Formula: baseRate + skillBonus - complexityPenalty
-            // Based on swkotor2.exe: Success rate calculation (NOT IMPLEMENTED in original)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Success rate calculation (NOT IMPLEMENTED in original)
             double successRate = baseSuccessRate + totalSkillBonus - complexityPenalty;
 
             // Clamp success rate to valid range (5% to 95%)
             // Minimum: 5% (always a chance, even with no skills)
             // Maximum: 95% (never 100% to maintain some risk)
-            // Based on swkotor2.exe: Skill check success rates typically range from 5% to 95%
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Skill check success rates typically range from 5% to 95%
             successRate = Math.Max(0.05, Math.Min(0.95, successRate));
 
             return successRate;

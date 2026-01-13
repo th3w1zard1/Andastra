@@ -1,13 +1,13 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Andastra.Parsing.Formats.WAV;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Microsoft.Xna.Framework.Audio;
 
-namespace Andastra.Runtime.MonoGame.Audio
+namespace Andastra.Game.Graphics.MonoGame.Audio
 {
     /// <summary>
     /// MonoGame implementation of IMusicPlayer for playing background music.

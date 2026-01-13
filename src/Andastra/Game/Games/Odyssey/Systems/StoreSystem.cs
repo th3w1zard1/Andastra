@@ -5,14 +5,14 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Manages merchant store interactions.
     /// </summary>
     /// <remarks>
     /// Store System:
-    /// - Based on swkotor2.exe store/merchant system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) store/merchant system
     /// - LoadStoreFromGFF @ 0x00571310 - Loads store data from GIT GFF into store object (located via "StoreList" @ 0x007bd098)
     ///   - Reads Tag, LocName, MarkDown, MarkUp, OnOpenStore, BuySellFlag, ItemList (ObjectId, Infinite, InventoryRes)
     ///   - Creates item objects for each item in ItemList, loads item data from GFF, adds items to store inventory sorted by value
@@ -64,7 +64,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Fire OnOpenStore script event
-            // Based on swkotor2.exe: OnOpenStore script fires when store is opened
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnOpenStore script fires when store is opened
             // Located via string reference: "OnOpenStore" @ 0x007c1200
             // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 dispatches OnOpenStore script event
             IEventBus eventBus = _world.EventBus;
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Fire OnStoreClose script event
-            // Based on swkotor2.exe: OnStoreClose script fires when store is closed
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnStoreClose script fires when store is closed
             // Located via string references: Store close event handling
             // Original implementation: OnStoreClose script fires on store entity when store GUI is closed
             IEventBus eventBus = _world.EventBus;

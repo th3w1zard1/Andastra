@@ -1,4 +1,4 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;

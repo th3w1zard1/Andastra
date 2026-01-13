@@ -1,7 +1,7 @@
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IInputManager.

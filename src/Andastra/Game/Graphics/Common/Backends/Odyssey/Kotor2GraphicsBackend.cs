@@ -3,17 +3,17 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ParsingResourceType = Andastra.Parsing.Common.ResourceType;
+using ParsingResourceType = BioWare.NET.Common.ResourceType;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Graphics backend for Star Wars: Knights of the Old Republic II - The Sith Lords,
@@ -1522,7 +1522,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// - Falls back to standard ChoosePixelFormat if ARB extension not available
         /// - Returns window handle or IntPtr.Zero on failure
         ///
-        /// Based on swkotor2.exe reverse engineering:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering:
         /// - Window class: "KOTOR2SecondaryWindow" (registered once, reused)
         /// - Window style: 0 (WS_OVERLAPPED, minimal style for hidden window)
         /// - Window size: 1x1 pixels (minimal size for valid window)
@@ -2065,7 +2065,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// </summary>
         /// <remarks>
         /// This function initializes vertex programs for render texture rectangle operations.
-        /// Based on swkotor2.exe: FUN_00429780 @ 0x00429780
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00429780 @ 0x00429780
         /// - Generates and configures 5 vertex program objects for rectangle texture rendering
         /// - Vertex programs handle coordinate transformation for GL_TEXTURE_RECTANGLE_NV textures
         /// - Each program is bound and configured with specific shader code for rectangle texture operations
@@ -2097,7 +2097,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             glEnable(GL_VERTEX_PROGRAM_ARB);
 
             // Generate 5 vertex program IDs for rectangle texture operations
-            // Based on swkotor2.exe: FUN_00429780 - generates multiple vertex program objects
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00429780 - generates multiple vertex program objects
             // Each program is generated individually (matching pattern in KOTOR1 and KOTOR2 codebase)
             _kotor2GlGenProgramsArb(1, ref _kotor2VertexProgramId0);
             _kotor2GlGenProgramsArb(1, ref _kotor2VertexProgramId1);
@@ -2187,7 +2187,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// all scene rendering including rooms, entities, effects, lighting, and fog.
         /// This method is a wrapper that ensures the OpenGL context is current before rendering.
         ///
-        /// Based on swkotor2.exe rendering architecture:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering architecture:
         /// - Scene rendering is delegated to Area system (OdysseyArea.Render())
         /// - Graphics backend provides OpenGL context management and state setup
         /// - Area system handles all per-frame rendering logic (entities, rooms, effects)
@@ -2208,14 +2208,14 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             // This method ensures the OpenGL context is current before rendering
 
             // Make sure primary context is current (matching swkotor2.exe rendering pattern)
-            // Based on swkotor2.exe: Context must be current before any rendering operations
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Context must be current before any rendering operations
             // Located via string references: wglMakeCurrent usage in rendering code
             if (_kotor2PrimaryDC != IntPtr.Zero && _kotor2PrimaryContext != IntPtr.Zero)
             {
                 wglMakeCurrent(_kotor2PrimaryDC, _kotor2PrimaryContext);
 
                 // Clear the frame buffer (matching swkotor2.exe: glClear calls)
-                // Based on swkotor2.exe: Frame buffer is cleared at the start of each frame
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Frame buffer is cleared at the start of each frame
                 // Clears color, depth, and stencil buffers to prepare for new frame rendering
                 // Original implementation: glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);

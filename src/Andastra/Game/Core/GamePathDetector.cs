@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Core;
 using Microsoft.Win32;
-using GameType = Andastra.Parsing.Common.BioWareGame;
+using GameType = BioWare.NET.Common.BioWareGame;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Detects KOTOR installation paths from common locations.
     /// </summary>
     /// <remarks>
     /// Game Path Detection:
-    /// - Based on swkotor2.exe installation path detection system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) installation path detection system
     /// - Located via string references: Original engine reads installation path from Windows registry
     /// - Registry access: Uses Windows Registry API (RegOpenKeyEx, RegQueryValueEx) for path lookup
     /// - Registry keys: K1 uses "SOFTWARE\BioWare\SW\KOTOR" or "SOFTWARE\LucasArts\KotOR"

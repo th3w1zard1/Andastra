@@ -1,7 +1,7 @@
 using System;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora engine time manager implementation for Neverwinter Nights and Neverwinter Nights 2.

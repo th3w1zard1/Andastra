@@ -6,19 +6,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.SSF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Mods.GFF;
-using Andastra.Parsing.Mods.SSF;
-using Andastra.Parsing.Mods.TwoDA;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Common;
+using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.SSF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.TSLPatcher.Mods;
+using BioWare.NET.TSLPatcher.Mods.GFF;
+using BioWare.NET.TSLPatcher.Mods.SSF;
+using BioWare.NET.TSLPatcher.Mods.TwoDA;
+using BioWare.NET.Resource;
+using BioWare.NET.Common;
 using KotorDiff.Diff;
-using Andastra.Parsing.TSLPatcher;
+using BioWare.NET.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Diff
@@ -262,7 +262,7 @@ namespace KotorDiff.Diff
                     {
                         // Only store strref_mappings for TLK modifications
                         // Other modification types (2DA, GFF, SSF) don't use strref_mappings
-                        if (modifications is Andastra.Parsing.Mods.TLK.ModificationsTLK modTlk)
+                        if (modifications is BioWare.NET.TSLPatcher.Mods.TLK.ModificationsTLK modTlk)
                         {
                             incrementalWriter.SetTlkMetadata(modTlk, "strref_mappings", strrefMappings);
                             logFunc($"  |-- StrRef mappings: {strrefMappings.Count} mappings stored for linking patches");
@@ -290,18 +290,18 @@ namespace KotorDiff.Diff
                 modifications.Destination = folder;
                 modifications.SourceFile = resourceName;
 
-                if (modifications is Andastra.Parsing.Mods.TwoDA.Modifications2DA mod2da)
+                if (modifications is BioWare.NET.TSLPatcher.Mods.TwoDA.Modifications2DA mod2da)
                 {
                     modificationsByType.Twoda.Add(mod2da);
                     logFunc("  |-- Type: [2DAList]");
                 }
-                else if (modifications is Andastra.Parsing.Mods.GFF.ModificationsGFF modGff)
+                else if (modifications is BioWare.NET.TSLPatcher.Mods.GFF.ModificationsGFF modGff)
                 {
                     modGff.SaveAs = resourceName;
                     modificationsByType.Gff.Add(modGff);
                     logFunc("  |-- Type: [GFFList]");
                 }
-                else if (modifications is Andastra.Parsing.Mods.SSF.ModificationsSSF modSsf)
+                else if (modifications is BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF modSsf)
                 {
                     modificationsByType.Ssf.Add(modSsf);
                     logFunc("  |-- Type: [SSFList]");
@@ -314,15 +314,15 @@ namespace KotorDiff.Diff
 
                 // Get modifier count based on type
                 int modifiersCount = 0;
-                if (modifications is Andastra.Parsing.Mods.TwoDA.Modifications2DA mod2daCount)
+                if (modifications is BioWare.NET.TSLPatcher.Mods.TwoDA.Modifications2DA mod2daCount)
                 {
                     modifiersCount = mod2daCount.Modifiers != null ? mod2daCount.Modifiers.Count : 0;
                 }
-                else if (modifications is Andastra.Parsing.Mods.GFF.ModificationsGFF modGff2)
+                else if (modifications is BioWare.NET.TSLPatcher.Mods.GFF.ModificationsGFF modGff2)
                 {
                     modifiersCount = modGff2.Modifiers != null ? modGff2.Modifiers.Count : 0;
                 }
-                else if (modifications is Andastra.Parsing.Mods.SSF.ModificationsSSF modSsf2)
+                else if (modifications is BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF modSsf2)
                 {
                     modifiersCount = modSsf2.Modifiers != null ? modSsf2.Modifiers.Count : 0;
                 }
@@ -366,15 +366,15 @@ namespace KotorDiff.Diff
                 // For 2DA files, create empty 2DA
                 if (extLower == "2da")
                 {
-                    var empty2da = new Andastra.Parsing.Formats.TwoDA.TwoDA();
-                    return Andastra.Parsing.Formats.TwoDA.TwoDAAuto.Bytes2DA(empty2da, ResourceType.TwoDA);
+                    var empty2da = new BioWare.NET.Resource.Formats.TwoDA.TwoDA();
+                    return BioWare.NET.Resource.Formats.TwoDA.TwoDAAuto.Bytes2DA(empty2da, ResourceType.TwoDA);
                 }
 
                 // For SSF files, create empty SSF
                 if (extLower == "ssf")
                 {
-                    var emptySsf = new Andastra.Parsing.Formats.SSF.SSF();
-                    return Andastra.Parsing.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
+                    var emptySsf = new BioWare.NET.Resource.Formats.SSF.SSF();
+                    return BioWare.NET.Resource.Formats.SSF.SSFAuto.BytesSsf(emptySsf, ResourceType.SSF);
                 }
 
                 // For GFF files, create empty GFF with appropriate content type based on extension
@@ -386,22 +386,22 @@ namespace KotorDiff.Diff
                 if (gffTypes.Contains(extLower))
                 {
                     // Try to determine GFFContent from extension
-                    Andastra.Parsing.Formats.GFF.GFFContent gffContent;
+                    BioWare.NET.Resource.Formats.GFF.GFFContent gffContent;
                     try
                     {
                         // Map extension to GFFContent enum using FromResName (pass filename with extension)
                         string filename = $"dummy.{ext}";
-                        gffContent = Andastra.Parsing.Formats.GFF.GFFContentExtensions.FromResName(filename);
+                        gffContent = BioWare.NET.Resource.Formats.GFF.GFFContentExtensions.FromResName(filename);
                     }
                     catch
                     {
                         // Fallback to generic GFF content type
-                        gffContent = Andastra.Parsing.Formats.GFF.GFFContent.GFF;
+                        gffContent = BioWare.NET.Resource.Formats.GFF.GFFContent.GFF;
                     }
 
                     // Create empty GFF with determined content type
-                    var emptyGff = new Andastra.Parsing.Formats.GFF.GFF(gffContent);
-                    return Andastra.Parsing.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
+                    var emptyGff = new BioWare.NET.Resource.Formats.GFF.GFF(gffContent);
+                    return BioWare.NET.Resource.Formats.GFF.GFFAuto.BytesGff(emptyGff, ResourceType.GFF);
                 }
             }
             catch (Exception e)
@@ -426,7 +426,7 @@ namespace KotorDiff.Diff
         {
             try
             {
-                var capsule = new Andastra.Parsing.Formats.Capsule.Capsule(capsulePath);
+                var capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(capsulePath);
                 string capsuleName = Path.GetFileName(capsulePath);
 
                 // Determine destination based on capsule location and type

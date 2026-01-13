@@ -4,10 +4,10 @@ using System.Linq;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey Engine walkmesh implementation for navigation and collision detection.
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Tests if line segment between points doesn't intersect unwalkable geometry.
         /// Used for AI perception and projectile collision.
         /// 
-        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
         /// The original implementation:
         /// 1. Performs a raycast from start to end position
         /// 2. If a hit is found, checks if the hit face is walkable (walkable faces don't block line of sight)
@@ -468,7 +468,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
         /// Function signature: `float* FindPathAroundObstacle(void* this, int* movingCreature, void* blockingCreature)`
         /// Called from UpdateCreatureMovement @ 0x0054be70 (line 183) when creature collision detected
         /// Equivalent in swkotor.exe: FindPathAroundObstacle @ 0x005d0840 (called from UpdateCreatureMovement @ 0x00516630, line 254)
@@ -909,7 +909,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Finds face using AABB tree traversal for spatial acceleration.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe walkmesh AABB tree structure.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh AABB tree structure.
         /// Recursively traverses the tree, testing point against bounding boxes first,
         /// then testing actual triangles in leaf nodes.
         /// </remarks>
@@ -1117,7 +1117,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Performs a raycast against the walkmesh.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks.
         /// Uses AABB tree for spatial acceleration when available, falls back to brute force.
         /// Returns the closest hit point and face index along the ray.
         /// </remarks>
@@ -1168,7 +1168,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Performs raycast using AABB tree traversal for spatial acceleration.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe walkmesh AABB tree structure.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh AABB tree structure.
         /// Recursively traverses the tree, testing ray against bounding boxes first,
         /// then testing actual triangles in leaf nodes.
         /// </remarks>

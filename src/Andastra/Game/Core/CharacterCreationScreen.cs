@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
@@ -14,19 +14,19 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Odyssey.Components;
-using Andastra.Runtime.Games.Odyssey.Systems;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Systems;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using JetBrains.Annotations;
 using GraphicsColor = Andastra.Runtime.Graphics.Color;
 using GraphicsVector2 = Andastra.Runtime.Graphics.Vector2;
-using ParsingColor = Andastra.Parsing.Common.Color;
-using ParsingObjectType = Andastra.Parsing.Common.ParsingObjectType;
+using ParsingColor = BioWare.NET.Common.Color;
+using ParsingObjectType = BioWare.NET.Common.ParsingObjectType;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Character creation screen for KOTOR 1 and KOTOR 2.
@@ -1913,9 +1913,9 @@ namespace Andastra.Runtime.Game.Core
                     portraitResRef,
                     new[]
                     {
-                        Andastra.Parsing.Installation.SearchLocation.OVERRIDE,
-                        Andastra.Parsing.Installation.SearchLocation.CUSTOM_FOLDERS,
-                        Andastra.Parsing.Installation.SearchLocation.CHITIN
+                        BioWare.NET.Extract.Installation.SearchLocation.OVERRIDE,
+                        BioWare.NET.Extract.Installation.SearchLocation.CUSTOM_FOLDERS,
+                        BioWare.NET.Extract.Installation.SearchLocation.CHITIN
                     }
                 );
 

@@ -4,10 +4,10 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.Loaders
@@ -19,7 +19,7 @@ namespace Andastra.Runtime.Content.Loaders
     /// </summary>
     /// <remarks>
     /// GIT Loader:
-    /// - Based on swkotor2.exe GIT file loading
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) GIT file loading
     /// - Located via string references: "GIT " signature (GFF file format) in GFF file header
     /// - "tmpgit" @ 0x007be618 (temporary GIT file reference during loading)
     /// - GFF list field names for instance lists:
@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Content.Loaders
         /// </summary>
         public async Task<GITData> LoadAsync(string areaResRef, CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(areaResRef, Andastra.Parsing.Common.ResourceType.GIT);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(areaResRef, BioWare.NET.Common.ResourceType.GIT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -104,11 +104,11 @@ namespace Andastra.Runtime.Content.Loaders
 
             // Use Parsing GITHelpers to parse the GFF
             GFF gff = GFF.FromBytes(data);
-            var git = Andastra.Parsing.Resource.Generics.GITHelpers.ConstructGit(gff);
+            var git = BioWare.NET.Resource.Formats.GFF.Generics.GITHelpers.ConstructGit(gff);
             return ParseGIT(git);
         }
 
-        private GITData ParseGIT(Andastra.Parsing.Resource.Generics.GIT git)
+        private GITData ParseGIT(BioWare.NET.Resource.Formats.GFF.Generics.GIT git)
         {
             var gitData = new GITData();
 
@@ -201,7 +201,7 @@ namespace Andastra.Runtime.Content.Loaders
 
         #region Instance Parsers
 
-        private CreatureInstance ParseCreatureInstance(Andastra.Parsing.Resource.Generics.GITCreature creature)
+        private CreatureInstance ParseCreatureInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITCreature creature)
         {
             var instance = new CreatureInstance();
 
@@ -216,7 +216,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private DoorInstance ParseDoorInstance(Andastra.Parsing.Resource.Generics.GITDoor door)
+        private DoorInstance ParseDoorInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITDoor door)
         {
             var instance = new DoorInstance();
 
@@ -234,7 +234,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private PlaceableInstance ParsePlaceableInstance(Andastra.Parsing.Resource.Generics.GITPlaceable placeable)
+        private PlaceableInstance ParsePlaceableInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITPlaceable placeable)
         {
             var instance = new PlaceableInstance();
 
@@ -248,7 +248,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private TriggerInstance ParseTriggerInstance(Andastra.Parsing.Resource.Generics.GITTrigger trigger)
+        private TriggerInstance ParseTriggerInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITTrigger trigger)
         {
             var instance = new TriggerInstance();
 
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private WaypointInstance ParseWaypointInstance(Andastra.Parsing.Resource.Generics.GITWaypoint waypoint)
+        private WaypointInstance ParseWaypointInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITWaypoint waypoint)
         {
             var instance = new WaypointInstance();
 
@@ -338,7 +338,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private SoundInstance ParseSoundInstance(Andastra.Parsing.Resource.Generics.GITSound sound)
+        private SoundInstance ParseSoundInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITSound sound)
         {
             var instance = new SoundInstance();
 
@@ -367,7 +367,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private EncounterInstance ParseEncounterInstance(Andastra.Parsing.Resource.Generics.GITEncounter encounter)
+        private EncounterInstance ParseEncounterInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITEncounter encounter)
         {
             var instance = new EncounterInstance();
 
@@ -445,7 +445,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private StoreInstance ParseStoreInstance(Andastra.Parsing.Resource.Generics.GITStore store)
+        private StoreInstance ParseStoreInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITStore store)
         {
             var instance = new StoreInstance();
 
@@ -477,7 +477,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private CameraInstance ParseCameraInstance(Andastra.Parsing.Resource.Generics.GITCamera camera)
+        private CameraInstance ParseCameraInstance(BioWare.NET.Resource.Formats.GFF.Generics.GITCamera camera)
         {
             var instance = new CameraInstance();
 
@@ -508,7 +508,7 @@ namespace Andastra.Runtime.Content.Loaders
             return instance;
         }
 
-        private AreaPropertiesData ParseAreaProperties(Andastra.Parsing.Resource.Generics.GIT git)
+        private AreaPropertiesData ParseAreaProperties(BioWare.NET.Resource.Formats.GFF.Generics.GIT git)
         {
             var props = new AreaPropertiesData();
 

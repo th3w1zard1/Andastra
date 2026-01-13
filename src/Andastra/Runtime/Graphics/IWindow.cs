@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Window Interface:
-    /// - Based on swkotor2.exe window management system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) window management system
     /// - Located via string references: "Render Window" @ 0x007b5680, "SW Movie Player Window" @ 0x007b57dc
     /// - "SWMovieWindow" @ 0x007b57f4, "Exo Base Window" @ 0x007b74a0
     /// - "AllowWindowedMode" @ 0x007c75d0 (windowed mode option)

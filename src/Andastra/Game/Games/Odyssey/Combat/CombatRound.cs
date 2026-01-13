@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Combat
+namespace Andastra.Game.Engines.Odyssey.Combat
 {
     /// <summary>
     /// Combat round phases.
@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR Combat Round (~3 seconds):
-    /// - Based on swkotor2.exe: CSWSCombatRound class
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSCombatRound class
     /// - Located via string reference: "CombatRoundData" @ 0x007bf6b4
     /// - Original implementation: FUN_00529470 @ 0x00529470 (save CombatRoundData to GFF)
     ///   - Saves all combat round state fields in specific order:

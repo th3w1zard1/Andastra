@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Materials
+namespace Andastra.Game.Graphics.MonoGame.Materials
 {
     /// <summary>
     /// Material instancing system for efficient material management.

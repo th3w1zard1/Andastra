@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Templates
     /// </summary>
     /// <remarks>
     /// Placeable Template:
-    /// - Based on swkotor2.exe placeable system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) placeable system
     /// - Located via string references: "Placeable" @ 0x007bc530, "Placeable List" @ 0x007bd260
     /// - "Placeables" @ 0x007c4bd0, "placeableobjsnds" @ 0x007c4bf0
     /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references placeable templates)
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.Core.Templates
             }
 
             // Apply script hooks
-            // Based on swkotor2.exe: Placeable script hooks from UTP template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable script hooks from UTP template
             // Located via string references: "ScriptOnUsed" @ 0x007beeb8, "ScriptOnOpen" @ 0x007c1a54, "ScriptOnClose" @ 0x007c1a8c
             // Original implementation: FUN_00585ec0 @ 0x00585ec0 loads placeable script hooks from UTP template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();

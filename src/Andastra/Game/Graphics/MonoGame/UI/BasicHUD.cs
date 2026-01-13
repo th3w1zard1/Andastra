@@ -4,7 +4,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.UI
+namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Basic HUD component using MonoGame SpriteBatch rendering.
@@ -12,7 +12,7 @@ namespace Andastra.Runtime.MonoGame.UI
     /// </summary>
     /// <remarks>
     /// HUD Rendering:
-    /// - Based on swkotor2.exe HUD system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) HUD system
     /// - Located via string references: GUI panel references for HUD elements
     /// - "GuiQuickbar" @ 0x007c2484 (quickbar GUI), "GuiCharacterSheet" @ 0x007c24ac (character sheet GUI)
     /// - "GuiContainer" @ 0x007c24e4 (container GUI), "GuiInventory" @ 0x007c24f4 (inventory GUI)

@@ -3,7 +3,7 @@ using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Profiles
+namespace Andastra.Game.Engines.Odyssey.Profiles
 {
     /// <summary>
     /// Game profile for Star Wars: Knights of the Old Republic (K1).

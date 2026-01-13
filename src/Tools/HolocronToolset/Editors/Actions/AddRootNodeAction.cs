@@ -1,5 +1,5 @@
 using System;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 using HolocronToolset.Editors.DLG;
 
 namespace HolocronToolset.Editors.Actions

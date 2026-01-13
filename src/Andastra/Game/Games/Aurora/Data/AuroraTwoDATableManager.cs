@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
 
-namespace Andastra.Runtime.Games.Aurora.Data
+namespace Andastra.Game.Games.Aurora.Data
 {
     /// <summary>
     /// Manages loading and caching of 2DA tables for game data lookup (Aurora engine).
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
     /// - Resource precedence: override → module → hak → base game archives
     /// - Table lookup: Uses row label (string) or row index (int) to access data
     /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)
-    /// - Based on Andastra.Parsing.Formats.TwoDA.TwoDA for parsing
+    /// - Based on BioWare.NET.Resource.Formats.TwoDA.TwoDA for parsing
     /// - Key 2DA tables (Aurora-specific): appearance.2da, baseitems.2da, classes.2da, feat.2da, spells.2da, skills.2da, surfacemat.2da, portraits.2da, placeables.2da, doors.2da
     /// </remarks>
     public class AuroraTwoDATableManager
@@ -64,7 +64,7 @@ namespace Andastra.Runtime.Games.Aurora.Data
             // Load from installation
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(tableName, Andastra.Parsing.Common.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, BioWare.NET.Common.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;

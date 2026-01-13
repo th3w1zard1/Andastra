@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Games.Common.Actions;
+using Andastra.Game.Games.Common.Actions;
 
-namespace Andastra.Runtime.Games.Odyssey.Actions
+namespace Andastra.Game.Games.Odyssey.Actions
 {
     /// <summary>
     /// Base class for Odyssey engine actions (swkotor.exe, swkotor2.exe).

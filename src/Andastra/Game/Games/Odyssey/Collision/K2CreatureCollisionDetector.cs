@@ -1,14 +1,14 @@
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Odyssey.Collision
+namespace Andastra.Game.Games.Odyssey.Collision
 {
     /// <summary>
     /// KOTOR 2: The Sith Lords (swkotor2.exe) specific creature collision detection.
     /// </summary>
     /// <remarks>
     /// K2 Creature Collision Detection:
-    /// - Based on swkotor2.exe reverse engineering via Ghidra MCP
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering via Ghidra MCP
     /// - Bounding box structure pointer at offset 0x380 (different from K1's 0x340)
     /// - Reverse engineered functions:
     ///   - FUN_005479f0 @ 0x005479f0 (swkotor2.exe: main collision detection function using bounding box)
@@ -40,12 +40,12 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
     {
         /// <summary>
         /// Gets the bounding box for a creature entity.
-        /// Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0 uses creature bounding box from entity structure at offset 0x380.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005479f0 @ 0x005479f0 uses creature bounding box from entity structure at offset 0x380.
         /// </summary>
         /// <param name="entity">The creature entity.</param>
         /// <returns>The creature's bounding box.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe reverse engineering via Ghidra MCP:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering via Ghidra MCP:
         /// - FUN_0050e170 @ 0x0050e170 (initialization, similar to K1's FUN_004ed6e0):
         ///   - Appearance type: `*(ushort *)(param_1 + 0x1184)` - offset 0x1184, ushort (2 bytes)
         ///   - Bounding box pointer: `*(int *)(param_1 + 0x380)` - offset 0x380, int pointer
@@ -67,21 +67,21 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
         {
             if (entity == null)
             {
-                // Based on swkotor2.exe: Default bounding box for null entity
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Default bounding box for null entity
                 // Original code: Width defaults to 0.6f (0x3f19999a), radius defaults to 0.5f
                 // For collision detection, we use radius for all dimensions
                 return CreatureBoundingBox.FromRadius(0.5f); // Default radius
             }
 
             // Get appearance type from entity
-            // Based on swkotor2.exe: FUN_0050e170 @ 0x0050e170 gets appearance type from offset 0x1184
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0050e170 @ 0x0050e170 gets appearance type from offset 0x1184
             // Original code: `*(ushort *)(param_1 + 0x1184)` - direct memory access
             // Our abstraction: Use GetAppearanceType() which tries IRenderableComponent, then reflection
             // This matches the behavior but uses high-level API instead of direct memory access
             int appearanceType = GetAppearanceType(entity);
 
             // Get bounding box dimensions from GameDataProvider
-            // Based on swkotor2.exe: FUN_0050e170 @ 0x0050e170 performs 5 separate 2DA lookups (similar to K1):
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0050e170 @ 0x0050e170 performs 5 separate 2DA lookups (similar to K1):
             // 1. First lookup (DAT_00826990): Sets width at +4 (defaults to 0.6f if lookup fails)
             // 2. Second lookup (DAT_00826948): Sets radius at +8 (this is the hitradius column)
             // 3-5. Additional lookups for other bounding box values
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
 
             if (appearanceType >= 0 && entity.World != null && entity.World.GameDataProvider != null)
             {
-                // Based on swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 accesses "hitradius" column from appearance.2da
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0041d2c0 @ 0x0041d2c0 accesses "hitradius" column from appearance.2da
                 // This is the second lookup in FUN_0050e170 (DAT_00826948), which sets radius at offset +8
                 // FUN_0065a380 @ 0x0065a380 wraps FUN_0041d2c0 for GetCreatureRadius
                 // OdysseyGameDataProvider.GetCreatureRadius uses TwoDATableManager to lookup hitradius
@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
                 radius = entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
             }
 
-            // Based on swkotor2.exe reverse engineering: Bounding box structure at offset 0x380
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reverse engineering: Bounding box structure at offset 0x380
             // FUN_0050e170 @ 0x0050e170 (initialization) sets:
             // - Width at +4: `*(float *)(iVar1 + 4) = local_4;` (defaults to 0.6f if lookup fails)
             // - Radius at +8: `*(float *)(*(int *)(param_1 + 0x380) + 8) = local_4;` (from hitradius lookup)

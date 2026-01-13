@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Party
     /// </summary>
     /// <remarks>
     /// KOTOR Party System:
-    /// - Based on swkotor2.exe party system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) party system
     /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
     /// - "party" @ 0x007bda4c, "OnPartyDeath" @ 0x007bd9f4 (party member death event)
     /// - "PartyInteract" @ 0x007c1fc0 (party interaction system)
@@ -839,7 +839,7 @@ namespace Andastra.Runtime.Core.Party
             float spawnFacing = leaderTransform.Facing;
 
             // Create entity from member's template/resource
-            // Based on swkotor2.exe party member spawning system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) party member spawning system
             // Located via string references: Party member entity creation
             // Original implementation: Creates creature entity from UTC template stored in party member data
             // Party members use their TemplateResRef to spawn entities
@@ -849,7 +849,7 @@ namespace Andastra.Runtime.Core.Party
             if (!string.IsNullOrEmpty(member.TemplateResRef) && _templateFactory != null)
             {
                 // Use template factory to create entity from UTC template
-                // Based on swkotor2.exe: EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EntityFactory.CreateCreatureFromTemplate loads UTC GFF and creates entity
                 // Located via string references: "TemplateResRef" @ 0x007bd00c
                 // Original implementation: Loads UTC GFF, reads creature properties (Tag, FirstName, LastName, Appearance_Type,
                 // FactionID, CurrentHitPoints, MaxHitPoints, ForcePoints, MaxForcePoints, ClassList, Str/Dex/Con/Int/Wis/Cha,

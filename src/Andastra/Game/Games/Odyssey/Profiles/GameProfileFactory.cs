@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
+using BioWare.NET;
 using Andastra.Runtime.Content.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Profiles
+namespace Andastra.Game.Engines.Odyssey.Profiles
 {
     /// <summary>
     /// Factory for creating game profiles based on game type.
     /// </summary>
     /// <remarks>
     /// Game Profile Factory:
-    /// - Based on swkotor2.exe game profile system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game profile system
     /// - Located via string references: Game version detection determines which profile to use (K1 vs K2)
     /// - Resource setup: FUN_00633270 @ 0x00633270 sets up resource directories and precedence (related to game profile configuration)
     /// - Original implementation: Factory pattern for creating game-specific profiles

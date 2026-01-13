@@ -5,8 +5,8 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Tools;
+using BioWare.NET.Installation;
+using BioWare.NET.Tools;
 
 namespace HolocronToolset.Dialogs
 {
@@ -289,7 +289,7 @@ namespace HolocronToolset.Dialogs
                     string filename = kvp.Key;
                     string name = kvp.Value ?? "";
                     // Matching PyKotor: Module.filepath_to_root(filename)
-                    string root = Andastra.Parsing.Installation.Installation.GetModuleRoot(filename);
+                    string root = BioWare.NET.Installation.Installation.GetModuleRoot(filename);
                     if (!options.ContainsKey(root))
                     {
                         options[root] = new ModuleOption(name, root, new List<string>(), installation);
@@ -440,7 +440,7 @@ namespace HolocronToolset.Dialogs
             {
                 try
                 {
-                    Andastra.Parsing.Tools.ModuleTools.CloneModule(
+                    BioWare.NET.Tools.ModuleTools.CloneModule(
                         root,
                         identifier,
                         prefix,

@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
 

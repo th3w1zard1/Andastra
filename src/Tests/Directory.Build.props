@@ -1,7 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <!-- Skip MonoGame content pipeline for all test projects and their references -->
-    <SkipMonoGameContentPipeline Condition="'$(SkipMonoGameContentPipeline)' == ''">true</SkipMonoGameContentPipeline>
-  </PropertyGroup>
-</Project>
-

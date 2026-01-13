@@ -1,14 +1,14 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.UI
+namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Loading screen UI component using MonoGame SpriteBatch rendering.
     /// </summary>
     /// <remarks>
     /// Loading Screen:
-    /// - Based on swkotor2.exe loading screen system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) loading screen system
     /// - Located via string references: "LoadScreenID" @ 0x007bd54c (loading screen ID)
     /// - "Loadscreens" @ 0x007c4c04 (loading screens resource), "loadscreenhints" @ 0x007c7350
     /// - "loadscreen_p" @ 0x007cbe40 (loading screen panel GUI)

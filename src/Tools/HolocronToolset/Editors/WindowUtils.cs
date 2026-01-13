@@ -6,8 +6,8 @@ using Avalonia.Controls;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Editors.DLG;
-using Andastra.Parsing.Resource;
-using FileResource = Andastra.Parsing.Extract.FileResource;
+using BioWare.NET.Resource;
+using FileResource = BioWare.NET.Extract.FileResource;
 using JetBrains.Annotations;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -138,23 +138,23 @@ namespace HolocronToolset.Editors
             var targetType = restype.TargetType();
 
             // Route to appropriate editor based on resource type
-            if (targetType == Andastra.Parsing.Resource.ResourceType.TwoDA)
+            if (targetType == BioWare.NET.Resource.ResourceType.TwoDA)
             {
                 editor = new TwoDAEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.SSF)
+            else if (targetType == BioWare.NET.Resource.ResourceType.SSF)
             {
                 editor = new SSFEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.TLK)
+            else if (targetType == BioWare.NET.Resource.ResourceType.TLK)
             {
                 editor = new TLKEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.LTR)
+            else if (targetType == BioWare.NET.Resource.ResourceType.LTR)
             {
                 editor = new LTREditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.LIP)
+            else if (targetType == BioWare.NET.Resource.ResourceType.LIP)
             {
                 editor = new LIPEditor(parentWindow, installation);
             }
@@ -162,13 +162,13 @@ namespace HolocronToolset.Editors
             {
                 editor = new BWMEditor(parentWindow, installation);
             }
-            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != Andastra.Parsing.Resource.ResourceType.TXI)
+            else if ((restype.Category == "Images" || restype.Category == "Textures") && restype != BioWare.NET.Resource.ResourceType.TXI)
             {
                 editor = new TPCEditor(parentWindow, installation);
             }
-            else if (restype == Andastra.Parsing.Resource.ResourceType.NSS || restype == Andastra.Parsing.Resource.ResourceType.NCS)
+            else if (restype == BioWare.NET.Resource.ResourceType.NSS || restype == BioWare.NET.Resource.ResourceType.NCS)
             {
-                if (installation == null && restype == Andastra.Parsing.Resource.ResourceType.NCS)
+                if (installation == null && restype == BioWare.NET.Resource.ResourceType.NCS)
                 {
                     // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/utils/window.py:215-219
                     // Original: QMessageBox.warning(parent_window_widget, tr("Cannot decompile NCS without an installation active"), tr("Please select an installation from the dropdown before loading an NCS."))
@@ -182,7 +182,7 @@ namespace HolocronToolset.Editors
                 }
                 editor = new NSSEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.DLG)
+            else if (targetType == BioWare.NET.Resource.ResourceType.DLG)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -193,7 +193,7 @@ namespace HolocronToolset.Editors
                     editor = new DLGEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTC || targetType == Andastra.Parsing.Resource.ResourceType.BTC || targetType == Andastra.Parsing.Resource.ResourceType.BIC)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTC || targetType == BioWare.NET.Resource.ResourceType.BTC || targetType == BioWare.NET.Resource.ResourceType.BIC)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -204,7 +204,7 @@ namespace HolocronToolset.Editors
                     editor = new UTCEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTP || targetType == Andastra.Parsing.Resource.ResourceType.BTP)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTP || targetType == BioWare.NET.Resource.ResourceType.BTP)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -215,7 +215,7 @@ namespace HolocronToolset.Editors
                     editor = new UTPEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTD || targetType == Andastra.Parsing.Resource.ResourceType.BTD)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTD || targetType == BioWare.NET.Resource.ResourceType.BTD)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -226,11 +226,11 @@ namespace HolocronToolset.Editors
                     editor = new UTDEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.IFO)
+            else if (targetType == BioWare.NET.Resource.ResourceType.IFO)
             {
                 editor = new IFOEditor(parentWindow, installation);
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTS)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTS)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -241,7 +241,7 @@ namespace HolocronToolset.Editors
                     editor = new UTSEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTT || targetType == Andastra.Parsing.Resource.ResourceType.BTT)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTT || targetType == BioWare.NET.Resource.ResourceType.BTT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -252,7 +252,7 @@ namespace HolocronToolset.Editors
                     editor = new UTTEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTM || targetType == Andastra.Parsing.Resource.ResourceType.BTM)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTM || targetType == BioWare.NET.Resource.ResourceType.BTM)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -263,7 +263,7 @@ namespace HolocronToolset.Editors
                     editor = new UTMEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTW)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTW)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -274,7 +274,7 @@ namespace HolocronToolset.Editors
                     editor = new UTWEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTE || targetType == Andastra.Parsing.Resource.ResourceType.BTE)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTE || targetType == BioWare.NET.Resource.ResourceType.BTE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -285,7 +285,7 @@ namespace HolocronToolset.Editors
                     editor = new UTEEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.UTI || targetType == Andastra.Parsing.Resource.ResourceType.BTI)
+            else if (targetType == BioWare.NET.Resource.ResourceType.UTI || targetType == BioWare.NET.Resource.ResourceType.BTI)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -296,7 +296,7 @@ namespace HolocronToolset.Editors
                     editor = new UTIEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.JRL)
+            else if (targetType == BioWare.NET.Resource.ResourceType.JRL)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -307,7 +307,7 @@ namespace HolocronToolset.Editors
                     editor = new JRLEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.ARE)
+            else if (targetType == BioWare.NET.Resource.ResourceType.ARE)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -318,7 +318,7 @@ namespace HolocronToolset.Editors
                     editor = new AREEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.PTH)
+            else if (targetType == BioWare.NET.Resource.ResourceType.PTH)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -329,7 +329,7 @@ namespace HolocronToolset.Editors
                     editor = new PTHEditor(parentWindow, installation);
                 }
             }
-            else if (targetType == Andastra.Parsing.Resource.ResourceType.GIT)
+            else if (targetType == BioWare.NET.Resource.ResourceType.GIT)
             {
                 if (installation == null || !gffSpecialized.Value)
                 {
@@ -344,13 +344,13 @@ namespace HolocronToolset.Editors
             {
                 editor = new WAVEditor(parentWindow, installation);
             }
-            else if (restype == Andastra.Parsing.Resource.ResourceType.ERF || restype == Andastra.Parsing.Resource.ResourceType.SAV ||
-                     restype == Andastra.Parsing.Resource.ResourceType.MOD || restype == Andastra.Parsing.Resource.ResourceType.RIM ||
-                     restype == Andastra.Parsing.Resource.ResourceType.BIF)
+            else if (restype == BioWare.NET.Resource.ResourceType.ERF || restype == BioWare.NET.Resource.ResourceType.SAV ||
+                     restype == BioWare.NET.Resource.ResourceType.MOD || restype == BioWare.NET.Resource.ResourceType.RIM ||
+                     restype == BioWare.NET.Resource.ResourceType.BIF)
             {
                 editor = new ERFEditor(parentWindow, installation);
             }
-            else if (restype == Andastra.Parsing.Resource.ResourceType.MDL || restype == Andastra.Parsing.Resource.ResourceType.MDX)
+            else if (restype == BioWare.NET.Resource.ResourceType.MDL || restype == BioWare.NET.Resource.ResourceType.MDX)
             {
                 editor = new MDLEditor(parentWindow, installation);
             }

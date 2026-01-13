@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Module
     /// </summary>
     /// <remarks>
     /// Module System:
-    /// - Based on swkotor2.exe module system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module system
     /// - Located via string references: "Module" @ 0x007bc4e0, "ModuleName" @ 0x007bde2c, "ModuleLoaded" @ 0x007bdd70
     /// - "MODULE" @ 0x007beab8, "ModuleList" @ 0x007bdd3c, "GetModuleList" @ 0x007bdd48
     /// - "ModuleRunning" @ 0x007bdd58, "LinkedToModule" @ 0x007bd7bc
@@ -193,7 +193,7 @@ namespace Andastra.Runtime.Core.Module
         /// Ordered list of area ResRefs from Mod_Area_list in the module IFO file.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list contains ordered list of area ResRefs.
         /// Each entry in Mod_Area_list contains an Area_Name field with the area ResRef.
         /// This list is used for resolving transition targets by index (TransPendNextID).
         /// Stored during module loading to avoid re-reading the IFO file.
@@ -296,7 +296,7 @@ namespace Andastra.Runtime.Core.Module
         /// <param name="year">Year number.</param>
         /// <returns>Number of days in the month (28-31).</returns>
         /// <remarks>
-        /// Based on swkotor2.exe calendar system.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) calendar system.
         /// Uses standard calendar with variable days per month:
         /// - Months 1, 3, 5, 7, 8, 10, 12: 31 days
         /// - Months 4, 6, 9, 11: 30 days
@@ -324,7 +324,7 @@ namespace Andastra.Runtime.Core.Module
         /// </summary>
         /// <param name="minutes">Number of minutes to advance.</param>
         /// <remarks>
-        /// Based on swkotor2.exe time advancement system.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) time advancement system.
         /// Properly handles:
         /// - Day overflow into next month (respects days per month)
         /// - Month overflow into next year (12 months per year)

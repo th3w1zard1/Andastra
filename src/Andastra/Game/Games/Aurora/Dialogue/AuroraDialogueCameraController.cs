@@ -2,9 +2,9 @@ using System;
 using System.Numerics;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Game.Games.Common.Dialogue;
 
-namespace Andastra.Runtime.Games.Aurora.Dialogue
+namespace Andastra.Game.Games.Aurora.Dialogue
 {
     /// <summary>
     /// Aurora engine implementation of dialogue camera controller.

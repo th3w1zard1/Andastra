@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Core.Actions
     /// - Door OpenState is set to 2 (destroyed state) when bashed open
     /// - Attack interval: ~2.0 seconds between bash attempts (similar to combat attack intervals)
     /// - Based on swkotor.exe: Door bashing damage application (FUN_005226d0 @ 0x005226d0 references door bashing)
-    /// - Based on swkotor2.exe: Door bashing system (door damage handling in door component)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door bashing system (door damage handling in door component)
     /// </remarks>
     public class ActionBashDoor : ActionBase
     {
@@ -185,7 +185,7 @@ namespace Andastra.Runtime.Core.Actions
                 Console.WriteLine("[ActionBashDoor] Bashed door: roll=" + roll + " + STR mod=" + strengthModifier + " = " + total + " vs DC=" + doorComponent.LockDC + ", damage=" + bashDamage + ", door HP=" + doorComponent.HitPoints);
 
                 // Fire OnDamaged script event if door still exists (HP > 0 means door wasn't destroyed)
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70
                 if (doorComponent.HitPoints > 0 && actor.World != null && actor.World.EventBus != null)
                 {
@@ -198,7 +198,7 @@ namespace Andastra.Runtime.Core.Actions
                     Console.WriteLine("[ActionBashDoor] Door bashed open!");
 
                     // Fire OnDeath script event (door destruction)
-                    // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies/is destroyed
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies/is destroyed
                     // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bcaf0 (0x3)
                     if (actor.World != null && actor.World.EventBus != null)
                     {

@@ -2,14 +2,14 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.UI
+namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Screen fade system for transitions (fade in/out effects).
     /// </summary>
     /// <remarks>
     /// Screen Fade System:
-    /// - Based on swkotor2.exe screen fade system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) screen fade system
     /// - Located via string references: "FadeDelayOnDeath" @ 0x007bf55c, "FadeLength" @ 0x007c3580, "FadeDelay" @ 0x007c358c
     /// - "FadeColor" @ 0x007c3598, "FadeType" @ 0x007c35a4, "FadeTime" @ 0x007c60ec
     /// - "fade_p" @ 0x007c8790 (fade panel GUI), "donefade" @ 0x007cdb94 (fade completion)

@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Animation
     /// </summary>
     /// <remarks>
     /// Animation System:
-    /// - Based on swkotor2.exe animation system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) animation system
     /// - Located via string references: "Animation" @ 0x007bf604, "AnimList" @ 0x007c3694, "AnimationTime" @ 0x007bf810
     /// - "AnimationLength" @ 0x007bf980, "AnimationState" @ 0x007c1f30, "Animations" @ 0x007c4e38
     /// - "CombatAnimations" @ 0x007c4ea4, "DialogAnimations" @ 0x007c4eb8 (animation categories)
@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Core.Animation
     /// - Looping animations wrap AnimationTime back to 0.0 when reaching duration
     /// - Animation durations are retrieved from animation component (loaded from MDX/MDL data)
     /// - Animation completion events are fired when non-looping animations finish playing
-    /// - Based on swkotor2.exe: Animation completion triggers script events and action completion
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
     /// </remarks>
     public class AnimationSystem
     {
@@ -71,7 +71,7 @@ namespace Andastra.Runtime.Core.Animation
                 }
 
                 // Get animation duration from component (loaded from MDX/MDL data)
-                // Based on swkotor2.exe: Animation duration stored in MDX animation data
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation duration stored in MDX animation data
                 // BaseAnimationComponent.AnimationDuration is set by engine-specific implementations
                 float animationDuration = GetAnimationDuration(animation);
 
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Core.Animation
                         // AnimationComplete is computed property, will be true now
 
                         // Fire completion event if animation just completed (wasn't complete last frame)
-                        // Based on swkotor2.exe: Animation completion triggers script events and action completion
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
                         // Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling
                         if (!wasComplete && animation.AnimationComplete)
                         {
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.Core.Animation
         /// <param name="animation">The animation component.</param>
         /// <returns>The animation duration in seconds.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Animation duration stored in MDX animation data
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation duration stored in MDX animation data
         /// BaseAnimationComponent.AnimationDuration is set by engine-specific implementations
         /// </remarks>
         private float GetAnimationDuration(IAnimationComponent animation)
@@ -171,7 +171,7 @@ namespace Andastra.Runtime.Core.Animation
         /// <param name="entity">The entity whose animation completed.</param>
         /// <param name="animation">The animation component.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Animation completion triggers script events and action completion
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
         /// Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling
         /// Original implementation: Animation completion events notify action system and scripts
         /// </remarks>
@@ -193,7 +193,7 @@ namespace Andastra.Runtime.Core.Animation
             _completionEventsFired[completionKey] = true;
 
             // Fire animation completion event
-            // Based on swkotor2.exe: Animation completion events notify action system and scripts
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion events notify action system and scripts
             var animationCompleteEvent = new AnimationCompleteEvent
             {
                 Entity = entity,
@@ -221,7 +221,7 @@ namespace Andastra.Runtime.Core.Animation
     /// </summary>
     /// <remarks>
     /// Animation Complete Event:
-    /// - Based on swkotor2.exe: Animation completion triggers script events and action completion
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
     /// - Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling
     /// - Original implementation: Animation completion events notify action system and scripts
     /// - Fired once per animation completion (not every frame)

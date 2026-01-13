@@ -3,21 +3,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common.Script;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.Types;
 
-namespace Andastra.Runtime.Scripting.VM
+namespace Andastra.Game.Scripting.VM
 {
     /// <summary>
     /// NWScript Compiled Script Virtual Machine implementation.
     /// </summary>
     /// <remarks>
     /// NCS Virtual Machine:
-    /// - Based on swkotor2.exe NCS VM implementation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NCS VM implementation
     /// - Located via string references: NCS script execution engine handles bytecode interpretation
     /// - NCS file format: "NCS " signature (bytes 0-3), "V1.0" version (bytes 4-7), 0x42 marker at offset 8 (byte 8)
     /// - File format markers: "MOD V1.0" @ 0x007be0d4 (module save format), "BWM V1.0" @ 0x007c061c (walkmesh format), "LIP V1.0" @ 0x007d98d4 (lip sync format)
@@ -62,7 +62,7 @@ namespace Andastra.Runtime.Scripting.VM
         private int _nextStringHandle;
 
         // Location storage (Location objects are stored off-stack with IDs)
-        // Based on swkotor2.exe: Location object management system
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Location object management system
         // Located via string references: "LOCATION" @ 0x007c2850 (location type constant)
         // Original implementation: Location objects are managed by engine, stored in catalog with unique IDs
         // Location IDs start from 0x80000000 to avoid conflicts with object IDs (0x7F000000+ range)
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Scripting.VM
             _context = ctx;
 
             // Set current execution context for async execution flow tracking
-            // Based on swkotor2.exe: Execution context stack tracking for delayed script execution
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking for delayed script execution
             // Original implementation: Sets current execution context so delayed actions can access caller/triggerer
             ExecutionContext.SetCurrent(ctx);
 
@@ -140,7 +140,7 @@ namespace Andastra.Runtime.Scripting.VM
             Array.Clear(_stack, 0, _stack.Length);
 
             // Restore stored VM state if present (for DelayCommand state restoration)
-            // Based on swkotor2.exe: State restoration for delayed actions
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): State restoration for delayed actions
             // Original implementation: Restores stack, locals, and pools before executing delayed action
             if (ctx != null && ctx is ExecutionContext execContext && execContext.StoredVmState != null)
             {
@@ -177,7 +177,7 @@ namespace Andastra.Runtime.Scripting.VM
             {
                 _running = false;
                 // Clear current execution context after script execution completes
-                // Based on swkotor2.exe: Execution context stack tracking cleanup
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking cleanup
                 // Original implementation: Clears current execution context when script execution ends
                 ExecutionContext.SetCurrent(null);
             }
@@ -211,10 +211,10 @@ namespace Andastra.Runtime.Scripting.VM
                     throw new InvalidOperationException("Failed to load script: " + resRef, aex.InnerException ?? aex);
                 }
             }
-            // Fallback to Andastra.Parsing Installation provider
+            // Fallback to BioWare.NET Installation provider
             else if (provider is Installation installation)
             {
-                Andastra.Parsing.Installation.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
+                BioWare.NET.Extract.Installation.ResourceResult result = installation.Resource(resRef, ResourceType.NCS, null, null);
                 if (result != null && result.Data != null)
                 {
                     ncsBytes = result.Data;
@@ -479,19 +479,19 @@ namespace Andastra.Runtime.Scripting.VM
         private void RSADDF() { PushFloat(0f); }
         private void RSADDS() { PushString(string.Empty); }
         private void RSADDO() { PushInt(unchecked((int)ObjectInvalid)); }
-        // Based on swkotor2.exe: RSADDEFF reserves 4 bytes for effect type on stack
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RSADDEFF reserves 4 bytes for effect type on stack
         // Located via string references: Effect type storage (4 bytes, same as object)
         // Original implementation: Effect types are stored as 4-byte values on stack
         private void RSADDEFF() { PushInt(0); } // Effect type (4 bytes, initialized to 0)
-        // Based on swkotor2.exe: RSADDEVT reserves 4 bytes for event type on stack
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RSADDEVT reserves 4 bytes for event type on stack
         // Located via string references: Event type storage (4 bytes, same as object)
         // Original implementation: Event types are stored as 4-byte values on stack
         private void RSADDEVT() { PushInt(0); } // Event type (4 bytes, initialized to 0)
-        // Based on swkotor2.exe: RSADDLOC reserves 4 bytes for location type on stack
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RSADDLOC reserves 4 bytes for location type on stack
         // Located via string references: Location type storage (4 bytes, same as object)
         // Original implementation: Location types are stored as 4-byte object references on stack
         private void RSADDLOC() { PushInt(unchecked((int)ObjectInvalid)); } // Location (4 bytes, initialized to OBJECT_INVALID)
-        // Based on swkotor2.exe: RSADDTAL reserves 4 bytes for talent type on stack
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RSADDTAL reserves 4 bytes for talent type on stack
         // Located via string references: Talent type storage (4 bytes, same as object)
         // Original implementation: Talent types are stored as 4-byte values on stack
         private void RSADDTAL() { PushInt(0); } // Talent type (4 bytes, initialized to 0)
@@ -527,7 +527,7 @@ namespace Andastra.Runtime.Scripting.VM
 
         private void ACTION()
         {
-            // Based on swkotor2.exe: ACTION opcode implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ACTION opcode implementation
             // Located via string references: ACTION opcode (0x2A) calls engine functions
             // Original implementation: Pops arguments from stack based on function signature types
             // ACTION opcode format: uint16 routineId (big-endian) + uint8 argCount
@@ -539,7 +539,7 @@ namespace Andastra.Runtime.Scripting.VM
             // Get function signature from ScriptDefs to determine argument types
             // Original engine: Function signatures stored in nwscript.nss definitions
             // Function signature lookup: Routine ID maps to function definition with parameter types
-            // Based on swkotor2.exe: ACTION opcode uses function dispatch table indexed by routine ID
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ACTION opcode uses function dispatch table indexed by routine ID
             // Routine IDs match function indices from nwscript.nss compilation (0-based index into function table)
             ScriptFunction functionDef = null;
             try
@@ -611,7 +611,7 @@ namespace Andastra.Runtime.Scripting.VM
                             break;
                         case DataType.Location:
                             // Location is stored on stack as a single object reference (4 bytes = 1 word)
-                            // Based on swkotor2.exe: Location type storage
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Location type storage
                             // Located via string references: "LOCATION" @ 0x007c2850, "ValLocation" @ 0x007c26ac
                             // Original implementation: Location stored as object reference (off-stack complex object)
                             // The actual Location object (position, facing, area) is managed by the engine
@@ -672,7 +672,7 @@ namespace Andastra.Runtime.Scripting.VM
                         break;
                     case VariableType.Location:
                         // Location is pushed as an integer handle/ID (same as Object)
-                        // Based on swkotor2.exe: Location type result pushing
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Location type result pushing
                         // Original implementation: Location objects are managed by engine, stack stores integer handle
                         // Handle both integer IDs (for arguments) and Location objects (for return values)
                         if (result.ComplexValue is int locationId)
@@ -708,7 +708,7 @@ namespace Andastra.Runtime.Scripting.VM
         private void EQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) < 0.0001f ? 1 : 0); }
         private void EQUALSS() { string b = PopString(); string a = PopString(); PushInt(a == b ? 1 : 0); }
         private void EQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
-        // Based on swkotor2.exe: EQUALTT compares structures byte-by-byte
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EQUALTT compares structures byte-by-byte
         // Located via string references: Structure comparison (qualifier 0x24 = struct/struct)
         // Original implementation: Reads uint16 size field, compares size bytes from stack
         // Format: [0x0B][0x24][uint16 size] - size must be multiple of 4
@@ -738,19 +738,19 @@ namespace Andastra.Runtime.Scripting.VM
             _sp -= size * 2; // Remove both structures from stack
             PushInt(equal ? 1 : 0);
         }
-        // Based on swkotor2.exe: EQUALEFFEFF compares effect types (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EQUALEFFEFF compares effect types (4 bytes each)
         // Located via string references: Effect type comparison
         // Original implementation: Compares two 4-byte effect values
         private void EQUALEFFEFF() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
-        // Based on swkotor2.exe: EQUALEVTEVT compares event types (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EQUALEVTEVT compares event types (4 bytes each)
         // Located via string references: Event type comparison
         // Original implementation: Compares two 4-byte event values
         private void EQUALEVTEVT() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
-        // Based on swkotor2.exe: EQUALLOCLOC compares location types (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EQUALLOCLOC compares location types (4 bytes each)
         // Located via string references: Location type comparison
         // Original implementation: Compares two 4-byte location object references
         private void EQUALLOCLOC() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
-        // Based on swkotor2.exe: EQUALTALTAL compares talent types (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EQUALTALTAL compares talent types (4 bytes each)
         // Located via string references: Talent type comparison
         // Original implementation: Compares two 4-byte talent values
         private void EQUALTALTAL() { int b = PopInt(); int a = PopInt(); PushInt(a == b ? 1 : 0); }
@@ -760,7 +760,7 @@ namespace Andastra.Runtime.Scripting.VM
         private void NEQUALFF() { float b = PopFloat(); float a = PopFloat(); PushInt(Math.Abs(a - b) >= 0.0001f ? 1 : 0); }
         private void NEQUALSS() { string b = PopString(); string a = PopString(); PushInt(a != b ? 1 : 0); }
         private void NEQUALOO() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
-        // Based on swkotor2.exe: NEQUALTT compares structures byte-by-byte for inequality
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NEQUALTT compares structures byte-by-byte for inequality
         // Located via string references: Structure comparison (qualifier 0x24 = struct/struct)
         // Original implementation: Reads uint16 size field, compares size bytes from stack
         // Format: [0x0C][0x24][uint16 size] - size must be multiple of 4
@@ -790,19 +790,19 @@ namespace Andastra.Runtime.Scripting.VM
             _sp -= size * 2; // Remove both structures from stack
             PushInt(equal ? 0 : 1); // Inverted for NEQUAL
         }
-        // Based on swkotor2.exe: NEQUALEFFEFF compares effect types for inequality (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NEQUALEFFEFF compares effect types for inequality (4 bytes each)
         // Located via string references: Effect type comparison
         // Original implementation: Compares two 4-byte effect values
         private void NEQUALEFFEFF() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
-        // Based on swkotor2.exe: NEQUALEVTEVT compares event types for inequality (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NEQUALEVTEVT compares event types for inequality (4 bytes each)
         // Located via string references: Event type comparison
         // Original implementation: Compares two 4-byte event values
         private void NEQUALEVTEVT() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
-        // Based on swkotor2.exe: NEQUALLOCLOC compares location types for inequality (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NEQUALLOCLOC compares location types for inequality (4 bytes each)
         // Located via string references: Location type comparison
         // Original implementation: Compares two 4-byte location object references
         private void NEQUALLOCLOC() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
-        // Based on swkotor2.exe: NEQUALTALTAL compares talent types for inequality (4 bytes each)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NEQUALTALTAL compares talent types for inequality (4 bytes each)
         // Located via string references: Talent type comparison
         // Original implementation: Compares two 4-byte talent values
         private void NEQUALTALTAL() { int b = PopInt(); int a = PopInt(); PushInt(a != b ? 1 : 0); }
@@ -880,7 +880,7 @@ namespace Andastra.Runtime.Scripting.VM
                 PushFloat(0); PushFloat(0); PushFloat(0);
             }
         }
-        // Based on swkotor2.exe: DIVFV divides vector by float (float, vector)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DIVFV divides vector by float (float, vector)
         // Located via string references: Vector/float division
         // Original implementation: Divides each component of vector by float scalar
         // Stack: [float s][vector z][vector y][vector x] -> [result z][result y][result x]
@@ -1059,7 +1059,7 @@ namespace Andastra.Runtime.Scripting.VM
 
         private void STORE_STATE()
         {
-            // Based on swkotor2.exe: STORE_STATE opcode implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): STORE_STATE opcode implementation
             // Located via string references: "DelayCommand" @ 0x007be900 (NWScript DelayCommand function)
             // STORE_STATE opcode format: uint32 stackBytes (big-endian, bytes 0-3) + uint32 localsBytes (big-endian, bytes 4-7)
             // Original implementation: Stores current stack and local variable state for deferred action execution
@@ -1225,7 +1225,7 @@ namespace Andastra.Runtime.Scripting.VM
         /// </summary>
         /// <param name="state">The VM state to restore.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: State restoration for DelayCommand.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): State restoration for DelayCommand.
         /// Original implementation: Restores stack, locals, and pools before executing delayed action.
         /// </remarks>
         public void RestoreState(VmState state)

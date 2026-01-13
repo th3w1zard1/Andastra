@@ -14,7 +14,7 @@ namespace Andastra.Runtime.Core.Module
     /// </summary>
     /// <remarks>
     /// Runtime Area:
-    /// - Based on swkotor2.exe area system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) area system
     /// - Located via string references: "Area" @ 0x007be340, "AreaName" @ 0x007be340, "AREANAME" @ 0x007be1dc
     /// - "Area_Name" @ 0x007be73c, "AreaId" @ 0x007bef48, "AreaNumber" @ 0x007c7324
     /// - "Mod_Area_list" @ 0x007be748, "Mod_Entry_Area" @ 0x007be9b4 (module entry area)
@@ -61,7 +61,7 @@ namespace Andastra.Runtime.Core.Module
         private readonly Dictionary<ScriptEvent, string> _scripts;
 
         // Camera states storage (cameras are not runtime entities, stored separately for save system)
-        // Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cameras are stored in GIT CameraList but not as runtime entities
         // Camera states are stored here when area is loaded from GIT for save system compatibility
         private readonly List<Save.EntityState> _cameraStates;
 
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Gets or sets whether stealth XP is enabled for this area.
-        /// Based on swkotor2.exe: StealthXPEnabled stored in AreaProperties GFF
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): StealthXPEnabled stored in AreaProperties GFF
         /// Located via string references: "StealthXPEnabled" @ 0x007bd1b4
         /// Ghidra analysis: FUN_004e26d0 @ 0x004e26d0 reads from AreaProperties GFF at offset +0x2f4
         /// FUN_004e11d0 @ 0x004e11d0 writes to AreaProperties GFF at offset +0x2f4
@@ -460,13 +460,13 @@ namespace Andastra.Runtime.Core.Module
         {
             // Basic implementation - area effects, lighting, weather updates would go here
             // Engine-specific implementations should override this method
-            // Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 updates area state
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404cf0 @ 0x00404cf0 updates area state
         }
 
         /// <summary>
         /// Gets camera states stored in this area.
         /// Cameras are not runtime entities, so they're stored separately for save system compatibility.
-        /// Based on swkotor2.exe: Cameras are stored in GIT CameraList but not as runtime entities.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cameras are stored in GIT CameraList but not as runtime entities.
         /// </summary>
         public IReadOnlyList<EntityState> GetCameraStates()
         {
@@ -476,7 +476,7 @@ namespace Andastra.Runtime.Core.Module
         /// <summary>
         /// Adds a camera state to this area.
         /// Called when loading area from GIT to store camera data for save system.
-        /// Based on swkotor2.exe: Camera states are stored when area is loaded from GIT.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera states are stored when area is loaded from GIT.
         /// </summary>
         public void AddCameraState(EntityState cameraState)
         {

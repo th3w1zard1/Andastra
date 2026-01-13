@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Andastra.Runtime.MonoGame.Assets
+namespace Andastra.Game.Graphics.MonoGame.Assets
 {
     /// <summary>
     /// Asset validation system for catching errors early.

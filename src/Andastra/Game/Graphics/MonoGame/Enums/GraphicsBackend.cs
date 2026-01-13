@@ -1,6 +1,6 @@
 using System;
 
-namespace Andastra.Runtime.MonoGame.Enums
+namespace Andastra.Game.Graphics.MonoGame.Enums
 {
     /// <summary>
     /// Supported graphics API backends.

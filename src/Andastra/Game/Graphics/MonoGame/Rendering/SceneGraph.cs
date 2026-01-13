@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Scene graph system for hierarchical scene organization.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Scene Graph System:
-    /// - Based on swkotor2.exe rendering system (scene organization)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system (scene organization)
     /// - Located via string references: Scene hierarchy used for room and object organization
     /// - Original implementation: KOTOR organizes scenes hierarchically (rooms, objects, attached items)
     /// - Hierarchical transforms: Parent-child relationships for attached objects (weapons, shields on creatures)

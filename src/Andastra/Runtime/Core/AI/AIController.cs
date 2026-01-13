@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Core.AI
     /// </summary>
     /// <remarks>
     /// AI Controller:
-    /// - Based on swkotor2.exe AI system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) AI system
     /// - Located via string references: "OnHeartbeat" @ 0x007beeb0 (heartbeat script field), "Heartbeat" @ 0x007c1a90
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bc9a4 (heartbeat script event type, 0x0)
     /// - "HeartbeatInterval" @ 0x007c38e8 (heartbeat timing interval field)
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Core.AI
 
         /// <summary>
         /// Checks if entity is player-controlled.
-        /// Based on swkotor2.exe: Player control detection
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player control detection
         /// Located via string references: "IsPC" @ 0x007c4090, "GetIsPC" @ NWScript function
         /// Original implementation: Checks entity flags and party membership to determine if player-controlled
         /// </summary>
@@ -147,7 +147,7 @@ namespace Andastra.Runtime.Core.AI
 
         /// <summary>
         /// Checks if entity is in conversation.
-        /// Based on swkotor2.exe: Dialogue state tracking
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Dialogue state tracking
         /// Located via string references: "DialogueActive" @ 0x007c38e0, "InConversation" @ 0x007c38e4
         /// Original implementation: Tracks active dialogue state per entity to prevent AI during conversations
         /// </summary>
@@ -181,7 +181,7 @@ namespace Andastra.Runtime.Core.AI
                 if (!string.IsNullOrEmpty(script))
                 {
                     // Execute heartbeat script with entity as owner
-                    // Based on swkotor2.exe: Heartbeat script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Heartbeat script execution
                     // Located via string references: "OnHeartbeat" @ 0x007beeb0, "Heartbeat" @ 0x007c1a90
                     // Original implementation: FUN_005226d0 @ 0x005226d0 executes heartbeat scripts every 6 seconds
                     if (_world.EventBus != null)

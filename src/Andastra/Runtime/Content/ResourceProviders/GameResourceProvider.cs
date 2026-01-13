@@ -4,33 +4,33 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Extract.Capsule;
-using Andastra.Parsing.Extract.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Extract;
+using BioWare.NET.Extract.Capsule;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
 {
     /// <summary>
-    /// Resource provider that wraps Andastra.Parsing.Installation for unified resource access.
+    /// Resource provider that wraps BioWare.NET.Extract.Installation for unified resource access.
     /// </summary>
     /// <remarks>
     /// Game Resource Provider:
-    /// - Based on swkotor2.exe resource loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
     /// - Located via string references: "Resource" @ 0x007c14d4 (resource field)
     /// - Resource table errors: "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
     /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124 (duplicate resource key error)
-    /// - Original implementation: Wraps Andastra.Parsing.Installation for resource access
+    /// - Original implementation: Wraps BioWare.NET.Extract.Installation for resource access
     /// - Resource lookup: Uses installation resource system to locate files in archives (RIM, ERF, BIF, MOD)
     /// - Module context: Sets current module for module-specific resource lookups (module RIMs loaded first)
     /// - Search order: Module RIMs → Override directory → Main game archives (chitin.key/BIF files)
     /// - Resource types: Supports all KOTOR resource types (MDL, MDX, TPC, WAV, NCS, DLG, etc.)
     /// - Async loading: Provides async resource access for streaming and background loading
     /// - Resource enumeration: Can enumerate resources by type from installation archives
-    /// - Based on Andastra.Parsing resource system which mirrors original engine's CExoKeyTable/ResourceManager
+    /// - Based on BioWare.NET resource system which mirrors original engine's CExoKeyTable/ResourceManager
     /// </remarks>
     public class GameResourceProvider : IGameResourceProvider
     {
@@ -65,7 +65,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Extract.ResourceResult result = _installation.Resources.LookupResource(
+                BioWare.NET.Extract.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -93,7 +93,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Extract.ResourceResult result = _installation.Resources.LookupResource(
+                BioWare.NET.Extract.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -113,11 +113,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Extract.Installation.SearchLocation[] kotorOrder = order != null
+                BioWare.NET.Extract.Installation.SearchLocation[] kotorOrder = order != null
                     ? order.Select(ConvertSearchLocation).Where(l => l.HasValue).Select(l => l.Value).ToArray()
                     : null;
 
-                List<Andastra.Parsing.Extract.LocationResult> results = _installation.Resources.LocateResource(
+                List<BioWare.NET.Extract.LocationResult> results = _installation.Resources.LocateResource(
                     id.ResName,
                     id.ResType,
                     kotorOrder,
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 );
 
                 var converted = new List<Andastra.Runtime.Content.Interfaces.LocationResult>();
-                foreach (Andastra.Parsing.Extract.LocationResult r in results)
+                foreach (BioWare.NET.Extract.LocationResult r in results)
                 {
                     converted.Add(new Andastra.Runtime.Content.Interfaces.LocationResult
                     {
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
         /// </summary>
         /// <remarks>
         /// Resource enumeration implementation:
-        /// - Based on swkotor2.exe resource enumeration system (CExoKeyTable resource table iteration)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource enumeration system (CExoKeyTable resource table iteration)
         /// - Scans all archives and directories in precedence order: OVERRIDE > MODULES > CHITIN > TEXTUREPACKS > STREAMS > RIMS
         /// - Uses HashSet to track unique resources (duplicates from lower-priority locations are ignored)
         /// - Archive types scanned: ERF, MOD, RIM, BIF (via chitin.key), patch.erf (K1 only)
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             string installPath = _installation.Path;
 
             // 1. Enumerate from OVERRIDE directory (highest priority)
-            string overridePath = Andastra.Parsing.Extract.Installation.Installation.GetOverridePath(installPath);
+            string overridePath = BioWare.NET.Extract.Installation.Installation.GetOverridePath(installPath);
             if (Directory.Exists(overridePath))
             {
                 string extension = type.Extension ?? "";
@@ -197,7 +197,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 2. Enumerate from MODULES directory (module RIM/ERF/MOD files)
-            string modulesPath = Andastra.Parsing.Extract.Installation.Installation.GetModulesPath(installPath);
+            string modulesPath = BioWare.NET.Extract.Installation.Installation.GetModulesPath(installPath);
             if (Directory.Exists(modulesPath))
             {
                 var moduleFiles = Directory.GetFiles(modulesPath)
@@ -211,10 +211,10 @@ namespace Andastra.Runtime.Content.ResourceProviders
                 // Filter by current module if specified
                 if (!string.IsNullOrWhiteSpace(_currentModule))
                 {
-                    string moduleRoot = Andastra.Parsing.Extract.Installation.Installation.GetModuleRoot(_currentModule);
+                    string moduleRoot = BioWare.NET.Extract.Installation.Installation.GetModuleRoot(_currentModule);
                     moduleFiles = moduleFiles.Where(f =>
                     {
-                        string fileRoot = Andastra.Parsing.Extract.Installation.Installation.GetModuleRoot(Path.GetFileName(f));
+                        string fileRoot = BioWare.NET.Extract.Installation.Installation.GetModuleRoot(Path.GetFileName(f));
                         return fileRoot.Equals(moduleRoot, StringComparison.OrdinalIgnoreCase);
                     }).ToList();
                 }
@@ -268,7 +268,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 5. Enumerate from TEXTURE_PACKS (ERF files: swpc_tex_tpa.erf, swpc_tex_tpb.erf, swpc_tex_tpc.erf, swpc_tex_gui.erf)
-            string texturePacksPath = Andastra.Parsing.Extract.Installation.Installation.GetTexturePacksPath(installPath);
+            string texturePacksPath = BioWare.NET.Extract.Installation.Installation.GetTexturePacksPath(installPath);
             if (Directory.Exists(texturePacksPath))
             {
                 string[] texturePackFiles = new[]
@@ -311,11 +311,11 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // 6. Enumerate from STREAM directories (Music, Sounds, Voice, Waves, Lips)
             string[] streamDirectories = new[]
             {
-                Andastra.Parsing.Extract.Installation.Installation.GetStreamMusicPath(installPath),
-                Andastra.Parsing.Extract.Installation.Installation.GetStreamSoundsPath(installPath),
-                Andastra.Parsing.Extract.Installation.Installation.GetStreamVoicePath(installPath),
-                Andastra.Parsing.Extract.Installation.Installation.GetStreamWavesPath(installPath),
-                Andastra.Parsing.Extract.Installation.Installation.GetLipsPath(installPath)
+                BioWare.NET.Extract.Installation.Installation.GetStreamMusicPath(installPath),
+                BioWare.NET.Extract.Installation.Installation.GetStreamSoundsPath(installPath),
+                BioWare.NET.Extract.Installation.Installation.GetStreamVoicePath(installPath),
+                BioWare.NET.Extract.Installation.Installation.GetStreamWavesPath(installPath),
+                BioWare.NET.Extract.Installation.Installation.GetLipsPath(installPath)
             };
 
             foreach (string streamDir in streamDirectories)
@@ -352,7 +352,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             }
 
             // 7. Enumerate from LIPS directory (ERF/RIM capsule files)
-            string lipsPath = Andastra.Parsing.Extract.Installation.Installation.GetLipsPath(installPath);
+            string lipsPath = BioWare.NET.Extract.Installation.Installation.GetLipsPath(installPath);
             if (Directory.Exists(lipsPath))
             {
                 var capsuleFiles = Directory.GetFiles(lipsPath)
@@ -389,7 +389,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             // 8. Enumerate from RIMS directory (RIM files, TSL only)
             if (_gameType == GameType.K2)
             {
-                string rimsPath = Andastra.Parsing.Extract.Installation.Installation.GetRimsPath(installPath);
+                string rimsPath = BioWare.NET.Extract.Installation.Installation.GetRimsPath(installPath);
                 if (Directory.Exists(rimsPath))
                 {
                     var rimFiles = Directory.GetFiles(rimsPath, "*.rim", SearchOption.TopDirectoryOnly);
@@ -430,7 +430,7 @@ namespace Andastra.Runtime.Content.ResourceProviders
             {
                 ct.ThrowIfCancellationRequested();
 
-                Andastra.Parsing.Extract.ResourceResult result = _installation.Resources.LookupResource(
+                BioWare.NET.Extract.ResourceResult result = _installation.Resources.LookupResource(
                     id.ResName,
                     id.ResType,
                     null,
@@ -460,9 +460,9 @@ namespace Andastra.Runtime.Content.ResourceProviders
         /// <remarks>
         /// This method provides synchronous resource loading by ResRef and ResourceType parameters.
         /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
-        /// Based on swkotor2.exe: Resource lookup uses CExoKeyTable for resource resolution.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Resource lookup uses CExoKeyTable for resource resolution.
         /// </remarks>
-        public byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType)
+        public byte[] LoadResource(BioWare.NET.Common.ResRef resRef, ResourceType resourceType)
         {
             if (resRef == null || resRef.IsBlank() || resourceType == null || resourceType.IsInvalid)
             {
@@ -475,14 +475,14 @@ namespace Andastra.Runtime.Content.ResourceProviders
 
         #region Type Conversion
 
-        private static Andastra.Parsing.Extract.Installation.SearchLocation? ConvertSearchLocation(Andastra.Runtime.Content.Interfaces.SearchLocation location)
+        private static BioWare.NET.Extract.Installation.SearchLocation? ConvertSearchLocation(Andastra.Runtime.Content.Interfaces.SearchLocation location)
         {
             switch (location)
             {
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Override: return Andastra.Parsing.Extract.Installation.SearchLocation.OVERRIDE;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Module: return Andastra.Parsing.Extract.Installation.SearchLocation.MODULES;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin: return Andastra.Parsing.Extract.Installation.SearchLocation.CHITIN;
-                case Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks: return Andastra.Parsing.Extract.Installation.SearchLocation.TEXTURES_TPA;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Override: return BioWare.NET.Extract.Installation.SearchLocation.OVERRIDE;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Module: return BioWare.NET.Extract.Installation.SearchLocation.MODULES;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.Chitin: return BioWare.NET.Extract.Installation.SearchLocation.CHITIN;
+                case Andastra.Runtime.Content.Interfaces.SearchLocation.TexturePacks: return BioWare.NET.Extract.Installation.SearchLocation.TEXTURES_TPA;
                 default: return null;
             }
         }

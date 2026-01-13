@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering.Upscaling
+namespace Andastra.Game.Graphics.MonoGame.Rendering.Upscaling
 {
     /// <summary>
     /// NVIDIA DLSS (Deep Learning Super Sampling) integration.

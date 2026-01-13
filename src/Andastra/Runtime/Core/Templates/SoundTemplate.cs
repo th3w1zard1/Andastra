@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Templates
     /// </summary>
     /// <remarks>
     /// Sound Template:
-    /// - Based on swkotor2.exe sound system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) sound system
     /// - Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
     /// - "SoundResRef" @ 0x007b5f70 (sound resource reference field), "PlaySound" @ 0x007c5f70 (sound playback function)
     /// - "Volume" @ 0x007c6110 (sound volume field), "MinVolumeDist" @ 0x007c60c4, "MaxVolumeDist" @ 0x007c60d8 (sound distance falloff fields)

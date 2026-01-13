@@ -4,12 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
+using BioWare.NET;
+using BioWare.NET.Common;
 using JetBrains.Annotations;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using Game = Andastra.Parsing.Common.BioWareGame;
+using Game = BioWare.NET.Common.BioWareGame;
 
 namespace KotorDiff.Cache
 {

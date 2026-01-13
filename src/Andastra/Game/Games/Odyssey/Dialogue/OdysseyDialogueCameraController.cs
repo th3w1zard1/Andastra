@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Game.Games.Common.Dialogue;
 using DialogueCameraAngle = Andastra.Runtime.Core.Camera.DialogueCameraAngle;
 
-namespace Andastra.Runtime.Games.Odyssey.Dialogue
+namespace Andastra.Game.Games.Odyssey.Dialogue
 {
     /// <summary>
     /// Odyssey engine implementation of dialogue camera controller.

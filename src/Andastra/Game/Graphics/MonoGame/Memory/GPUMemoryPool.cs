@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Memory
+namespace Andastra.Game.Graphics.MonoGame.Memory
 {
     /// <summary>
     /// GPU memory pool for efficient GPU memory allocation.

@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Eclipse engine delay scheduler implementation.

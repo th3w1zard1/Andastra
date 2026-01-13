@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Pick Up Item Action:
-    /// - Based on swkotor2.exe ActionPickUpItem NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionPickUpItem NWScript function
     /// - Located via string references: "TakeItem" @ 0x007be4f0 (take item action), "PickUpItem" action type (ACTION_TYPE_PICKUP_ITEM constant)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (acquire item script event, 0x1d), "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (acquire item event, case 0x1c)
     /// - "Mod_OnAcquirItem" @ 0x007be7e0 (module acquire item script), "ITEMRECEIVED" @ 0x007bdf58 (item received global variable)
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Core.Actions
             float distance = toItem.Length();
 
             // Move towards item if not in range
-            // Based on swkotor2.exe: ActionPickUpItem implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionPickUpItem implementation
             // Located via string references: "TakeItem" @ 0x007be4f0
             // Original implementation: Moves actor to item location before pickup
             // Pickup range: ~1.5 units (verified from original engine behavior)
@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Core.Actions
             _approached = true;
 
             // Pick up the item
-            // Based on swkotor2.exe: Item acquisition triggers EVENT_ACQUIRE_ITEM
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item acquisition triggers EVENT_ACQUIRE_ITEM
             // Located via string references: "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4
             // "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4
             // Original implementation: Adds item to inventory, then fires ON_ACQUIRE_ITEM event
@@ -109,7 +109,7 @@ namespace Andastra.Runtime.Core.Actions
             if (inventory.AddItem(item))
             {
                 // Fire OnAcquireItem script event
-                // Based on swkotor2.exe: EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ACQUIRE_ITEM fires OnAcquireItem script when item is acquired
                 // Located via string references: "EVENT_ACQUIRE_ITEM" @ 0x007bcbf4 (case 0x19), "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACQUIRE_ITEM" @ 0x007bc8c4 (0x1d)
                 // Original implementation: EVENT_ACQUIRE_ITEM fires on actor entity when item is successfully picked up
                 IEventBus eventBus = actor.World.EventBus;

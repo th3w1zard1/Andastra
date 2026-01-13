@@ -1,12 +1,12 @@
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Data;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Aurora.Data;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Component for creature entities in Aurora engine (Neverwinter Nights).

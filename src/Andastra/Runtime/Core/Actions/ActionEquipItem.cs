@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Equip Item Action:
-    /// - Based on swkotor2.exe ActionEquipItem NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionEquipItem NWScript function
     /// - Located via string references: "EquipItem" @ 0x007be4e0, "EquippedItem" @ 0x007c23a0
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594, "Mod_OnEquipItem" @ 0x007beac8
     /// - Inventory system: "Inventory" @ 0x007bd658, "InventorySlot" @ 0x007c49bc, "Item" @ 0x007bc54c
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Equip item to slot
-            // Based on swkotor2.exe: Equip item implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Equip item implementation
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_EQUIP_ITEM" @ 0x007bc594, "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
             // Original implementation: Sets item in equipment slot, modifies entity stats, fires OnInventoryDisturbed script event
             // OnInventoryDisturbed fires when items are added/removed/equipped/unequipped (CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED = 0x1b)
@@ -109,7 +109,7 @@ namespace Andastra.Runtime.Core.Actions
             inventory.SetItemInSlot(_inventorySlot, item);
 
             // Fire OnInventoryDisturbed script event
-            // Based on swkotor2.exe: ON_INVENTORY_DISTURBED fires when items are equipped/unequipped
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ON_INVENTORY_DISTURBED fires when items are equipped/unequipped
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
             // Original implementation: OnInventoryDisturbed script fires on actor entity when inventory is modified (equip/unequip/add/remove)
             IEventBus eventBus = actor.World?.EventBus;

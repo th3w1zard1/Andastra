@@ -5,7 +5,7 @@ using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 using Andastra.Runtime.MonoGame.Rendering;
 
-namespace Andastra.Runtime.MonoGame.Backends
+namespace Andastra.Game.Graphics.MonoGame.Backends
 {
     /// <summary>
     /// Vulkan graphics backend implementation.

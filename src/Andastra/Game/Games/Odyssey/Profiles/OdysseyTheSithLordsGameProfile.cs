@@ -4,7 +4,7 @@ using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Profiles
+namespace Andastra.Game.Engines.Odyssey.Profiles
 {
     /// <summary>
     /// Game profile for KOTOR 2: The Sith Lords (TSL).
@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
     /// </summary>
     /// <remarks>
     /// KOTOR 2 Game Profile:
-    /// - Based on swkotor2.exe game profile system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game profile system
     /// - Located via string references: Game version checking, resource path resolution
     /// - Game identification: "swkotor2" @ 0x007b575c, "swKotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644
     /// - "KotOR2" @ 0x0080c210, "KotorCin" @ 0x007b5630
@@ -27,7 +27,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Profiles
     /// - Feature support: Influence system, Prestige Classes, Combat Forms, Item Crafting supported in K2 (not in K1)
     /// - K2-specific features: Workbench, Lab Station, Item Breakdown (crafting system)
     /// - K2 does not support Pazaak Den (replaced with Pazaak cards), supports Pazaak minigame
-    /// - Based on swkotor2.exe game version detection and resource loading
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game version detection and resource loading
     /// - FUN_00633270 @ 0x00633270 sets up all game directories including MODULES, OVERRIDE, SAVES
     /// </remarks>
     public class OdysseyTheSithLordsGameProfile : BaseEngineProfile

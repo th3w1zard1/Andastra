@@ -1,7 +1,7 @@
 using System.Numerics;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.Games.Eclipse.Lighting
+namespace Andastra.Game.Games.Eclipse.Lighting
 {
     /// <summary>
     /// Fog settings for Eclipse engine lighting system.

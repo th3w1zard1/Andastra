@@ -8,7 +8,7 @@ using System.Text;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Raytracing
+namespace Andastra.Game.Graphics.MonoGame.Raytracing
 {
     /// <summary>
     /// Native hardware raytracing system using DXR/Vulkan RT.

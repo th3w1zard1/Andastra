@@ -4,20 +4,20 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
-using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
 using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
 using DoorData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.DoorData;
 using PlaceableData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.PlaceableData;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Resolves model ResRefs from entity appearance types and object types.
     /// </summary>
     /// <remarks>
     /// Model Resolver:
-    /// - Based on swkotor2.exe model resolution system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model resolution system
     /// - Located via string references: Model loading from appearance.2da, placeables.2da, genericdoors.2da
     /// - "Appearance_Type" @ 0x007c40f0 (appearance type field), "AppearanceType" @ 0x007c84c8 (appearance type field variant)
     /// - "ModelResRef" @ 0x007c2f6c (model resource reference), "ModelName" @ 0x007c1c8c (model name field)
@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// - genericdoors.2da: modelname column for doors (door model ResRef)
     /// - Body variation determines which model variant to use (0 = ModelA, 1 = ModelB, etc.)
     /// - Model resolution order: 1) RenderableComponent.ModelResRef (if set), 2) Resolve from appearance.2da/placeables.2da/genericdoors.2da
-    /// - Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (resolve creature model from appearance)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005261b0 @ 0x005261b0 (resolve creature model from appearance)
     /// </remarks>
     public static class ModelResolver
     {

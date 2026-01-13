@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Multi-threaded rendering system for parallel command buffer generation.
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Rendering System (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: Windows thread API functions
     /// - Thread management: CreateThread, GetCurrentThread, GetCurrentThreadId, ExitThread
     /// - Thread control: SetThreadPriority, ResumeThread, SuspendThread, GetExitCodeThread

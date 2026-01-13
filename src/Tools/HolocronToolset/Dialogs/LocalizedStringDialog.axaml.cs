@@ -1,13 +1,13 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.TLK;
+using BioWare.NET;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.TLK;
 using HolocronToolset.Data;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;

@@ -3,9 +3,9 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Games.Aurora;
+using Andastra.Game.Games.Aurora;
 
-namespace Andastra.Runtime.Engines.Aurora
+namespace Andastra.Game.Engines.Aurora
 {
     /// <summary>
     /// Aurora Engine implementation for Neverwinter Nights and Neverwinter Nights 2.

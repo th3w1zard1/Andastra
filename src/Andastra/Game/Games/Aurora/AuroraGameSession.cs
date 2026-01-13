@@ -4,10 +4,10 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Games.Aurora;
+using Andastra.Game.Games.Aurora;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Aurora
+namespace Andastra.Game.Engines.Aurora
 {
     /// <summary>
     /// Aurora Engine game session implementation for Neverwinter Nights and Neverwinter Nights 2.
@@ -80,7 +80,7 @@ namespace Andastra.Runtime.Engines.Aurora
                 throw new InvalidOperationException("Resource provider must be AuroraResourceProvider for Aurora engine");
             }
 
-            // Initialize module loader (using Andastra.Runtime.Games.Aurora implementation)
+            // Initialize module loader (using Andastra.Game.Games.Aurora implementation)
             _moduleLoader = new AuroraModuleLoader(engine.World, engine.ResourceProvider);
         }
 

@@ -1,9 +1,9 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Odyssey engine-specific implementation of faction component for KOTOR 1 and KOTOR 2.

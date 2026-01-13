@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Andastra.Runtime.Scripting.Interfaces
+namespace Andastra.Game.Scripting.Interfaces
 {
     /// <summary>
     /// Script variable types.
@@ -26,7 +26,7 @@ namespace Andastra.Runtime.Scripting.Interfaces
     /// </summary>
     /// <remarks>
     /// Variable Type System:
-    /// - Based on swkotor2.exe NWScript variable type system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript variable type system
     /// - Located via string references: Variable type handling in NCS VM stack operations
     /// - NCS VM: NCS file format "NCS " signature @ offset 0, "V1.0" version @ offset 4, 0x42 marker @ offset 8, instructions start @ offset 0x0D
     /// - Variable types: Void (0), Int (1), Float (2), String (3), Object (4), Vector (5), Location (6), Effect (7), Event (8), Talent (9), Action (10)

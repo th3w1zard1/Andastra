@@ -1,5 +1,5 @@
 using System;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Game.Core;
 using Andastra.Runtime.Graphics;
@@ -9,14 +9,14 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Core = Andastra.Runtime.Game.Core;
 
-namespace Andastra.Runtime.Game
+namespace Andastra.Game.Game
 {
     /// <summary>
     /// Entry point for the Odyssey Engine game launcher.
     /// </summary>
     /// <remarks>
     /// Program Entry Point:
-    /// - Based on swkotor2.exe: entry @ 0x0076e2dd (PE entry point)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): entry @ 0x0076e2dd (PE entry point)
     /// - Main initialization: FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Located via string references: "swkotor2" @ 0x007b575c (executable name), "KotOR2" @ 0x0080c210 (BioWareGame title)
     /// - Original implementation: Entry point calls GetVersionExA, initializes heap, calls FUN_00404250

@@ -5,10 +5,10 @@ using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Eclipse Engine navigation mesh with dynamic obstacle support.

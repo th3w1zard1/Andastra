@@ -5,17 +5,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing.Tools;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Installation;
+using BioWare.NET.TSLPatcher.Mods;
+using BioWare.NET.Tools;
 using Andastra.Utility;
 using KotorDiff.Diff;
-using Andastra.Parsing.TSLPatcher;
+using BioWare.NET.TSLPatcher;
 using Tuple = System.Tuple;
 using SystemTextEncoding = System.Text.Encoding;
-using Game = Andastra.Parsing.Common.BioWareGame;
+using Game = BioWare.NET.Common.BioWareGame;
 
 namespace KotorDiff.AppCore
 {
@@ -776,7 +776,7 @@ namespace KotorDiff.AppCore
             }
 
             // Use TSLPatchDataGenerator for batch generation
-            var generator = new Andastra.Parsing.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
+            var generator = new BioWare.NET.TSLPatcher.TSLPatchDataGenerator(tslpatchdataPath);
 
             var generatedFiles = generator.GenerateAllFiles(modifications, baseDataPath);
 
@@ -794,7 +794,7 @@ namespace KotorDiff.AppCore
             LogOutput($"\nGenerating {iniFilename} at: {iniPath}");
 
             // Use TSLPatcher INI serializer
-            var serializer = new Andastra.Parsing.Mods.TSLPatcherINISerializer();
+            var serializer = new BioWare.NET.TSLPatcher.Mods.TSLPatcherINISerializer();
             string iniContent = serializer.Serialize(modifications, includeHeader: true, includeSettings: true);
                 File.WriteAllText(iniPath, iniContent, SystemTextEncoding.UTF8);
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace Andastra.Runtime.MonoGame.Enums
+namespace Andastra.Game.Graphics.MonoGame.Enums
 {
     /// <summary>
     /// PBR material types supported by the Odyssey renderer.

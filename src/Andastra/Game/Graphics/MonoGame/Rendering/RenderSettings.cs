@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Comprehensive render settings for the Odyssey engine.

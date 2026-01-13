@@ -1,0 +1,211 @@
+using System.Collections.Generic;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Tools;
+
+namespace BioWare.NET.Common
+{
+    // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module_loader.py (backend-agnostic loader)
+    public static class ModuleDataSearch
+    {
+        // TODO: Search locations when circular dependency is resolved
+        public static readonly string[] SearchOrder2DA = {
+            "OVERRIDE",
+            "CHITIN",
+        };
+    }
+
+    /// <summary>
+    /// Minimal module resource interfaces to mirror PyKotor loader contracts.
+    /// </summary>
+    public interface IModuleResource<T>
+    {
+        T Resource();
+    }
+
+    public interface IModule
+    {
+        ModuleResource Git();
+        ModuleResource Layout();
+        ModuleResource Creature(string resref);
+        ModuleResource Door(string resref);
+        ModuleResource Placeable(string resref);
+    }
+
+    /// <summary>
+    /// Backend-agnostic module data loader (partial parity).
+    /// </summary>
+    public class ModuleDataLoader
+    {
+        private readonly Installation _installation;
+
+        public TwoDA TableDoors { get; private set; }
+        public TwoDA TablePlaceables { get; private set; }
+        public TwoDA TableCreatures { get; private set; }
+        public TwoDA TableHeads { get; private set; }
+        public TwoDA TableBaseItems { get; private set; }
+
+        public ModuleDataLoader(Installation installation)
+        {
+            _installation = installation;
+            // TODO: Load 2DA tables when circular dependency is resolved
+        }
+
+        public (object git, object lyt) GetModuleResources(IModule module)
+        {
+            object git = null;
+            object lyt = null;
+
+            ModuleResource gitRes = module?.Git();
+            if (gitRes != null)
+            {
+                git = gitRes.Resource();
+            }
+
+            ModuleResource lytRes = module?.Layout();
+            if (lytRes != null)
+            {
+                lyt = lytRes.Resource();
+            }
+
+            return (git, lyt);
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module_loader.py:98-173
+        // Original: def get_creature_model_data(self, git_creature, module: Module) -> dict[str, str | None]:
+        public Dictionary<string, object> GetCreatureModelData(GITCreature gitCreature, Module module)
+        {
+            // Get creature resource from module
+            string creatureResRef = gitCreature?.ResRef?.ToString() ?? "";
+            var creatureResource = module.Creature(creatureResRef);
+
+            if (creatureResource == null)
+            {
+                return new Dictionary<string, object>
+                {
+                    { "body_model", null },
+                    { "body_texture", null },
+                    { "head_model", null },
+                    { "head_texture", null },
+                    { "rhand_model", null },
+                    { "lhand_model", null },
+                    { "mask_model", null }
+                };
+            }
+
+            if (!(creatureResource.Resource() is Resource.Formats.GFF.Generics.UTC.UTC utc))
+            {
+                return new Dictionary<string, object>
+                {
+                    { "body_model", null },
+                    { "body_texture", null },
+                    { "head_model", null },
+                    { "head_texture", null },
+                    { "rhand_model", null },
+                    { "lhand_model", null },
+                    { "mask_model", null }
+                };
+            }
+
+            // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module_loader.py:145-163
+            // Original: body_model, body_texture = creature.get_body_model(...)
+            (string bodyModel, string bodyTexture) = Creature.GetBodyModel(
+                utc,
+                _installation,
+                TableCreatures,
+                TableBaseItems
+            );
+
+            // Original: head_model, head_texture = creature.get_head_model(...)
+            (string headModel, string headTexture) = Creature.GetHeadModel(
+                utc,
+                _installation,
+                TableCreatures,
+                TableHeads
+            );
+
+            // Original: rhand_model, lhand_model = creature.get_weapon_models(...)
+            (string rhandModel, string lhandModel) = Creature.GetWeaponModels(
+                utc,
+                _installation,
+                TableCreatures,
+                TableBaseItems
+            );
+
+            // Original: mask_model = creature.get_mask_model(...)
+            string maskModel = Creature.GetMaskModel(utc, _installation);
+
+            return new Dictionary<string, object>
+            {
+                { "body_model", bodyModel },
+                { "body_texture", bodyTexture },
+                { "head_model", headModel },
+                { "head_texture", headTexture },
+                { "rhand_model", rhandModel },
+                { "lhand_model", lhandModel },
+                { "mask_model", maskModel }
+            };
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module_loader.py:175-199
+        // Original: def get_door_model_name(self, door, module: Module) -> str | None:
+        public string GetDoorModelName(GITDoor door, Module module)
+        {
+            // Get door resource from module
+            string doorResRef = door?.ResRef?.ToString() ?? "";
+            var doorResource = module.Door(doorResRef);
+
+            if (doorResource == null)
+            {
+                return null;
+            }
+
+            if (!(doorResource.Resource() is UTD utd))
+            {
+                return null;
+            }
+
+            // Get appearance_id from UTD and lookup in TableDoors
+            var appearanceId = utd.AppearanceId;
+            var row = TableDoors.GetRow(appearanceId);
+
+            if (row == null)
+            {
+                return null;
+            }
+
+            return row.GetString("modelname");
+        }
+
+        // Matching PyKotor implementation at vendor/PyKotor/Libraries/PyKotor/src/pykotor/common/module_loader.py:201-225
+        // Original: def get_placeable_model_name(self, placeable, module: Module) -> str | None:
+        public string GetPlaceableModelName(GITPlaceable placeable, Module module)
+        {
+            // Get placeable resource from module
+            string placeableResRef = placeable?.ResRef?.ToString() ?? "";
+            var placeableResource = module.Placeable(placeableResRef);
+
+            if (placeableResource == null)
+            {
+                return null;
+            }
+
+            if (!(placeableResource.Resource() is UTP utp))
+            {
+                return null;
+            }
+
+            // Get appearance_id from UTP and lookup in TablePlaceables
+            var appearanceId = utp.AppearanceId;
+            var row = TablePlaceables.GetRow(appearanceId);
+
+            if (row == null)
+            {
+                return null;
+            }
+
+            return row.GetString("modelname");
+        }
+    }
+}

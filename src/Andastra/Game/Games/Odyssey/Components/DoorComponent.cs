@@ -1,9 +1,9 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey engine-specific door component implementation.
@@ -192,7 +192,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Min1HP Flag:
-        /// - Based on swkotor2.exe door system (KotOR2/TSL only)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door system (KotOR2/TSL only)
         /// - Located via UTD field: "Min1HP" (UInt8/Byte, KotOR2 only)
         /// - Original implementation: If Min1HP is true (1), door cannot drop below 1 HP when damaged
         /// - Plot doors: Min1HP=1 prevents door from being destroyed, making it effectively indestructible
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// NotBlastable Flag:
-        /// - Based on swkotor2.exe door system (KotOR2/TSL only)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door system (KotOR2/TSL only)
         /// - Located via UTD field: "NotBlastable" (UInt8/Byte, KotOR2 only)
         /// - Original implementation: If NotBlastable is true (1), door cannot be blasted (explosive damage)
         /// - Blasting: Refers to damage from explosives, grenades, or force powers that bypass normal hardness

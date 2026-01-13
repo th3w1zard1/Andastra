@@ -43,7 +43,7 @@ namespace Andastra.Runtime.Core.Dialogue
     /// </summary>
     /// <remarks>
     /// Dialogue System:
-    /// - Based on swkotor2.exe dialogue system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) dialogue system
     /// - ExecuteDialogue @ 0x005e9920 - Main dialogue execution function (located via "Error: dialogue can't find object '%s'!" @ 0x007c3730)
     /// - LoadScriptHooks @ 0x0050c510 - Loads script hook references including ScriptDialogue/ScriptEndDialogue (located via "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0)
     /// - SaveEntityState @ 0x005226d0 - Saves entity state including ScriptDialogue/ScriptEndDialogue (located via "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0)
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Core.Dialogue
             _availableReplies = new List<DialogueReply>();
 
             // Fire OnConversation script event
-            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE fires when conversation begins
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE fires when conversation begins
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (0x7), "ScriptDialogue" @ 0x007bee40
             // Original implementation: OnConversation script fires on owner entity (NPC) when conversation starts
             if (_world != null && _world.EventBus != null)
@@ -411,7 +411,7 @@ namespace Andastra.Runtime.Core.Dialogue
             State = DialogueState.Ending;
 
             // Fire OnEndDialogue script event
-            // Based on swkotor2.exe: ScriptEndDialogue fires when conversation ends
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ScriptEndDialogue fires when conversation ends
             // Located via string references: "ScriptEndDialogue" @ 0x007bede0
             // Original implementation: OnEndDialogue script fires on owner entity (NPC) when conversation ends
             if (_world != null && _world.EventBus != null && _owner != null)

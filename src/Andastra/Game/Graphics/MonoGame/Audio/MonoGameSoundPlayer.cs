@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Formats.WAV;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Microsoft.Xna.Framework.Audio;
 
-namespace Andastra.Runtime.MonoGame.Audio
+namespace Andastra.Game.Graphics.MonoGame.Audio
 {
     /// <summary>
     /// MonoGame implementation of ISoundPlayer for playing sound effects.
@@ -23,7 +23,7 @@ namespace Andastra.Runtime.MonoGame.Audio
     /// </summary>
     /// <remarks>
     /// Sound Player (MonoGame Implementation):
-    /// - Based on swkotor2.exe sound effect playback system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) sound effect playback system
     /// - Located via string references: "SoundResRef" @ 0x007b5f70, "SoundList" @ 0x007bd080, "Sounds" @ 0x007c1038
     /// - "Sound" @ 0x007bc500, "SoundOptions" @ 0x007b5720, "Disable Sound" @ 0x007b5730
     /// - "guisounds" @ 0x007b5f7c (GUI sound effects), "PartSounds" @ 0x007bd440 (party sounds)
@@ -319,7 +319,7 @@ namespace Andastra.Runtime.MonoGame.Audio
         /// blocking of the main thread during resource loading. This matches the pattern
         /// used in MonoGameVoicePlayer for async resource loading.
         /// 
-        /// Based on swkotor2.exe sound loading system - original engine loads WAV resources
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) sound loading system - original engine loads WAV resources
         /// asynchronously from disk/archive files to prevent audio playback stalls.
         /// </summary>
         /// <param name="soundResRef">The sound resource reference to load.</param>
@@ -347,7 +347,7 @@ namespace Andastra.Runtime.MonoGame.Audio
                         return null;
                     }
 
-                    // Convert Andastra.Parsing WAV to MonoGame-compatible format
+                    // Convert BioWare.NET WAV to MonoGame-compatible format
                     byte[] wavBytes = CreateMonoGameWavStream(wav);
                     if (wavBytes == null || wavBytes.Length == 0)
                     {
@@ -386,7 +386,7 @@ namespace Andastra.Runtime.MonoGame.Audio
         }
 
         /// <summary>
-        /// Converts Andastra.Parsing WAV object to MonoGame-compatible RIFF/WAVE byte array.
+        /// Converts BioWare.NET WAV object to MonoGame-compatible RIFF/WAVE byte array.
         /// 
         /// Handles all WAV formats comprehensively:
         /// - PCM (8-bit, 16-bit, 24-bit, 32-bit) - converts to 16-bit PCM

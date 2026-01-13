@@ -5,11 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Logger;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Common.Logger;
 using JetBrains.Annotations;
-using NCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
+using NCS = ResourceNCS::BioWare.NET.Resource.Formats.NCS.NCS;
 
 namespace Andastra
 {

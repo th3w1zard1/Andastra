@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Textures
+namespace Andastra.Game.Graphics.MonoGame.Textures
 {
     /// <summary>
     /// Texture streaming and atlas management system.

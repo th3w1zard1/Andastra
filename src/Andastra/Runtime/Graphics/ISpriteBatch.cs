@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Sprite Batch Interface:
-    /// - Based on swkotor2.exe 2D rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 2D rendering system
     /// - Located via string references: Original game uses DirectX 8/9 for 2D sprite rendering
     /// - GUI rendering: "gui3D_room" @ 0x007cc144 (3D GUI room), "Render Window" @ 0x007b5680
     /// - Original implementation: Renders 2D sprites (GUI elements, text, HUD) using DirectX immediate mode

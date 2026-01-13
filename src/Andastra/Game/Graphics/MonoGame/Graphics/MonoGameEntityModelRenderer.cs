@@ -1,6 +1,6 @@
 using System;
 using System.Numerics;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IEntityModelRenderer.
@@ -35,7 +35,7 @@ namespace Andastra.Runtime.MonoGame.Graphics
             // EntityModelRenderer requires both GameDataManager and Installation for model loading
             // GameDataManager provides access to 2DA tables (appearance.2da, placeables.2da, etc.) for model resolution
             // Installation provides access to resource system (MDL files, textures, etc.)
-            // Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
             // Note: Using object types to avoid circular dependency - EntityModelRenderer accepts object for gameDataManager
             if (gameDataManager != null && installation != null)
             {

@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Andastra.Runtime.MonoGame.UI
+namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Main menu UI component using MonoGame SpriteBatch rendering.
@@ -10,7 +10,7 @@ namespace Andastra.Runtime.MonoGame.UI
     /// </summary>
     /// <remarks>
     /// Main Menu Rendering:
-    /// - Based on swkotor2.exe main menu system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) main menu system
     /// - Located via string references: "MAINMENU" @ 0x007cc030, "RIMS:MAINMENU" @ 0x007b6044
     /// - "mainmenu_p" @ 0x007cc000, "mainmenu8x6_p" @ 0x007cc00c (main menu panel GUI)
     /// - "mainmenu01-05" @ 0x007cc108-0x007cc114 (main menu button GUI elements)

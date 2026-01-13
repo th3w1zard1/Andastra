@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.BWM;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.BWM;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Represents a single tile in an Aurora area.

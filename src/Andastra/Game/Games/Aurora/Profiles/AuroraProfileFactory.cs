@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Engines.Common;
 
-namespace Andastra.Runtime.Engines.Aurora.Profiles
+namespace Andastra.Game.Engines.Aurora.Profiles
 {
     /// <summary>
     /// Factory for creating Aurora Engine game profiles based on game type.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Common.Script;
+using BioWare.NET.Common.Script;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
@@ -12,7 +12,7 @@ using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.Types;
 using Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Runtime.Engines.Odyssey.EngineApi
+namespace Andastra.Game.Engines.Odyssey.EngineApi
 {
     /// <summary>
     /// Base engine API implementation for Odyssey engine family (KOTOR, TSL, Jade Empire).
@@ -218,7 +218,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 }
 
                 // Execute script and track instruction count
-                // Based on swkotor2.exe: Script execution with instruction budget tracking
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script execution with instruction budget tracking
                 // Located via string references: Script execution budget limits per frame
                 // Original implementation: Tracks instruction count per entity for budget enforcement
                 int result = _vm.ExecuteScript(scriptName, scriptCtx);

@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Cast Spell At Location Action:
-    /// - Based on swkotor2.exe spell casting system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) spell casting system
     /// - Located via string references: "ActionCastSpellAtLocation" NWScript function (routine ID varies by game)
     /// - Location references: "LOCATION" @ 0x007c2850 (location type constant), "ValLocation" @ 0x007c26ac (location value field)
     /// - "CatLocation" @ 0x007c26dc (location catalog field), "FollowLocation" @ 0x007beda8 (follow location action)
@@ -44,7 +44,7 @@ namespace Andastra.Runtime.Core.Actions
         private const float CastRange = 20.0f; // Default spell range
         /// <summary>
         /// Default projectile speed for spell projectiles (units per second).
-        /// Based on swkotor2.exe: Spell projectile speed is constant across all spells.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell projectile speed is constant across all spells.
         /// Note: spells.2da does not contain a projectile speed column, so the engine uses a constant value.
         /// This value differs from weapon projectile speed (which uses 16.0f in vendor/reone implementation).
         /// </summary>
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Core.Actions
             if (distance > CastRange && !_approached)
             {
                 // Get movement speed for spell casting
-                // Based on swkotor2.exe: Movement speed during spell casting uses entity's walk speed
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Movement speed during spell casting uses entity's walk speed
                 // Located via analysis: spells.2da does not contain a movement speed column
                 // The original engine uses the caster's walk speed (from appearance.2da WALKRATE) for movement
                 // Movement speed effects (EffectMovementSpeedIncrease/Decrease) are already applied via IStatsComponent.WalkSpeed
@@ -117,7 +117,7 @@ namespace Andastra.Runtime.Core.Actions
                 Vector3 newPosition = transform.Position + direction * moveDistance;
 
                 // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-                // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
                 IArea area = actor.World?.CurrentArea;
                 if (area != null && area.NavigationMesh != null)
                 {
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Core.Actions
                 stats.CurrentFP = Math.Max(0, stats.CurrentFP - forcePointCost);
 
                 // Apply spell effects at target location
-                // Based on swkotor2.exe: Spell casting at location implementation
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell casting at location implementation
                 // Located via string references: "ActionCastSpellAtLocation" NWScript function
                 // Original implementation: Applies spell effects to entities in range of target location
                 // Spell types: Instant (apply immediately), Area (affect all in radius), Projectile (create projectile entity)
@@ -176,13 +176,13 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the projectile speed for a spell projectile.
-        /// Based on swkotor2.exe: Spell projectile speed is constant across all spells.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell projectile speed is constant across all spells.
         /// </summary>
         /// <param name="spell">The spell data (may be null if unavailable).</param>
         /// <returns>The projectile speed in units per second.</returns>
         /// <remarks>
         /// Spell Projectile Speed:
-        /// - Based on swkotor2.exe: Spell projectile speed is constant across all spells
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell projectile speed is constant across all spells
         /// - Located via analysis: spells.2da does not contain a projectile speed column
         /// - The original engine uses a constant value (30.0 units per second) for all spell projectiles
         /// - This value differs from weapon projectile speed which uses 16.0 units per second (vendor/reone: kProjectileSpeed)
@@ -198,14 +198,14 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the movement speed to use when moving towards target location during spell casting.
-        /// Based on swkotor2.exe: Movement speed during spell casting uses entity's walk speed.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Movement speed during spell casting uses entity's walk speed.
         /// </summary>
         /// <param name="actor">The caster entity.</param>
         /// <param name="stats">The caster's stats component.</param>
         /// <returns>The movement speed in units per second.</returns>
         /// <remarks>
         /// Movement Speed During Spell Casting:
-        /// - Based on swkotor2.exe: Movement speed during spell casting uses entity's walk speed
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Movement speed during spell casting uses entity's walk speed
         /// - Located via analysis: spells.2da does not contain a movement speed column
         /// - The original engine uses the caster's walk speed (from appearance.2da WALKRATE) for movement
         /// - Movement speed effects (EffectMovementSpeedIncrease/Decrease) are already applied via IStatsComponent.WalkSpeed
@@ -220,19 +220,19 @@ namespace Andastra.Runtime.Core.Actions
             if (stats == null)
             {
                 // Fallback: Default walk speed if stats component is missing
-                // Based on swkotor2.exe: Default movement speed when stats unavailable
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Default movement speed when stats unavailable
                 // Matches ActionCastSpellAtObject fallback speed (2.5 units per second)
                 return 2.5f;
             }
 
             // Use entity's walk speed (already accounts for movement speed effects)
-            // Based on swkotor2.exe: Movement speed during spell casting uses walk speed from appearance.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Movement speed during spell casting uses walk speed from appearance.2da
             // WalkSpeed property already includes all movement speed modifiers from effects
             // (EffectMovementSpeedIncrease/Decrease are applied by the effect system to WalkSpeed)
             float walkSpeed = stats.WalkSpeed;
 
             // Validate walk speed (ensure it's positive and reasonable)
-            // Based on swkotor2.exe: Movement speed validation (minimum 0.1 units per second)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Movement speed validation (minimum 0.1 units per second)
             if (walkSpeed <= 0f)
             {
                 // Fallback: Default walk speed if invalid
@@ -267,7 +267,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Gets the spell radius from spell data.
-        /// Based on swkotor2.exe: Spell range from spells.2da (range column or conjrange column)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell range from spells.2da (range column or conjrange column)
         /// </summary>
         private float GetSpellRadius(dynamic spell)
         {
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Applies spell effects to entities at a target location within radius.
-        /// Based on swkotor2.exe: Spell effects are applied to entities in range at target location
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell effects are applied to entities in range at target location
         /// Located via string references: Spell effect application system applies effects to entities within spell radius
         /// Original implementation: Applies visual effects and executes impact scripts for all entities in range
         /// This is called for both instant spells (immediately) and projectile spells (on impact)
@@ -323,7 +323,7 @@ namespace Andastra.Runtime.Core.Actions
             IEnumerable<IEntity> entitiesInRange = caster.World.GetEntitiesInRadius(targetLocation, spellRadius, ObjectType.Creature);
 
             // Handle spell-specific effects (damage, healing, status effects) from spells.2da
-            // Based on swkotor2.exe: Spell effects are applied to entities in range
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell effects are applied to entities in range
             // Spell effects come from impact scripts (impactscript column) which apply damage/healing/status effects
             // Full implementation: Executes impact scripts directly and applies spell effects from spell data
             // Impact scripts are the primary mechanism for spell effects - they contain all damage, healing, and status effect logic
@@ -336,7 +336,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Apply spell effects to target
-                // Based on swkotor2.exe: Spell effects are applied based on spell data and impact scripts
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell effects are applied based on spell data and impact scripts
                 // This executes impact scripts directly and applies visual effects from spell data
                 ApplySpellEffectsToTarget(caster, target, spell, effectSystem);
             }
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <returns>The duration in seconds, or 2.0f as default if not found.</returns>
         /// <remarks>
         /// Visual Effect Duration:
-        /// - Based on swkotor2.exe: Visual effects duration from visualeffects.2da
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Visual effects duration from visualeffects.2da
         /// - Located via string references: "visualeffects" @ 0x007c4a7c
         /// - Original implementation: Loads visualeffects.2da table, reads "duration" column for the visual effect ID
         /// - Visual effect ID is row index in visualeffects.2da
@@ -400,7 +400,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Applies spell effects at the target location.
-        /// Based on swkotor2.exe: Spell effect application at location
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell effect application at location
         /// Located via string references: Spell effect system for location-based spells
         /// Original implementation: Applies effects to entities in range, creates area effects or projectiles
         /// </summary>
@@ -429,12 +429,12 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Determine spell area of effect radius
-            // Based on swkotor2.exe: Spell range from spells.2da (range column or conjrange column)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell range from spells.2da (range column or conjrange column)
             // Default 5.0 units for area spells, uses conjrange if available, otherwise range
             float spellRadius = GetSpellRadius(spell);
 
             // 4. Apply ground visual effects at target location
-            // Based on swkotor2.exe: Ground visual effects (conjgrndvfx) are applied at the spell target location
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ground visual effects (conjgrndvfx) are applied at the spell target location
             // Located via string references: "CastGrndVisual" @ 0x007c3240, conjgrndvfx column in spells.2da
             // Original implementation: Creates visual effect entity or area effect at target location
             if (spell != null)
@@ -445,7 +445,7 @@ namespace Andastra.Runtime.Core.Actions
                     if (conjGrndVfx > 0)
                     {
                         // Create a temporary entity at the location to display the ground visual effect
-                        // Based on swkotor2.exe: Ground visual effects are rendered as area effects at the spell location
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ground visual effects are rendered as area effects at the spell location
                         IEntity groundVfxEntity = caster.World.CreateEntity(ObjectType.AreaOfEffect, targetLocation, 0f);
                         if (groundVfxEntity != null)
                         {
@@ -456,7 +456,7 @@ namespace Andastra.Runtime.Core.Actions
                             };
                             effectSystem.ApplyEffect(groundVfxEntity, groundVisualEffect, caster);
                             // Schedule entity destruction after visual effect duration
-                            // Based on swkotor2.exe: Ground visual effects persist for their duration from visualeffects.2da
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ground visual effects persist for their duration from visualeffects.2da
                             // Located via string references: "visualeffects" @ 0x007c4a7c, duration column in visualeffects.2da
                             // Original implementation: Visual effects duration is read from visualeffects.2da "duration" column
                             float visualEffectDuration = GetVisualEffectDuration(conjGrndVfx);
@@ -477,7 +477,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 1. Create projectile entity for projectile spells
-            // Based on swkotor2.exe: Projectile spells create projectile entities that travel to target location
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Projectile spells create projectile entities that travel to target location
             // Located via string references: projectile, projectilemodel columns in spells.2da
             // Original implementation: Creates projectile entity with model from projectilemodel column,
             // projectile travels from caster position to target location, applies effects on impact
@@ -499,14 +499,14 @@ namespace Andastra.Runtime.Core.Actions
                             Vector3 projectileStart = casterTransform.Position;
 
                             // Create projectile entity
-                            // Based on swkotor2.exe: Projectile entities use AreaOfEffect object type
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Projectile entities use AreaOfEffect object type
                             // Projectile travels from start to target location
                             IEntity projectileEntity = caster.World.CreateEntity(ObjectType.AreaOfEffect, projectileStart, 0f);
                             if (projectileEntity != null)
                             {
                                 // Store projectile data in entity for rendering/movement system
                                 // Projectile model is stored for rendering system to load and display
-                                // Based on swkotor2.exe: Projectile entities contain model ResRef for rendering
+                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Projectile entities contain model ResRef for rendering
                                 Type entityType = projectileEntity.GetType();
                                 System.Reflection.FieldInfo dataField = entityType.BaseType.GetField("_data", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                                 if (dataField != null)
@@ -526,7 +526,7 @@ namespace Andastra.Runtime.Core.Actions
 
                                 // Projectile will be handled by rendering/movement system
                                 // On impact, projectile applies spell effects to entities at target location
-                                // Based on swkotor2.exe: Projectile impact applies spell effects to entities at target location
+                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Projectile impact applies spell effects to entities at target location
                                 // Located via string references: Spell impact system applies effects when projectile reaches target
                                 // Original implementation: Projectile travels from caster to target, applies effects on impact
                                 Vector3 toTarget = targetLocation - projectileStart;
@@ -534,7 +534,7 @@ namespace Andastra.Runtime.Core.Actions
                                 float distance = toTarget.Length();
 
                                 // Get projectile speed for spell projectile
-                                // Based on swkotor2.exe: Spell projectile speed is constant across all spells
+                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell projectile speed is constant across all spells
                                 // Located via analysis: spells.2da does not contain a projectile speed column
                                 // The original engine uses a constant value for all spell projectiles
                                 // Note: This differs from weapon projectiles which use a different constant (16.0f in vendor/reone)
@@ -556,7 +556,7 @@ namespace Andastra.Runtime.Core.Actions
                                     if (projectileEntity.IsValid && capturedCaster.World != null)
                                     {
                                         // Apply spell effects at impact location
-                                        // Based on swkotor2.exe: Projectile impact applies spell effects to entities at target location
+                                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Projectile impact applies spell effects to entities at target location
                                         // Effects are applied to all entities within spell radius at impact location
                                         ApplySpellEffectsToEntitiesAtLocation(capturedCaster, capturedTargetLocation, capturedSpellRadius, capturedSpell, capturedEffectSystem);
 
@@ -575,7 +575,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 2. Create area effect zone entity for persistent area spells
-            // Based on swkotor2.exe: Persistent area spells (conjduration > 0) create area effect zones
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Persistent area spells (conjduration > 0) create area effect zones
             // Located via string references: conjduration, conjrange columns in spells.2da
             // Original implementation: Creates area effect object that applies effects to entities entering/within range
             // Area effects persist for conjduration seconds, applying effects each round to entities in range
@@ -587,13 +587,13 @@ namespace Andastra.Runtime.Core.Actions
                     if (conjDuration > 0f)
                     {
                         // Create persistent area effect
-                        // Based on swkotor2.exe: Area effects are stored in area's area effect list
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area effects are stored in area's area effect list
                         // Area effects apply effects to entities within range over their duration
                         IArea area = caster.World?.CurrentArea;
                         if (area != null)
                         {
                             // Check if area supports area effects (AuroraArea has AddAreaEffect method)
-                            // Based on swkotor2.exe: Area effects are IAreaEffect instances
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area effects are IAreaEffect instances
                             // Area effects update each frame, applying effects to entities in range
                             // Since IAreaEffect is engine-specific (defined in AuroraArea), we use reflection
                             // to work with the interface without direct dependencies
@@ -623,7 +623,7 @@ namespace Andastra.Runtime.Core.Actions
                                     // The area effect will be updated each frame to apply spell effects to entities in range
 
                                     // Schedule periodic updates for the area effect
-                                    // Based on swkotor2.exe: Area effects update each frame, applying effects to entities in range
+                                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area effects update each frame, applying effects to entities in range
                                     float updateInterval = 0.1f; // Update every 0.1 seconds (10 times per second)
                                     float remainingDuration = conjDuration;
 
@@ -679,7 +679,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Applies spell effects to a target entity.
-        /// Based on swkotor2.exe: Comprehensive spell effect resolution
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Comprehensive spell effect resolution
         /// </summary>
         /// <param name="caster">The entity casting the spell.</param>
         /// <param name="target">The target entity receiving the spell effects.</param>
@@ -691,7 +691,7 @@ namespace Andastra.Runtime.Core.Actions
         /// 2. Executes impact script directly (if available)
         /// 3. Fires script events for compatibility
         /// 4. Applies spell effects from spell data when available
-        /// Based on swkotor2.exe: Spell effects are resolved through impact scripts and spell data
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell effects are resolved through impact scripts and spell data
         /// </remarks>
         private void ApplySpellEffectsToTarget(IEntity caster, IEntity target, dynamic spell, Combat.EffectSystem effectSystem)
         {
@@ -701,7 +701,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 1. Apply visual effects if spell data available
-            // Based on swkotor2.exe: Visual effects (conjhandvfx, conjheadvfx columns) are applied to targets
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Visual effects (conjhandvfx, conjheadvfx columns) are applied to targets
             if (spell != null)
             {
                 try
@@ -736,7 +736,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 2. Execute impact script directly if present
-            // Based on swkotor2.exe: Impact scripts (impactscript column) contain spell effect logic
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts (impactscript column) contain spell effect logic
             // Impact scripts apply damage, healing, status effects based on spell ID and caster level
             // Located via string references: "ImpactScript" @ spells.2da, impact scripts execute on spell impact
             // Impact scripts are the primary mechanism for spell effects - they contain all damage, healing, and status effect logic
@@ -751,12 +751,12 @@ namespace Andastra.Runtime.Core.Actions
                     if (!string.IsNullOrEmpty(impactScript))
                     {
                         // Execute impact script directly using script executor
-                        // Based on swkotor2.exe: Impact scripts receive target as OBJECT_SELF, caster as triggerer
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts receive target as OBJECT_SELF, caster as triggerer
                         // Impact scripts contain the primary spell effect logic (damage, healing, status effects)
                         bool scriptExecuted = ExecuteImpactScript(target, impactScript, caster);
 
                         // Also fire script event for compatibility (some systems may rely on events)
-                        // Based on swkotor2.exe: Script events provide additional hooks for spell effects
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script events provide additional hooks for spell effects
                         // OnSpellCastAt script event fires to allow entities to react to being targeted by spells
                         IEventBus eventBus = caster.World?.EventBus;
                         if (eventBus != null)
@@ -773,7 +773,7 @@ namespace Andastra.Runtime.Core.Actions
                     }
 
                     // Execute conjuration impact script (conjimpactscript column) if present
-                    // Based on swkotor2.exe: Conjuration impact scripts execute for conjuration-type spells
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Conjuration impact scripts execute for conjuration-type spells
                     // Located via string references: "conjimpactscript" column in spells.2da
                     // Conjuration impact scripts are used for area-effect spells and persistent spell zones
                     string conjImpactScript = spell.ConjImpactScript as string;
@@ -794,7 +794,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Executes an impact script directly using the script executor.
-        /// Based on swkotor2.exe: Direct script execution for impact scripts
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Direct script execution for impact scripts
         /// Located via string references: "ImpactScript" @ spells.2da, script execution system
         /// Original implementation: Impact scripts execute with target as OBJECT_SELF, caster as triggerer
         /// </summary>
@@ -809,7 +809,7 @@ namespace Andastra.Runtime.Core.Actions
         /// 3. Method signature variations: ExecuteScript(IEntity, string, IEntity) or ExecuteScript(string, IEntity, IEntity)
         /// 4. Direct World method: World.ExecuteScript (some implementations expose this directly)
         /// Falls back gracefully if script executor is not available.
-        /// Based on swkotor2.exe: Impact scripts execute with target as OBJECT_SELF, caster as triggerer
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts execute with target as OBJECT_SELF, caster as triggerer
         /// Script context: Spell ID and caster level are available through GetLastSpellId/GetLastSpellCasterLevel engine functions
         /// </remarks>
         private bool ExecuteImpactScript(IEntity target, string scriptResRef, IEntity triggerer)
@@ -951,7 +951,7 @@ namespace Andastra.Runtime.Core.Actions
 
     /// <summary>
     /// Area effect for persistent spell zones.
-    /// Based on swkotor2.exe: Persistent area spell effects (conjduration > 0)
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Persistent area spell effects (conjduration > 0)
     /// Located via string references: Area effect system for persistent spell zones
     /// Original implementation: Area effects apply spell effects to entities within range over duration
     /// </summary>
@@ -1059,7 +1059,7 @@ namespace Andastra.Runtime.Core.Actions
                         }
 
                         // Execute impact script if present (spell effects come from scripts)
-                        // Based on swkotor2.exe: Impact scripts are the primary mechanism for spell effects
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts are the primary mechanism for spell effects
                         // Impact scripts contain damage, healing, and status effect logic
                         if (spell != null)
                         {
@@ -1117,7 +1117,7 @@ namespace Andastra.Runtime.Core.Actions
 
         /// <summary>
         /// Executes an impact script directly using the script executor (helper for SpellAreaEffect).
-        /// Based on swkotor2.exe: Direct script execution for impact scripts
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Direct script execution for impact scripts
         /// </summary>
         /// <param name="target">The target entity (OBJECT_SELF in script).</param>
         /// <param name="scriptResRef">The script resource reference to execute.</param>

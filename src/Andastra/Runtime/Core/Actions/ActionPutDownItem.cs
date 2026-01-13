@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Put Down Item Action:
-    /// - Based on swkotor2.exe ActionPutDownItem NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionPutDownItem NWScript function
     /// - Located via string references: "GiveItem" @ 0x007be4f8 (give item action), "PutDownItem" action type (ACTION_TYPE_PUT_DOWN_ITEM constant)
     /// - Inventory system: "Inventory" @ 0x007bd658 (inventory field), "Item" @ 0x007bc54c (item object type), "ItemList" @ 0x007bf580 (item list field)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c (lose item script event, 0x1c) - fires when item is removed from inventory
@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Remove item from inventory
-            // Based on swkotor2.exe: ActionPutDownItem implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionPutDownItem implementation
             // Located via string references: "GiveItem" @ 0x007be4f8, "PutDownItem" action type
             // Original implementation: Removes item from inventory, places in world at drop location
             // Item becomes world-dropped item that can be picked up by other entities
@@ -75,7 +75,7 @@ namespace Andastra.Runtime.Core.Actions
             if (item != null && inventory.RemoveItem(item))
             {
                 // Fire OnLoseItem script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM fires when item is removed from inventory
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM fires when item is removed from inventory
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOSE_ITEM" @ 0x007bc89c (0x1c)
                 // Original implementation: OnLoseItem script fires on actor entity when item is removed from inventory
                 IEventBus eventBus = actor.World.EventBus;

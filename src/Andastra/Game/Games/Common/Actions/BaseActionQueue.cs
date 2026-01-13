@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Common.Actions
+namespace Andastra.Game.Games.Common.Actions
 {
     /// <summary>
     /// Base class for action queues shared across BioWare engines that use GFF-based action serialization.

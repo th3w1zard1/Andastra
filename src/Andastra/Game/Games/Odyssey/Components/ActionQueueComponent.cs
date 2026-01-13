@@ -3,14 +3,14 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Component that wraps an ActionQueue for entity action management.
     /// </summary>
     /// <remarks>
     /// Action Queue Component:
-    /// - Based on swkotor2.exe action system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) action system
     /// - Located via string references: "ActionList" @ 0x007bebdc, "ActionId" @ 0x007bebd0
     /// - Original implementation: Entities maintain action queue with current action and pending actions
     /// - Actions processed sequentially: Current action executes until complete, then next action dequeued

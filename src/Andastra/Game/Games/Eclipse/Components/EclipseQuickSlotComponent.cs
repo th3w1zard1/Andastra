@@ -1,9 +1,9 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Components
+namespace Andastra.Game.Games.Eclipse.Components
 {
     /// <summary>
     /// Eclipse engine implementation of quick slot component.

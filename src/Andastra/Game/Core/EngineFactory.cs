@@ -1,5 +1,5 @@
 using System;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Engines.Aurora;
 using Andastra.Runtime.Engines.Aurora.Profiles;
@@ -10,7 +10,7 @@ using Andastra.Runtime.Engines.Eclipse.Profiles;
 using Andastra.Runtime.Engines.Odyssey;
 using Andastra.Runtime.Engines.Odyssey.Profiles;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Factory for creating engine instances based on BioWareGame enum.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.Game.Core
     /// <remarks>
     /// Engine Factory:
     /// - Maps BioWareGame enum values to appropriate engine instances
-    /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 determines game type and initializes appropriate engine
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 determines game type and initializes appropriate engine
     /// - Original implementation: Game executable identifies itself and initializes engine accordingly
     /// - Cross-engine: All BioWare games follow similar pattern - determine game type, create engine, initialize
     /// - This factory provides unified access to all engine families (Odyssey, Aurora, Eclipse, Infinity)

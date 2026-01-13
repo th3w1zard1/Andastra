@@ -7,7 +7,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using DialogueCameraAngle = Andastra.Runtime.Core.Camera.DialogueCameraAngle;
 
-namespace Andastra.Runtime.MonoGame.Camera
+namespace Andastra.Game.Graphics.MonoGame.Camera
 {
     /// <summary>
     /// MonoGame implementation of IDialogueCameraController.
@@ -56,7 +56,7 @@ namespace Andastra.Runtime.MonoGame.Camera
 
         /// <summary>
         /// Initializes default camera animations (angles 0-3).
-        /// Based on swkotor2.exe: Default camera animation mappings
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Default camera animation mappings
         /// Located via string references: "CameraAnimation" @ 0x007c3460
         /// Original implementation: Default animations map to standard camera angles (0=speaker, 1=listener, 2=wide, 3=over-shoulder)
         /// </summary>
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.MonoGame.Camera
 
         /// <summary>
         /// Registers a camera animation with hook support.
-        /// Based on swkotor2.exe: Camera animation registration system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera animation registration system
         /// Located via string references: "CameraAnimation" @ 0x007c3460
         /// Original implementation: Camera animations can be registered dynamically from dialogue entries or script calls
         /// </summary>
@@ -132,7 +132,7 @@ namespace Andastra.Runtime.MonoGame.Camera
                 return;
             }
 
-            // Based on swkotor2.exe: Dialogue camera focus implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Dialogue camera focus implementation
             // Located via string references: "CameraAnimation" @ 0x007c3460, "CameraAngle" @ 0x007c3490
             // Original implementation: Sets camera to dialogue mode with speaker/listener focus
             // Camera defaults to speaker focus angle
@@ -148,7 +148,7 @@ namespace Andastra.Runtime.MonoGame.Camera
         /// <param name="angle">The camera angle index (0 = speaker, 1 = listener, 2 = wide, 3 = over-shoulder).</param>
         public void SetAngle(int angle)
         {
-            // Based on swkotor2.exe: Camera angle selection
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera angle selection
             // Located via string references: "CameraAngle" @ 0x007c3490
             // Original implementation: Camera angle index maps to DialogueCameraAngle enum
             DialogueCameraAngle cameraAngle;
@@ -176,7 +176,7 @@ namespace Andastra.Runtime.MonoGame.Camera
 
         /// <summary>
         /// Sets the camera animation.
-        /// Based on swkotor2.exe: Camera animation system with hook support
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera animation system with hook support
         /// Located via string references: "CameraAnimation" @ 0x007c3460
         /// Reverse engineered functions:
         ///   - CGuiInGame::GetCameraAnimationName @ 0x006288f0 - Resolves animation name from dialoganimations.2da
@@ -200,7 +200,7 @@ namespace Andastra.Runtime.MonoGame.Camera
             if (!_cameraAnimations.TryGetValue(animId, out animation))
             {
                 // Unknown animation ID - fallback to angle-based system for IDs 0-3
-                // Based on swkotor2.exe: Fallback behavior when animation ID is not registered
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fallback behavior when animation ID is not registered
                 // Original implementation: If animation ID is 0-3, maps to standard camera angles
                 if (animId >= 0 && animId <= 3)
                 {
@@ -213,12 +213,12 @@ namespace Andastra.Runtime.MonoGame.Camera
             if (animation.UsesHooks && animation.CameraHookEntity != null)
             {
                 // Use camera hook-based positioning
-                // Based on swkotor2.exe: Camera hook positioning for dialogue animations
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera hook positioning for dialogue animations
                 // Located via string references: "camerahook" @ 0x007c7dac, "camerahook%d" @ 0x007d0448
                 // Original implementation: Queries MDL model for nodes named "camerahook{N}" and uses their world-space positions
                 // Camera hooks are MDL dummy nodes that define precise camera positions relative to character models
                 // The GetCameraHookPosition method searches MDL node tree recursively for "camerahook{N}" nodes
-                // Based on swkotor2.exe: FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006c6020 @ 0x006c6020 searches MDL node tree for "camerahook" nodes
                 // Implementation:
                 //   1. Constructs camera hook node name (format: "camerahook{N}" where N is hookIndex)
                 //   2. Searches MDL model node tree recursively for matching node name
@@ -237,7 +237,7 @@ namespace Andastra.Runtime.MonoGame.Camera
             else
             {
                 // Try to automatically detect and use camera hooks from speaker/listener models
-                // Based on swkotor2.exe: Automatic camera hook detection when animation doesn't explicitly specify hooks
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Automatic camera hook detection when animation doesn't explicitly specify hooks
                 // Original implementation: If speaker/listener models have camera hooks, use them for precise positioning
                 // This provides automatic camera hook support without requiring manual registration
                 bool hooksFound = false;
@@ -274,7 +274,7 @@ namespace Andastra.Runtime.MonoGame.Camera
                 if (!hooksFound)
                 {
                     // No camera hooks found - use fallback angle-based system
-                    // Based on swkotor2.exe: Fallback to predefined camera angles when hooks are not available
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fallback to predefined camera angles when hooks are not available
                     // Original implementation: Uses DialogueCameraAngle enum for standard camera positions
                     _cameraController.SetDialogueCameraAngle(animation.FallbackAngle);
                 }
@@ -283,7 +283,7 @@ namespace Andastra.Runtime.MonoGame.Camera
 
         /// <summary>
         /// Gets the head position of an entity for camera look-at targeting.
-        /// Based on swkotor2.exe: Entity head position calculation for dialogue cameras
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity head position calculation for dialogue cameras
         /// Original implementation: Head position is typically at entity position + height offset (1.7 units)
         /// This matches CameraController.GetEntityHeadPosition implementation for consistency
         /// </summary>
@@ -303,7 +303,7 @@ namespace Andastra.Runtime.MonoGame.Camera
             }
 
             // Head position is entity position + height offset
-            // Based on swkotor2.exe: Head position calculation for dialogue cameras
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Head position calculation for dialogue cameras
             // Original implementation: Head position = entity position + up vector * head height (1.7 units)
             // This matches CameraController.GetEntityHeadPosition implementation (Y-up coordinate system: Y is vertical)
             return transform.Position + new Vector3(0, 1.7f, 0);
@@ -335,21 +335,21 @@ namespace Andastra.Runtime.MonoGame.Camera
         public void Reset()
         {
             // Get player entity from world via camera controller
-            // Based on swkotor2.exe: Player entity lookup for camera reset
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity lookup for camera reset
             // Original implementation: Retrieves player entity and sets camera to chase mode
             IEntity playerEntity = _cameraController.GetPlayerEntity();
 
             if (playerEntity != null)
             {
                 // Reset to chase mode following player
-                // Based on swkotor2.exe: Camera mode switching to chase mode with player as target
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Camera mode switching to chase mode with player as target
                 // Original implementation: SetChaseMode sets camera to follow player entity
                 _cameraController.SetChaseMode(playerEntity);
             }
             else
             {
                 // Fallback to free mode if player entity not found (shouldn't happen in normal gameplay)
-                // Based on swkotor2.exe: Fallback behavior when player entity is unavailable
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fallback behavior when player entity is unavailable
                 // Original implementation: Free mode allows manual camera control if player not found
                 _cameraController.SetFreeMode();
             }

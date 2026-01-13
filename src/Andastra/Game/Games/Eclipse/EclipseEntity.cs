@@ -7,12 +7,12 @@ using System.Text;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Games.Eclipse.Components;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Common.Components;
+using Andastra.Game.Games.Eclipse.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Eclipse Engine (Dragon Age Origins, Dragon Age 2) specific entity implementation.

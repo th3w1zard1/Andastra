@@ -1,6 +1,6 @@
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Odyssey Engine (KotOR, KotOR2) specific waypoint component implementation.

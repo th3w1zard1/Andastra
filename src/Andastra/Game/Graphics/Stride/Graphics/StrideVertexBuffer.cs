@@ -1,7 +1,7 @@
 using System;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IVertexBuffer.

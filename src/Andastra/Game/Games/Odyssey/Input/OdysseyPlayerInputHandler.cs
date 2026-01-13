@@ -6,7 +6,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Movement;
 using Andastra.Runtime.Core.Party;
 
-namespace Andastra.Runtime.Games.Odyssey.Input
+namespace Andastra.Game.Games.Odyssey.Input
 {
     /// <summary>
     /// Base class for Odyssey engine player input handling (common to K1 and K2).

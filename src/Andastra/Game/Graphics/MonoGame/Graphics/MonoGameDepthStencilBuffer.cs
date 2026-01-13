@@ -2,13 +2,13 @@ using System;
 using Andastra.Runtime.Graphics;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IDepthStencilBuffer.
     /// Note: MonoGame doesn't support separate depth buffers natively, they're part of render targets.
     /// This implementation creates a dedicated RenderTarget2D for depth-stencil operations.
-    /// Based on swkotor2.exe DirectX depth-stencil buffer system (IDirect3DDevice9::CreateDepthStencilSurface).
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX depth-stencil buffer system (IDirect3DDevice9::CreateDepthStencilSurface).
     /// </summary>
     public class MonoGameDepthStencilBuffer : IDepthStencilBuffer
     {

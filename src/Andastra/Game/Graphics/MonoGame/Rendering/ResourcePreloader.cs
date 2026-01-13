@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Resource preloader for predictive asset loading.
@@ -323,7 +323,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
                 // Extract UTS template resource reference if available
                 // UTS templates define sound properties and contain references to actual sound files
-                // Based on swkotor2.exe: UTS templates loaded from TemplateResRef field
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UTS templates loaded from TemplateResRef field
                 // swkotor2.exe: LoadSoundTemplate @ 0x005706b0 loads UTS templates and extracts sound files
                 // The UTS template contains a "Sounds" list (GFFList) with ResRef entries for WAV sound files
                 // We preload the UTS template itself, then parse it to extract and preload referenced sound files
@@ -366,7 +366,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// Resolves model and texture resources from appearance data.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe appearance data structure:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) appearance data structure:
         /// - appearance.2da contains ModelA, ModelB (model variants), TexA, TexB (texture variants)
         /// - Model resolution: FUN_005261b0 @ 0x005261b0 resolves creature model from appearance.2da row
         /// - Appearance data accessed via GameDataManager.GetAppearance() in Odyssey engine
@@ -576,7 +576,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// </summary>
         /// <remarks>
         /// UTS Template Preloading:
-        /// - Based on swkotor2.exe: LoadSoundTemplate @ 0x005706b0 loads UTS templates
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LoadSoundTemplate @ 0x005706b0 loads UTS templates
         /// - UTS templates are GFF files with "UTS " signature containing sound object definitions
         /// - UTS.Sounds list contains ResRef entries for WAV sound files that need to be preloaded
         /// - UTS.Sound field contains a single sound reference (deprecated but still used)
@@ -591,7 +591,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             try
             {
                 // Load UTS template bytes
-                var utsResourceId = new ResourceIdentifier(utsResRef, Andastra.Parsing.Common.ResourceType.UTS);
+                var utsResourceId = new ResourceIdentifier(utsResRef, BioWare.NET.Common.ResourceType.UTS);
                 byte[] utsData = await _resourceProvider.GetResourceBytesAsync(utsResourceId, System.Threading.CancellationToken.None);
 
                 if (utsData == null || utsData.Length == 0)
@@ -600,7 +600,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 }
 
                 // Parse UTS template to extract sound file references
-                // Based on swkotor2.exe: UTS parsing in LoadSoundTemplate
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UTS parsing in LoadSoundTemplate
                 // UTSHelpers.ConstructUts() parses GFF structure and extracts Sounds list
                 GFF gff;
                 using (var stream = new MemoryStream(utsData))
@@ -677,24 +677,24 @@ namespace Andastra.Runtime.MonoGame.Rendering
             }
         }
 
-        private Andastra.Parsing.Common.ResourceType ConvertResourceType(ResourceType type)
+        private BioWare.NET.Common.ResourceType ConvertResourceType(ResourceType type)
         {
             switch (type)
             {
                 case ResourceType.Texture:
-                    return Andastra.Parsing.Common.ResourceType.TPC;
+                    return BioWare.NET.Common.ResourceType.TPC;
                 case ResourceType.Model:
-                    return Andastra.Parsing.Common.ResourceType.MDL;
+                    return BioWare.NET.Common.ResourceType.MDL;
                 case ResourceType.Animation:
-                    return Andastra.Parsing.Common.ResourceType.MDL;
+                    return BioWare.NET.Common.ResourceType.MDL;
                 case ResourceType.Sound:
-                    return Andastra.Parsing.Common.ResourceType.WAV;
+                    return BioWare.NET.Common.ResourceType.WAV;
                 case ResourceType.Script:
-                    return Andastra.Parsing.Common.ResourceType.NCS;
+                    return BioWare.NET.Common.ResourceType.NCS;
                 case ResourceType.UTSTemplate:
-                    return Andastra.Parsing.Common.ResourceType.UTS;
+                    return BioWare.NET.Common.ResourceType.UTS;
                 default:
-                    return Andastra.Parsing.Common.ResourceType.INVALID;
+                    return BioWare.NET.Common.ResourceType.INVALID;
             }
         }
     }

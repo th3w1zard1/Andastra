@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Render State Interfaces:
-    /// - Based on swkotor2.exe DirectX render state system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX render state system
     /// - Located via string references: Original game uses DirectX 8/9 render states (D3DRS_* constants)
     /// - Depth-stencil: "GL_ARB_depth_texture" @ 0x007b8848, "glDepthMask" @ 0x0080aa38, "glDepthFunc" @ 0x0080ad96
     /// - Stencil: "glStencilOp" @ 0x0080a9f0, "glStencilMask" @ 0x0080aa0c, "glStencilFunc" @ 0x0080aa68

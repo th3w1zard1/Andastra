@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Runtime.Games.Common.Journal;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using Andastra.Game.Games.Common.Journal;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Journal
+namespace Andastra.Game.Games.Eclipse.Journal
 {
     /// <summary>
     /// Eclipse-specific JRL loader implementation (daorigins.exe, DragonAge2.exe - Dragon Age series).

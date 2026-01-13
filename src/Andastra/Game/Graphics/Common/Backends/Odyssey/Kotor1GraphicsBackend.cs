@@ -3,17 +3,17 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ResourceType = Andastra.Parsing.Common.ResourceType;
+using ResourceType = BioWare.NET.Common.ResourceType;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Graphics backend for Star Wars: Knights of the Old Republic, matching swkotor.exe rendering exactly 1:1.
@@ -2149,7 +2149,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// Calculates texture size recursively for mipmap levels.
         /// Matches swkotor.exe texture size calculation pattern.
         /// </summary>
-        private int CalculateTextureSizeRecursive(int width, int height, Andastra.Parsing.Formats.TPC.TPCTextureFormat format)
+        private int CalculateTextureSizeRecursive(int width, int height, BioWare.NET.Resource.Formats.TPC.TPCTextureFormat format)
         {
             // Matching swkotor.exe texture size calculation
             // This calculates the total size needed for all mipmap levels
@@ -3366,7 +3366,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             if (_resourceProvider != null)
             {
                 // Try TPC first (most common format for KOTOR 1)
-                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, Andastra.Parsing.Common.ResourceType.TPC);
+                ResourceIdentifier tpcId = new ResourceIdentifier(resRef, BioWare.NET.Common.ResourceType.TPC);
                 Task<bool> existsTask = _resourceProvider.ExistsAsync(tpcId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -3377,7 +3377,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
 
                 // Try TGA format as fallback
-                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, Andastra.Parsing.Common.ResourceType.TGA);
+                ResourceIdentifier tgaId = new ResourceIdentifier(resRef, BioWare.NET.Common.ResourceType.TGA);
                 existsTask = _resourceProvider.ExistsAsync(tgaId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)
@@ -3388,7 +3388,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
 
                 // Try DDS format (compressed textures)
-                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, Andastra.Parsing.Common.ResourceType.DDS);
+                ResourceIdentifier ddsId = new ResourceIdentifier(resRef, BioWare.NET.Common.ResourceType.DDS);
                 existsTask = _resourceProvider.ExistsAsync(ddsId, CancellationToken.None);
                 existsTask.Wait();
                 if (existsTask.Result)

@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 
-namespace Andastra.Runtime.Scripting.Interfaces
+namespace Andastra.Game.Scripting.Interfaces
 {
     /// <summary>
     /// Engine function dispatch interface for NWScript ACTION calls.
     /// </summary>
     /// <remarks>
     /// Engine API Interface:
-    /// - Based on swkotor2.exe NWScript engine API system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript engine API system
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
     /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0 (action ID field)
     /// - "ActionType" @ 0x007bf7f8 (action type field), "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output)

@@ -1,8 +1,8 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Component for placeable entities (containers, furniture, etc.) in Odyssey engine.
@@ -51,7 +51,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Appearance Type Property:
         /// - Odyssey-specific: Index into placeables.2da for placeable appearance
-        /// - Based on swkotor2.exe: "Appearance" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Appearance" field in UTP template (FUN_00588010 @ 0x00588010)
         /// </remarks>
         public int AppearanceType { get; set; }
 
@@ -71,7 +71,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Fortitude Save Property:
         /// - Odyssey-specific: Fortitude save for placeable
-        /// - Based on swkotor2.exe: "Fort" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Fort" field in UTP template (FUN_00589520 @ 0x00589520)
         /// </remarks>
         public int Fort { get; set; }
 
@@ -81,7 +81,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Reflex Save Property:
         /// - Odyssey-specific: Reflex save for placeable
-        /// - Based on swkotor2.exe: "Ref" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Ref" field in UTP template (FUN_00589520 @ 0x00589520)
         /// </remarks>
         public int Reflex { get; set; }
 
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Will Save Property:
         /// - Odyssey-specific: Will save for placeable
-        /// - Based on swkotor2.exe: "Will" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Will" field in UTP template (FUN_00589520 @ 0x00589520)
         /// </remarks>
         public int Will { get; set; }
 
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Key Required Property:
         /// - Odyssey-specific: Whether a key is required to unlock
-        /// - Based on swkotor2.exe: "KeyRequired" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "KeyRequired" field in UTP template (FUN_00588010 @ 0x00588010)
         /// </remarks>
         public bool KeyRequired { get; set; }
 
@@ -120,7 +120,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Container Property:
         /// - Odyssey-specific: Whether placeable is a container (synonym for HasInventory)
-        /// - Based on swkotor2.exe: Container flag in placeable system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Container flag in placeable system
         /// </remarks>
         public bool IsContainer { get; set; }
 
@@ -130,7 +130,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Faction ID Property:
         /// - Odyssey-specific: Faction ID for placeable
-        /// - Based on swkotor2.exe: "Faction" field in UTP template (FUN_00588010 @ 0x00588010, line 77)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Faction" field in UTP template (FUN_00588010 @ 0x00588010, line 77)
         /// </remarks>
         public int FactionId { get; set; }
 
@@ -140,7 +140,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Body Bag Property:
         /// - Odyssey-specific: Body bag placeable to spawn on destruction
-        /// - Based on swkotor2.exe: "BodyBag" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "BodyBag" field in UTP template (FUN_00589520 @ 0x00589520)
         /// </remarks>
         public int BodyBag { get; set; }
 
@@ -150,7 +150,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Plot Property:
         /// - Odyssey-specific: Whether placeable is plot-critical
-        /// - Based on swkotor2.exe: "Plot" field in UTP template (FUN_00588010 @ 0x00588010, line 83)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Plot" field in UTP template (FUN_00588010 @ 0x00588010, line 83)
         /// </remarks>
         public bool Plot { get; set; }
 
@@ -178,7 +178,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Placeable Activation:
         /// - Odyssey-specific: Also checks IsContainer flag
-        /// - Based on swkotor2.exe: OnUsed script event handling
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnUsed script event handling
         /// </remarks>
         public override void Activate()
         {
@@ -196,7 +196,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// <remarks>
         /// Placeable Deactivation:
         /// - Odyssey-specific: Also checks IsContainer flag
-        /// - Based on swkotor2.exe: Placeable deactivation handling
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable deactivation handling
         /// </remarks>
         public override void Deactivate()
         {

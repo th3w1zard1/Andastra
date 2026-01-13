@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource.Generics.UTI;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using ItemUpgrade = Andastra.Runtime.Core.Interfaces.Components.ItemUpgrade;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Upgrade screen implementation for Aurora engine (Neverwinter Nights).

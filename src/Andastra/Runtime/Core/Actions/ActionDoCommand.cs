@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Do Command Action:
-    /// - Based on swkotor2.exe AssignCommand/DelayCommand system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) AssignCommand/DelayCommand system
     /// - Located via string references: "DelayCommand" @ 0x007be900 (delay command script field), "Commandable" @ 0x007bec3c (commandable flag)
     /// - "deleted %d trace commands" @ 0x007b95d4 (command cleanup debug message)
     /// - Original implementation: Executes a stored action/script command on entity
@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            // Based on swkotor2.exe: AssignCommand/DelayCommand implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AssignCommand/DelayCommand implementation
             // Located via string references: "DelayCommand" @ 0x007be900, "AssignCommand" NWScript function
             // Original implementation: Executes stored action/script command on entity
             // Used by AssignCommand (execute on different entity) and DelayCommand (execute after delay)

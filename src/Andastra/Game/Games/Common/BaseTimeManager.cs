@@ -1,7 +1,7 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of time management functionality shared across all BioWare engines.

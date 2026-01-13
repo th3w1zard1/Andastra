@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Andastra.Runtime.Core;
 
-namespace Andastra.Runtime.Game.GUI
+namespace Andastra.Game.Game.GUI
 {
     /// <summary>
     /// Game options settings that can be configured in the options menu.

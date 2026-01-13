@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.PostProcessing
+namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 {
     /// <summary>
     /// Tone mapping operator for HDR to LDR conversion.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
     /// </summary>
     /// <remarks>
     /// Tone Mapping:
-    /// - Based on swkotor2.exe rendering system (modern HDR enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system (modern HDR enhancement)
     /// - Located via string references: "Frame Buffer" @ 0x007c8408 (HDR frame buffer)
     /// - "CB_FRAMEBUFF" @ 0x007d1d84 (frame buffer option)
     /// - Original implementation: KOTOR uses fixed lighting and color mapping

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Eclipse.Components
+namespace Andastra.Game.Games.Eclipse.Components
 {
     /// <summary>
     /// Eclipse Engine (Dragon Age Origins, Dragon Age 2) specific sound component implementation.

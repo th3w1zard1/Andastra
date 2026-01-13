@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Depth-Stencil Buffer Interface:
-    /// - Based on swkotor2.exe DirectX depth-stencil buffer system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX depth-stencil buffer system
     /// - Located via string references: "GL_ARB_depth_texture" @ 0x007b8848, "m_sDepthTextureName" @ 0x007baaa8
     /// - "depth_texture" @ 0x007bab5c, "glDepthMask" @ 0x0080aa38, "glDepthFunc" @ 0x0080ad96
     /// - "glStencilOp" @ 0x0080a9f0, "glStencilMask" @ 0x0080aa0c, "glStencilFunc" @ 0x0080aa68

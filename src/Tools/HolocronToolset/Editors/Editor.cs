@@ -7,7 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Platform.Storage;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using JetBrains.Annotations;
 

@@ -1,26 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.BWM;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
-using Logger = Andastra.Parsing.Logger;
+using Logger = BioWare.NET.Logger;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Andastra.Runtime.Engines.Odyssey.Loading
+namespace Andastra.Game.Engines.Odyssey.Loading
 {
     /// <summary>
     /// Factory for creating NavigationMesh from BWM walkmesh data.
     /// </summary>
     /// <remarks>
     /// Navigation Mesh Factory:
-    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh/navigation system
     /// - Located via string references: "walkmesh" pathfinding functions, "?nwsareapathfind.cpp" @ 0x007be3ff (pathfinding implementation)
     /// - "BWM V1.0" @ 0x007c061c (BWM file signature), "ERROR: opening a Binary walkmesh file for writeing that already exists (File: %s)" @ 0x007c0630
     /// - Pathfinding errors:
@@ -194,7 +194,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// 1. Module archives (RIM/ERF files) - WOK files packaged with module
         /// 2. Installation (CHITIN/CUSTOM_MODULES) - Fallback to base game resources
         /// 
-        /// Based on swkotor2.exe: Module resources are searched first, then installation fallback
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module resources are searched first, then installation fallback
         /// </remarks>
         [CanBeNull]
         private BWM LoadWalkmesh(Module module, string resRef)
@@ -223,7 +223,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                         catch (Exception ex)
                         {
                             // Log parsing error but continue to fallback
-                            new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
+                            new BioWare.NET.Logger.RobustLogger().Warning($"Failed to parse WOK '{resRef}' from module: {ex.Message}");
                         }
                     }
                 }
@@ -238,7 +238,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
                 // Search installation for WOK resource
                 // SearchLocation.CHITIN = base game resources, SearchLocation.CUSTOM_MODULES = module-specific resources
-                Andastra.Parsing.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
+                BioWare.NET.Extract.Installation.ResourceResult wokResource = installation.Resource(resRef, ResourceType.WOK,
                     new[] { SearchLocation.CHITIN, SearchLocation.CUSTOM_MODULES });
 
                 if (wokResource == null || wokResource.Data == null)
@@ -251,7 +251,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             catch (Exception ex)
             {
                 // Failed to load walkmesh - log and return null
-                new Andastra.Parsing.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
+                new BioWare.NET.Logger.RobustLogger().Warning($"Failed to load walkmesh '{resRef}': {ex.Message}");
                 return null;
             }
         }

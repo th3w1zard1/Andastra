@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Resource.Formats.MDL;
-using Andastra.Parsing.Resource.Formats.MDLData;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of IRoomMeshRenderer.

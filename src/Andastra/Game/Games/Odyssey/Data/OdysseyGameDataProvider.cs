@@ -1,9 +1,9 @@
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
 using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 
-namespace Andastra.Runtime.Games.Odyssey.Data
+namespace Andastra.Game.Games.Odyssey.Data
 {
     /// <summary>
     /// Odyssey-specific implementation of IGameDataProvider.
@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Games.Odyssey.Data
         /// <param name="defaultRadius">Default radius to return if lookup fails.</param>
         /// <returns>The creature collision radius, or defaultRadius if lookup fails.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0065a380 @ 0x0065a380 (GetCreatureRadius)
         /// - Calls FUN_0041d2c0 to lookup "hitradius" column from appearance.2da table
         /// - Uses appearanceType as row index
         /// - Falls back to size-based defaults if appearance data unavailable:
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Games.Odyssey.Data
             }
 
             // Fall back to size-based defaults if appearance data unavailable
-            // Based on swkotor2.exe: Size categories determine default radius
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Size categories determine default radius
             // Size categories: 0=Small, 1=Medium, 2=Large, 3=Huge, 4=Gargantuan
             if (appearance != null)
             {
@@ -100,7 +100,7 @@ namespace Andastra.Runtime.Games.Odyssey.Data
         /// <param name="defaultValue">Default value to return if lookup fails.</param>
         /// <returns>The float value, or defaultValue if lookup fails.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup)
         /// - Looks up float value from 2DA table by row index and column name
         /// - Uses GameDataManager to access 2DA tables
         /// </remarks>
@@ -141,7 +141,7 @@ namespace Andastra.Runtime.Games.Odyssey.Data
         /// <param name="tableName">The table name without extension (e.g., "appearance" for appearance.2da, "itempropdef" for itempropdef.2da).</param>
         /// <returns>The loaded 2DA table, or null if not found.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0041d2c0 @ 0x0041d2c0 (2DA table lookup)
         /// - Uses GameDataManager to access 2DA tables with caching
         /// - Cross-engine pattern: Same as Aurora and Eclipse
         /// </remarks>

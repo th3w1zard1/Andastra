@@ -1,13 +1,13 @@
 using Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Runtime.Scripting.Interfaces
+namespace Andastra.Game.Scripting.Interfaces
 {
     /// <summary>
     /// NWScript compiled script virtual machine.
     /// </summary>
     /// <remarks>
     /// NCS VM Interface:
-    /// - Based on swkotor2.exe NCS VM implementation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NCS VM implementation
     /// - Located via string references: NCS script execution engine handles bytecode interpretation
     /// - NCS file format: "NCS " signature (bytes 0-3), "V1.0" version (bytes 4-7), 0x42 marker at offset 8
     /// - Instructions start at offset 0x0D (13 decimal) - matches original engine NCS file structure
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Scripting.Interfaces
         /// </summary>
         /// <param name="state">The VM state to restore.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: State restoration for DelayCommand.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): State restoration for DelayCommand.
         /// Original implementation: Restores stack, locals, and pools before executing delayed action.
         /// </remarks>
         void RestoreState(VmState state);

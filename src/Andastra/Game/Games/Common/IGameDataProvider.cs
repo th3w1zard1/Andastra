@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Engine-agnostic interface for accessing game data tables.

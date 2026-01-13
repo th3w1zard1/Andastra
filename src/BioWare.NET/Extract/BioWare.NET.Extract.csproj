@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateGlobalUsings>false</GenerateGlobalUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>BioWare.NET.Extract</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\Andastra.Core.csproj" />
+    <ProjectReference Include="..\Utility\BioWare.NET.Utility.csproj" />
+    <ProjectReference Include="..\Common\BioWare.NET.Common.csproj" />
+    <ProjectReference Include="..\Resource\BioWare.NET.Resource.csproj" />
+    <ProjectReference Include="..\Resource\Formats\NCS\BioWare.NET.Resource.NCS.csproj" Aliases="ResourceNCS" />
+    <!-- Removed TSLPatcher reference to break circular dependency: Extract ↔ TSLPatcher -->
+    <!-- Removed Tools reference to break circular dependency: Extract ↔ Tools -->
+    <!-- Extract uses Tools.FileHelpers and Logger.RobustLogger via fully qualified names where needed -->
+  </ItemGroup>
+</Project>

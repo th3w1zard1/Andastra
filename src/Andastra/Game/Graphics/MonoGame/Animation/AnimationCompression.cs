@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Andastra.Runtime.MonoGame.Animation
+namespace Andastra.Game.Graphics.MonoGame.Animation
 {
     /// <summary>
     /// Animation compression system for reducing animation data size.

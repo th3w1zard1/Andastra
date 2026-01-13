@@ -1,13 +1,13 @@
 using System.Numerics;
 
-namespace Andastra.Runtime.Scripting.Types
+namespace Andastra.Game.Scripting.Types
 {
     /// <summary>
     /// Represents a location (position + facing) in NWScript.
     /// </summary>
     /// <remarks>
     /// Location Type:
-    /// - Based on swkotor2.exe location type system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) location type system
     /// - Located via string references: "LOCATION" @ 0x007c2850 (location type constant), "ValLocation" @ 0x007c26ac (location value field)
     /// - "CatLocation" @ 0x007c26dc (location catalog field), "FollowLocation" @ 0x007beda8 (follow location field)
     /// - Error messages:

@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Components
+namespace Andastra.Game.Games.Eclipse.Components
 {
     /// <summary>
     /// Component for managing entity inventory and equipped items in Eclipse engine (Dragon Age Origins, Dragon Age 2).

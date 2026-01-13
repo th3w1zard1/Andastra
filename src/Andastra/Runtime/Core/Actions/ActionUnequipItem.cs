@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Unequip Item Action:
-    /// - Based on swkotor2.exe ActionUnequipItem NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionUnequipItem NWScript function
     /// - Located via string references: "UnequipItem" @ 0x007be4e8, "EquippedItem" @ 0x007c23a0
     /// - "UnequipHItem" @ 0x007c3870, "UnequipItems" @ 0x007c3880 (unequip operations)
     /// - Inventory system: "Inventory" @ 0x007bd658, "InventorySlot" @ 0x007c49bc, "Item" @ 0x007bc54c
@@ -46,7 +46,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Clear the slot (unequip)
-            // Based on swkotor2.exe: Unequip item implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Unequip item implementation
             // Located via string references: "UnequipHItem" @ 0x007c3870, "UnequipItems" @ 0x007c3880, "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
             // Original implementation: Removes item from equipment slot, removes stat modifications, returns item to inventory
             // Item remains in entity's inventory after unequipping (does not delete item)
@@ -55,7 +55,7 @@ namespace Andastra.Runtime.Core.Actions
             inventory.SetItemInSlot(_inventorySlot, null);
 
             // Fire OnInventoryDisturbed script event
-            // Based on swkotor2.exe: ON_INVENTORY_DISTURBED fires when items are equipped/unequipped
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ON_INVENTORY_DISTURBED fires when items are equipped/unequipped
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
             // Original implementation: OnInventoryDisturbed script fires on actor entity when inventory is modified (equip/unequip/add/remove)
             IEventBus eventBus = actor.World?.EventBus;

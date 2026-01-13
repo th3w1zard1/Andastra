@@ -4,7 +4,7 @@ using Andastra.Runtime.MonoGame.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Game.Graphics.MonoGame.Lighting
 {
     /// <summary>
     /// Clustered light culling system for efficient handling of many lights.

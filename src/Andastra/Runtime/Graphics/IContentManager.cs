@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Content Manager Interface:
-    /// - Based on swkotor2.exe resource loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
     /// - Located via string references: "Resource" @ 0x007c14d4, "Loading" @ 0x007c7e40
     /// - CExoKeyTable @ 0x007b6078, FUN_00633270 @ 0x00633270 (resource path resolution)
     /// - Original implementation: Loads game assets (textures, models, sounds) from ERF/BIF files via CExoKeyTable

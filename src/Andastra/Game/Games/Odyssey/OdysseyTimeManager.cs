@@ -1,6 +1,6 @@
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey engine time manager implementation for KOTOR 1 and KOTOR 2.
@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// - Fixed timestep: 60 Hz (1/60s = 0.01667s per tick) - verified in swkotor2.exe
 
     /// - Game time storage: Stored in module IFO file as Mod_StartMinute/Second/MiliSec and Mod_PauseDay/PauseTime fields
-    ///   Based on swkotor2.exe: FUN_00500290 @ 0x00500290 (IFO serialization) lines 96-100
+    ///   [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00500290 @ 0x00500290 (IFO serialization) lines 96-100
     /// - Time played tracking: TIMEPLAYED field in save game NFO.res file
     /// - Frame timing: NOTE - Previously documented addresses (frameStart @ 0x007ba698, frameEnd @ 0x007ba668) are string constants, not functions.
     ///   VERIFIED via Ghidra MCP: These addresses contain string data used in particle system configuration, not frame timing functions.
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="realDeltaTime">The real frame time in seconds.</param>
         /// <remarks>
         /// Odyssey-specific: Frame update implementation matching original engine behavior.
-        /// Based on swkotor2.exe: FUN_00401c30 @ 0x00401c30 (frame update function)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00401c30 @ 0x00401c30 (frame update function)
         /// Based on swkotor.exe: FUN_00401c10 @ 0x00401c10 (equivalent frame update function)
         /// 
         /// Original engine behavior:
@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="millisecond">Millisecond (0-999)</param>
         /// <remarks>
         /// Odyssey-specific: Sets game time (stored in module IFO file).
-        /// Based on swkotor2.exe: FUN_00500290 @ 0x00500290 (IFO serialization function)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00500290 @ 0x00500290 (IFO serialization function)
         /// 
         /// Original engine behavior (swkotor2.exe: FUN_00500290 @ 0x00500290):
         /// - Lines 79-80: Gets current game time (day, time in milliseconds) via FUN_004db710

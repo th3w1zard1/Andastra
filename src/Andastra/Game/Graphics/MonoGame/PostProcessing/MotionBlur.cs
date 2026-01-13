@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.PostProcessing
+namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 {
     /// <summary>
     /// Motion blur post-processing effect.
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
         /// 2. Accumulate samples with proper weights (Gaussian or linear falloff)
         /// 3. Normalize and output blurred result
         /// 
-        /// Based on swkotor2.exe: Frame buffer post-processing @ 0x007c8408
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Frame buffer post-processing @ 0x007c8408
         /// Original implementation: Uses frame buffers for rendering and effects
         /// This implementation: Full motion blur pipeline with velocity-based sampling
         /// </remarks>

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common.Dialogue
+namespace Andastra.Game.Games.Common.Dialogue
 {
     /// <summary>
     /// Abstract base class for dialogue state across all engines.

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Compute
+namespace Andastra.Game.Graphics.MonoGame.Compute
 {
     /// <summary>
     /// Compute shader framework for general-purpose GPU computing.

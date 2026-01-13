@@ -8,10 +8,10 @@ using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
 using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Games.Common.Combat;
+using Andastra.Game.Games.Common.Combat;
 using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseItemData;
 
-namespace Andastra.Runtime.Engines.Odyssey.Combat
+namespace Andastra.Game.Engines.Odyssey.Combat
 {
     /// <summary>
     /// Combat state for an entity.
@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     /// </remarks>
     /// <remarks>
     /// Combat System Overview:
-    /// - Based on swkotor2.exe combat system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) combat system
     /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
     /// - "InCombatHPBase" @ 0x007bf224, "OutOfCombatHPBase" @ 0x007bf210, "InCombatFPBase" @ 0x007bf4fc
     /// - "?OutOfCombatFPBase" @ 0x007bf50f (out-of-combat force points base)
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// XP multiplier for Challenge Rating calculation.
         /// KOTOR uses a simplified XP formula: XP = CR * XpPerChallengeRating.
         /// This is a simplified version compared to full D&D 3.5 XP calculation.
-        /// Based on swkotor2.exe: XP award system uses CR * 100 formula.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): XP award system uses CR * 100 formula.
         /// </summary>
         private const int XpPerChallengeRating = 100;
 
@@ -220,7 +220,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
 
         /// <summary>
         /// Checks if an entity is in "real" combat (has an active combat round).
-        /// Based on swkotor2.exe: GetIsInCombat with bOnlyCountReal=TRUE checks for active CombatRoundData
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetIsInCombat with bOnlyCountReal=TRUE checks for active CombatRoundData
         /// Located via string reference: "CombatRoundData" @ 0x007bf6b4
         /// Original implementation: FUN_005226d0 @ 0x005226d0 checks if CombatRoundData is active
         /// (*(int *)(*(void **)((int)this + 0x10dc) + 0xa84) == 1) where 0xa84 is RoundStarted offset
@@ -448,7 +448,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             _lastAttackers[attack.Target.ObjectId] = attack.Attacker;
 
             // Fire OnPhysicalAttacked script event on target (fires regardless of hit/miss)
-            // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
             // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
             // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target entity when attacked (before damage is applied)
             IEventBus eventBus = _world.EventBus;
@@ -473,7 +473,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
                 int actualDamage = _damageCalc.ApplyDamage(attack.Target, result.TotalDamage, attack.DamageType);
 
                 // Fire OnDamaged script event on target
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
                 if (eventBus != null && actualDamage > 0)
                 {
@@ -505,7 +505,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             SetCombatState(victim, CombatState.Dead);
 
             // Fire OnDeath script event
-            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
             // Located via string references: "OnDeath" script field, death event handling
             // Original implementation: OnDeath script fires on victim entity with killer as triggerer
             IEventBus eventBus = _world.EventBus;
@@ -637,7 +637,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// </summary>
         /// <remarks>
         /// Weapon Stats Retrieval:
-        /// - Based on swkotor2.exe weapon system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) weapon system
         /// - Original implementation: Gets weapon damage, critical threat, and multiplier from baseitems.2da
         /// - INVENTORY_SLOT_RIGHTWEAPON = 4, INVENTORY_SLOT_LEFTWEAPON = 5
         /// - Falls back to unarmed damage (1d4) if no weapon equipped
@@ -718,7 +718,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// </summary>
         /// <remarks>
         /// XP Sharing System (KOTOR):
-        /// - Based on swkotor2.exe: XP award system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): XP award system
         /// - Located via string references: "XP" @ 0x007c18a4 (PT_XP_POOL in PARTYTABLE.res)
         /// - Original implementation: XP is shared equally among all active party members within range
         /// - Participation criteria:
@@ -728,7 +728,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
         /// - XP calculation: CR * XpPerChallengeRating (simplified KOTOR formula, not full D&D 3.5)
         ///   - Formula: XP = ChallengeRating * 100
         ///   - This is the standard KOTOR XP calculation, simplified from D&D 3.5 rules
-        ///   - Based on swkotor2.exe: XP award system uses CR * 100 formula
+        ///   - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): XP award system uses CR * 100 formula
         /// - Each participating member receives full XP amount (not divided)
         /// - Original engine behavior: All party members in range receive full XP, not split
         /// </remarks>
@@ -754,7 +754,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
 
             // Calculate XP using KOTOR's simplified formula: CR * XpPerChallengeRating
             // This is a simplified version compared to full D&D 3.5 XP calculation.
-            // Based on swkotor2.exe: XP award system uses CR * 100 formula.
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): XP award system uses CR * 100 formula.
             // Formula: XP = ChallengeRating * XpPerChallengeRating
             int xpAwarded = (int)(cr * XpPerChallengeRating);
 
@@ -898,7 +898,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
             {
                 Console.WriteLine("[CombatManager] " + entity.Tag + " can level up! (Level " + oldLevel + " -> " + (oldLevel + 1) + ")");
                 // Fire OnPlayerLevelUp script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP fires when player levels up
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_PLAYER_LEVEL_UP fires when player levels up
                 // Located via string references: "OnPlayerLevelUp" @ 0x007c1a90, "LevelUp" @ 0x007c1a9c
                 // Original implementation: OnPlayerLevelUp script fires on entity when it levels up
                 if (_world != null && _world.EventBus != null)

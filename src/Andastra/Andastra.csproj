@@ -84,8 +84,7 @@
   <ItemGroup>
     <ProjectReference Include="Graphics\Andastra.Graphics.csproj" />
     <ProjectReference Include="UI\Andastra.UI.csproj" />
-    <ProjectReference Include="Parsing\Andastra.Parsing.csproj" />
-    <ProjectReference Include="Utility\Andastra.Utility.csproj" />
+    <ProjectReference Include="..\BioWare.NET\BioWare.NET.csproj" />
     <PackageReference Include="ini-parser-netstandard" Version="2.5.3" />
     <!-- Explicitly resolve transitive dependencies from Microsoft.Extensions.* 10.0.1 -->
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />

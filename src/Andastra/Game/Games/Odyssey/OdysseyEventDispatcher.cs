@@ -4,10 +4,10 @@ using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Base Odyssey Engine event dispatcher implementation.
@@ -75,7 +75,7 @@ namespace Andastra.Runtime.Games.Odyssey
             var subtypeName = GetEventSubtypeName(eventSubtype);
 
             // Log event dispatch with entity information
-            // Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 debug format "DRF Event Added: %s(%s) %s(%s) %s %s\n"
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DispatchEvent @ 0x004dcfb0 debug format "DRF Event Added: %s(%s) %s(%s) %s %s\n"
             string sourceInfo = sourceEntity != null ? $"{sourceEntity.Tag ?? "null"} ({sourceEntity.ObjectId})" : "null";
             string targetInfo = targetEntity != null ? $"{targetEntity.Tag ?? "null"} ({targetEntity.ObjectId})" : "null";
             Console.WriteLine($"[OdysseyEventDispatcher] Dispatching event: {eventName} ({eventType}) from {sourceInfo} to {targetInfo}, subtype: {subtypeName} ({eventSubtype})");
@@ -85,7 +85,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 case 0x1a: // EVENT_AREA_TRANSITION
                     // Extract target area from sourceEntity (door/trigger) component
-                    // Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 handles EVENT_AREA_TRANSITION (case 0x1a)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DispatchEvent @ 0x004dcfb0 handles EVENT_AREA_TRANSITION (case 0x1a)
                     // Source entity is the door/trigger that triggered the transition
                     // Target entity is the entity being transitioned (usually player/party)
                     string targetAreaResRef = ExtractTargetAreaFromTransitionSource(sourceEntity, targetEntity);
@@ -326,7 +326,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="entity">Entity to transition.</param>
         /// <param name="targetAreaResRef">Target area ResRef.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: HandleAreaTransition processes entity movement between areas.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): HandleAreaTransition processes entity movement between areas.
         /// This public wrapper allows areas and other systems to trigger transitions directly.
         /// </remarks>
         public void TransitionEntityToArea(IEntity entity, string targetAreaResRef)
@@ -363,7 +363,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Extracts target area from transition source entity (door/trigger).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Door/trigger transition system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door/trigger transition system
         /// Located via string references: "LinkedTo" @ 0x007bd798, "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788
         /// Original implementation: Doors/triggers with LinkedTo field trigger area transitions
         /// LinkedTo contains waypoint tag - waypoint's AreaId determines target area
@@ -458,7 +458,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets the current area for an entity.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Entity area tracking system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity area tracking system
         /// Checks entity's AreaId first, then falls back to world's CurrentArea.
         /// </remarks>
         private IArea GetCurrentAreaForEntity(IEntity entity, IWorld world)
@@ -486,7 +486,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Loads or gets the target area for transition.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area streaming system (swkotor2.exe: LoadAreaProperties @ 0x004e26d0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area streaming system (swkotor2.exe: LoadAreaProperties @ 0x004e26d0)
         /// Checks if area is already loaded in current module, otherwise loads it via ModuleLoader.
         ///
         /// Area streaming flow (based on swkotor2.exe area transition system):
@@ -554,19 +554,19 @@ namespace Andastra.Runtime.Games.Odyssey
             try
             {
                 // Create Module instance for resource access
-                // Based on swkotor2.exe: Module objects are created per module for resource lookups
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are created per module for resource lookups
                 // Module instance provides access to ARE, GIT, LYT, VIS files for areas
-                Andastra.Parsing.Installation.Installation installation = _moduleLoader.GetInstallation();
+                BioWare.NET.Extract.Installation.Installation installation = _moduleLoader.GetInstallation();
                 if (installation == null)
                 {
                     Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Cannot load area {targetAreaResRef} - ModuleLoader has no Installation");
                     return null;
                 }
 
-                var module = new Andastra.Parsing.Installation.Module(moduleName, installation);
+                var module = new BioWare.NET.Extract.Installation.Module(moduleName, installation);
 
                 // Load area using ModuleLoader
-                // Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0 loads ARE + GIT + LYT + VIS
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LoadAreaProperties @ 0x004e26d0 loads ARE + GIT + LYT + VIS
                 // ModuleLoader.LoadArea creates RuntimeArea with all area resources
                 RuntimeArea loadedArea = _moduleLoader.LoadArea(module, targetAreaResRef);
                 if (loadedArea == null)
@@ -578,7 +578,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 Console.WriteLine($"[OdysseyEventDispatcher] LoadOrGetTargetArea: Successfully loaded area {targetAreaResRef} from module {moduleName}");
 
                 // Add loaded area to module's Areas collection
-                // Based on swkotor2.exe: Areas are stored in module's area list for lookup
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Areas are stored in module's area list for lookup
                 if (world.CurrentModule is RuntimeModule runtimeModule)
                 {
                     runtimeModule.AddArea(loadedArea);
@@ -586,7 +586,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Register area with world (assign AreaId for entity lookup)
-                // Based on swkotor2.exe: Areas are registered with AreaId for GetArea() lookups
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Areas are registered with AreaId for GetArea() lookups
                 // World.RegisterArea assigns AreaId and stores area for efficient lookup
                 world.RegisterArea(loadedArea);
                 uint areaId = world.GetAreaId(loadedArea);
@@ -610,7 +610,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="targetArea">The target area for the transition.</param>
         /// <param name="sourceEntity">Optional source entity (door/trigger) that triggered the transition.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Transition positioning system (FUN_004e26d0 @ 0x004e26d0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Transition positioning system (FUN_004e26d0 @ 0x004e26d0)
         /// Located via string references: "LinkedTo" @ 0x007bd7a4 (waypoint tag for positioning after transition)
         /// Original implementation: If source entity (door/trigger) has LinkedTo field, positions entity at that waypoint.
         /// Otherwise, entity position is preserved and projected to target area walkmesh in ProjectEntityToTargetArea.
@@ -680,7 +680,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Find waypoint with LinkedTo tag in target area
-            // Based on swkotor2.exe: GetWaypointByTag searches for waypoint by tag in area
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetWaypointByTag searches for waypoint by tag in area
             // Located via string references: "GetWaypointByTag" function searches waypoints by tag
             IEntity waypoint = targetArea.GetObjectByTag(linkedToTag, 0);
             if (waypoint == null)
@@ -705,7 +705,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Position entity at waypoint's position and facing
-            // Based on swkotor2.exe: Transition positioning sets entity position to waypoint position
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Transition positioning sets entity position to waypoint position
             // Original implementation: FUN_004e26d0 @ 0x004e26d0 positions entity at waypoint after transition
             Vector3 waypointPosition = waypointTransform.Position;
             float waypointFacing = waypointTransform.Facing;
@@ -720,7 +720,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Projects an entity's position to the target area's walkmesh.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
         /// Projects position to walkable surface for accurate positioning.
         /// </remarks>
         private void ProjectEntityToTargetArea(IEntity entity, IArea targetArea)
@@ -763,7 +763,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Finds the nearest walkable point in an area.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Walkmesh search system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh search system
         /// Searches in expanding radius when direct projection fails.
         /// </remarks>
         private Vector3 FindNearestWalkablePoint(IArea area, Vector3 searchPoint)
@@ -819,7 +819,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Removes an entity from an area.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Entity removal from area
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity removal from area
         /// Calls area's RemoveEntityFromArea method.
         /// </remarks>
         private void RemoveEntityFromArea(IArea area, IEntity entity)
@@ -848,7 +848,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Adds an entity to a target area.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Entity addition to area
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity addition to area
         /// Calls area's AddEntityToArea method.
         /// </remarks>
         private void AddEntityToTargetArea(IArea targetArea, IEntity entity)
@@ -877,7 +877,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Fires area transition events.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area transition event system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transition event system
         /// Fires OnEnter script events for target area.
         /// </remarks>
         private void FireAreaTransitionEvents(IWorld world, IEntity entity, IArea targetArea)
@@ -890,7 +890,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
             Console.WriteLine($"[OdysseyEventDispatcher] FireAreaTransitionEvents: Firing OnEnter script for entity {entity.Tag ?? "null"} ({entity.ObjectId}) entering area {targetArea.ResRef}");
             // Fire OnEnter script for target area
-            // Based on swkotor2.exe: Area enter script execution
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area enter script execution
             // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
             // Original implementation: Fires when entity enters an area
             if (targetArea is Core.Module.RuntimeArea targetRuntimeArea)
@@ -1035,7 +1035,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="entity">The entity to open (door or placeable).</param>
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: EVENT_OPEN_OBJECT opens door/placeable and fires OnOpen script
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT opens door/placeable and fires OnOpen script
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 7, line 66)
         /// </remarks>
         private void HandleOpenObjectEvent(IEntity entity, IWorld world)
@@ -1047,7 +1047,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (doorComponent != null)
             {
                 // Open the door
-                // Based on swkotor2.exe: EVENT_OPEN_OBJECT sets IsOpen=true, OpenState=1
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT sets IsOpen=true, OpenState=1
                 // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7)
                 // Original implementation: Opens door, updates OpenState to 1 (open), fires OnOpen script
                 if (!doorComponent.IsOpen)
@@ -1061,7 +1061,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnOpen script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN (0x16) fires when door is opened
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN (0x16) fires when door is opened
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16), "OnOpen" @ 0x007be1b0, "ScriptOnOpen" @ 0x007beeb8
                 // Original implementation: OnOpen script fires on door entity after door is opened
                 // Script fires regardless of whether door was already open (allows scripts to react to open attempts)
@@ -1075,7 +1075,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (placeableComponent != null)
             {
                 // Open the placeable (container)
-                // Based on swkotor2.exe: EVENT_OPEN_OBJECT sets IsOpen=true, AnimationState=1
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT sets IsOpen=true, AnimationState=1
                 // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7)
                 // Original implementation: Opens placeable container, updates AnimationState to 1 (open), fires OnOpen script
                 if (!placeableComponent.IsOpen)
@@ -1089,7 +1089,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnOpen script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN (0x16) fires when placeable is opened
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN (0x16) fires when placeable is opened
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
                 // Original implementation: OnOpen script fires on placeable entity after placeable is opened
                 // Script fires regardless of whether placeable was already open (allows scripts to react to open attempts)
@@ -1108,7 +1108,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="entity">The entity to close (door or placeable).</param>
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: EVENT_CLOSE_OBJECT closes door/placeable and fires OnClose script
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_CLOSE_OBJECT closes door/placeable and fires OnClose script
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 6, line 63)
         /// </remarks>
         private void HandleCloseObjectEvent(IEntity entity, IWorld world)
@@ -1120,7 +1120,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (doorComponent != null)
             {
                 // Close the door
-                // Based on swkotor2.exe: EVENT_CLOSE_OBJECT sets IsOpen=false, OpenState=0
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_CLOSE_OBJECT sets IsOpen=false, OpenState=0
                 // Located via string references: "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6)
                 // Original implementation: Closes door, updates OpenState to 0 (closed), fires OnClose script
                 if (doorComponent.IsOpen)
@@ -1134,7 +1134,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnClose script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE (0x17) fires when door is closed
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE (0x17) fires when door is closed
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17), "OnClosed" @ 0x007be1c8, "ScriptOnClose" @ 0x007beeb8
                 // Original implementation: OnClose script fires on door entity after door is closed
                 // Script fires regardless of whether door was already closed (allows scripts to react to close attempts)
@@ -1148,7 +1148,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (placeableComponent != null)
             {
                 // Close the placeable (container)
-                // Based on swkotor2.exe: EVENT_CLOSE_OBJECT sets IsOpen=false, AnimationState=0
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_CLOSE_OBJECT sets IsOpen=false, AnimationState=0
                 // Located via string references: "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6)
                 // Original implementation: Closes placeable container, updates AnimationState to 0 (closed), fires OnClose script
                 if (placeableComponent.IsOpen)
@@ -1162,7 +1162,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnClose script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE (0x17) fires when placeable is closed
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE (0x17) fires when placeable is closed
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
                 // Original implementation: OnClose script fires on placeable entity after placeable is closed
                 // Script fires regardless of whether placeable was already closed (allows scripts to react to close attempts)
@@ -1181,7 +1181,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="entity">The entity to lock (door or placeable).</param>
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: EVENT_LOCK_OBJECT locks door/placeable and fires OnLock script
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_LOCK_OBJECT locks door/placeable and fires OnLock script
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xd, line 84)
         /// </remarks>
         private void HandleLockObjectEvent(IEntity entity, IWorld world)
@@ -1193,14 +1193,14 @@ namespace Andastra.Runtime.Games.Odyssey
             if (doorComponent != null)
             {
                 // Lock the door
-                // Based on swkotor2.exe: EVENT_LOCK_OBJECT sets IsLocked=true (only if Lockable flag is true)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_LOCK_OBJECT sets IsLocked=true (only if Lockable flag is true)
                 // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd)
                 // Original implementation: Locks door if Lockable flag is true, fires OnLock script
                 // Lock validation: Only locks if Lockable flag is true (from UTD template)
                 if (!doorComponent.IsLocked)
                 {
                     // Check if door is lockable
-                    // Based on swkotor2.exe: Lockable flag determines if door can be locked
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Lockable flag determines if door can be locked
                     // Located via string references: "Lockable" field in UTD template
                     // Original implementation: Only locks if Lockable flag is true
                     if (doorComponent.LockableByScript)
@@ -1220,7 +1220,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnLock script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED (0x1c) fires when door is locked
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED (0x1c) fires when door is locked
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c), "OnLock" @ 0x007c1a28, "ScriptOnLock" @ 0x007c1a0c
                 // Original implementation: OnLock script fires on door entity after door is locked
                 // Script fires regardless of whether door was already locked (allows scripts to react to lock attempts)
@@ -1234,7 +1234,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (placeableComponent != null)
             {
                 // Lock the placeable
-                // Based on swkotor2.exe: EVENT_LOCK_OBJECT sets IsLocked=true
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_LOCK_OBJECT sets IsLocked=true
                 // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd)
                 // Original implementation: Locks placeable, fires OnLock script
                 // Note: Placeables don't have LockableByScript flag, so we always allow locking
@@ -1249,7 +1249,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnLock script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED (0x1c) fires when placeable is locked
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED (0x1c) fires when placeable is locked
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                 // Original implementation: OnLock script fires on placeable entity after placeable is locked
                 // Script fires regardless of whether placeable was already locked (allows scripts to react to lock attempts)
@@ -1268,7 +1268,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="entity">The entity to unlock (door or placeable).</param>
         /// <param name="world">The world containing the entity.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: EVENT_UNLOCK_OBJECT unlocks door/placeable and fires OnUnlock script
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT unlocks door/placeable and fires OnUnlock script
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xc, line 81)
         /// </remarks>
         private void HandleUnlockObjectEvent(IEntity entity, IWorld world)
@@ -1280,7 +1280,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (doorComponent != null)
             {
                 // Unlock the door
-                // Based on swkotor2.exe: EVENT_UNLOCK_OBJECT sets IsLocked=false
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT sets IsLocked=false
                 // Located via string references: "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc)
                 // Original implementation: Unlocks door, fires OnUnlock script
                 if (doorComponent.IsLocked)
@@ -1294,7 +1294,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnUnlock script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when door is unlocked
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when door is unlocked
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d), "OnUnlock" @ 0x007c1a00, "ScriptOnUnlock" @ 0x007c1a00
                 // Original implementation: OnUnlock script fires on door entity after door is unlocked
                 // Script fires regardless of whether door was already unlocked (allows scripts to react to unlock attempts)
@@ -1308,7 +1308,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (placeableComponent != null)
             {
                 // Unlock the placeable
-                // Based on swkotor2.exe: EVENT_UNLOCK_OBJECT sets IsLocked=false
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT sets IsLocked=false
                 // Located via string references: "EVENT_UNLOCK_OBJECT" @ 0x007bcd34 (case 0xc)
                 // Original implementation: Unlocks placeable, fires OnUnlock script
                 if (placeableComponent.IsLocked)
@@ -1322,7 +1322,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Fire OnUnlock script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when placeable is unlocked
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED (0x1d) fires when placeable is unlocked
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_UNLOCKED" @ 0x007bc72c (0x1d)
                 // Original implementation: OnUnlock script fires on placeable entity after placeable is unlocked
                 // Script fires regardless of whether placeable was already unlocked (allows scripts to react to unlock attempts)
@@ -1342,7 +1342,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="eventType">The combat event type (EVENT_ON_MELEE_ATTACKED, EVENT_DESTROY_OBJECT, etc.).</param>
         /// <param name="sourceEntity">The entity that triggered the combat event (attacker, damager, etc.). May be null if not available.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 handles combat events by firing appropriate script events.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DispatchEvent @ 0x004dcfb0 handles combat events by firing appropriate script events.
         /// Located via string references:
         /// - "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf) - fires OnPhysicalAttacked script
         /// - "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb) - fires OnDeath script if entity is dead, or handles object destruction
@@ -1397,7 +1397,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 case 0xf: // EVENT_ON_MELEE_ATTACKED (swkotor2.exe: 0x004dcfb0 case 0xf, line 89)
                     // Fire OnPhysicalAttacked script event on target entity
-                    // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
                     // Located via string references: "EVENT_ON_MELEE_ATTACKED" @ 0x007bccf4 (case 0xf), "OnMeleeAttacked" @ 0x007c1a5c, "ScriptAttacked" @ 0x007bee80
                     // Original implementation: EVENT_ON_MELEE_ATTACKED fires on target entity when attacked (before damage is applied)
                     // Script fires regardless of hit/miss - this allows scripts to react to being targeted
@@ -1408,7 +1408,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 case 0xb: // EVENT_DESTROY_OBJECT (swkotor2.exe: 0x004dcfb0 case 0xb, line 77)
                     // Handle object destruction or entity death
-                    // Based on swkotor2.exe: EVENT_DESTROY_OBJECT can indicate entity death or object destruction
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_DESTROY_OBJECT can indicate entity death or object destruction
                     // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb)
                     // Original implementation: EVENT_DESTROY_OBJECT fires when entity dies or object is destroyed
                     // For creatures: If entity is dead (CurrentHP <= 0), fires OnDeath script with killer as triggerer
@@ -1420,7 +1420,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 case 0xa: // EVENT_SIGNAL_EVENT with ON_DAMAGED (eventSubtype 4)
                     // This case is handled in DispatchEvent before calling HandleCombatEvent
                     // But if called directly, fire OnDamaged script event
-                    // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
                     // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
                     // Original implementation: OnDamaged script fires on target entity when damage is dealt (after damage is applied)
                     // Source entity (damager) is passed as triggerer to script execution context
@@ -1442,7 +1442,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="attacker">The entity attacking (may be null).</param>
         /// <param name="world">The world containing the entities.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnPhysicalAttacked script
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnPhysicalAttacked script
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xf, line 89)
         /// </remarks>
         private void HandleMeleeAttackedEvent(IEntity entity, IEntity attacker, IWorld world)
@@ -1450,7 +1450,7 @@ namespace Andastra.Runtime.Games.Odyssey
             Console.WriteLine($"[OdysseyEventDispatcher] HandleMeleeAttackedEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) attacked by {attacker?.Tag ?? "null"} ({attacker?.ObjectId ?? 0})");
 
             // Fire OnPhysicalAttacked script event on target entity
-            // Based on swkotor2.exe: EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_ON_MELEE_ATTACKED fires OnMeleeAttacked script
             // Script fires regardless of hit/miss - this allows scripts to react to being targeted
             // Source entity (attacker) is passed as triggerer to script execution context
             world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnPhysicalAttacked, attacker);
@@ -1464,7 +1464,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="killer">The entity that destroyed/killed (may be null).</param>
         /// <param name="world">The world containing the entities.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: EVENT_DESTROY_OBJECT handles entity death or object destruction
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_DESTROY_OBJECT handles entity death or object destruction
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0 case 0xb, line 77)
         /// </remarks>
         private void HandleDestroyObjectEvent(IEntity entity, IEntity killer, IWorld world)
@@ -1476,7 +1476,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (stats != null && stats.IsDead)
             {
                 // Entity is dead - fire OnDeath script event
-                // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH fires when entity dies
                 // Located via string references: "OnDeath" script field, death event handling
                 // Original implementation: OnDeath script fires on victim entity with killer as triggerer
                 world.EventBus.FireScriptEvent(entity, Core.Enums.ScriptEvent.OnDeath, killer);
@@ -1486,7 +1486,7 @@ namespace Andastra.Runtime.Games.Odyssey
             {
                 // Entity is not dead - this is object destruction (door, placeable, etc.)
                 // Handle object destruction cleanup
-                // Based on swkotor2.exe: Object destruction removes entity from world and cleans up components
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Object destruction removes entity from world and cleans up components
                 // Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (case 0xb in DispatchEvent @ 0x004dcfb0)
                 // Original implementation: EVENT_DESTROY_OBJECT is logged but doesn't fire script events
                 // Object destruction is handled by removing entity from world and cleaning up components
@@ -1495,7 +1495,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Destroy the entity through the world's destruction system
                 // This ensures proper cleanup of all components, removal from areas, physics, and event systems
-                // Based on swkotor2.exe: Object destruction removes entity from world and cleans up all components
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Object destruction removes entity from world and cleans up all components
                 // The world's DestroyEntity method handles:
                 // - Component cleanup (removes all component references)
                 // - Area removal (removes entity from current area)
@@ -1523,7 +1523,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="damager">The entity that damaged (may be null).</param>
         /// <param name="world">The world containing the entities.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
         /// (swkotor2.exe: DispatchEvent @ 0x004dcfb0, eventSubtype 4, line 145)
         /// </remarks>
         private void HandleDamagedEvent(IEntity entity, IEntity damager, IWorld world)
@@ -1531,7 +1531,7 @@ namespace Andastra.Runtime.Games.Odyssey
             Console.WriteLine($"[OdysseyEventDispatcher] HandleDamagedEvent: Entity {entity.Tag ?? "null"} ({entity.ObjectId}) damaged by {damager?.Tag ?? "null"} ({damager?.ObjectId ?? 0})");
 
             // Fire OnDamaged script event on target entity
-            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED fires when entity takes damage
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14 (0x4), "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80
             // Original implementation: OnDamaged script fires on target entity when damage is dealt (after damage is applied)
             // Source entity (damager) is passed as triggerer to script execution context
@@ -1833,7 +1833,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// </summary>
     /// <remarks>
     /// KOTOR 2 Event Dispatcher:
-    /// - Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DispatchEvent @ 0x004dcfb0
     /// - Maps event IDs to string names for debugging
     /// - Routes events to appropriate handlers based on type
     ///
@@ -1859,7 +1859,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="eventSubtype">The event subtype from EVENT_SIGNAL_EVENT.</param>
         /// <returns>The corresponding ScriptEvent enum value.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: DispatchEvent @ 0x004dcfb0 lines 132-246.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DispatchEvent @ 0x004dcfb0 lines 132-246.
         /// Maps CSWSSCRIPTEVENT_EVENTTYPE_ON_* constants to ScriptEvent enum.
         /// Returns ScriptEvent.OnUserDefined for unknown subtypes.
         ///

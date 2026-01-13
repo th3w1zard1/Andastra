@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Systems;
@@ -13,7 +13,7 @@ using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IEntityModelRenderer.
@@ -240,7 +240,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     strideEffect.Projection = projectionMatrix;
 
                     // Apply opacity from renderable component for fade-in/fade-out effects
-                    // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                     // Opacity is updated by AppearAnimationFadeSystem for appear animations
                     // Opacity is updated by ActionDestroyObject for destroy animations
                     float opacity = renderable.Opacity;
@@ -292,8 +292,8 @@ namespace Andastra.Runtime.Stride.Graphics
                     return null;
                 }
 
-                // Use Andastra.Parsing MDL parser
-                return Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                // Use BioWare.NET MDL parser
+                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

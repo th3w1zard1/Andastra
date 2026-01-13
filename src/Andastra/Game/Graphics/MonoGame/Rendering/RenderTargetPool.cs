@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Render target pool for efficient render target reuse.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Render Target Pool (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: "Frame Buffer" @ 0x007c8408, "CB_FRAMEBUFF" @ 0x007d1d84
     /// - OpenGL render texture: "WGL_NV_render_texture_rectangle" @ 0x007b880c, "WGL_ARB_render_texture" @ 0x007b8890
     /// - Original implementation: KOTOR used minimal render targets (mainly for UI overlays)
@@ -216,7 +216,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// This method differs from Dispose() in that it keeps the pool object alive and reusable.
         /// Dispose() should be called when the pool is no longer needed and will be garbage collected.
         /// 
-        /// Based on swkotor2.exe rendering system architecture:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture:
         /// - Original engine: Render targets allocated on-demand, released when done
         /// - Modern enhancement: Pooling with clear capability for memory management
         /// - Clear operation: Disposes all render targets and resets pool state

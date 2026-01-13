@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Formats.DDS;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.TEX;
-using Andastra.Parsing.Resource.Generics.GUI;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Eclipse.Fonts;
+using BioWare.NET.Resource.Formats.DDS;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.TEX;
+using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework.Input;
 using NumericsVector2 = System.Numerics.Vector2;
-using ParsingColor = Andastra.Parsing.Common.Color;
-using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
+using ParsingColor = BioWare.NET.Common.Color;
+using ParsingGUI = BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI;
 
-namespace Andastra.Runtime.Games.Eclipse.GUI
+namespace Andastra.Game.Games.Eclipse.GUI
 {
     /// <summary>
     /// Eclipse engine (Dragon Age Origins, Dragon Age 2) GUI manager implementation.

@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Enums
     /// </summary>
     /// <remarks>
     /// Object Type Enum:
-    /// - Based on swkotor2.exe object type system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) object type system
     /// - Located via string references: ObjectType used throughout entity system for type checking
     /// - Object type strings: "Creature" @ 0x007bc4e0, "Door" @ 0x007bc4f4, "Placeable" @ 0x007bc508
     /// - "Trigger" @ 0x007bc51c, "Item" @ 0x007bc530, "Waypoint" @ 0x007bc544, "Sound" @ 0x007bc558

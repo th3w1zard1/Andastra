@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Andastra.Runtime.MonoGame.Memory
+namespace Andastra.Game.Graphics.MonoGame.Memory
 {
     /// <summary>
     /// Generic object pool for reducing allocations and GC pressure.
@@ -13,7 +13,7 @@ namespace Andastra.Runtime.MonoGame.Memory
     /// </summary>
     /// <remarks>
     /// Object Pool:
-    /// - Based on swkotor2.exe memory management system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) memory management system
     /// - Located via string references: "SpawnPoolActive" @ 0x007c0bdc (spawn pool active flag)
     /// - "PT_XP_POOL" @ 0x007c18a4 (XP pool in PARTYTABLE)
     /// - Memory allocation: wglAllocateMemoryNV, wglFreeMemoryNV (OpenGL memory management)

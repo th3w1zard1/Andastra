@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) specific stats component implementation.

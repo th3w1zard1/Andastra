@@ -4,7 +4,7 @@ using Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 using StrideEngine = Stride.Engine;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Extension methods for Stride GraphicsDevice to provide compatibility with older API.

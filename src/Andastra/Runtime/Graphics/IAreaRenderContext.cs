@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Area Render Context:
-    /// - Based on swkotor2.exe: Area rendering uses graphics device, room mesh renderer, and basic effect
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area rendering uses graphics device, room mesh renderer, and basic effect
     /// - Provides unified access to rendering services for area rendering
     /// - Set by game loop before calling area.Render()
     /// - Contains graphics device, room mesh renderer, basic effect, camera matrices, and camera position

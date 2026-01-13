@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) specific sound component implementation.

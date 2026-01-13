@@ -2,24 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.GUI;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
 
-namespace Andastra.Runtime.Engines.Odyssey.UI
+namespace Andastra.Game.Engines.Odyssey.UI
 {
     /// <summary>
     /// Base class for upgrade screen implementation common to both K1 and K2.
@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
     /// - Differences: K2 uses "upgradeitems_p", K1 uses "upgradeitems" for regular items
     /// - Differences: K2 has 6 upgrade slots for lightsabers, K1 has 4
     /// - Based on swkotor.exe: FUN_006c7630 (constructor), FUN_006c6500 (button handler), FUN_006c59a0 (ApplyUpgrade)
-    /// - Based on swkotor2.exe: FUN_00731a00 (constructor), FUN_0072e260 (button handler), FUN_00729640 (ApplyUpgrade)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 (constructor), FUN_0072e260 (button handler), FUN_00729640 (ApplyUpgrade)
     /// </remarks>
     public abstract class OdysseyUpgradeScreenBase : BaseUpgradeScreen
     {
@@ -46,7 +46,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         private bool _guiInitialized;
 
         // Upgrade slot and list box state tracking
-        // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - tracks selected upgrade slot and list box selection
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - tracks selected upgrade slot and list box selection
         // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - tracks selected upgrade slot and list box selection
         private int? _selectedUpgradeSlot;
         private List<string> _currentUpgradeList; // List of upgrade ResRefs currently displayed in LB_ITEMS
@@ -83,7 +83,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Shows the upgrade screen.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00680cb0 @ 0x00680cb0 (ShowUpgradeScreen)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00680cb0 @ 0x00680cb0 (ShowUpgradeScreen)
         /// Based on swkotor.exe: Similar upgrade screen display logic
         /// Original implementation:
         /// - Creates upgrade screen object (FUN_00733bc0 for K2, FUN_006c78d0 for K1)
@@ -99,17 +99,17 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             _isVisible = true;
 
             // Extract character skills when screen is shown
-            // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
             // Skills are extracted when character is set, but we also extract them here to ensure they're up-to-date
             ExtractCharacterSkills();
 
             // Get GUI name based on game version
-            // Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 37 - loads "upgradeitems_p"
             // Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 line 37 - loads "upgradeitems"
             _guiName = GetUpgradeGuiName();
 
             // Load upgrade screen GUI
-            // Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 - constructor loads GUI
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 - constructor loads GUI
             // Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 - constructor loads GUI
             if (!LoadUpgradeGui())
             {
@@ -118,12 +118,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Initialize GUI controls and set up button handlers
-            // Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 lines 39-64 - sets up controls
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 lines 39-64 - sets up controls
             // Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 lines 39-64 - sets up controls
             InitializeGuiControls();
 
             // Update GUI with current item and character data
-            // Based on swkotor2.exe: FUN_00680cb0 @ 0x00680cb0 lines 40-41 - sets item ID and character ID
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00680cb0 @ 0x00680cb0 lines 40-41 - sets item ID and character ID
             UpdateGuiData();
 
             // Refresh available upgrades display
@@ -136,7 +136,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Hides the upgrade screen.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GUI hiding logic (inverse of ShowUpgradeScreen)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI hiding logic (inverse of ShowUpgradeScreen)
         /// Based on swkotor.exe: Similar GUI hiding logic
         /// Original implementation:
         /// - Removes GUI from GUI manager
@@ -149,7 +149,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             _isVisible = false;
 
             // Clear GUI state
-            // Based on swkotor2.exe: GUI cleanup when hiding screen
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI cleanup when hiding screen
             // Based on swkotor.exe: GUI cleanup when hiding screen
             if (_guiInitialized)
             {
@@ -250,13 +250,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 }
 
                 // Get character inventory ResRefs using base class helper
-                // Based on swkotor2.exe: FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef
                 // Based on swkotor.exe: FUN_00555ed0 @ 0x00555ed0 - searches inventory by ResRef
                 // These functions iterate through inventory items and compare ResRefs
                 HashSet<string> inventoryResRefs = GetCharacterInventoryResRefs(_character);
 
                 // Get column headers to check if required columns exist
-                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - uses "UpgradeType" and "Template" columns
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - uses "UpgradeType" and "Template" columns
                 // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - uses "UpgradeType" and "Template" columns
                 List<string> headers = upgradeTable.GetHeaders();
                 bool hasUpgradeTypeColumn = headers.Contains("UpgradeType", StringComparer.OrdinalIgnoreCase);
@@ -269,7 +269,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 }
 
                 // Iterate through upgrade table rows and filter by compatibility
-                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 lines 100-128, 144-172, 271-299
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 lines 100-128, 144-172, 271-299
                 // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 lines 88-116
                 // Loop through all rows in upgrade table
                 for (int rowIndex = 0; rowIndex < upgradeTable.GetHeight(); rowIndex++)
@@ -277,7 +277,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     TwoDARow row = upgradeTable.GetRow(rowIndex);
 
                     // Check UpgradeType compatibility (this is the slot index)
-                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 102 - checks "UpgradeType" column
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 102 - checks "UpgradeType" column
                     // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 90 - checks "UpgradeType" column
                     // UpgradeType column specifies which slot this upgrade can be placed in
                     // Can be:
@@ -295,13 +295,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     }
 
                     // Check if UpgradeType matches the requested slot
-                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 107, 151, 278 - compares UpgradeType with slot
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 107, 151, 278 - compares UpgradeType with slot
                     // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 95 - compares UpgradeType with slot
                     bool slotMatches = false;
                     if (string.IsNullOrWhiteSpace(upgradeTypeValue) || upgradeTypeValue == "****")
                     {
                         // Empty UpgradeType - special case: for lightsaber crystals (slot 1), UpgradeType can be 0/empty
-                        // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 107 - checks if UpgradeType == 0
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 107 - checks if UpgradeType == 0
                         if (upgradeSlot == 1)
                         {
                             // For slot 1 (lightsaber crystals), empty UpgradeType is valid
@@ -332,7 +332,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     }
 
                     // Get Template ResRef from upgrade table row
-                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 108, 152, 279 - uses "Template" column
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 108, 152, 279 - uses "Template" column
                     // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 96, 98 - uses "Template" column
                     // Template column contains the upgrade item template ResRef
                     string upgradeResRef = null;
@@ -351,7 +351,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     }
 
                     // Normalize ResRef (remove extension, lowercase)
-                    // Based on swkotor2.exe: FUN_00631140 @ 0x00631140 - ResRef normalization
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631140 @ 0x00631140 - ResRef normalization
                     // Based on swkotor.exe: FUN_005e6080 @ 0x005e6080 - ResRef normalization
                     string normalizedResRef = upgradeResRef.ToLowerInvariant();
                     if (normalizedResRef.EndsWith(".uti"))
@@ -360,13 +360,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                     }
 
                     // Check if upgrade item is in inventory
-                    // Based on swkotor2.exe: FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef, returns item ID or 0x7f000000
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055f2a0 @ 0x0055f2a0 - searches inventory by ResRef, returns item ID or 0x7f000000
                     // Based on swkotor.exe: FUN_00555ed0 @ 0x00555ed0 - searches inventory by ResRef, returns item ID or 0x7f000000
                     // FUN_0055f2a0/FUN_00555ed0 iterate through inventory items and compare ResRefs using string comparison
                     if (inventoryResRefs.Contains(normalizedResRef))
                     {
                         // Check skill requirements for upgrade (if character skills are available)
-                        // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
                         // Skills are used to filter available upgrades based on skill requirements
                         // If upgrade table has skill requirement columns (e.g., "RequiredSkill", "RequiredSkillRank"), check them
                         // Common skills used: Repair (5), Security (6), Computer Use (0), Demolitions (1)
@@ -415,7 +415,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                         }
 
                         // Upgrade is compatible, available in inventory, and meets skill requirements
-                        // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 79, 118, 162, 289 - checks if item found in inventory
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 79, 118, 162, 289 - checks if item found in inventory
                         // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 66, 106 - checks if item found in inventory
                         if (meetsSkillRequirements && !availableUpgrades.Contains(normalizedResRef, StringComparer.OrdinalIgnoreCase))
                         {
@@ -456,7 +456,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <remarks>
         /// Remove Upgrade Logic (Odyssey Engine - K1 and K2):
         /// - Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 lines 165-180 (removal logic)
-        /// - Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 lines 217-230 (removal logic)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 lines 217-230 (removal logic)
         /// - Original implementation flow:
         ///   1. Gets upgrade item from slot array (K1: offset 0x2f74, K2: offset 0x3d54)
         ///   2. Clears flag/bit associated with upgrade slot
@@ -489,7 +489,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Find upgrade in slot
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 169 - gets upgrade from offset 0x2f74
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 218 - gets upgrade from offset 0x3d54
             var upgrade = itemComponent.Upgrades.FirstOrDefault(u => u.Index == upgradeSlot);
             if (upgrade == null)
             {
@@ -499,7 +499,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Get upgrade item ResRef from tracked upgrade data
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 169 - gets item from slot array
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 218 - gets item from slot array
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 218 - gets item from slot array
             // We track upgrade ResRefs in _upgradeResRefMap for removal
             string upgradeKey = item.ObjectId.ToString() + "_" + upgradeSlot.ToString();
             string upgradeResRef = null;
@@ -508,7 +508,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 // Upgrade ResRef not found in tracking map - cannot remove properties
                 // Still remove upgrade from item, but cannot restore properties
                 // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 176 - removes from array using FUN_006857a0
-                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
                 itemComponent.RemoveUpgrade(upgrade);
                 return true;
             }
@@ -516,13 +516,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             // Load upgrade UTI template to remove properties
             // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
             // Based on swkotor.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
-            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 - loads UTI template
             UTI upgradeUTI = LoadUpgradeUTITemplate(upgradeResRef);
 
             // Remove upgrade from item
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 176 - removes from array using FUN_006857a0
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 219 - removes from array using FUN_00431ec0
             // This clears the upgrade slot and removes it from the item's upgrade list
             itemComponent.RemoveUpgrade(upgrade);
 
@@ -532,7 +532,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Remove upgrade properties from item (damage bonuses, AC bonuses, etc.)
             // Based on swkotor.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
-            // Based on swkotor2.exe: FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055e160 @ 0x0055e160 - removes upgrade stats from item
             // Properties from upgrade UTI are removed to restore original item stats
             if (upgradeUTI != null)
             {
@@ -541,13 +541,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Recalculate item stats and update display
             // Based on swkotor.exe: Item stat recalculation after upgrade removal
-            // Based on swkotor2.exe: Item stat recalculation after upgrade removal
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stat recalculation after upgrade removal
             // Recalculates item damage, AC, and other stats after removing upgrade properties
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 171 - returns to inventory using FUN_0055d330
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 221 - returns to inventory using FUN_00567ce0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 221 - returns to inventory using FUN_00567ce0
             // swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item entity and adds to inventory
             // swkotor.exe: FUN_0055d330 @ 0x0055d330 - creates item entity and adds to inventory
             // Original implementation: Creates upgrade item entity from UTI template and adds to character's inventory
@@ -561,7 +561,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// </summary>
         /// <returns>GUI name (e.g., "upgradeitems_p" for K2, "upgradeitems" for K1).</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 37 - uses "upgradeitems_p"
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 37 - uses "upgradeitems_p"
         /// Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 line 37 - uses "upgradeitems"
         /// </remarks>
         protected abstract string GetUpgradeGuiName();
@@ -571,7 +571,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// </summary>
         /// <returns>True if GUI was loaded successfully, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 lines 37-38 - loads GUI using FUN_00406e90 and FUN_0040a810
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 lines 37-38 - loads GUI using FUN_00406e90 and FUN_0040a810
         /// Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 lines 37-38 - loads GUI using FUN_00406d80 and FUN_0040a680
         /// </remarks>
         private bool LoadUpgradeGui()
@@ -584,7 +584,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             try
             {
                 // Load GUI resource from installation
-                // Based on swkotor2.exe: FUN_00406e90 @ 0x00406e90 - loads GUI resource
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00406e90 @ 0x00406e90 - loads GUI resource
                 // Based on swkotor.exe: FUN_00406d80 @ 0x00406d80 - loads GUI resource
                 ResourceResult guiResult = _installation.Resource(_guiName, ResourceType.GUI, null, null);
                 if (guiResult == null || guiResult.Data == null || guiResult.Data.Length == 0)
@@ -594,7 +594,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 }
 
                 // Parse GUI file using GUIReader
-                // Based on swkotor2.exe: GUI parsing system
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI parsing system
                 // Based on swkotor.exe: GUI parsing system
                 GUIReader guiReader = new GUIReader(guiResult.Data);
                 _loadedGui = guiReader.Load();
@@ -620,7 +620,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Initializes GUI controls and sets up button handlers.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 lines 39-64 - sets up controls
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 lines 39-64 - sets up controls
         /// Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 lines 39-64 - sets up controls
         /// Original implementation:
         /// - Gets control references: LBL_TITLE, LB_ITEMS, LB_DESCRIPTION, BTN_UPGRADEITEM, BTN_BACK
@@ -635,12 +635,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Build control and button maps for quick lookup
-            // Based on swkotor2.exe: Control mapping system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Control mapping system
             // Based on swkotor.exe: Control mapping system
             BuildControlMaps(_loadedGui.Controls, _controlMap, _buttonMap);
 
             // Set up button click handlers
-            // Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 lines 80-82 - sets button handlers
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 lines 80-82 - sets button handlers
             // Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 lines 80-82 - sets button handlers
             // Button handlers are set up via event system or callback registration
             // BTN_UPGRADEITEM: Calls ApplyUpgrade when clicked
@@ -694,7 +694,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Updates GUI with current item and character data.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00680cb0 @ 0x00680cb0 lines 40-41 - sets item ID (offset 0x629) and character ID (offset 0x18a8)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00680cb0 @ 0x00680cb0 lines 40-41 - sets item ID (offset 0x629) and character ID (offset 0x18a8)
         /// Based on swkotor.exe: Similar data setting logic
         /// Original implementation:
         /// - Sets item ID in GUI object (offset 0x629)
@@ -706,7 +706,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         private void UpdateGuiData()
         {
             // Update title label with item name if available
-            // Based on swkotor2.exe: FUN_00731a00 @ 0x00731a00 line 39 - sets LBL_TITLE
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00731a00 @ 0x00731a00 line 39 - sets LBL_TITLE
             // Based on swkotor.exe: FUN_006c7630 @ 0x006c7630 line 39 - sets LBL_TITLE
             if (_controlMap.TryGetValue("LBL_TITLE", out GUIControl titleControl))
             {
@@ -734,7 +734,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// </summary>
         /// <param name="upgradeSlot">Upgrade slot index (0-based).</param>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - slot selection handler
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - slot selection handler
         /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - slot selection handler
         /// Original implementation:
         /// - Sets selected slot index
@@ -759,7 +759,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Refreshes the upgrade display with available upgrades.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - populates upgrade list
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - populates upgrade list
         /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - populates upgrade list
         /// Original implementation:
         /// - Gets available upgrades for current item and slot
@@ -782,7 +782,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Get available upgrades for the selected slot
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - gets available upgrades
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - gets available upgrades
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - gets available upgrades
             _currentUpgradeList = GetAvailableUpgrades(_targetItem, _selectedUpgradeSlot.Value);
 
@@ -794,7 +794,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Updates the LB_ITEMS list box with the current upgrade list.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - populates LB_ITEMS list box
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - populates LB_ITEMS list box
         /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - populates LB_ITEMS list box
         /// Original implementation:
         /// - Clears existing list box items
@@ -814,12 +814,12 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Clear existing list box items (children represent list items)
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - clears list box before populating
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - clears list box before populating
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - clears list box before populating
             listBox.Children.Clear();
 
             // Add each upgrade as a list box item
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - adds items to list box
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - adds items to list box
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - adds items to list box
             foreach (string upgradeResRef in _currentUpgradeList)
             {
@@ -866,7 +866,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// </summary>
         /// <param name="buttonTag">Tag of the button that was clicked.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - button click handler
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - button click handler
         /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - button click handler
         /// Original implementation:
         /// - BTN_UPGRADEITEM: Applies selected upgrade to item
@@ -883,14 +883,14 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             {
                 case "BTN_UPGRADEITEM":
                     // Apply selected upgrade
-                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
                     // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
                     HandleApplyUpgrade();
                     break;
 
                 case "BTN_BACK":
                     // Hide upgrade screen
-                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - hides screen
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - hides screen
                     // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - hides screen
                     Hide();
                     break;
@@ -905,7 +905,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// Handles applying the selected upgrade to the item.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
         /// Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
         /// Original implementation:
         /// - Gets selected upgrade slot (offset 0x18d0 in upgrade screen object)
@@ -921,7 +921,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Check if upgrade slot is selected
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 216 - checks selected slot
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 216 - checks selected slot
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 164 - checks selected slot
             if (!_selectedUpgradeSlot.HasValue)
             {
@@ -932,7 +932,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             int upgradeSlot = _selectedUpgradeSlot.Value;
 
             // Get selected upgrade ResRef from list box
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 217 - gets selected item from LB_ITEMS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 217 - gets selected item from LB_ITEMS
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 165 - gets selected item from LB_ITEMS
             // List box CurrentValue property contains the selected item index
             string selectedUpgradeResRef = null;
@@ -941,7 +941,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
                 if (listBoxControl is GUIListBox listBox)
                 {
                     // Get selected index from CurrentValue property
-                    // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - uses CurrentValue to get selected index
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - uses CurrentValue to get selected index
                     // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - uses CurrentValue to get selected index
                     if (listBox.CurrentValue.HasValue && listBox.CurrentValue.Value >= 0 && listBox.CurrentValue.Value < _currentUpgradeList.Count)
                     {
@@ -975,14 +975,14 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             }
 
             // Apply upgrade to item
-            // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 line 215 - calls ApplyUpgrade
             // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 line 163 - calls ApplyUpgrade
             bool success = ApplyUpgrade(_targetItem, upgradeSlot, selectedUpgradeResRef);
 
             if (success)
             {
                 // Refresh upgrade display to reflect changes
-                // Based on swkotor2.exe: FUN_0072e260 @ 0x0072e260 - refreshes display after applying upgrade
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0072e260 @ 0x0072e260 - refreshes display after applying upgrade
                 // Based on swkotor.exe: FUN_006c6500 @ 0x006c6500 - refreshes display after applying upgrade
                 RefreshUpgradeDisplay();
             }
@@ -1037,7 +1037,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <returns>True if item was created and added successfully, false otherwise.</returns>
         /// <remarks>
         /// Based on swkotor.exe: FUN_0055d330 @ 0x0055d330 - creates item entity and adds to inventory
-        /// Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item entity and adds to inventory
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - creates item entity and adds to inventory
         /// Original implementation:
         /// - Loads UTI template from installation
         /// - Creates item entity using World.CreateEntity
@@ -1057,7 +1057,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             {
                 // Get player character from world using multiple fallback strategies
                 // Based on swkotor.exe: Player entity retrieval patterns
-                // Based on swkotor2.exe: Player entity retrieval patterns
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity retrieval patterns
                 character = _world.GetEntityByTag("Player", 0);
 
                 if (character == null)
@@ -1112,7 +1112,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Load UTI template from installation
             // Based on swkotor.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
-            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 - loads UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 - loads UTI template
             UTI utiTemplate = LoadUpgradeUTITemplate(templateResRef);
             if (utiTemplate == null)
             {
@@ -1122,7 +1122,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Create item entity
             // Based on swkotor.exe: FUN_0055d330 @ 0x0055d330 - creates item entity using World.CreateEntity
-            // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - creates item entity using World.CreateEntity
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - creates item entity using World.CreateEntity
             IEntity itemEntity = _world.CreateEntity(ObjectType.Item, System.Numerics.Vector3.Zero, 0f);
             if (itemEntity == null)
             {
@@ -1132,7 +1132,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Set tag from template or use template name
             // Based on swkotor.exe: Item tag assignment from UTI template
-            // Based on swkotor2.exe: Item tag assignment from UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item tag assignment from UTI template
             if (!string.IsNullOrEmpty(utiTemplate.Tag))
             {
                 itemEntity.Tag = utiTemplate.Tag;
@@ -1144,7 +1144,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Add item component with UTI template data
             // Based on swkotor.exe: FUN_0055d330 @ 0x0055d330 - configures item component
-            // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - configures item component
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - configures item component
             // Located via string references: "ItemComponent" @ 0x007c41e4 (swkotor2.exe)
             var itemComponent = new OdysseyItemComponent
             {
@@ -1158,7 +1158,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Convert UTI properties to ItemProperty
             // Based on swkotor.exe: Property conversion from UTI template
-            // Based on swkotor2.exe: Property conversion from UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property conversion from UTI template
             foreach (var utiProp in utiTemplate.Properties)
             {
                 var prop = new ItemProperty
@@ -1175,7 +1175,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Convert UTI upgrades to ItemUpgrade (if any)
             // Based on swkotor.exe: Upgrade conversion from UTI template
-            // Based on swkotor2.exe: Upgrade conversion from UTI template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Upgrade conversion from UTI template
             for (int i = 0; i < utiTemplate.Upgrades.Count; i++)
             {
                 var utiUpgrade = utiTemplate.Upgrades[i];
@@ -1192,13 +1192,13 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Add item to character's inventory
             // Based on swkotor.exe: FUN_0055d330 @ 0x0055d330 - adds item to inventory, destroys if full
-            // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - adds item to inventory, destroys if full
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - adds item to inventory, destroys if full
             // Original implementation: If inventory is full, item entity is destroyed and function returns false
             if (!characterInventory.AddItem(itemEntity))
             {
                 // Inventory full - destroy item entity
                 // Based on swkotor.exe: FUN_0055d330 @ 0x0055d330 - destroys item if inventory full
-                // Based on swkotor2.exe: FUN_00567ce0 @ 0x00567ce0 - destroys item if inventory full
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00567ce0 @ 0x00567ce0 - destroys item if inventory full
                 _world.DestroyEntity(itemEntity.ObjectId);
                 return false;
             }
@@ -1214,7 +1214,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <remarks>
         /// Character Retrieval Logic (Odyssey Engine - K1 and K2):
         /// - Based on swkotor.exe: DAT_007a39fc - global structure storing current player character pointer
-        /// - Based on swkotor2.exe: DAT_008283d4 - global structure storing current player character pointer
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DAT_008283d4 - global structure storing current player character pointer
         /// - Original implementation: Both games use a global structure to store the current player character
         /// - The upgrade screen accesses the character from this global structure
         /// - Common pattern: Get character from stored _character field, or find player entity from world
@@ -1229,7 +1229,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Get player character from world
             // Based on swkotor.exe: Player entity is tagged "Player"
-            // Based on swkotor2.exe: Player entity is tagged "Player"
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity is tagged "Player"
             // Located via string references: "Player" @ 0x007be628 (swkotor2.exe), "Mod_PlayerList" @ 0x007be060 (swkotor2.exe)
             IEntity character = _world.GetEntityByTag("Player", 0);
 
@@ -1237,7 +1237,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
             {
                 // Fallback: Search through all entities for one marked as player
                 // Based on swkotor.exe: Player entity has IsPlayer data flag set to true
-                // Based on swkotor2.exe: Player entity has IsPlayer data flag set to true
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity has IsPlayer data flag set to true
                 // Original implementation: Player entity is marked with IsPlayer flag during creation
                 foreach (IEntity entity in _world.GetAllEntities())
                 {

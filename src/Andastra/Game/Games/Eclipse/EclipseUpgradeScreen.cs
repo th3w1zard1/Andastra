@@ -1,26 +1,26 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.GUI;
-using Andastra.Parsing.Resource.Generics.UTI;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Eclipse.GUI;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Eclipse.GUI;
 using Andastra.Runtime.Graphics;
-using static Andastra.Parsing.Common.GameExtensions;
-using ParsingGUI = Andastra.Parsing.Resource.Generics.GUI.GUI;
-using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
+using static BioWare.NET.Common.GameExtensions;
+using ParsingGUI = BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI;
+using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Upgrade screen implementation for Eclipse engine (Dragon Age, ).
@@ -972,7 +972,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 {
                     // Cannot load baseitems.2da, fall back to known armor base items
                     // Based on UTI.ArmorBaseItems: Known armor base item IDs
-                    foreach (int armorBaseItem in Andastra.Parsing.Resource.Generics.UTI.UTI.ArmorBaseItems)
+                    foreach (int armorBaseItem in BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems)
                     {
                         // For fallback, we can't determine itemclass without baseitems.2da
                         // So we'll use the fallback logic in IsArmorItemClass
@@ -992,7 +992,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
                     // Known armor base item IDs from UTI.ArmorBaseItems
                     // Based on PyKotor: ARMOR_BASE_ITEMS = {35, 36, 37, 38, 39, 40, 41, 42, 43, 53, 58, 63, 64, 65, 69, 71, 85, 89, 98, 100, 102, 103}
-                    HashSet<int> knownArmorBaseItems = new HashSet<int>(Andastra.Parsing.Resource.Generics.UTI.UTI.ArmorBaseItems);
+                    HashSet<int> knownArmorBaseItems = new HashSet<int>(BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems);
 
                     // Iterate through all rows in baseitems.2da
                     // Based on Dragon Age Origins: ItemUpgrade system checks all rows to determine armor items
@@ -1153,7 +1153,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Based on UTI.ArmorBaseItems: Known armor base item IDs
             // Note: This fallback checks if itemClass matches known armor base item IDs, which is not ideal
             // but provides backward compatibility if baseitems.2da is unavailable
-            return Andastra.Parsing.Resource.Generics.UTI.UTI.ArmorBaseItems.Contains(itemClass.Value) ||
+            return BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI.ArmorBaseItems.Contains(itemClass.Value) ||
                    (itemClass.Value >= 30 && itemClass.Value < 110);
         }
 
@@ -2156,7 +2156,7 @@ namespace Andastra.Runtime.Games.Eclipse
             else if (propertyControl is GUIListBox propertyListBox)
             {
                 // Store property descriptions in the list box for rendering system to use
-                // Based on swkotor2.exe: GUI list boxes display item properties as selectable list items
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GUI list boxes display item properties as selectable list items
                 // The rendering system (KotorGuiManager.RenderListBox) retrieves items from Properties["Items"]
                 // Each property description becomes a separate list item that can be selected and scrolled
                 propertyListBox.Properties["Items"] = propertyDescriptions;

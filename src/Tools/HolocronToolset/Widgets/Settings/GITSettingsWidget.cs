@@ -8,8 +8,8 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
-using Andastra.Parsing.Common;
-using KotorColor = Andastra.Parsing.Common.ParsingColor;
+using BioWare.NET.Common;
+using KotorColor = BioWare.NET.Common.ParsingColor;
 
 namespace HolocronToolset.Widgets.Settings
 {

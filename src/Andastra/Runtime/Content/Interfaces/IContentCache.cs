@@ -2,8 +2,8 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces
 {
@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// </summary>
     /// <remarks>
     /// Content Cache Interface:
-    /// - Based on swkotor2.exe asset caching system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) asset caching system
     /// - Located via string references: "CACHE" @ 0x007c6848, "z:\cache" @ 0x007c6850, CExoKeyTable resource management
     /// - Original implementation: Caches converted assets (MDL→runtime model, TPC→runtime texture) to disk
     /// - Resource management: CExoKeyTable handles resource key management, tracks loaded resources in memory

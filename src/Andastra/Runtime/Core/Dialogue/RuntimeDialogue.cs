@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Dialogue
     /// </summary>
     /// <remarks>
     /// Runtime Dialogue:
-    /// - Based on swkotor2.exe dialogue system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) dialogue system
     /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4 (dialogue script event type, 0x7)
     /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730 (dialogue object lookup failure)
@@ -248,7 +248,7 @@ namespace Andastra.Runtime.Core.Dialogue
 
         /// <summary>
         /// Delay before advancing (in milliseconds, -1 = auto).
-        /// Based on swkotor2.exe: FUN_005e6ac0 @ 0x005e6ac0 reads Delay field from DLG node
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6ac0 @ 0x005e6ac0 reads Delay field from DLG node
         /// Located via string reference: "Delay" @ 0x007c35b0
         /// Original implementation: If Delay == -1 and voiceover exists, uses voiceover duration
         /// If Delay == -1 and no voiceover, uses default delay from WaitFlags

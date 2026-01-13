@@ -1,21 +1,21 @@
 using System;
 using System.Numerics;
 using System.Collections.Generic;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using HolocronToolset.Data;
-using KotorColor = Andastra.Parsing.Common.ParsingColor;
+using KotorColor = BioWare.NET.Common.ParsingColor;
 using Window = Avalonia.Controls.Window;
-using PTH = Andastra.Parsing.Resource.Generics.PTH;
+using PTH = BioWare.NET.Resource.Formats.GFF.Generics.PTH;
 using PathSelection = HolocronToolset.Editors.PathSelection;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using Andastra.Parsing.Resource.Formats.LYT;
-using Andastra.Parsing.Formats.BWM;
+using BioWare.NET.Resource.Formats.LYT;
+using BioWare.NET.Resource.Formats.BWM;
 
 namespace HolocronToolset.Editors
 {

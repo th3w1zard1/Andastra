@@ -1,23 +1,23 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Runtime.Games.Common.Journal;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using Andastra.Game.Games.Common.Journal;
 using JetBrains.Annotations;
-using JRL = Andastra.Parsing.Resource.Generics.JRL;
+using JRL = BioWare.NET.Resource.Formats.GFF.Generics.JRL;
 
-namespace Andastra.Runtime.Games.Odyssey.Journal
+namespace Andastra.Game.Games.Odyssey.Journal
 {
     /// <summary>
     /// Odyssey-specific JRL loader implementation (swkotor.exe, swkotor2.exe).
     /// </summary>
     /// <remarks>
     /// Odyssey JRL Loader:
-    /// - Based on swkotor2.exe: JRL file loading (GFF with "JRL " signature)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL file loading (GFF with "JRL " signature)
     /// - Based on swkotor.exe: Similar JRL system (needs reverse engineering)
     /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
     /// - JRL structure: JRL -> JRLQuest -> JRLQuestEntry
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Games.Odyssey.Journal
             try
             {
                 // Load JRL file from installation
-                // Based on swkotor2.exe: JRL files are loaded from resource system
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL files are loaded from resource system
                 // Original implementation: Loads JRL files from chitin.key or module archives
                 ResourceResult resource = _installation.Resources.LookupResource(jrlResRef, ResourceType.JRL);
                 if (resource == null || resource.Data == null || resource.Data.Length == 0)

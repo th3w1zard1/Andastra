@@ -5,7 +5,7 @@ using Andastra.Runtime.Stride.Graphics;
 using Stride.Core.Mathematics;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Culling
+namespace Andastra.Game.Stride.Culling
 {
     /// <summary>
     /// Stride implementation of occlusion culling system using Hi-Z (Hierarchical-Z) buffer.
@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Stride.Culling
     /// </summary>
     /// <remarks>
     /// Stride Occlusion Culling System (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: Original engine uses VIS file-based room visibility culling
     /// - VIS file format: "%s/%s.VIS" @ 0x007b972c (VIS file path format), "visasmarr" @ 0x007bf720 (VIS file reference)
     /// - Original implementation: KOTOR uses VIS (visibility) files for room-based occlusion culling

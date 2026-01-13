@@ -3,7 +3,7 @@ using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of game services context shared across all BioWare engines.

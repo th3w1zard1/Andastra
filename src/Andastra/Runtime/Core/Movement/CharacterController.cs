@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Movement
     /// </summary>
     /// <remarks>
     /// Character Movement System:
-    /// - Based on swkotor2.exe character movement system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) character movement system
     /// - Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
     /// - "MOVERATE" @ 0x007c3988, "WALKRATE" @ 0x007c4b78, "?WalkRate" @ 0x007c3fff
     /// - "WALKDIST" @ 0x007c5014, "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
@@ -374,7 +374,7 @@ namespace Andastra.Runtime.Core.Movement
             CurrentSpeed = baseSpeed;
 
             // Calculate movement
-            // Based on swkotor2.exe: Character movement implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character movement implementation
             // Located via string references: "MovementRate" @ 0x007c400c, "MovementPerSec" @ 0x007cb9a8
             // "WALKRATE" @ 0x007c4b78, "RUNRATE" @ 0x007c4b84 (walk/run speed from appearance.2da)
             // Original implementation: Movement speed from appearance.2da WALKRATE/RUNRATE fields
@@ -389,7 +389,7 @@ namespace Andastra.Runtime.Core.Movement
             Vector3 newPosition = currentPos + normalizedDir * moveDistance;
 
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             // Located via string references: "WalkCheck" @ 0x007c1514, "Walking" @ 0x007c4dcc
             // Error messages: "aborted walking, Bumped into this creature at this position already." @ 0x007c03c0
             // "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408

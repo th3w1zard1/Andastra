@@ -2,13 +2,13 @@ using System;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Odyssey.Game;
-using Andastra.Runtime.Games.Odyssey;
+using Andastra.Game.Games.Odyssey;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Main game wrapper for Odyssey Engine games (KOTOR 1/2).
@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Game.Core
     /// </summary>
     /// <remarks>
     /// Odyssey Game Wrapper:
-    /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
     /// - Original implementation: Initializes engine, creates game session, runs game loop
     /// - Graphics backend: Provides cross-platform graphics abstraction (MonoGame, Stride)
     /// - Game session: Manages all game systems (combat, dialogue, AI, scripts, etc.)
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Game.Core
             Action<float> updateAction = (deltaTime) =>
             {
                 // Clear the screen BEFORE any rendering happens
-                // Based on swkotor2.exe: glClear() happens before rendering (line 530 in World.cs comments)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): glClear() happens before rendering (line 530 in World.cs comments)
                 // Clear must happen before Update if rendering occurs during Update
                 // This ensures the screen is cleared before any rendering operations
                 if (_graphicsBackend != null && _graphicsBackend.GraphicsDevice != null)

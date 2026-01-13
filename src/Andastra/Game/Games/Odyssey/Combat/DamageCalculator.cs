@@ -6,7 +6,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Combat
+namespace Andastra.Game.Engines.Odyssey.Combat
 {
     /// <summary>
     /// Attack result types.
@@ -42,7 +42,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR D20 Combat System:
-    /// - Based on swkotor2.exe combat system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) combat system
     /// - Located via string references: "DamageValue" @ 0x007bf890, "DamageList" @ 0x007bf89c
     /// - "ScriptDamaged" @ 0x007bee70, "OnDamaged" @ 0x007c1a80, "OnDamage" @ 0x007cb410
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DAMAGED" @ 0x007bcb14

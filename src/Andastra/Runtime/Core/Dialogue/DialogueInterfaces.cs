@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Dialogue
     /// </summary>
     /// <remarks>
     /// Dialogue Loader Interface:
-    /// - Based on swkotor2.exe dialogue system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) dialogue system
     /// - Located via string references: "Conversation" @ 0x007c1abc, "ConversationType" @ 0x007c38b0, "EndConversation" @ 0x007c38e0
     /// - "Conversation File: " @ 0x007cb1ac
     /// - Dialogue script hooks: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
@@ -37,7 +37,7 @@ namespace Andastra.Runtime.Core.Dialogue
     /// </summary>
     /// <remarks>
     /// Script Executor Interface:
-    /// - Based on swkotor2.exe NCS VM system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NCS VM system
     /// - Located via string references: NCS VM execution functions
     /// - Original implementation: Executes compiled NWScript (NCS) files via NCS VM
     /// - Script execution: Loads NCS file, creates execution context, runs VM until completion
@@ -61,7 +61,7 @@ namespace Andastra.Runtime.Core.Dialogue
     /// </summary>
     /// <remarks>
     /// Voice Player Interface:
-    /// - Based on swkotor2.exe voice-over system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) voice-over system
     /// - Located via string references: Voice-over playback functions
     /// - Original implementation: Plays voice-over audio files (WAV format) during dialogue
     /// - Voice-over files: Stored in VO folder, referenced by dialogue entries (VoiceOverId)

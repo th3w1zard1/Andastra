@@ -5,10 +5,10 @@ using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// AI controller system for NPCs in Odyssey engine (KOTOR, KOTOR 2, Jade Empire).
@@ -17,19 +17,20 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// <remarks>
     /// Odyssey AI Controller System:
     /// - Based on swkotor.exe/swkotor2.exe AI system
-    /// - Located via string references: "OnHeartbeat" @ 0x007c1f60 (swkotor2.exe), "OnPerception" @ 0x007c1f64 (swkotor2.exe)
-    /// - "OnCombatRoundEnd" @ 0x007c1f68 (swkotor2.exe), "OnDamaged" @ 0x007c1f6c (swkotor2.exe), "OnDeath" @ 0x007c1f70 (swkotor2.exe)
-    /// - AI state: "PT_AISTATE" @ 0x007c1768 (party AI state in PARTYTABLE, swkotor2.exe), "AISTATE" @ 0x007c81f8 (swkotor2.exe), "AIState" @ 0x007c4090 (swkotor2.exe)
-    /// - AI scripts: "aiscripts" @ 0x007c4fd0 (AI script directory/resource, swkotor2.exe)
+    /// - Located via string references: ["OnHeartbeat"] @ (K1: TODO: Find this address, TSL: 0x007c1f60), ["OnPerception"] @ (K1: TODO: Find this address, TSL: 0x007c1f64)
+    /// - ["OnCombatRoundEnd"] @ (K1: TODO: Find this address, TSL: 0x007c1f68), ["OnDamaged"] @ (K1: TODO: Find this address, TSL: 0x007c1f6c), ["OnDeath"] @ (K1: TODO: Find this address, TSL: 0x007c1f70)
+    /// - AI state: "PT_AISTATE" @ 0x007c1768 (party AI state in PARTYTABLE, swkotor2.exe), ["AISTATE"] @ (K1: TODO: Find this address, TSL: 0x007c81f8, ["AIState"] @ (K1: TODO: Find this address, TSL: 0x007c4090)
+    /// - AI scripts: ["aiscripts"] @ (K1: TODO: Find this address, TSL: 0x007c4fd0) - AI script directory/resource
     /// - Pathfinding errors:
-    ///   - "?The Path find has Failed... Why?" @ 0x007c055f (swkotor2.exe)
-    ///   - "Bailed the desired position is unsafe." @ 0x007c0584 (swkotor2.exe)
-    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ 0x007be510 (swkotor2.exe)
-    ///   - "    failed to grid based pathfind from the ending path point ot the destiantion." @ 0x007be4b8 (swkotor2.exe)
-    /// - Script hooks: "k_def_pathfail01" @ 0x007c52fc (pathfinding failure script example, swkotor2.exe)
-    /// - Debug: "    AI Level: " @ 0x007cb174 (AI level debug display, swkotor2.exe)
-    /// - Original implementation: FUN_004eb750 @ 0x004eb750 (creature AI update loop, swkotor2.exe)
-    /// - FUN_005226d0 @ 0x005226d0 (process heartbeat scripts, swkotor2.exe), FUN_004dfbb0 @ 0x004dfbb0 (perception checks, swkotor2.exe)
+    ///   - "?The Path find has Failed... Why?" @ (K1: TODO: Find this address, TSL: 0x007c055f)
+    ///   - "Bailed the desired position is unsafe." @ (K1: TODO: Find this address, TSL: 0x007c0584)
+    ///   - "    failed to grid based pathfind from the creatures position to the starting path point." @ (K1: TODO: Find this address, TSL: 0x007be510)
+    ///   - "    failed to grid based pathfind from the ending path point ot the destiantion." @ (K1: TODO: Find this address, TSL: 0x007be4b8)
+    /// - Script hooks: "k_def_pathfail01" @ (K1: TODO: Find this address, TSL: 0x007c52fc) - pathfinding failure script example
+    /// - Debug: "    AI Level: " @ (K1: TODO: Find this address, TSL: 0x007cb174) - AI level debug display
+    /// - Original implementation: [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750) - creature AI update loop
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005226d0) - process heartbeat scripts
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004dfbb0) - perception checks
     /// - AI operates through action queue population based on perception and scripts
     /// - Heartbeat scripts: Fire every 6 seconds (HeartbeatInterval), can queue actions, check conditions
     /// - Perception system: Detects enemies via sight/hearing, fires OnPerception events
@@ -48,9 +49,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         private readonly Random _random;
 
         // Idle behavior constants (Odyssey-specific values based on swkotor2.exe behavior)
-        // Based on swkotor2.exe: Idle behavior timing and distances
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Idle behavior timing and distances
         // Located via string references: ActionRandomWalk implementation in swkotor2.exe
-        // Original implementation: FUN_00508260 @ 0x00508260 (load ActionList), ActionRandomWalk action type
+        // Original implementation: [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00508260) - load ActionList, ActionRandomWalk action type
         private const float IdleWanderRadius = 5.0f; // Maximum distance to wander from spawn point (swkotor2.exe default)
         private const float IdleWanderInterval = 10.0f; // Seconds between wander decisions (swkotor2.exe default)
         private const float IdleLookAroundInterval = 5.0f; // Seconds between look-around actions (Odyssey-specific)
@@ -68,7 +69,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Fires heartbeat script for a creature (Odyssey-specific: uses ScriptEvent system).
-        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (process heartbeat scripts)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x005226d0) - process heartbeat scripts
         /// </summary>
         protected override void FireHeartbeatScript(IEntity creature)
         {
@@ -85,7 +86,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Checks perception for a creature (Odyssey-specific: uses walkmesh line-of-sight).
-        /// Based on swkotor2.exe: FUN_004dfbb0 @ 0x004dfbb0 (perception checks)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004dfbb0) - perception checks
         /// </summary>
         protected override void CheckPerception(IEntity creature)
         {
@@ -132,7 +133,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Checks if subject can see target (Odyssey-specific: uses walkmesh line-of-sight).
-        /// Based on swkotor2.exe perception system with walkmesh raycast.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) perception system with walkmesh raycast.
         /// </summary>
         private bool CanSee(IEntity subject, IEntity target, float range)
         {
@@ -150,7 +151,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Line-of-sight check through walkmesh
-            // Based on swkotor2.exe perception system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) perception system
             // Located via string references: Line-of-sight checks in perception functions
             // Original implementation: Uses walkmesh raycast to check if target is visible
             if (_world.CurrentArea != null)
@@ -175,7 +176,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Checks if subject can hear target (Odyssey-specific: distance-based hearing).
-        /// Based on swkotor2.exe perception system.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) perception system.
         /// </summary>
         private bool CanHear(IEntity subject, IEntity target, float range)
         {
@@ -192,7 +193,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Handles combat AI for a creature (Odyssey-specific: attack nearest enemy).
-        /// Based on swkotor2.exe: Default combat AI engages nearest enemy.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Default combat AI engages nearest enemy.
         /// </summary>
         protected override void HandleCombatAI(IEntity creature)
         {
@@ -275,7 +276,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Updates AI for a single creature, including idle behavior timing.
-        /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750 (creature AI update loop)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x004eb750) - creature AI update loop
         /// </summary>
         protected override void UpdateCreatureAI(IEntity creature, float deltaTime)
         {
@@ -292,9 +293,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Handles idle AI for a creature (Odyssey-specific: patrol routes, random wandering, look-around, idle animations).
-        /// Based on swkotor2.exe: Idle behavior system with patrol routes and random wandering
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Idle behavior system with patrol routes and random wandering
         /// Located via string references: "ActionList" @ 0x007bebdc, "ActionType" @ 0x007bf7f8
-        /// Original implementation: FUN_00508260 @ 0x00508260 (load ActionList), ActionRandomWalk action type
+        /// Original implementation: [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00508260) - load ActionList, ActionRandomWalk action type
         /// </summary>
         /// <remarks>
         /// Odyssey Idle Behavior:
@@ -304,7 +305,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// - Plays idle animations periodically when standing still
         /// - Performs look-around behavior to make NPCs appear more alive
         /// - Uses action queue to queue movement actions (ActionMoveToLocation, ActionRandomWalk)
-        /// - Based on swkotor2.exe idle behavior patterns from reverse engineering
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) idle behavior patterns from reverse engineering
         /// </remarks>
         protected override void HandleIdleAI(IEntity creature)
         {
@@ -363,7 +364,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Handles patrol behavior for a creature following waypoint route.
-        /// Based on swkotor2.exe: Patrol route following via waypoint entities
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Patrol route following via waypoint entities
         /// Located via string references: Waypoint entities in GIT file, patrol route patterns
         /// </summary>
         private void HandlePatrolBehavior(IEntity creature, IdleState idleState, IActionQueueComponent actionQueue, float deltaTime)
@@ -427,9 +428,9 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Handles random wandering behavior for a creature.
-        /// Based on swkotor2.exe: ActionRandomWalk implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - ActionRandomWalk implementation
         /// Located via string references: "ActionList" @ 0x007bebdc, "ActionType" @ 0x007bf7f8
-        /// Original implementation: FUN_00508260 @ 0x00508260 (load ActionList), ActionRandomWalk action type
+        /// Original implementation: [TODO: Function name] @ (K1: TODO: Find this address, TSL: 0x00508260) - load ActionList, ActionRandomWalk action type
         /// </summary>
         private void HandleRandomWanderBehavior(IEntity creature, IdleState idleState, IActionQueueComponent actionQueue, float deltaTime)
         {
@@ -454,7 +455,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Use ActionRandomWalk for random wandering
-            // Based on swkotor2.exe: ActionRandomWalk action type in ActionList
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionRandomWalk action type in ActionList
             // Original implementation: Picks random direction and distance, uses pathfinding to reach target
             var randomWalkAction = new ActionRandomWalk(IdleWanderRadius, 0f); // 0 = unlimited duration
             actionQueue.Add(randomWalkAction);
@@ -464,7 +465,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Handles look-around behavior to make NPCs appear more alive.
-        /// Based on swkotor2.exe: Idle behavior patterns for NPCs
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Idle behavior patterns for NPCs
         /// </summary>
         private void HandleLookAroundBehavior(IEntity creature, IdleState idleState, IActionQueueComponent actionQueue, float deltaTime)
         {
@@ -503,7 +504,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Handles idle animations for a creature.
-        /// Based on swkotor2.exe: Animation system with idle animations
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Animation system with idle animations
         /// Located via string references: Animation playback in creature update loop
         /// </summary>
         private void HandleIdleAnimations(IEntity creature, IdleState idleState, float deltaTime)
@@ -530,7 +531,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Play idle animation (animation ID 0 is typically idle/stand in Odyssey)
-            // Based on swkotor2.exe: Animation ID 0 is typically idle/stand animation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Animation ID 0 is typically idle/stand animation
             // Original implementation: Plays idle animation when no other animation is active
             if (animation.CurrentAnimation == -1 || animation.AnimationComplete)
             {
@@ -542,7 +543,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Gets the spawn position for a creature (used as wander center).
-        /// Based on swkotor2.exe: Creature spawn position tracking
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Creature spawn position tracking
         /// </summary>
         private Vector3 GetSpawnPosition(IEntity creature)
         {
@@ -556,7 +557,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Gets patrol waypoints for a creature (if assigned via tag pattern matching).
-        /// Based on swkotor2.exe: Waypoint entities in GIT file, patrol route patterns
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Waypoint entities in GIT file, patrol route patterns
         /// Located via string references: Waypoint entities loaded from GIT file
         /// Original implementation: Creatures with patrol tags (e.g., "PATROL_01") look for waypoints with matching prefix
         /// </summary>
@@ -570,7 +571,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Check if creature has a patrol tag (e.g., "PATROL_01" would look for waypoints "PATROL_01_01", "PATROL_01_02", etc.)
-            // Based on swkotor2.exe: Patrol route pattern matching via waypoint tags
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) - Patrol route pattern matching via waypoint tags
             string creatureTag = creature.Tag;
             if (string.IsNullOrEmpty(creatureTag))
             {

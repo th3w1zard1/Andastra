@@ -3,7 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Game.Graphics.MonoGame.Lighting
 {
     /// <summary>
     /// Dynamic light source implementation.

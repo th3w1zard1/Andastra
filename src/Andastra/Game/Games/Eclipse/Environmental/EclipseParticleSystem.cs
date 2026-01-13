@@ -4,7 +4,7 @@ using System.Linq;
 using System.Numerics;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Environmental
+namespace Andastra.Game.Games.Eclipse.Environmental
 {
     /// <summary>
     /// Eclipse engine particle system implementation.

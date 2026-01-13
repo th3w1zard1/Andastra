@@ -1,10 +1,10 @@
 using System;
-using Andastra.Parsing;
-using Andastra.Parsing.Installation;
+using BioWare.NET;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// UI system implementation for Eclipse engine (Dragon Age, ).

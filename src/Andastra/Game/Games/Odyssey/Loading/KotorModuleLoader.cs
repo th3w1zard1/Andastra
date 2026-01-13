@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 
-namespace Andastra.Runtime.Engines.Odyssey.Loading
+namespace Andastra.Game.Engines.Odyssey.Loading
 {
     /// <summary>
     /// KOTOR implementation of IModuleLoader.
@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
     /// </summary>
     /// <remarks>
     /// Module Loader (KOTOR Implementation):
-    /// - Based on swkotor2.exe module loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading system
     /// - LoadModule @ 0x004f20d0 - Main module loading function (located via "MODULES:" @ 0x007b58b4)
     /// - LoadModuleFromPath @ 0x004f3460 - Loads module from path with save integration (located via "MODULES:" @ 0x007b58b4)
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "Module" @ 0x007bc4e0

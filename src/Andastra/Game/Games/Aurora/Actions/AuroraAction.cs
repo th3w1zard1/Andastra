@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Enums;
-using Andastra.Runtime.Games.Common.Actions;
+using Andastra.Game.Games.Common.Actions;
 
-namespace Andastra.Runtime.Games.Aurora.Actions
+namespace Andastra.Game.Games.Aurora.Actions
 {
     /// <summary>
     /// Base class for Aurora engine actions (nwmain.exe, nwn2main.exe).

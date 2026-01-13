@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Faction reputation/hostility values.
@@ -40,7 +40,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// </summary>
     /// <remarks>
     /// Faction Manager System:
-    /// - Based on swkotor2.exe faction system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) faction system
     /// - Located via string references: "FactionRep" @ 0x007c290c, "FactionID1" @ 0x007c2924, "FactionID2" @ 0x007c2918
     /// - "FACTIONREP" @ 0x007bcec8, "FactionList" @ 0x007be604, "Faction" @ 0x007c24dc
     /// - "repute.2da" @ 0x007c2900 (faction relationship table file), "FACTIONREP" @ 0x007bcec8 (faction reputation field)

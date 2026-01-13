@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.MonoGame.Loading
+namespace Andastra.Game.Graphics.MonoGame.Loading
 {
     /// <summary>
     /// Asynchronous resource loader for textures and models.
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.MonoGame.Loading
     /// </summary>
     /// <remarks>
     /// Async Resource Loader:
-    /// - Based on swkotor2.exe resource loading system (modern async enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system (modern async enhancement)
     /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
     /// - "LoadScreenID" @ 0x007bd54c, "LoadSavegame" @ 0x007bdc90, "LOADMUSIC" @ 0x007be044
     /// - "load_%s" @ 0x007be32c (load format string), "Mod_OnModLoad" @ 0x007be7bc

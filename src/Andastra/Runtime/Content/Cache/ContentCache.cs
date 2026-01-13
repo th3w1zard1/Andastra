@@ -10,8 +10,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.Cache
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Content.Cache
     /// </summary>
     /// <remarks>
     /// Content Cache System:
-    /// - Based on swkotor2.exe asset caching system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) asset caching system
     /// - Located via string references: "CACHE" @ 0x007c6848, "z:\cache" @ 0x007c6850, "CExoKeyTable" resource management
     /// - Original implementation: Engine caches loaded models, textures, and other assets to avoid redundant loading
     /// - Resource management: CExoKeyTable handles resource key management, CExoKeyTable::AddKey adds resources to cache
@@ -351,7 +351,7 @@ namespace Andastra.Runtime.Content.Cache
         /// </summary>
         /// <remarks>
         /// Size Estimation:
-        /// - Based on swkotor2.exe memory management system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) memory management system
         /// - Original implementation: CExoKeyTable tracks resource memory usage for cache eviction
         /// - Accurate size estimation is critical for LRU cache eviction and memory budget management
         /// - Handles primitive types, arrays, collections, MonoGame graphics types, and custom types via reflection

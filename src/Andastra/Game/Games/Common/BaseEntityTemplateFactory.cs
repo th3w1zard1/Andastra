@@ -2,7 +2,7 @@ using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of entity template factory shared across all BioWare engines.

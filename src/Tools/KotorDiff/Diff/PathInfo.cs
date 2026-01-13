@@ -2,7 +2,7 @@
 // Original: @dataclass class PathInfo: ...
 using System;
 using System.IO;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Installation;
 
 namespace KotorDiff.Diff
 {

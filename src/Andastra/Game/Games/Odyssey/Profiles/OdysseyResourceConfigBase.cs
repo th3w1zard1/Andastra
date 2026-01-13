@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Profiles
+namespace Andastra.Game.Engines.Odyssey.Profiles
 {
     /// <summary>
     /// Base class for Odyssey engine resource configuration.

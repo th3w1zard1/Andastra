@@ -1,9 +1,9 @@
 using System.Numerics;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Engines.Odyssey.Loading
+namespace Andastra.Game.Engines.Odyssey.Loading
 {
     /// <summary>
     /// Lazy-loading Odyssey entity template factory that retrieves the module from ModuleLoader on demand.
@@ -69,10 +69,10 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             // Get current module from module loader (lazy loading)
-            // Based on swkotor2.exe: Module must be loaded before entities can be created from templates
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module must be loaded before entities can be created from templates
             // Located via string references: Module loading precedes entity template loading
             // Original implementation: Template creation requires module to be loaded for resource access
-            Andastra.Parsing.Installation.Module module = _moduleLoader?.GetCurrentModule();
+            BioWare.NET.Extract.Installation.Module module = _moduleLoader?.GetCurrentModule();
             if (module == null)
             {
                 // Module not loaded yet - this is expected before LoadModuleAsync completes

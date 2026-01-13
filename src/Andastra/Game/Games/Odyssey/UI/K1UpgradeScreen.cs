@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.UTI;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.UI
+namespace Andastra.Game.Engines.Odyssey.UI
 {
     /// <summary>
     /// Upgrade screen implementation for KOTOR 1 (swkotor.exe).

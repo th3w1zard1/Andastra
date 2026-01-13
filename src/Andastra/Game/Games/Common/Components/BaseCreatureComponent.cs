@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Common.Components
+namespace Andastra.Game.Games.Common.Components
 {
     /// <summary>
     /// Base class for creature components shared between Odyssey and Aurora engines.
@@ -210,7 +210,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
-        /// - Based on swkotor2.exe: FUN_005d63d0 reads classes.2da, loads attack bonus tables, calculates BAB per level
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads classes.2da, loads attack bonus tables, calculates BAB per level
         /// </summary>
         /// <param name="gameDataProvider">Game data provider for accessing 2DA tables.</param>
         /// <returns>Total base attack bonus from all class levels.</returns>
@@ -276,7 +276,7 @@ namespace Andastra.Runtime.Games.Common.Components
                 }
 
                 // Sum BAB from all levels in this class (levels 1 through cls.Level)
-                // Based on swkotor2.exe: BAB is looked up per level from the attack bonus table
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): BAB is looked up per level from the attack bonus table
                 for (int level = 1; level <= cls.Level; level++)
                 {
                     // Level is 1-based, table rows are 0-based
@@ -294,7 +294,7 @@ namespace Andastra.Runtime.Games.Common.Components
 
                     // Get BAB value from row
                     // Column names may vary: "BAB", "Value", "attackbonus", or similar
-                    // Based on swkotor2.exe: Attack bonus tables typically have "BAB" or "Value" column
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack bonus tables typically have "BAB" or "Value" column
                     int? babValue = babRow.GetInteger("BAB");
                     if (!babValue.HasValue)
                     {
@@ -307,7 +307,7 @@ namespace Andastra.Runtime.Games.Common.Components
                     if (!babValue.HasValue)
                     {
                         // Try to find first integer column that's not "level" or "Label"
-                        // Based on swkotor2.exe: Attack bonus tables may have different column structures
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack bonus tables may have different column structures
                         try
                         {
                             var allData = babRow.GetData();

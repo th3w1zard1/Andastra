@@ -7,14 +7,14 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource.Generics;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using HolocronToolset.Data;
 using HolocronToolset.Editors;
 using HolocronToolset.Widgets.Edit;
-using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
-using UTI = Andastra.Parsing.Resource.Generics.UTI.UTI;
-using UTIProperty = Andastra.Parsing.Resource.Generics.UTI.UTIProperty;
+using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
+using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
+using UTIProperty = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTIProperty;
 
 namespace HolocronToolset.Dialogs
 {

@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Eclipse.Collision
+namespace Andastra.Game.Games.Eclipse.Collision
 {
     /// <summary>
     /// Dragon Age: Origins (daorigins.exe) specific creature collision detection.

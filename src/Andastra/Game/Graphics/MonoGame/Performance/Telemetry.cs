@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Andastra.Runtime.MonoGame.Performance
+namespace Andastra.Game.Graphics.MonoGame.Performance
 {
     /// <summary>
     /// Telemetry system for performance data collection and analysis.

@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Index Buffer Interface:
-    /// - Based on swkotor2.exe DirectX index buffer system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX index buffer system
     /// - Located via string references: "GetNextIndex: Duplicate triangle sent\n" @ 0x007bb308, "GetNextIndex: Duplicate triangle probably got us derailed\n" @ 0x007bb330
     /// - "GetNextIndex: Triangle doesn't have all of its vertices\n" @ 0x007bb36c (index buffer validation)
     /// - Original implementation: DirectX 8/9 index buffer (IDirect3DIndexBuffer8/IDirect3DIndexBuffer9) for indexed rendering

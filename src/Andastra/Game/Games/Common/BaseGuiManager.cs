@@ -4,7 +4,7 @@ using System.Numerics;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base class for GUI managers across all engines.

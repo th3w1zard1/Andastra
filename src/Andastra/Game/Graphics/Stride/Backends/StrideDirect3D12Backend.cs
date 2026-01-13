@@ -10,7 +10,7 @@ using Andastra.Runtime.Graphics.Common.Structs;
 using Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Backends
+namespace Andastra.Game.Stride.Backends
 {
     /// <summary>
     /// Stride implementation of DirectX 12 backend with DXR raytracing support.

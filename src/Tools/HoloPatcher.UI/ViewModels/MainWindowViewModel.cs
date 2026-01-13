@@ -12,15 +12,15 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-// Andastra.Parsing includes Utility files, causing SystemHelpers conflict - use global:: prefix
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Config;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Logger;
-using Andastra.Parsing.Namespaces;
-using Andastra.Parsing.TSLPatcher;
-using Andastra.Parsing.Reader;
-using Andastra.Parsing.Uninstall;
+// BioWare.NET includes Utility files, causing SystemHelpers conflict - use global:: prefix
+using BioWare.NET.Common;
+using BioWare.NET.Config;
+using BioWare.NET.Installation;
+using BioWare.NET.Common.Logger;
+using BioWare.NET.Namespaces;
+using BioWare.NET.TSLPatcher;
+using BioWare.NET.Reader;
+using BioWare.NET.Uninstall;
 using HoloPatcher.UI;
 using HoloPatcher.UI.Update;
 using RteDocument = global::HoloPatcher.UI.Rte.RteDocument;
@@ -250,7 +250,7 @@ namespace HoloPatcher.UI.ViewModels
         {
             // Initialize RobustLogger for pykotor errors/exceptions/warnings/info
             // Will set log file path when mod is loaded
-            _pykotorLogger = new Andastra.Parsing.Logger.RobustLogger();
+            _pykotorLogger = new BioWare.NET.Logger.RobustLogger();
 
             // Initialize commands
             BrowseModCommand = new AsyncRelayCommand(BrowseMod);

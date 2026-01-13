@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Perception
     /// </summary>
     /// <remarks>
     /// Perception System:
-    /// - Based on swkotor2.exe perception system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) perception system
     /// - Located via string references: "OnPerception" @ 0x007bee80 (perception script field), "OnNotice" @ 0x007beea0 (notice script field)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (perception script event type, 0x1)
     /// - "PerceptionData" @ 0x007bf6c4 (perception data structure), "PerceptionList" @ 0x007bf6d4 (perception list field)
@@ -159,7 +159,7 @@ namespace Andastra.Runtime.Core.Perception
             }
 
             // Line-of-sight check through walkmesh
-            // Based on swkotor2.exe: Eye height uses Z axis (vertical) - TransformComponent.Up = UnitZ
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Eye height uses Z axis (vertical) - TransformComponent.Up = UnitZ
             // Located via string references: Position offsets use Z for vertical, Y for horizontal (2D movement plane)
             // Original implementation: Eye position offset by DefaultEyeHeight along Z axis (vertical)
             Vector3 eyePos = subjectTransform.Position + Vector3.UnitZ * DefaultEyeHeight;
@@ -168,7 +168,7 @@ namespace Andastra.Runtime.Core.Perception
             float distance = direction.Length();
 
             // Raycast through walkmesh to check line-of-sight
-            // Based on swkotor2.exe: Line-of-sight raycast implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Line-of-sight raycast implementation
             // Located via string references: "Raycast" @ navigation mesh functions
             // Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
             // Walking collision function: UpdateCreatureMovement @ 0x0054be70 handles creature collision and line-of-sight checks
@@ -217,7 +217,7 @@ namespace Andastra.Runtime.Core.Perception
             }
 
             // Hearing doesn't require line-of-sight, just distance
-            // Based on swkotor2.exe: Hearing perception with occlusion checks
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Hearing perception with occlusion checks
             // Located via string references: Hearing range checks in perception system
             // Original implementation: Hearing can be occluded by walls/doors, but has longer range than sight
             // Check for occlusion through walkmesh (walls block sound, doors may block depending on state)
@@ -237,7 +237,7 @@ namespace Andastra.Runtime.Core.Perception
                     if (_world.CurrentArea.NavigationMesh.Raycast(subjectPos, direction, distance, out hitPoint, out hitFace))
                     {
                         // Something is blocking - check if it's a door that might be open
-                        // Based on swkotor2.exe: Sound occlusion through walls and doors
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound occlusion through walls and doors
                         // Located via string references: Door entity checks in perception system
                         // Original implementation: Doors that are open allow sound to pass, closed doors and walls block sound
                         // Check for door entities near the hit point
@@ -292,7 +292,7 @@ namespace Andastra.Runtime.Core.Perception
             if (!string.IsNullOrEmpty(script))
             {
                 // Execute perception script with subject as owner and target as triggerer
-                // Based on swkotor2.exe: Perception script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Perception script execution
                 // Located via string references: "OnPerception" @ 0x007bee80, "OnNotice" @ 0x007beea0
                 // Original implementation: FUN_004dfbb0 @ 0x004dfbb0 executes perception scripts when entities are detected
                 if (_world.EventBus != null)

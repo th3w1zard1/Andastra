@@ -4,7 +4,7 @@ using Andastra.Runtime.MonoGame.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Particles
+namespace Andastra.Game.Graphics.MonoGame.Particles
 {
     /// <summary>
     /// GPU-based particle system using compute shaders.

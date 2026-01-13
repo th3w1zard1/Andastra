@@ -1,5 +1,5 @@
 using System.IO;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces
 {
@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// </summary>
     /// <remarks>
     /// Resource Provider Interface:
-    /// - Based on swkotor2.exe resource loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
     /// - Located via string references: "Resource" @ 0x007c14d4, "CExoKeyTable::DestroyTable: Resource %s still in demand during table deletion" @ 0x007b6078
     /// - "CExoKeyTable::AddKey: Duplicate Resource " @ 0x007b6124 (duplicate resource error)
     /// - Resource precedence: OVERRIDE > MODULE > SAVE > TEXTUREPACKS > CHITIN > HARDCODED

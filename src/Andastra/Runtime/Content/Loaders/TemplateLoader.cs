@@ -4,16 +4,16 @@ using System.IO;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
-using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
 
 namespace Andastra.Runtime.Content.Loaders
 {
@@ -22,7 +22,7 @@ namespace Andastra.Runtime.Content.Loaders
     /// </summary>
     /// <remarks>
     /// Template Loader:
-    /// - Based on swkotor2.exe template loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) template loading system
     /// - Template formats: GFF files with signatures "UTC ", "UTP ", "UTD ", "UTT ", "UTW ", "UTS ", "UTE ", "UTM "
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c (template reference field in GIT instances)
     /// - "TemplateResRef: " @ 0x007caedc (template debug message), "template" @ 0x007d0470, "Template" @ 0x007d05cc
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTC);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTC);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -106,7 +106,7 @@ namespace Andastra.Runtime.Content.Loaders
 
             // Use Parsing UTCHelpers to parse the GFF
             GFF gff = GFF.FromBytes(data);
-            var utc = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.ConstructUtc(gff);
+            var utc = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers.ConstructUtc(gff);
             return ParseCreatureTemplate(utc);
         }
 
@@ -117,7 +117,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTP);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTP);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTD);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTD);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -161,7 +161,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTT);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTT);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -183,7 +183,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTW);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTW);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTS);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTS);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -227,7 +227,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTE);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTE);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -249,7 +249,7 @@ namespace Andastra.Runtime.Content.Loaders
             string templateResRef,
             CancellationToken ct = default(CancellationToken))
         {
-            var id = new Andastra.Parsing.Resource.ResourceIdentifier(templateResRef, Andastra.Parsing.Common.ResourceType.UTM);
+            var id = new BioWare.NET.Resource.ResourceIdentifier(templateResRef, BioWare.NET.Common.ResourceType.UTM);
             byte[] data = await _resourceProvider.GetResourceBytesAsync(id, ct);
             if (data == null)
             {
@@ -266,7 +266,7 @@ namespace Andastra.Runtime.Content.Loaders
 
         #region Template Parsing
 
-        private CreatureTemplate ParseCreatureTemplate(Andastra.Parsing.Resource.Generics.UTC.UTC utc)
+        private CreatureTemplate ParseCreatureTemplate(BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC utc)
         {
             var template = new CreatureTemplate();
 
@@ -587,7 +587,7 @@ namespace Andastra.Runtime.Content.Loaders
         /// <summary>
         /// Gets a localized string from a GFF struct field.
         /// Resolves LocalizedString fields using TLK lookup or embedded substrings.
-        /// Based on swkotor2.exe: LocalizedString resolution in template loading
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LocalizedString resolution in template loading
         /// Original implementation: FUN_005261b0 @ 0x005261b0 loads creature templates with LocalizedString fields
         /// - FirstName, LastName fields use LocalizedString with StringRef pointing to TLK entries
         /// - LocName, Description fields use LocalizedString with StringRef or embedded substrings
@@ -616,7 +616,7 @@ namespace Andastra.Runtime.Content.Loaders
 
             // If StringRef == -1, use embedded substrings from GFF
             // Try to get string for current language (default to English if not available)
-            // Based on swkotor2.exe: LocalizedString with StringRef == -1 uses embedded substrings
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LocalizedString with StringRef == -1 uses embedded substrings
             // Priority: Current language/gender -> English/Male -> First available substring
             string result = locString.Get(Language.English, Gender.Male, useFallback: true);
             if (!string.IsNullOrEmpty(result))
@@ -638,7 +638,7 @@ namespace Andastra.Runtime.Content.Loaders
 
         /// <summary>
         /// Looks up a string reference in the TLK (talk table) files.
-        /// Based on swkotor2.exe: TLK string lookup system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TLK string lookup system
         /// Original implementation: Uses dialog.tlk for base strings, custom TLK for modded strings
         /// - Custom TLK entries start at 0x01000000 (high bit set)
         /// - Base TLK: dialog.tlk contains base game strings (0 to ~50,000)
@@ -682,7 +682,7 @@ namespace Andastra.Runtime.Content.Loaders
 
         /// <summary>
         /// Ensures TLK files are loaded (lazy loading on first use).
-        /// Based on swkotor2.exe: TLK loading system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TLK loading system
         /// Original implementation: Loads dialog.tlk at startup, custom TLK files from override directory
         /// - Base TLK: dialog.tlk from installation root
         /// - Custom TLK: Custom TLK files from override directory (optional)

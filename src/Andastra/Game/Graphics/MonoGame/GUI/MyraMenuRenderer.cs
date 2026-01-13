@@ -1,12 +1,12 @@
 using System;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Graphics.Common.GUI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Myra;
 using Myra.Graphics2D.UI;
 
-namespace Andastra.Runtime.MonoGame.GUI
+namespace Andastra.Game.Graphics.MonoGame.GUI
 {
     /// <summary>
     /// Myra-based menu renderer for MonoGame (if Myra is available).

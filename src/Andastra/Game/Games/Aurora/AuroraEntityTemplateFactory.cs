@@ -2,22 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Components;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Aurora.Components;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
-using ResRef = Andastra.Parsing.Common.ResRef;
+using ResRef = BioWare.NET.Common.ResRef;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora engine family implementation of entity template factory.

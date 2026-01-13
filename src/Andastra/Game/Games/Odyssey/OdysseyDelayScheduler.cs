@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey engine delay scheduler implementation.

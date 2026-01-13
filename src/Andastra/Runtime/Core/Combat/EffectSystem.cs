@@ -95,7 +95,7 @@ namespace Andastra.Runtime.Core.Combat
     /// </summary>
     /// <remarks>
     /// Effect System:
-    /// - Based on swkotor2.exe effect system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) effect system
     /// - Located via string references: "EffectList" @ 0x007bebe8, "AreaEffectList" @ 0x007bd0d4
     /// - "EVENT_APPLY_EFFECT" @ 0x007bcdc8, "EVENT_REMOVE_EFFECT" @ 0x007bcd0c
     /// - "EVENT_ABILITY_EFFECT_APPLIED" @ 0x007bcc20, "EffectAttacks" @ 0x007bfa28
@@ -400,7 +400,7 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.ACIncrease:
                 case EffectType.ACDecrease:
                     // AC modifiers are applied via effect bonus tracking
-                    // Based on swkotor2.exe: AC effects modify total AC calculation
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AC effects modify total AC calculation
                     // Located via string references: "ArmorClass" @ 0x007c42a8, "EffectACIncrease" @ routine 115
                     // Original implementation: AC effects add to total AC (10 + DEX + Armor + Natural + Deflection + Effects)
                     // swkotor2.exe: FUN_0050b540 loads EffectList, AC effects are tracked and applied to total AC calculation
@@ -418,7 +418,7 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.AttackIncrease:
                 case EffectType.AttackDecrease:
                     // Attack bonus is applied via effect bonus tracking
-                    // Based on swkotor2.exe: Attack effects modify total attack bonus
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack effects modify total attack bonus
                     // Located via string references: "EffectAttackIncrease" @ routine 118
                     // Original implementation: Attack effects add to total attack (BAB + STR/DEX + Effects)
                     // swkotor2.exe: FUN_0050b540 loads EffectList, attack effects are tracked and applied to total attack bonus calculation
@@ -487,7 +487,7 @@ namespace Andastra.Runtime.Core.Combat
                 case EffectType.MovementSpeedIncrease:
                 case EffectType.MovementSpeedDecrease:
                     // Movement speed modifiers are handled dynamically by StatsComponent
-                    // Based on swkotor2.exe: Haste/Slow effects modify movement speed
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Haste/Slow effects modify movement speed
                     // Located via string references: "Haste" @ routine 119, "Slow" @ routine 120
                     // Original implementation: Haste doubles speed, Slow halves speed
                     // MovementSpeedIncrease/Decrease: Percentage-based modifiers (EffectMovementSpeedIncrease/Decrease script functions)

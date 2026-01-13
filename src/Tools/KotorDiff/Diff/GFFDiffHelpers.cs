@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing.Diff;
-using GffCompareResult = Andastra.Parsing.Diff.GffCompareResult;
+using BioWare.NET.Diff;
+using GffCompareResult = BioWare.NET.Diff.GffCompareResult;
 
 namespace KotorDiff.Diff
 {

@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Odyssey;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey.Kotor2
+namespace Andastra.Game.Games.Odyssey.Kotor2
 {
     /// <summary>
     /// KOTOR 2 (swkotor2.exe) specific navigation mesh implementation.

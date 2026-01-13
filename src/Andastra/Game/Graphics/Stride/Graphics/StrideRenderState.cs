@@ -3,7 +3,7 @@ using Andastra.Runtime.Graphics;
 using Stride.Core.Mathematics;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IRasterizerState.

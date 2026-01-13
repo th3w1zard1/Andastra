@@ -1,10 +1,10 @@
 using System.Numerics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Common;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Engines.Odyssey.Loading
+namespace Andastra.Game.Engines.Odyssey.Loading
 {
     /// <summary>
     /// Odyssey engine family implementation of entity template factory.

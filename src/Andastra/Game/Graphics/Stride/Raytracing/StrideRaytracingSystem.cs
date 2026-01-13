@@ -5,7 +5,7 @@ using Andastra.Runtime.Graphics.Common.Raytracing;
 using Andastra.Runtime.Graphics.Common.Structs;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Raytracing
+namespace Andastra.Game.Stride.Raytracing
 {
     /// <summary>
     /// Stride implementation of hardware raytracing system.

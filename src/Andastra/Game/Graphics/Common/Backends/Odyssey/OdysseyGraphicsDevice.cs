@@ -2,7 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine graphics device implementation.
@@ -231,7 +231,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Creates a texture from pixel data.
         /// Based on swkotor.exe: FUN_00427c90 @ 0x00427c90 (texture initialization)
-        /// Based on swkotor2.exe: FUN_0042a100 @ 0x0042a100 (texture initialization)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0042a100 @ 0x0042a100 (texture initialization)
         /// </summary>
         /// <param name="width">Texture width.</param>
         /// <param name="height">Texture height.</param>

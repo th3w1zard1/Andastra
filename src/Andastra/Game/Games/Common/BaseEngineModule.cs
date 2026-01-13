@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Navigation;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Common
+namespace Andastra.Game.Engines.Common
 {
     /// <summary>
     /// Abstract base class for module management across all engines.

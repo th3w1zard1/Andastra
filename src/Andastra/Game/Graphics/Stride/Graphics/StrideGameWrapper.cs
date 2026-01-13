@@ -3,7 +3,7 @@ using global::Stride.Engine;
 using global::Stride.Games;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Wrapper for Stride.Engine.Game that provides UpdateFrame and DrawFrame events.

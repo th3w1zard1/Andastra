@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.PostProcessing
+namespace Andastra.Game.Graphics.MonoGame.PostProcessing
 {
     /// <summary>
     /// Bloom post-processing effect for HDR rendering.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.PostProcessing
     /// </summary>
     /// <remarks>
     /// Bloom Post-Processing:
-    /// - Based on swkotor2.exe rendering system (modern post-processing enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system (modern post-processing enhancement)
     /// - Located via string references: "Frame Buffer" @ 0x007c8408 (frame buffer for post-processing)
     /// - "CB_FRAMEBUFF" @ 0x007d1d84 (frame buffer checkbox in options)
     /// - Original implementation: KOTOR uses frame buffers for rendering and effects

@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Close Door Action:
-    /// - Based on swkotor2.exe door closing system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door closing system
     /// - Located via string references: "OnClosed" @ 0x007be1c8 (door closed script), "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (close object event, case 6)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (close script event, 0x10), door loading: FUN_005838d0 @ 0x005838d0 (load door properties)
     /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT event (case 6, fires before script execution)
@@ -88,7 +88,7 @@ namespace Andastra.Runtime.Core.Actions
             _approached = true;
 
             // Close the door
-            // Based on swkotor2.exe: Door closing implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door closing implementation
             // Located via string references: "OnClosed" @ 0x007be1c8, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
             // Original implementation: FUN_004dcfb0 @ 0x004dcfb0 handles EVENT_CLOSE_OBJECT (case 6)
             // Door state: IsOpen flag set to false, fires OnClosed script event
@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Core.Actions
                 doorState.OpenState = 0; // Closed state
 
                 // Record entering/clicking object for GetEnteringObject() and GetClickingObject() functions
-                // Based on swkotor2.exe: GetEnteringObject/GetClickingObject track last entity that interacted with door
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetEnteringObject/GetClickingObject track last entity that interacted with door
                 // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnClick" @ 0x007c1a20
                 // Original implementation: Stores last interacting entity ID for script queries
                 if (door is Entities.Entity doorEntityImpl)
@@ -109,7 +109,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Fire OnClose script event
-                // Based on swkotor2.exe: EVENT_CLOSE_OBJECT fires OnClose script event
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_CLOSE_OBJECT fires OnClose script event
                 // Located via string references: "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6), "CSWSSCRIPTEVENT_EVENTTYPE_ON_CLOSE" @ 0x007bc820 (0x17)
                 IEventBus eventBus = actor.World.EventBus;
                 if (eventBus != null)

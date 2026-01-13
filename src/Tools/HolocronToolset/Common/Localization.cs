@@ -1,8 +1,8 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Andastra.Parsing;
+using BioWare.NET;
 
 namespace HolocronToolset.Common
 {

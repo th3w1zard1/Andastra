@@ -1,9 +1,9 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
+using BioWare.NET;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 

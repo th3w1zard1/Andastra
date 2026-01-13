@@ -14,7 +14,7 @@ using RectangleF = Stride.Core.Mathematics.RectangleF;
 using StrideGraphics = Stride.Graphics;
 using Vector2 = Stride.Core.Mathematics.Vector2;
 
-namespace Andastra.Runtime.Stride.PostProcessing
+namespace Andastra.Game.Stride.PostProcessing
 {
     /// <summary>
     /// Stride implementation of screen-space ambient occlusion effect.

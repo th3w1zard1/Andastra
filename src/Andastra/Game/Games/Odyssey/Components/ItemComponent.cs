@@ -1,6 +1,6 @@
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Odyssey engine-specific implementation of item component.

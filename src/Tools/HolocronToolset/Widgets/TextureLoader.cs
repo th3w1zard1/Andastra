@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.TPC;
-using TGAImage = Andastra.Parsing.Formats.TPC.TGAImage;
+using BioWare.NET.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.TPC;
+using TGAImage = BioWare.NET.Resource.Formats.TPC.TGAImage;
 
 namespace HolocronToolset.Widgets
 {
@@ -273,7 +273,7 @@ namespace HolocronToolset.Widgets
         // Original: def _load_tga_via_pil(self, data: bytes, icon_size: int) -> TPCMipmap:
         private TPCMipmap LoadTgaViaTgaReader(byte[] data, int iconSize)
         {
-            // Use TGA reader from Andastra.Parsing
+            // Use TGA reader from BioWare.NET
             // Matching PyKotor: img = Image.open(BytesIO(data))
             TGAImage tga;
             using (var ms = new MemoryStream(data))

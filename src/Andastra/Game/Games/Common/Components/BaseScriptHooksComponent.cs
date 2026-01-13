@@ -3,7 +3,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Common.Components
+namespace Andastra.Game.Games.Common.Components
 {
     /// <summary>
     /// Base implementation of script hooks component functionality shared across all BioWare engines.

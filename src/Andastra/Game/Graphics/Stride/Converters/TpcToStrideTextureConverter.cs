@@ -1,20 +1,20 @@
 using System;
-using Andastra.Parsing.Formats.TPC;
+using BioWare.NET.Resource.Formats.TPC;
 using Andastra.Runtime.Stride.Graphics;
 using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using StrideGraphics = global::Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Converters
+namespace Andastra.Game.Stride.Converters
 {
     /// <summary>
-    /// Converts Andastra.Parsing TPC texture data to Stride Graphics.Texture.
+    /// Converts BioWare.NET TPC texture data to Stride Graphics.Texture.
     /// Handles DXT1/DXT3/DXT5 compressed formats, RGB/RGBA uncompressed,
     /// and grayscale textures.
     /// </summary>
     /// <remarks>
     /// TPC to Stride Texture Converter:
-    /// - Based on swkotor2.exe texture loading system (modern Stride adaptation)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system (modern Stride adaptation)
     /// - Original game: DirectX 9 fixed-function pipeline (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
     /// - TPC format: BioWare texture format supporting DXT1/DXT3/DXT5 compression, RGB/RGBA, grayscale
     /// - Original engine: Uses DirectX texture creation APIs (D3DXCreateTextureFromFileInMemory, etc.)
@@ -154,7 +154,7 @@ namespace Andastra.Runtime.Stride.Converters
                     currentHeight = Math.Max(1, previousHeight >> 1);
 
                     // Downsample using box filter (2x2 average) for proper mipmap generation
-                    // Based on swkotor2.exe: Uses D3DXFilterTexture or similar for mipmap generation (box filter)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Uses D3DXFilterTexture or similar for mipmap generation (box filter)
                     rgbaData = DownsampleMipmap(previousLevelRgba, previousWidth, previousHeight);
                     // Store for next iteration
                     previousLevelRgba = rgbaData;
@@ -255,7 +255,7 @@ namespace Andastra.Runtime.Stride.Converters
 
         /// <summary>
         /// Downsamples an RGBA mipmap to half size using box filter (2x2 average).
-        /// Based on swkotor2.exe texture mipmap generation (D3DXFilterTexture uses box filter).
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture mipmap generation (D3DXFilterTexture uses box filter).
         /// </summary>
         private static byte[] DownsampleMipmap(byte[] source, int width, int height)
         {
@@ -412,7 +412,7 @@ namespace Andastra.Runtime.Stride.Converters
 
         #region DXT Decompression
 
-        // DXT decompression methods - Based on swkotor2.exe texture loading system
+        // DXT decompression methods - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system
         // Original game: DirectX 9 DXT texture decompression (swkotor2.exe: d3d9.dll @ 0x0080a6c0)
         private static void DecompressDxt1(byte[] input, byte[] output, int width, int height)
         {

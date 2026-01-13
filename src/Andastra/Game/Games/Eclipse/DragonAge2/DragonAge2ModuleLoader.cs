@@ -2,7 +2,7 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Eclipse.DragonAge;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAge2
+namespace Andastra.Game.Engines.Eclipse.DragonAge2
 {
     /// <summary>
     /// Dragon Age 2 module loader implementation (DragonAge2.exe).

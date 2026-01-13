@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Triggers
     /// </summary>
     /// <remarks>
     /// Trigger System:
-    /// - Based on swkotor2.exe trigger system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) trigger system
     /// - LoadTriggerList @ 0x004e5920 - Loads trigger list from GIT GFF into area (located via "TriggerList" @ 0x007bd254)
     ///   - Iterates through "TriggerList" GFF list, reads ObjectId, TemplateResRef, position (XPosition, YPosition, ZPosition), geometry polygon, LinkedToModule, TransitionDestination, LinkedTo, LinkedToFlags. Creates trigger entities and adds to area
     /// - SaveTriggerList @ 0x004e2b20 - Saves trigger list from area to GFF save data (located via "TriggerList" @ 0x007bd254)
@@ -211,7 +211,7 @@ namespace Andastra.Runtime.Core.Triggers
         private void FireOnEnter(IEntity triggerEntity, IEntity entity)
         {
             // Record entering object for GetEnteringObject() function
-            // Based on swkotor2.exe: GetEnteringObject tracks last entity that entered trigger/door/placeable
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetEnteringObject tracks last entity that entered trigger/door/placeable
             // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnEnter" @ 0x007bd708
             // Original implementation: Stores last entering entity ID for script queries
             // Store in entity's custom data to avoid circular dependencies
@@ -227,7 +227,7 @@ namespace Andastra.Runtime.Core.Triggers
                 if (!string.IsNullOrEmpty(script))
                 {
                     // Execute script with trigger as owner and entering entity as triggerer
-                    // Based on swkotor2.exe: Trigger OnEnter script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Trigger OnEnter script execution
                     // Located via string references: "OnEnter" @ 0x007bee60
                     // Original implementation: FUN_005226d0 @ 0x005226d0 executes trigger scripts with entity context
                     if (_world.EventBus != null)
@@ -255,7 +255,7 @@ namespace Andastra.Runtime.Core.Triggers
         private void FireOnExit(IEntity triggerEntity, IEntity entity)
         {
             // Record exiting object for GetExitingObject() function
-            // Based on swkotor2.exe: GetExitingObject tracks last entity that exited trigger/door/placeable
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetExitingObject tracks last entity that exited trigger/door/placeable
             // Located via string references: "EVENT_LEFT_TRIGGER" @ 0x007bcdf4, "OnExit" @ 0x007bd700
             // Original implementation: Stores last exiting entity ID for script queries
             // Store in entity's custom data to avoid circular dependencies
@@ -271,7 +271,7 @@ namespace Andastra.Runtime.Core.Triggers
                 if (!string.IsNullOrEmpty(script))
                 {
                     // Execute script with trigger as owner and exiting entity as triggerer
-                    // Based on swkotor2.exe: Trigger OnExit script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Trigger OnExit script execution
                     // Located via string references: "OnExit" @ 0x007bee70
                     // Original implementation: FUN_005226d0 @ 0x005226d0 executes trigger scripts with entity context
                     if (_world.EventBus != null)

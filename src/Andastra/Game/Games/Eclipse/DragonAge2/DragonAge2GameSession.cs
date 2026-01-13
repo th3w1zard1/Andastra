@@ -1,6 +1,6 @@
 using Andastra.Runtime.Engines.Eclipse;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAge2
+namespace Andastra.Game.Engines.Eclipse.DragonAge2
 {
     /// <summary>
     /// Dragon Age 2 game session implementation (DragonAge2.exe).

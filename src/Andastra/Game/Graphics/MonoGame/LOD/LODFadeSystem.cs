@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.LOD
+namespace Andastra.Game.Graphics.MonoGame.LOD
 {
     /// <summary>
     /// LOD fade system for smooth transitions between LOD levels.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.LOD
     /// </summary>
     /// <remarks>
     /// LOD Fade System:
-    /// - Based on swkotor2.exe fade system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) fade system
     /// - Located via string references: "FadeDelayOnDeath" @ 0x007bf55c (fade delay on death)
     /// - "FadeLength" @ 0x007c3580, "FadeDelay" @ 0x007c358c, "FadeColor" @ 0x007c3598
     /// - "FadeType" @ 0x007c35a4, "FadeTime" @ 0x007c60ec

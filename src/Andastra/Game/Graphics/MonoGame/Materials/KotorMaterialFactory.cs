@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.TPC;
+using BioWare.NET.Resource.Formats.TPC;
 using Andastra.Runtime.MonoGame.Converters;
 using Andastra.Runtime.MonoGame.Enums;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Materials
+namespace Andastra.Game.Graphics.MonoGame.Materials
 {
     /// <summary>
     /// Factory for creating MonoGame materials from KOTOR texture and material data.

@@ -50,7 +50,7 @@ namespace Andastra.Runtime.Graphics.Common.GUI
     /// Original Implementation:
     /// - Renders main menu with buttons (Start Game, Options, Exit), handles input and selection
     /// - Menu panels: Uses GUI panel system with background textures and button overlays
-    /// - Based on swkotor2.exe: Main menu uses GUI system with panel-based rendering
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Main menu uses GUI system with panel-based rendering
     /// - Menu state tracked via flag at DAT_008283c0+0x34 (swkotor2.exe) or DAT_007a39e8+0x34 (swkotor.exe)
     /// 
     /// Inheritance Structure:

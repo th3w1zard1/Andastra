@@ -1,9 +1,9 @@
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Systems;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Aurora.Systems;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Aurora engine-specific implementation of faction component for Neverwinter Nights.

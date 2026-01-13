@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Systems;
+using Andastra.Game.Games.Common.Systems;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Event arguments for party changes (Odyssey-specific, extends base).
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// </summary>
     /// <remarks>
     /// Party Management System:
-    /// - Based on swkotor2.exe party system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) party system
     /// - Located via string references: "PARTYTABLE" @ 0x007c1910, "Party" @ 0x007c24dc
     /// - "PartyInteract" @ 0x007c1fc0, "SetByPlayerParty" @ 0x007c1d04
     /// - "OnPartyDeath" @ 0x007bd9f4, "CB_PARTYKILLED" @ 0x007d29e4

@@ -8,7 +8,7 @@ using Andastra.Runtime.MonoGame.Memory;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Modern rendering pipeline with comprehensive AAA optimizations.
@@ -30,7 +30,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Modern Renderer:
-    /// - Based on swkotor2.exe rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system
     /// - Located via string references: "Render Window" @ 0x007b5680, "render" @ 0x007bab34
     /// - "renderorder" @ 0x007bab50 (render order sorting), "Apropagaterender" @ 0x007bb10f (render propagation)
     /// - "renderbmlmtype" @ 0x007bb26c (render billboard/lightmap type)

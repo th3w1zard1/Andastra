@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Game.Graphics.MonoGame.Lighting
 {
     /// <summary>
     /// Volumetric lighting and fog system.

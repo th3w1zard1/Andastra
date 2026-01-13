@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Eclipse
+namespace Andastra.Game.Engines.Eclipse
 {
     /// <summary>
     /// Abstract base class for Eclipse Engine module loader implementations.

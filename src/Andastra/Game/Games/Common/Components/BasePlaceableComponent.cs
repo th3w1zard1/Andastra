@@ -3,7 +3,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common.Components
+namespace Andastra.Game.Games.Common.Components
 {
     /// <summary>
     /// Base implementation of placeable component functionality shared across all BioWare engines.
@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Useability Property:
         /// - Common across all engines: Controls whether placeable can be interacted with
-        /// - Based on swkotor2.exe: "Useable" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Useable" field in UTP template (FUN_00588010 @ 0x00588010)
         /// - Based on nwmain.exe: "Useable" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 56)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -82,7 +82,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Inventory Property:
         /// - Common across all engines: Controls whether placeable can store items
-        /// - Based on swkotor2.exe: "HasInventory" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "HasInventory" field in UTP template (FUN_00589520 @ 0x00589520)
         /// - Based on nwmain.exe: "HasInventory" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 69)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Static Property:
         /// - Common across all engines: Controls whether placeable can be destroyed
-        /// - Based on swkotor2.exe: "Static" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Static" field in UTP template (FUN_00588010 @ 0x00588010)
         /// - Based on nwmain.exe: "Static" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 57)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -106,7 +106,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Open State Property:
         /// - Common across all engines: Controls whether container placeable is open
-        /// - Based on swkotor2.exe: "Open" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Open" field in UTP template (FUN_00589520 @ 0x00589520)
         /// - Based on nwmain.exe: "Open" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60)
         /// - AnimationState 0=closed, 1=open (swkotor2.exe)
         /// - Engine-specific: Field names and storage may differ, but concept is common
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Locked Property:
         /// - Common across all engines: Controls whether placeable is locked
-        /// - Based on swkotor2.exe: "Locked" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Locked" field in UTP template (FUN_00588010 @ 0x00588010)
         /// - Based on nwmain.exe: "Locked" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 68)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Lock DC Property:
         /// - Common across all engines: Difficulty class for lockpicking
-        /// - Based on swkotor2.exe: "OpenLockDC" field in UTP template (FUN_00588010 @ 0x00588010, line 93)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "OpenLockDC" field in UTP template (FUN_00588010 @ 0x00588010, line 93)
         /// - Based on nwmain.exe: "OpenLockDC" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 40)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -143,7 +143,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Key Tag Property:
         /// - Common across all engines: Key tag/name required to unlock placeable
-        /// - Based on swkotor2.exe: "KeyName" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "KeyName" field in UTP template (FUN_00588010 @ 0x00588010)
         /// - Based on nwmain.exe: "KeyName" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 41)
         /// - Engine-specific: Field names (KeyName vs KeyTag) and storage may differ, but concept is common
         /// </remarks>
@@ -155,7 +155,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Hit Points Property:
         /// - Common across all engines: Current hit points for destructible placeables
-        /// - Based on swkotor2.exe: "CurrentHP" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "CurrentHP" field in UTP template (FUN_00588010 @ 0x00588010)
         /// - Based on nwmain.exe: "CurrentHP" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 62)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Max Hit Points Property:
         /// - Common across all engines: Maximum hit points for destructible placeables
-        /// - Based on swkotor2.exe: "HP" field in UTP template (FUN_00588010 @ 0x00588010)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "HP" field in UTP template (FUN_00588010 @ 0x00588010)
         /// - Based on nwmain.exe: "HP" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 60)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -179,7 +179,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Hardness Property:
         /// - Common across all engines: Damage reduction when attacking placeable
-        /// - Based on swkotor2.exe: "Hardness" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Hardness" field in UTP template (FUN_00589520 @ 0x00589520)
         /// - Based on nwmain.exe: "Hardness" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 63)
         /// - Engine-specific: Field names and storage may differ, but concept is common
         /// </remarks>
@@ -191,7 +191,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Animation State Property:
         /// - Common across all engines: Current animation state (0=closed, 1=open, etc.)
-        /// - Based on swkotor2.exe: "Animation" field in UTP template (FUN_00589520 @ 0x00589520)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Animation" field in UTP template (FUN_00589520 @ 0x00589520)
         /// - AnimationState 0=closed, 1=open for containers (swkotor2.exe)
         /// - Engine-specific: Field names and state values may differ, but concept is common
         /// </remarks>
@@ -203,7 +203,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Conversation Property:
         /// - Common across all engines: Conversation file for dialogue interactions
-        /// - Based on swkotor2.exe: FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
         /// - Located via string reference: "Conversation" @ 0x007c1abc
         /// - Based on nwmain.exe: "Conversation" field in CNWSPlaceable (SavePlaceable @ 0x1404b6a60, line 86)
         /// - Original implementation: Conversation field in UTP template contains dialogue ResRef
@@ -217,7 +217,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Placeable Opening:
         /// - Common behavior across all engines: Sets IsOpen flag, updates AnimationState
-        /// - Based on swkotor2.exe: EVENT_OPEN_OBJECT event (FUN_004dcfb0 @ 0x004dcfb0, case 7)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT event (FUN_004dcfb0 @ 0x004dcfb0, case 7)
         /// - Engine-specific: Animation handling, script event firing (OnOpen)
         /// - Engine-specific subclasses override this to provide correct implementation
         /// </remarks>
@@ -238,7 +238,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Placeable Closing:
         /// - Common behavior across all engines: Sets IsOpen flag to false, updates AnimationState
-        /// - Based on swkotor2.exe: EVENT_CLOSE_OBJECT event (FUN_004dcfb0 @ 0x004dcfb0, case 6)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_CLOSE_OBJECT event (FUN_004dcfb0 @ 0x004dcfb0, case 6)
         /// - Engine-specific: Animation handling, script event firing (OnClose/OnClosed)
         /// - Engine-specific subclasses override this to provide correct implementation
         /// </remarks>
@@ -259,7 +259,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Placeable Activation:
         /// - Common behavior across all engines: Activates placeable (opens container if HasInventory)
-        /// - Based on swkotor2.exe: OnUsed script event (FUN_004dcfb0 @ 0x004dcfb0)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnUsed script event (FUN_004dcfb0 @ 0x004dcfb0)
         /// - For containers, this opens them
         /// - Engine-specific: Script event firing (OnUsed), use distance checking
         /// - Engine-specific subclasses override this to provide correct implementation
@@ -299,7 +299,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Placeable Unlocking:
         /// - Common behavior across all engines: Sets IsLocked flag to false
-        /// - Based on swkotor2.exe: EVENT_UNLOCK_OBJECT event (FUN_004dcfb0 @ 0x004dcfb0, case 0xc)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_UNLOCK_OBJECT event (FUN_004dcfb0 @ 0x004dcfb0, case 0xc)
         /// - Engine-specific: Unlock validation, script event firing (OnUnlock)
         /// - Engine-specific subclasses override this to provide correct implementation
         /// </remarks>

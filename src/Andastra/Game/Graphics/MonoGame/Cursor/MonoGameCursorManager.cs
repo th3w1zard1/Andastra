@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-using Andastra.Parsing.Extract.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 
 
-namespace Andastra.Runtime.MonoGame.Graphics.Cursor
+namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
 {
     /// <summary>
     /// MonoGame implementation of ICursorManager.
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
     /// - Cursor state: Tracks current cursor type and pressed state
     /// - Cursor position: Tracks mouse position for rendering
     /// - Cursor resources: Cursors are stored as Windows PE resources in EXE file (cursor groups 1, 2, 11, 12, etc.)
-    /// - Based on swkotor2.exe: Cursor groups are loaded from EXE PE resources, cursor resources are CUR format
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cursor groups are loaded from EXE PE resources, cursor resources are CUR format
     /// - Original implementation: FUN_00633270 @ 0x00633270 sets up resource directories, cursor resources loaded from EXE
     /// - Cursor group format: 4 bytes reserved, 2 bytes resCount, then for each cursor: 12 bytes (width, height, planes, bitCount, bytesInRes), 2 bytes cursorId
     /// - Cursor resource format: CUR file format with hotspot information and bitmap data
@@ -114,7 +114,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         private ICursor CreateCursor(CursorType type)
         {
             // Try to load cursor from game resources first
-            // Based on swkotor2.exe: Cursors are loaded from EXE PE resources (cursor groups)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cursors are loaded from EXE PE resources (cursor groups)
             // If Installation is provided and has cursor resources available, load from resources
             // Otherwise, fall back to programmatic creation
             ICursor cursor = TryLoadCursorFromResources(type);
@@ -124,7 +124,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             }
 
             // Fall back to programmatic cursor textures
-            // Based on swkotor2.exe: If cursor resources not available, use fallback cursors
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If cursor resources not available, use fallback cursors
             ITexture2D textureUp = CreateCursorTexture(type, false);
             ITexture2D textureDown = CreateCursorTexture(type, true);
 
@@ -154,7 +154,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         /// <param name="type">The cursor type to load.</param>
         /// <returns>Loaded cursor if successful, null otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Cursor loading from EXE PE resources
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cursor loading from EXE PE resources
         /// - Cursors are stored as Windows PE resources in the EXE file
         /// - Cursor groups contain references to cursor resources (CUR format)
         /// - Each cursor type has two cursor groups (up and down states)
@@ -180,7 +180,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
             }
 
             // Try to load cursor group and extract cursor resources
-            // Based on swkotor2.exe: FUN_00633270 loads cursor groups from EXE PE resources
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 loads cursor groups from EXE PE resources
             // Cursor groups are stored as Windows PE resources (type 0xC = kPEGroupCursor)
             // Cursor resources are stored as Windows PE resources (type 0x1 = kPECursor)
 
@@ -210,7 +210,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         /// <param name="groupData">The cursor group data bytes.</param>
         /// <returns>List of cursor resource IDs, or empty list if parsing fails.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Cursor group format
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Cursor group format
         /// - Bytes 0-3: Reserved (4 bytes)
         /// - Bytes 4-5: Resource count (uint16, little-endian)
         /// - For each cursor entry (16 bytes):
@@ -289,7 +289,7 @@ namespace Andastra.Runtime.MonoGame.Graphics.Cursor
         /// <param name="pixels">Output: RGBA pixel data.</param>
         /// <returns>True if parsing succeeded, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: CUR file format parsing
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CUR file format parsing
         /// - CUR format is similar to ICO format but includes hotspot information
         /// - Header: 6 bytes (reserved, type, count)
         /// - Directory entry: 16 bytes (width, height, colorCount, reserved, planes, bitCount, size, offset)

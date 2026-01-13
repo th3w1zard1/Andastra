@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Components
+namespace Andastra.Game.Games.Odyssey.Components
 {
     /// <summary>
     /// Component for trigger entities in Odyssey engine (KotOR/KotOR2).
@@ -51,7 +51,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Template resource reference (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TemplateResRef field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TemplateResRef field in UTT template
         /// </remarks>
         public string TemplateResRef { get; set; }
 
@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Trigger type (0 = generic, 1 = transition, 2 = trap) (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Type field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Type field in UTT template
         /// </remarks>
         public int Type { get; set; }
 
@@ -67,7 +67,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Linked flags (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: LinkedToFlags field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LinkedToFlags field in UTT template
         /// </remarks>
         public int LinkedToFlags { get; set; }
 
@@ -75,7 +75,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Transition destination waypoint tag (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TransitionDestination field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TransitionDestination field in UTT template
         /// </remarks>
         public string TransitionDestination { get; set; }
 
@@ -83,7 +83,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Faction ID (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FactionId field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FactionId field in UTT template
         /// </remarks>
         public int FactionId { get; set; }
 
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Whether the trigger has a trap (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapFlag field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapFlag field in UTT template
         /// </remarks>
         public bool TrapFlag { get; set; }
 
@@ -99,7 +99,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Trap type (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapType field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapType field in UTT template
         /// </remarks>
         public int TrapType { get; set; }
 
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Whether the trap is detectable (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapDetectable field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapDetectable field in UTT template
         /// </remarks>
         public bool TrapDetectable { get; set; }
 
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Whether the trap is disarmable (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapDisarmable field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapDisarmable field in UTT template
         /// </remarks>
         public bool TrapDisarmable { get; set; }
 
@@ -123,7 +123,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Whether the trap is one-shot (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapOneShot field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapOneShot field in UTT template
         /// </remarks>
         public bool TrapOneShot { get; set; }
 
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Trap disarm DC (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: DisarmDC field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DisarmDC field in UTT template
         /// </remarks>
         public int DisarmDC { get; set; }
 
@@ -139,7 +139,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Set of entity IDs currently inside this trigger (Odyssey-specific).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Tracks entities currently in trigger for enter/exit detection
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Tracks entities currently in trigger for enter/exit detection
         /// </remarks>
         public HashSet<uint> EnteredBy
         {
@@ -153,7 +153,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Type of trigger (0=generic, 1=transition, 2=trap).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Type field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Type field in UTT template
         /// </remarks>
         public override int TriggerType
         {
@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Whether this is a trap trigger.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapFlag field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapFlag field in UTT template
         /// </remarks>
         public override bool IsTrap
         {
@@ -177,7 +177,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// DC to detect the trap.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapDetectDC field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapDetectDC field in UTT template
         /// </remarks>
         public override int TrapDetectDC { get; set; }
 
@@ -185,7 +185,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// DC to disarm the trap.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: DisarmDC field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DisarmDC field in UTT template
         /// </remarks>
         public override int TrapDisarmDC
         {
@@ -197,7 +197,7 @@ namespace Andastra.Runtime.Games.Odyssey.Components
         /// Whether the trigger fires only once.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: TrapOneShot field in UTT template
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TrapOneShot field in UTT template
         /// </remarks>
         public override bool FireOnce
         {

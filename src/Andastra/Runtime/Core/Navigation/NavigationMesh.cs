@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Navigation
 {
     /// <summary>
     /// Navigation mesh for pathfinding and collision detection.
-    /// Wraps BWM data from Andastra.Parsing with A* pathfinding on walkmesh adjacency.
+    /// Wraps BWM data from BioWare.NET with A* pathfinding on walkmesh adjacency.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -458,7 +458,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// 2. For each edge, find if any other triangle has the same two vertices (in either order)
     /// 3. If found, link them bidirectionally (triangle A's edge points to triangle B, and vice versa)
     /// 
-    /// Based on swkotor2.exe: Adjacency is computed during walkmesh loading, not stored in BWM files.
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Adjacency is computed during walkmesh loading, not stored in BWM files.
     /// However, BWM files can contain precomputed adjacency data for WOK files.
     /// 
     /// SURFACE MATERIALS:
@@ -657,7 +657,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - If it hits, it tests the two child boxes (left and right)
     /// - It keeps going down the tree until it reaches a leaf node (a single triangle)
     /// - This is much faster than testing every triangle (O(log n) instead of O(n))
-    /// - Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
     /// 
     /// AABB Tree Traversal Details (FUN_00575350 @ 0x00575350):
     /// - Tests ray against node's AABB using FUN_004d7400 @ 0x004d7400 (slab method)
@@ -817,7 +817,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - A face is blocked if its center is within obstacle radius
     /// - Blocked faces are skipped during pathfinding
     /// - If pathfinding fails with obstacles, retry with 1.5x expanded obstacle radius
-    /// - Based on swkotor2.exe: FindPathAroundObstacle @ 0x0061c390
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FindPathAroundObstacle @ 0x0061c390
     /// - Original implementation: FUN_0061c390 builds obstacle polygon and validates path
     /// 
     /// GRID-BASED PATHFINDING FALLBACK:
@@ -879,7 +879,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Searching the tree: O(log n) average case, O(n) worst case (degenerate tree)
     /// - Without tree: O(n) for every search (must test all triangles)
     /// 
-    /// Based on swkotor2.exe: AABB tree is built during walkmesh loading, not at runtime.
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AABB tree is built during walkmesh loading, not at runtime.
     /// The tree structure is stored in BWM files for WOK (area walkmeshes).
     /// </para>
     /// 
@@ -891,12 +891,12 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - Building: O(n log n) time, done once during walkmesh loading
     ///    - Searching: O(log n) average case, O(n) worst case
     ///    - Memory: O(n) space for tree nodes
-    ///    - Based on swkotor2.exe: AABB tree is stored in BWM files for WOK walkmeshes
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AABB tree is stored in BWM files for WOK walkmeshes
     /// 
     /// 2. Hint Face Index: When finding a face, if you provide a guess (hint), it tests that triangle
     ///    first. This is fast because characters usually stay on the same triangle for multiple frames
     ///    (60+ frames per second). The hint is correct most of the time, avoiding tree traversal.
-    ///    - Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260 tests hint face first (lines 31-42)
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260 tests hint face first (lines 31-42)
     ///    - Optimization: O(1) best case (hint correct), O(log n) average case (hint wrong)
     /// 
     /// 3. Normalized Direction Caching: When raycasting, the direction vector is normalized once
@@ -909,7 +909,7 @@ namespace Andastra.Runtime.Core.Navigation
     ///    stops immediately instead of checking more triangles.
     ///    - Exact hit: Ray starts on triangle surface (distance < 1e-5)
     ///    - Optimization: O(1) best case (exact hit on first triangle)
-    ///    - Based on swkotor2.exe: Early termination when exact hit found
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Early termination when exact hit found
     /// 
     /// 5. Distance-Based AABB Traversal: When traversing the AABB tree, it tests the closer child
     ///    first. This is an optimization over the original flag-based ordering (FUN_00575350 uses
@@ -917,14 +917,14 @@ namespace Andastra.Runtime.Core.Navigation
     ///    - Calculates distance from ray origin to each child's AABB center
     ///    - Tests closer child first (more likely to contain closest hit)
     ///    - Can reduce bestDist earlier, allowing more aggressive culling of second child
-    ///    - Based on swkotor2.exe: Original uses flag-based ordering, this is optimized version
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Original uses flag-based ordering, this is optimized version
     /// 
     /// 6. AABB Pre-filtering: Before testing triangle intersection, test if ray hits triangle's AABB.
     ///    This is a fast rejection test - if ray doesn't hit AABB, it can't hit the triangle.
     ///    - AABB test: O(1) per triangle (simple box test)
     ///    - Triangle test: O(1) per triangle (plane + edge tests)
     ///    - Rejection rate: High (most triangles are rejected by AABB test)
-    ///    - Based on swkotor2.exe: FUN_0055b300 @ 0x0055b300 tests AABB before triangle
+    ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055b300 @ 0x0055b300 tests AABB before triangle
     /// 
     /// 7. Brute Force Fallback: If no AABB tree is available, falls back to brute force search.
     ///    While slower (O(n)), it still works correctly and handles edge cases properly.
@@ -949,7 +949,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Triangles where all three vertices are collinear (in a straight line)
     /// - Detected by checking if normal vector length < 1e-6
     /// - Skipped during intersection tests (can't determine which side is "front")
-    /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 checks normal length (line 58)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 checks normal length (line 58)
     /// 
     /// RAY STARTING INSIDE TRIANGLE:
     /// - If ray origin is inside a triangle, intersection distance is 0 or negative
@@ -971,13 +971,13 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Triangles that are standing straight up (normal.Z very close to 0)
     /// - Can't use plane equation (would divide by zero)
     /// - Uses average height of three vertices: (v1.z + v2.z + v3.z) / 3
-    /// - Based on swkotor2.exe: FUN_004d6b10 @ 0x004d6b10 checks if normal.Z == _DAT_007b56fc
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d6b10 @ 0x004d6b10 checks if normal.Z == _DAT_007b56fc
     /// 
     /// RAY PARALLEL TO TRIANGLE PLANE:
     /// - If ray direction is parallel to triangle plane, ray never intersects
     /// - Detected by checking if ray crosses plane (dist0 and dist1 have opposite signs)
     /// - If both have same sign, ray is parallel - rejected
-    /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 checks plane crossing (lines 65-67)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 checks plane crossing (lines 65-67)
     /// 
     /// INVALID MAX DISTANCE:
     /// - Max distance <= 0 is rejected
@@ -998,7 +998,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Area walkmeshes (WOK): Vertices in world coordinates, no transformation needed
     /// - Placeable/Door walkmeshes (PWK/DWK): Vertices in local coordinates
     /// - Transformation applied when object is placed: local_to_world = position + rotation * local
-    /// - Based on swkotor2.exe: FUN_00557540 @ 0x00557540 applies coordinate transformations
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00557540 @ 0x00557540 applies coordinate transformations
     /// - Original implementation: FUN_00557540 transforms points using rotation matrix
     /// 
     /// TOLERANCE VALUES:
@@ -1009,7 +1009,7 @@ namespace Andastra.Runtime.Core.Navigation
     /// - Direction zero threshold: 1e-6 (minimum direction length)
     /// - AABB division epsilon: 1e-8 (division by zero protection)
     /// - Vertical triangle threshold: 1e-6 (normal.Z threshold for vertical triangles)
-    /// - Based on swkotor2.exe: Various epsilon values used throughout code (_DAT_007bc338, etc.)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Various epsilon values used throughout code (_DAT_007bc338, etc.)
     /// </para>
     /// </remarks>
     public class NavigationMesh : INavigationMesh
@@ -1264,7 +1264,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// Based on swkotor2.exe: Adjacency is computed during walkmesh loading, not stored in BWM files.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Adjacency is computed during walkmesh loading, not stored in BWM files.
         /// However, BWM files can contain precomputed adjacency data for WOK files.
         /// 
         /// The original engine computes adjacency by:
@@ -1488,7 +1488,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// Based on swkotor2.exe: AABB tree is built during walkmesh loading, not at runtime.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AABB tree is built during walkmesh loading, not at runtime.
         /// The tree structure is stored in BWM files for WOK (area walkmeshes).
         /// 
         /// The original engine builds the tree using a similar top-down recursive algorithm:
@@ -1690,7 +1690,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// <returns>True if the ray hit a triangle, false otherwise.</returns>
         /// <remarks>
         /// Simplified Raycast Overload:
-        /// - Based on swkotor2.exe walkmesh raycast system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh raycast system
         /// - Located via string references: "Raycast" @ navigation mesh functions
         /// - Original implementation: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts for visibility checks
         /// - This is a convenience overload that discards the hit face index
@@ -1766,7 +1766,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Finds a path from start to goal while avoiding obstacles.
-        /// Based on swkotor2.exe: FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FindPathAroundObstacle @ 0x0061c390 - pathfinding around obstacles
         /// Located via string references:
         ///   - "aborted walking, we are totaly blocked. can't get around this creature at all." @ 0x007c0408
         ///   - Called from UpdateCreatureMovement @ 0x0054be70 (line 183) when creature collision is detected
@@ -2174,7 +2174,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Finds the triangle (face) that contains the given 2D position (x, y).
-        /// Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260.
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
@@ -2193,7 +2193,7 @@ namespace Andastra.Runtime.Core.Navigation
         ///    - Continues until reaching a leaf node (single triangle)
         ///    - Tests if point is inside that triangle using 2D point-in-triangle test
         ///    - Performance: O(log n) average case, O(n) worst case
-        ///    - Based on swkotor2.exe: FUN_004f4260 uses AABB tree if available
+        ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 uses AABB tree if available
         /// 
         /// 2. BRUTE FORCE SEARCH (if no AABB tree):
         ///    - Tests every triangle until it finds one that contains the point
@@ -2206,7 +2206,7 @@ namespace Andastra.Runtime.Core.Navigation
         ///    - For each edge of the triangle, checks which side of the edge the point is on
         ///    - If point is on the same side of all three edges, it's inside the triangle
         ///    - Uses cross products to determine which side of each edge the point is on
-        ///    - Based on swkotor2.exe: FUN_0055b300 @ 0x0055b300 tests triangle intersection
+        ///    - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055b300 @ 0x0055b300 tests triangle intersection
         /// 
         /// ORIGINAL IMPLEMENTATION DETAILS (FUN_004f4260 @ 0x004f4260):
         /// 
@@ -2251,7 +2251,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// HOW IT WORKS:
         /// 
-        /// Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260 (FindFaceAt equivalent)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260 (FindFaceAt equivalent)
         /// 
         /// STAGE 1: Create Vertical Range
         /// - The original engine creates a vertical range around the point: z + tolerance to z - tolerance
@@ -2436,7 +2436,7 @@ namespace Andastra.Runtime.Core.Navigation
             // Use AABB tree if available for faster search
             // The AABB tree organizes triangles into a tree structure, making searches much faster
             // Instead of testing all triangles (O(n)), we test only a few (O(log n))
-            // Based on swkotor2.exe: FUN_004f4260 @ 0x004f4260 uses AABB tree when available
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 @ 0x004f4260 uses AABB tree when available
             if (_aabbRoot != null)
             {
                 return FindFaceAabb(_aabbRoot, position);
@@ -2445,7 +2445,7 @@ namespace Andastra.Runtime.Core.Navigation
             // Brute force fallback: test every triangle until we find one that contains the point
             // This is slower (O(n)) but works when no AABB tree is available
             // Used for: PWK/DWK walkmeshes (placeable/door walkmeshes don't have AABB trees)
-            // Based on swkotor2.exe: FUN_004f4260 lines 45-63 iterate through all faces if no tree
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f4260 lines 45-63 iterate through all faces if no tree
             for (int i = 0; i < _faceCount; i++)
             {
                 if (PointInFace2d(position, i))
@@ -2496,7 +2496,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Without tree: O(n) (must test all triangles)
         /// - Speedup: 100x-1000x faster for large meshes (1000+ triangles)
         /// 
-        /// Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
         /// Original implementation: Recursively traverses tree, tests AABB first, then triangle
         /// </remarks>
         /// <param name="node">The AABB tree node to search from</param>
@@ -2505,7 +2505,7 @@ namespace Andastra.Runtime.Core.Navigation
         private int FindFaceAabb(AabbNode node, Vector3 point)
         {
             // Test if point is within AABB bounds (2D)
-            // Based on swkotor2.exe: FUN_00575350 @ 0x00575350 tests AABB first (line 26)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 tests AABB first (line 26)
             // Original implementation: FUN_004d7400 @ 0x004d7400 tests ray-AABB intersection
             // This is a fast rejection test - if point isn't in the box, it can't be in any triangle
             if (point.X < node.BoundsMin.X || point.X > node.BoundsMax.X ||
@@ -2515,7 +2515,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Leaf node - test point against face
-            // Based on swkotor2.exe: FUN_00575350 @ 0x00575350 checks if node is leaf (line 30)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 checks if node is leaf (line 30)
             // Leaf nodes have FaceIndex >= 0 (contains a single triangle)
             if (node.FaceIndex >= 0)
             {
@@ -2527,7 +2527,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Internal node - test children
-            // Based on swkotor2.exe: FUN_00575350 @ 0x00575350 recursively tests children (lines 32-38)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 recursively tests children (lines 32-38)
             // Original implementation: Uses flag-based ordering (param_4[1] & node flag)
             // This implementation tests left first, then right (order doesn't matter for correctness)
             if (node.Left != null)
@@ -2616,7 +2616,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Degenerate triangle (collinear vertices): May return incorrect result (should be handled
         ///   by checking for degenerate triangles before calling this function)
         /// 
-        /// Based on swkotor2.exe: Similar to FUN_004d9030 @ 0x004d9030 edge containment tests
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Similar to FUN_004d9030 @ 0x004d9030 edge containment tests
         /// Original implementation: Uses cross products to test point containment in polygon
         /// </remarks>
         /// <param name="point">The 3D point to test</param>
@@ -2630,7 +2630,7 @@ namespace Andastra.Runtime.Core.Navigation
             Vector3 v3 = _vertices[_faceIndices[baseIdx + 2]];
 
             // Same-side test (2D projection)
-            // Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 uses edge containment tests (lines 79-95)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 uses edge containment tests (lines 79-95)
             // Original implementation: Tests if point is on correct side of all three edges
             float d1 = Sign2d(point, v1, v2);
             float d2 = Sign2d(point, v2, v3);
@@ -2668,7 +2668,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - Negative: Point p1 is on the right side of edge p3->p2
         /// - Zero: Point p1 is exactly on edge p3->p2 (within floating-point precision)
         /// 
-        /// Based on swkotor2.exe: Similar to cross product calculations in FUN_004d9030 @ 0x004d9030
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Similar to cross product calculations in FUN_004d9030 @ 0x004d9030
         /// Original implementation: Uses cross products for edge containment tests
         /// </remarks>
         /// <param name="p1">The point to test</param>
@@ -2800,7 +2800,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 2. Collision Detection: Characters are prevented from standing on non-walkable faces
         /// 3. Height Calculation: ProjectToSurface only works on walkable faces
         /// 
-        /// HOW PROJECTTOSURFACE WORKS (Based on swkotor2.exe):
+        /// HOW PROJECTTOSURFACE WORKS ([TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address)):
         /// 
         /// ProjectToSurface is based on FUN_0055b1d0 @ 0x0055b1d0 and FUN_005761f0 @ 0x005761f0.
         /// 
@@ -2901,7 +2901,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// Based on swkotor2.exe: Material walkability is hardcoded in the engine based on material ID.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Material walkability is hardcoded in the engine based on material ID.
         /// The engine does NOT look up materials in surfacemat.2da to determine walkability - it uses
         /// a hardcoded list of walkable material IDs. This function matches that hardcoded behavior.
         /// 
@@ -2969,7 +2969,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Performs a raycast against the mesh. Shoots an invisible ray and finds the first triangle it hits.
-        /// Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 performs walkmesh raycasts.
         /// </summary>
         /// <remarks>
         /// HOW RAYCASTING WORKS:
@@ -2985,7 +2985,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// - If it hits, we test the two child boxes (left and right)
         /// - We keep going down the tree until we reach a leaf node (a single triangle)
         /// - This is much faster than testing every triangle
-        /// - Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
         /// 
         /// STAGE 2: Ray-Triangle Intersection
         /// - For each triangle that might be hit, we test if the ray actually hits it
@@ -2995,13 +2995,13 @@ namespace Andastra.Runtime.Core.Navigation
         ///   c. Check if the ray crosses the plane (one endpoint on each side)
         ///   d. Calculate where the ray hits the plane
         ///   e. Test if that hit point is inside the triangle using edge tests
-        /// - Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
         /// 
         /// The AABB-ray intersection test uses the "slab method":
         /// - We test the ray against each axis (X, Y, Z) separately
         /// - For each axis, we find where the ray enters and exits the box
         /// - If the ray enters all three axes before exiting any, it hits the box
-        /// - Based on swkotor2.exe: FUN_004d7400 @ 0x004d7400 (AABB-ray intersection)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d7400 @ 0x004d7400 (AABB-ray intersection)
         /// 
         /// OPTIMIZATIONS:
         /// - Normalized direction caching: We normalize the direction once and reuse it
@@ -3127,7 +3127,7 @@ namespace Andastra.Runtime.Core.Navigation
             }
 
             // Internal node - test children with optimized traversal order
-            // Based on swkotor2.exe: FUN_00575350 @ 0x00575350 (AABB tree traversal)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00575350 @ 0x00575350 (AABB tree traversal)
             // Original implementation: Uses flag-based traversal order (param_4[1] & node flag)
             // Original: Lines 31-38 check param_4[1] flag to determine left/right traversal order
             // Optimization: This implementation uses distance-based ordering (test closer child first)
@@ -3353,7 +3353,7 @@ namespace Andastra.Runtime.Core.Navigation
             Vector3 v1 = _vertices[idx1];
             Vector3 v2 = _vertices[idx2];
 
-            // Based on swkotor2.exe: FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d9030 @ 0x004d9030 (ray-triangle intersection)
             // This algorithm uses a plane-based approach with edge containment tests.
             // 
             // STEP 1: Calculate the triangle's normal vector
@@ -3573,7 +3573,7 @@ namespace Andastra.Runtime.Core.Navigation
         /// 
         /// ORIGINAL IMPLEMENTATION:
         /// 
-        /// Based on swkotor2.exe: Line of sight checks are performed during perception updates.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Line of sight checks are performed during perception updates.
         /// The original engine uses walkmesh raycasting to determine if creatures can see each other.
         /// Non-walkable faces (walls, obstacles) block line of sight, while walkable faces (ground)
         /// do not block line of sight.
@@ -3610,7 +3610,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Projects a point onto the walkmesh surface. Finds the height of the ground at a given (x, y) position.
-        /// Based on swkotor2.exe: FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0055b1d0 @ 0x0055b1d0 and FUN_0055b210 @ 0x0055b210.
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:
@@ -3752,7 +3752,7 @@ namespace Andastra.Runtime.Core.Navigation
 
         /// <summary>
         /// Determines the Z (height) coordinate for a given (x, y) point on a triangle's plane.
-        /// Based on swkotor2.exe: FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation).
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004d6b10 @ 0x004d6b10 (plane equation height calculation).
         /// </summary>
         /// <remarks>
         /// WHAT THIS FUNCTION DOES:

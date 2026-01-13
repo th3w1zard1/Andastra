@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Game.Graphics.MonoGame.Lighting
 {
     /// <summary>
     /// Comprehensive area light calculator implementing true area light rendering.

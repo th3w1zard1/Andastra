@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces
 {
@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// </summary>
     /// <remarks>
     /// Game Resource Provider Interface:
-    /// - Based on swkotor2.exe resource loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading system
     /// - Located via string references: "Resource" @ 0x007c14d4, resource table management functions
     /// - Resource precedence: OVERRIDE > MODULE > SAVE > TEXTUREPACKS > CHITIN > HARDCODED
     /// - Original implementation: Unified interface for accessing game resources with automatic precedence resolution
@@ -72,7 +72,7 @@ namespace Andastra.Runtime.Content.Interfaces
         /// complementing the ResourceIdentifier-based methods for cases where separate
         /// ResRef and ResourceType parameters are more convenient.
         /// </remarks>
-        byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType);
+        byte[] LoadResource(BioWare.NET.Common.ResRef resRef, ResourceType resourceType);
 
         /// <summary>
         /// The game type (K1, K2, BaldursGate, , , etc.).

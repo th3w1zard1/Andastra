@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading;
-using Andastra.Parsing;
-using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource.Generics.UTI;
+using BioWare.NET;
+using BioWare.NET.Common.Script;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Audio;
@@ -33,7 +33,7 @@ using Andastra.Runtime.Scripting.VM;
 using CoreCombat = Andastra.Runtime.Core.Combat;
 using VMExecutionContext = Andastra.Runtime.Scripting.VM.ExecutionContext;
 
-namespace Andastra.Runtime.Engines.Odyssey.EngineApi
+namespace Andastra.Game.Engines.Odyssey.EngineApi
 {
     /// <summary>
     /// KOTOR 1 engine API implementation.
@@ -2285,10 +2285,10 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                             }
                         }
                     }
-                    // Fallback to Andastra.Parsing Installation provider
-                    else if (ctx.ResourceProvider is Andastra.Parsing.Installation.Installation installation)
+                    // Fallback to BioWare.NET Installation provider
+                    else if (ctx.ResourceProvider is BioWare.NET.Extract.Installation.Installation installation)
                     {
-                        Andastra.Parsing.Installation.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
+                        BioWare.NET.Extract.Installation.ResourceResult result = installation.Resource(itemTemplate, ResourceType.UTI, null, null);
                         if (result != null && result.Data != null)
                         {
                             using (var stream = new MemoryStream(result.Data))
@@ -2582,7 +2582,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
 
         /// <summary>
         /// GetIsInCombat(object oCreature=OBJECT_SELF, int bOnlyCountReal=FALSE) - Returns TRUE if the creature is in combat
-        /// Based on swkotor2.exe: GetIsInCombat implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetIsInCombat implementation
         /// Located via string reference: "InCombatHPBase" @ 0x007bf224, "CombatRoundData" @ 0x007bf6b4
         /// Original implementation: FUN_005119a0 @ 0x005119a0 checks combat state and active combat rounds
         /// - If bOnlyCountReal=FALSE: Returns true if combat state is InCombat (any combat, including just targeted)
@@ -2674,7 +2674,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                     Core.Interfaces.Components.ITransformComponent transform = ctx.Caller.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                     if (transform != null)
                     {
-                        // Convert Andastra.Parsing Vector3 to System.Numerics.Vector3
+                        // Convert BioWare.NET Vector3 to System.Numerics.Vector3
                         position = new System.Numerics.Vector3(transform.Position.X, transform.Position.Y, transform.Position.Z);
                     }
 
@@ -5513,7 +5513,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             if (targetFaction == null)
             {
                 // Create faction component if it doesn't exist
-                // Based on swkotor2.exe: Faction component creation during entity faction change
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction component creation during entity faction change
                 // Original implementation: Creates new faction component and assigns it to entity
                 // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe)
                 // Function: FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from creature template
@@ -5777,7 +5777,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
         /// - If waypoint tag is provided, positions party at that waypoint
         /// - If waypoint tag is empty, uses default entry waypoint from module IFO
         /// - Party members positioned in line perpendicular to waypoint facing (1.0 unit spacing)
-        /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
         ///
         /// Cross-Engine Equivalents:
         /// - swkotor2.exe: Same function ID (509), identical implementation pattern
@@ -6128,7 +6128,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             {
                 if (services.ModuleLoader is Andastra.Runtime.Engines.Odyssey.Game.ModuleLoader moduleLoader)
                 {
-                    Andastra.Parsing.Installation.Module parsingModule = moduleLoader.GetParsingModule();
+                    BioWare.NET.Extract.Installation.Module parsingModule = moduleLoader.GetParsingModule();
                     if (parsingModule == null)
                     {
                         return Variable.FromObject(ObjectInvalid);
@@ -6175,7 +6175,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
             // Fallback: Create basic entity if EntityFactory not available or template creation failed
             if (entity == null)
             {
-                // Convert System.Numerics.Vector3 to Andastra.Parsing Vector3 for World.CreateEntity
+                // Convert System.Numerics.Vector3 to BioWare.NET Vector3 for World.CreateEntity
                 Vector3 worldPosition = new Vector3(position.X, position.Y, position.Z);
                 entity = ctx.World.CreateEntity(odyObjectType, worldPosition, facing);
                 if (entity == null)
@@ -6215,7 +6215,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 if (entity is Core.Entities.Entity entityImpl)
                 {
                     // Set appear animation flag and timing for fade-in system
-                    // Based on swkotor2.exe: Appear animation uses opacity fade-in from 0.0 to 1.0
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Appear animation uses opacity fade-in from 0.0 to 1.0
                     // Similar pattern to ActionDestroyObject fade-out, but in reverse (fade-in instead of fade-out)
                     // The AppearAnimationFadeSystem will update Opacity property over time
                     entityImpl.SetData("AppearAnimation", true);
@@ -6249,7 +6249,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         if (animationComponent != null)
                         {
                             // Play spawn animation (animation ID 0 is typically the spawn/appear animation)
-                            // Based on swkotor2.exe: Spawn animation plays while entity fades in
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spawn animation plays while entity fades in
                             // Animation plays once (not looping) and completes as fade-in finishes
                             // If animation ID 0 doesn't exist, entity will just fade in without animation
                             animationComponent.PlayAnimation(0, 1.0f, false); // Animation ID 0, normal speed, no loop
@@ -6258,7 +6258,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
 
                     // For placeables, doors, and other objects with animation components:
                     // They may also have spawn animations, but typically just fade in
-                    // Based on swkotor2.exe: Most non-creature objects just fade in without specific animations
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Most non-creature objects just fade in without specific animations
                     // However, placeables with animation components may have an appear animation (animation ID 0)
                     if (objectType == 4) // OBJECT_TYPE_PLACEABLE
                     {
@@ -6266,7 +6266,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                         if (animationComponent != null)
                         {
                             // Placeables may have an appear animation (animation ID 0), similar to creatures
-                            // Based on swkotor2.exe: Placeables with appear animations play animation ID 0 while fading in
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeables with appear animations play animation ID 0 while fading in
                             // Animation ID 0 is typically the first animation in the model's animation array
                             // If animation ID 0 doesn't exist, entity will just fade in without animation
                             // Animation plays once (not looping) and completes as fade-in finishes
@@ -6842,14 +6842,14 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                 // Original implementation: Looks up max stack size from baseitems.2da "stacking" column using BaseItem ID
                 int maxStackSize = 100; // Default max
 
-                // Try to look up max stack size from baseitems.2da using Andastra.Parsing
+                // Try to look up max stack size from baseitems.2da using BioWare.NET
                 if (ctx is VMExecutionContext execCtx && execCtx.AdditionalContext is IGameServicesContext services)
                 {
                     if (services.GameSession is GameSession gameSession && gameSession.Installation != null)
                     {
                         try
                         {
-                            // Load baseitems.2da using Andastra.Parsing
+                            // Load baseitems.2da using BioWare.NET
                             ResourceResult baseitemsResult = gameSession.Installation.Resource("baseitems", ResourceType.TwoDA, null, null);
                             if (baseitemsResult != null && baseitemsResult.Data != null)
                             {
@@ -7221,7 +7221,7 @@ namespace Andastra.Runtime.Engines.Odyssey.EngineApi
                                 Core.Interfaces.Components.ITransformComponent doorTransform = door.GetComponent<Core.Interfaces.Components.ITransformComponent>();
                                 if (doorTransform != null)
                                 {
-                                    // Convert Andastra.Parsing Vector3 to System.Numerics.Vector3
+                                    // Convert BioWare.NET Vector3 to System.Numerics.Vector3
                                     position = new System.Numerics.Vector3(doorTransform.Position.X, doorTransform.Position.Y, doorTransform.Position.Z);
                                 }
 

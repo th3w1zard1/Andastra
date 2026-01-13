@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Core.Enums
     /// </summary>
     /// <remarks>
     /// Combat Form Enum:
-    /// - Based on swkotor2.exe combat form system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) combat form system
     /// - Located via string references: GetIsFormActive function in NWScript
     /// - Combat form constants from k2_nwscript.nss:
     ///   - FORM_SABER_I_SHII_CHO = 258
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Core.Enums
     /// - Force forms (265-268): Affect Force power usage and effectiveness
     /// - Form activation: Set via SetIsFormActive NWScript function or combat form selection UI
     /// - Form checking: GetIsFormActive NWScript function checks if specific form is active
-    /// - Based on swkotor2.exe: Combat forms are K2-specific feature (not in K1)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Combat forms are K2-specific feature (not in K1)
     /// </remarks>
     public enum CombatForm
     {

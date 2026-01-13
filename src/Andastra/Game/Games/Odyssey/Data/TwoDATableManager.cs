@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Engines.Odyssey.Profiles;
 using AppearanceData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.AppearanceData;
@@ -12,14 +12,14 @@ using BaseItemData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.BaseI
 using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
 using SpellData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.SpellData;
 
-namespace Andastra.Runtime.Engines.Odyssey.Data
+namespace Andastra.Game.Engines.Odyssey.Data
 {
     /// <summary>
     /// Manages loading and caching of 2DA tables for game data lookup.
     /// </summary>
     /// <remarks>
     /// 2DA Table Manager (Odyssey-specific):
-    /// - Based on swkotor2.exe: FUN_005edd20 @ 0x005edd20 (2DA table loading)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
     /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
     /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
     /// - Cross-engine analysis:
@@ -30,7 +30,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     /// - Resource precedence: override → module → chitin (via IGameResourceProvider)
     /// - Table lookup: Uses row label (string) or row index (int) to access data
     /// - Column access: Column names are case-insensitive (e.g., "ModelA", "modela" both work)
-    /// - Based on Andastra.Parsing.Formats.TwoDA.TwoDA for parsing
+    /// - Based on BioWare.NET.Resource.Formats.TwoDA.TwoDA for parsing
     /// </remarks>
     public class TwoDATableManager
     {
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
                         data = memoryStream.ToArray();
                     }
 
-                    // Parse 2DA file using Andastra.Parsing
+                    // Parse 2DA file using BioWare.NET
                     TwoDABinaryReader reader = new TwoDABinaryReader(data);
                     TwoDA table = reader.Load();
 

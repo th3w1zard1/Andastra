@@ -7,10 +7,10 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Data;
-using Andastra.Runtime.Games.Common.Systems;
-using Andastra.Runtime.Games.Odyssey.Data;
+using Andastra.Game.Games.Common.Systems;
+using Andastra.Game.Games.Odyssey.Data;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// Perception event type (Odyssey-specific enum).
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// </summary>
     /// <remarks>
     /// Perception System (Odyssey-specific):
-    /// - Based on swkotor2.exe perception system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) perception system
     /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68
     /// - "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4 (perception state storage)
     /// - "PERCEPTIONDIST" @ 0x007c4070, "PerceptionRange" @ 0x007c4080 (perception range fields)
@@ -129,7 +129,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// - Sound source is active
     /// - Not silenced
     ///
-    /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0
     /// Located via string reference: "PERCEPTIONDIST" @ 0x007c4070
     /// Original implementation: Updates perception for all creatures, checks sight/hearing ranges,
     /// fires script events "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 when perception changes
@@ -287,7 +287,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 float distSq = Vector3.DistanceSquared(position, targetPosition);
 
                 // Track activation state changes for placeables/doors (for hearing perception)
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Placeables/doors make sound when activated (opening, closing, using)
                 // We track state changes to detect recent activations
                 if (target.ObjectType == ObjectType.Placeable || target.ObjectType == ObjectType.Door)
@@ -364,7 +364,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
             // Update last perceived entity (for GetLastPerceived engine API)
             // Track the most recently perceived entity (seen or heard) based on timestamps
-            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 - tracks last perceived entity
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 - tracks last perceived entity
             // Based on nwmain.exe: ExecuteCommandGetLastPerceived @ 0x14052a6c0 - retrieves last perceived entity
             // Original implementation: Tracks most recently perceived entity for GetLastPerceived NWScript function
             IEntity lastPerceived = null;
@@ -520,7 +520,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// </summary>
         /// <remarks>
         /// Odyssey-specific implementation:
-        /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
         /// - Located via string references: "PerceptionData" @ 0x007bf6c4, "PerceptionList" @ 0x007bf6d4
         /// - Original implementation: Initializes perception tracking data structure when creature is created
         /// - Perception data is initialized proactively to ensure proper state before first update cycle
@@ -543,7 +543,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Initialize last perceived entity tracking (for GetLastPerceived engine API)
-            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 - tracks last perceived entity
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 - tracks last perceived entity
             // Based on nwmain.exe: ExecuteCommandGetLastPerceived @ 0x14052a6c0 - retrieves last perceived entity
             if (!_lastPerceivedEntity.ContainsKey(entity.ObjectId))
             {
@@ -604,7 +604,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// <returns>Feat ID if found, -1 otherwise.</returns>
         /// <remarks>
         /// See Invisibility Feat Lookup:
-        /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception check function)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception check function)
         /// - Located via string references: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
         /// - Original implementation: Looks up FEAT_SEE_INVISIBILITY from feat.2da table
         /// - Caches the result to avoid repeated table lookups
@@ -652,7 +652,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                     if (creatureComp != null && creatureComp.FeatList != null)
                     {
                         // See Invisibility feat ID (looked up from feat.2da)
-                        // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception check function)
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception check function)
                         // Original implementation: Checks for FEAT_SEE_INVISIBILITY from feat.2da table
                         int featSeeInvisibilityId = GetSeeInvisibilityFeatId();
                         if (featSeeInvisibilityId >= 0)
@@ -694,7 +694,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// <remarks>
         /// Hearing Detection (Odyssey-specific):
         /// Based on swkotor.exe: FUN_005afce0 @ 0x005afce0 (perception check function)
-        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
         /// Located via string references: EFFECT_TYPE_DEAF @ ScriptDefs constant 13
         /// Original implementation: Comprehensive hearing detection with multiple checks:
         /// 1. Deafness check: Creature must not be deafened (EFFECT_TYPE_DEAF = 13)
@@ -729,7 +729,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             }
 
             // Check if target is silenced (stealth/invisibility reduces sound)
-            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
             // Original implementation: Invisibility effect reduces sound generation
             // Stealth mode creatures make less sound (reduced detection range)
             // Completely silent creatures (no movement, no combat) are not audible
@@ -762,7 +762,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 // 3. Dead creatures do not make sound (unless death sound is still playing)
 
                 // Check if creature is dead
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Dead creatures do not make sound
                 // Check for death effect or zero hit points
                 if (_effectSystem.HasEffect(target, EffectType.Death))
@@ -772,7 +772,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 }
 
                 // Check if creature is moving
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Position changes between updates indicate movement
                 // Movement threshold: 0.1 meters (to account for floating point precision)
                 const float movementThreshold = 0.1f;
@@ -798,7 +798,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 }
 
                 // Check if creature is in combat
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Creatures in combat make sound (battle cries, attack grunts)
                 // Combat sounds are louder and more detectable than movement sounds
                 if (_world.CombatSystem.IsInCombat(target))
@@ -809,7 +809,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 }
 
                 // If target is invisible/stealthed and not making sound, it's not audible
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Stealth mode reduces sound generation
                 // Completely silent creatures (no movement, no combat) are not audible
                 if (targetIsInvisible && !isMakingSound)
@@ -824,7 +824,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 }
 
                 // Check line of sight for sound (sound can travel through some obstacles but not all)
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Sound can travel through some obstacles but not all
                 // Sound line of sight is less strict than visual line of sight
                 // Sound can bend around corners slightly (small obstacles don't block sound)
@@ -849,7 +849,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                         if (_world.CombatSystem.IsInCombat(target))
                         {
                             // Combat sounds can be heard through some obstacles
-                            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                             // Original implementation: Combat sounds have longer range and can penetrate some obstacles
                             // Uses multi-path sound propagation to simulate sound bending around corners
                             bool canHearCombatSound = TestCombatSoundPropagation(area, earPos, targetEarPos, creaturePos, targetPos);
@@ -871,7 +871,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             else if (target.ObjectType == ObjectType.Placeable || target.ObjectType == ObjectType.Door)
             {
                 // Placeables/doors only audible if activated
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
                 // Original implementation: Placeables/doors make sound when activated (opening, closing, using)
                 // Sound is generated during activation animation (opening/closing/using)
                 // Sound duration: ~1-2 seconds (typical door/placeable activation animation length)
@@ -886,7 +886,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
                 if (_placeableDoorActivationTimes.TryGetValue(target.ObjectId, out activationTime))
                 {
                     // Sound duration in seconds (typical door/placeable activation animation length)
-                    // Based on swkotor2.exe: Door/placeable activation sounds typically last 1-2 seconds
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door/placeable activation sounds typically last 1-2 seconds
                     // Located via string references: "placeableobjsnds" @ 0x007c4bf0 (placeable object sounds directory)
                     // Door sounds: "i_opendoor" @ 0x007c86d4 (open door animation), door opening/closing sounds
                     const float activationSoundDuration = 2.0f; // Sound duration in seconds
@@ -933,7 +933,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
 
         /// <summary>
         /// Tests if combat sound can propagate from source to listener through obstacles.
-        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
         /// Original implementation: Combat sounds have longer range and can penetrate some obstacles
         /// Uses multi-path sound propagation to simulate sound bending around corners and through openings.
         /// </summary>
@@ -950,7 +950,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
         /// - Sound is blocked by thick walls but can penetrate thin obstacles
         /// - Combat sounds are louder (higher base volume) and have longer effective range
         /// 
-        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
         /// Original implementation uses walkmesh raycasting with multiple paths for sound propagation
         /// </remarks>
         private bool TestCombatSoundPropagation(IArea area, Vector3 listenerEarPos, Vector3 sourceEarPos, Vector3 listenerPos, Vector3 sourcePos)
@@ -966,7 +966,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
             float dist = (float)Math.Sqrt(distSq);
 
             // Combat sound propagation constants
-            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception update system)
             // Original implementation: Combat sounds have longer range and can penetrate some obstacles
             const float combatSoundMaxRange = 25.0f; // Maximum range for combat sounds (meters)
             const float combatSoundPenetrationRange = 12.0f; // Range where combat sounds can penetrate obstacles (meters)

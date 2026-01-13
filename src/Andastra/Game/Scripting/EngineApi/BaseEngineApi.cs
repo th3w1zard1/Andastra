@@ -8,14 +8,14 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Scripting.EngineApi
+namespace Andastra.Game.Scripting.EngineApi
 {
     /// <summary>
     /// Base implementation of engine API with common functions.
     /// </summary>
     /// <remarks>
     /// Base Engine API:
-    /// - Based on swkotor2.exe NWScript engine API system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript engine API system
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
     /// - "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString function debug output format)
     /// - "ActionList" @ 0x007bebdc (action list GFF field), "ActionId" @ 0x007bebd0, "ActionType" @ 0x007bf7f8
@@ -96,7 +96,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// Random(int nMax) - Returns a random integer between 0 and nMax-1
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Random implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Random implementation
         /// Located via string references: "Random" @ 0x007c1080 (random number generation)
         /// Original implementation: Returns random integer in range [0, nMax) using engine RNG
         /// Returns 0 if nMax <= 0
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// PrintString(string sString) - Prints a string to the console/log
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: PrintString implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): PrintString implementation
         /// Located via string references: "PRINTSTRING: %s\n" @ 0x007c29f8 (PrintString debug output format)
         /// Original implementation: FUN_005c4ff0 @ 0x005c4ff0 (prints string with "PRINTSTRING: %s\n" format to console/log)
         ///   - Original implementation (from decompiled FUN_005c4ff0):
@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// </remarks>
         protected Variable Func_PrintString(IReadOnlyList<Variable> args, IExecutionContext ctx)
         {
-            // Based on swkotor2.exe: FUN_005c4ff0 @ 0x005c4ff0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005c4ff0 @ 0x005c4ff0
             // Located via string reference: "PRINTSTRING: %s\n" @ 0x007c29f8
             // Original implementation: Checks parameter count, formats with "PRINTSTRING: %s\n", outputs to console/log
             string msg = args.Count > 0 ? args[0].AsString() : string.Empty;
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// GetObjectByTag(string sTag, int nNth = 0) - Returns the object with the given tag
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetObjectByTag implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetObjectByTag implementation
         /// Located via string references: "Tag" @ 0x007c1a18 (entity tag field for lookup)
         /// Original implementation: Searches world for entity with matching tag (case-insensitive), returns nth match
         /// Returns OBJECT_INVALID (0x7F000000) if not found
@@ -438,7 +438,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// GetModule() - Returns the module object
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetModule NWScript function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetModule NWScript function
         /// Located via string references: "GetModule" @ NWScript function table
         /// Original implementation: Returns the module object ID (0x7F000002) if module is loaded, OBJECT_INVALID otherwise
         /// - Module is a special object with fixed ObjectId (0x7F000002)
@@ -472,7 +472,7 @@ namespace Andastra.Runtime.Scripting.EngineApi
         /// GetArea(object oTarget) - Returns the area that oTarget is currently in
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetArea NWScript function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetArea NWScript function
         /// Located via string references: "AreaId" @ 0x007bef48
         /// Original implementation: Gets area containing the specified object
         /// - If oTarget is invalid or OBJECT_SELF, returns current area

@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Core.Combat
     /// </summary>
     /// <remarks>
     /// Attack Type Enum:
-    /// - Based on swkotor2.exe combat system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) combat system
     /// - Located via string references: Combat attack type classification
     /// - Melee: Unarmed or melee weapon attacks (uses STR modifier)
     /// - Ranged: Blaster or thrown weapon attacks (uses DEX modifier)
@@ -42,7 +42,7 @@ namespace Andastra.Runtime.Core.Combat
     /// </summary>
     /// <remarks>
     /// Damage Type Enum:
-    /// - Based on swkotor2.exe damage system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) damage system
     /// - Located via string references: "DamageList" @ 0x007bf89c, "DamageValue" @ 0x007bf890
     /// - "DamageFlags" @ 0x007c01a4 (damage flags field), "DamageDie" @ 0x007c2d30 (damage die field)
     /// - "DamageDice" @ 0x007c2d3c (damage dice count field), "OffHandDamageMod" @ 0x007c2e18 (offhand damage modifier)

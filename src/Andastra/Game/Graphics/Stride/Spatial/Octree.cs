@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 
-namespace Andastra.Runtime.Stride.Spatial
+namespace Andastra.Game.Stride.Spatial
 {
     /// <summary>
     /// Octree spatial partitioning structure for efficient spatial queries and culling.
@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Stride.Spatial
     /// - Proximity queries
     /// - Dynamic object management
     /// 
-    /// Based on swkotor2.exe rendering optimization system:
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering optimization system:
     /// - Located via string references: "VIS" (visibility data), "room" (room-based culling)
     /// - Original implementation: Uses VIS (visibility) files for room-based frustum culling
     /// - VIS files: Binary format containing room visibility graph for frustum culling optimization

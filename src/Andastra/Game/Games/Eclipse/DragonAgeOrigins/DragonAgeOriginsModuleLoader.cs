@@ -2,7 +2,7 @@ using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Eclipse.DragonAge;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins
+namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins
 {
     /// <summary>
     /// Dragon Age: Origins module loader implementation (daorigins.exe).

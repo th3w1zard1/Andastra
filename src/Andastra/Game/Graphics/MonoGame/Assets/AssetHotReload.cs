@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Assets
+namespace Andastra.Game.Graphics.MonoGame.Assets
 {
     /// <summary>
     /// Asset hot reload system for development workflow.

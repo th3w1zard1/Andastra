@@ -7,7 +7,7 @@ using Stride.Engine;
 using Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IGraphicsBackend.
@@ -130,7 +130,7 @@ namespace Andastra.Runtime.Stride.Graphics
                     // This ensures thread safety and proper resource management in Stride 4.x
 
                     // Apply VSync state if it was set before graphics device was initialized
-                    // Based on swkotor2.exe: VSync controlled via DirectX Present parameters (PresentationInterval)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): VSync controlled via DirectX Present parameters (PresentationInterval)
                     // Stride equivalent: GraphicsDevice.Presenter.VSyncMode
                     if (_desiredVSyncState.HasValue)
                     {
@@ -301,7 +301,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         /// <summary>
         /// Applies VSync state to the Stride GraphicsDevice.Presenter.
-        /// Based on swkotor2.exe: DirectX Present parameters control VSync via PresentationInterval
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX Present parameters control VSync via PresentationInterval
         /// </summary>
         /// <param name="enabled">True to enable VSync, false to disable it.</param>
         private void ApplyVSyncState(bool enabled)

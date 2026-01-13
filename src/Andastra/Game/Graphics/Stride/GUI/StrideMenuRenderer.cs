@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using Stride.Core.Mathematics;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.GUI
+namespace Andastra.Game.Stride.GUI
 {
     /// <summary>
     /// Stride-based menu renderer using SpriteBatch for rendering.

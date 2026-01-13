@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Plot
     /// </summary>
     /// <remarks>
     /// Plot System (Odyssey-specific):
-    /// - Based on swkotor2.exe plot system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) plot system
     /// - Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
     /// - Plot processing: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20
     /// - Original implementation:

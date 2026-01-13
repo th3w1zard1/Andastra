@@ -2,9 +2,9 @@ using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey texture implementation.
@@ -474,7 +474,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// - xoreos: Uses glGenBuffers, glBufferData, glBindBuffer for IBO management
     /// - Matching xoreos indexbuffer.cpp: initGL(), updateGL(), destroyGL()
     /// - Index type: GL_UNSIGNED_SHORT (16-bit) if IsShort=true, GL_UNSIGNED_INT (32-bit) if IsShort=false
-    /// - Based on swkotor2.exe: Index buffer system for indexed primitive rendering
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Index buffer system for indexed primitive rendering
     /// </remarks>
     public class OdysseyIndexBuffer : IIndexBuffer
     {
@@ -731,7 +731,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// Odyssey sprite batch implementation.
     /// Uses immediate mode OpenGL for 2D rendering.
     /// Based on xoreos: guiquad.cpp render() @ lines 274-344
-    /// Based on swkotor2.exe: 2D sprite rendering for GUI elements
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 2D sprite rendering for GUI elements
     /// </summary>
     public class OdysseySpriteBatch : ISpriteBatch
     {
@@ -1071,7 +1071,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Draws text using a sprite font.
         /// Based on xoreos: texturefont.cpp render() @ lines 52-94
-        /// Based on swkotor2.exe: Font rendering system @ 0x007b6380 (dialogfont16x16)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Font rendering system @ 0x007b6380 (dialogfont16x16)
         /// </summary>
         public void DrawString(IFont font, string text, Vector2 position, Color color)
         {
@@ -1266,7 +1266,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Applies the effect to OpenGL state.
         /// Sets projection, view, and world matrices, and applies opacity via color/blending.
-        /// Based on swkotor2.exe: glDrawElements with proper matrix setup
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): glDrawElements with proper matrix setup
         /// Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
         ///
         /// Note: In OpenGL fixed-function pipeline:
@@ -1299,7 +1299,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
             glMultMatrixf(worldArray);
 
             // Apply opacity via color and blending
-            // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
             // Opacity is updated by AppearAnimationFadeSystem for appear animations
             // Opacity is updated by ActionDestroyObject for destroy animations
             if (_alpha < 1.0f)

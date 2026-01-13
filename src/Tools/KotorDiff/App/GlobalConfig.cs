@@ -13,7 +13,7 @@ namespace KotorDiff.AppCore
         public FileInfo OutputLog { get; set; }
         public bool? LoggingEnabled { get; set; }
         public KotorDiffConfig Config { get; set; }
-        public Andastra.Parsing.Mods.ModificationsByType ModificationsByType { get; set; }
+        public BioWare.NET.TSLPatcher.Mods.ModificationsByType ModificationsByType { get; set; }
     }
 }
 

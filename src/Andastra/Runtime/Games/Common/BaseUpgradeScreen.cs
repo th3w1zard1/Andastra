@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.UTI;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
@@ -60,7 +60,7 @@ namespace Andastra.Runtime.Games.Common
         protected readonly Dictionary<string, string> _upgradeResRefMap = new Dictionary<string, string>();
 
         // Character skills storage (skill ID -> skill rank)
-        // Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
         // KOTOR skills: 0=ComputerUse, 1=Demolitions, 2=Stealth, 3=Awareness, 4=Persuade, 5=Repair, 6=Security, 7=TreatInjury
         // Skills are extracted when character is set and used for upgrade availability and item creation checks
         protected readonly Dictionary<int, int> _characterSkills = new Dictionary<int, int>();
@@ -101,7 +101,7 @@ namespace Andastra.Runtime.Games.Common
         /// </summary>
         /// <remarks>
         /// When character is set, extracts all character skills for use in item creation/upgrading.
-        /// Based on swkotor2.exe: If oCharacter is NOT invalid, then that character's various skills will be used (NOT IMPLEMENTED in original)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If oCharacter is NOT invalid, then that character's various skills will be used (NOT IMPLEMENTED in original)
         /// Skills are extracted via IStatsComponent.GetSkillRank() and stored in _characterSkills dictionary.
         /// </remarks>
         public IEntity Character
@@ -340,7 +340,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Recalculate item stats after applying upgrade properties
-            // Based on swkotor2.exe: Stats are recalculated after applying upgrades
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stats are recalculated after applying upgrades
             RecalculateItemStats(item);
 
             return true;
@@ -393,7 +393,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Recalculate item stats after removing upgrade properties
-            // Based on swkotor2.exe: Stats are recalculated after removing upgrades
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stats are recalculated after removing upgrades
             RecalculateItemStats(item);
 
             return true;
@@ -405,7 +405,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="item">Item to recalculate stats for.</param>
         /// <remarks>
         /// Item Stat Recalculation:
-        /// - Based on swkotor2.exe: Item stats are recalculated after applying/removing upgrades
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stats are recalculated after applying/removing upgrades
         /// - Located via string references: Item stat calculation in upgrade system (FUN_00729640 @ 0x00729640)
         /// - Original implementation: Base item stats from baseitems.2da + cumulative property bonuses from itempropdef.2da
         /// - Stats calculated: Damage bonuses, AC bonuses, attack bonuses, saving throw bonuses, skill bonuses, ability bonuses
@@ -427,7 +427,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Get base item stats from baseitems.2da
-            // Based on swkotor2.exe: Base item stats loaded from baseitems.2da via GameDataProvider
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats loaded from baseitems.2da via GameDataProvider
             // Located via string references: "baseitems" @ 0x007c4594, "BASEITEMS" @ 0x007c4594
             // Original implementation: FUN_005fb0f0 loads base item data from baseitems.2da
             int baseItemId = itemComponent.BaseItem;
@@ -437,7 +437,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Initialize calculated stat accumulators
-            // Based on swkotor2.exe: Item stats are calculated as base + cumulative property bonuses
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item stats are calculated as base + cumulative property bonuses
             int totalDamageBonus = 0;
             int totalACBonus = 0;
             int totalAttackBonus = 0;
@@ -452,7 +452,7 @@ namespace Andastra.Runtime.Games.Common
             int criticalMultiplierBonus = 0;
 
             // Load baseitems.2da to get base item stats
-            // Based on swkotor2.exe: Base item stats include damage dice, damage bonus, AC, critical threat/multiplier
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats include damage dice, damage bonus, AC, critical threat/multiplier
             // Located via string references: "baseitems" table loaded via GameDataProvider
             TwoDA baseitemsTable = null;
             if (_world != null && _world.GameDataProvider != null)
@@ -483,7 +483,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Get base item stats from baseitems.2da
-            // Based on swkotor2.exe: Base item stats columns: numdice, dietoroll, damagebonus, ac, critthreat, critmultiplier
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats columns: numdice, dietoroll, damagebonus, ac, critthreat, critmultiplier
             // Located via string references: Base item data structure in swkotor2.exe
             int baseDamageBonus = 0;
             int baseAC = 0;
@@ -495,7 +495,7 @@ namespace Andastra.Runtime.Games.Common
                 if (baseItemRow != null)
                 {
                     // Get base damage bonus from baseitems.2da
-                    // Based on swkotor2.exe: "damagebonus" column in baseitems.2da
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "damagebonus" column in baseitems.2da
                     int? damageBonus = baseItemRow.GetInteger("damagebonus", null);
                     if (damageBonus.HasValue)
                     {
@@ -503,7 +503,7 @@ namespace Andastra.Runtime.Games.Common
                     }
 
                     // Get base AC from baseitems.2da (for armor items)
-                    // Based on swkotor2.exe: "ac" column in baseitems.2da (armor items have AC values)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "ac" column in baseitems.2da (armor items have AC values)
                     int? ac = baseItemRow.GetInteger("ac", null);
                     if (ac.HasValue)
                     {
@@ -511,7 +511,7 @@ namespace Andastra.Runtime.Games.Common
                     }
 
                     // Get base critical threat range from baseitems.2da
-                    // Based on swkotor2.exe: "critthreat" column in baseitems.2da
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "critthreat" column in baseitems.2da
                     int? critThreat = baseItemRow.GetInteger("critthreat", null);
                     if (critThreat.HasValue)
                     {
@@ -519,7 +519,7 @@ namespace Andastra.Runtime.Games.Common
                     }
 
                     // Get base critical multiplier from baseitems.2da
-                    // Based on swkotor2.exe: "critmultiplier" or "crithitmult" column in baseitems.2da
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "critmultiplier" or "crithitmult" column in baseitems.2da
                     int? critMult = baseItemRow.GetInteger("critmultiplier", null);
                     if (!critMult.HasValue)
                     {
@@ -533,7 +533,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Load itempropdef.2da to understand property effects
-            // Based on swkotor2.exe: Property effects are defined in itempropdef.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property effects are defined in itempropdef.2da
             // Located via string references: "ItemPropDef" @ 0x007c4c20, "itempropdef.2da" in resource system
             // Original implementation: Property types are row indices in itempropdef.2da
             TwoDA itempropDefTable = null;
@@ -564,7 +564,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Calculate cumulative bonuses from all item properties
-            // Based on swkotor2.exe: Properties are cumulative (multiple properties of same type stack)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Properties are cumulative (multiple properties of same type stack)
             // Located via string references: Property application in upgrade system
             // Original implementation: Each property contributes its bonus value to the total
             foreach (ItemProperty property in itemComponent.Properties)
@@ -580,16 +580,16 @@ namespace Andastra.Runtime.Games.Common
                 int subtype = property.Subtype;
 
                 // Get property amount from CostValue or Param1Value
-                // Based on swkotor2.exe: Property amount stored in CostValue or Param1Value depending on property type
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property amount stored in CostValue or Param1Value depending on property type
                 int amount = costValue != 0 ? costValue : param1Value;
 
                 // Calculate property bonuses based on property type
-                // Based on swkotor2.exe: Property types map to stat modifications via itempropdef.2da
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property types map to stat modifications via itempropdef.2da
                 // Located via string references: Property type constants in nwscript.nss
                 // Property type mappings based on Aurora engine standard (swkotor2.exe uses same system)
 
                 // ITEM_PROPERTY_ABILITY_BONUS (0): Ability score bonus
-                // Based on swkotor2.exe: Property type 0 = ability bonus, subtype = ability ID (0-5: STR, DEX, CON, INT, WIS, CHA)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 0 = ability bonus, subtype = ability ID (0-5: STR, DEX, CON, INT, WIS, CHA)
                 if (propType == 0)
                 {
                     if (subtype >= 0 && subtype <= 5 && amount > 0)
@@ -602,7 +602,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_AC_BONUS (1): Armor Class bonus
-                // Based on swkotor2.exe: Property type 1 = AC bonus, amount = bonus value
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 1 = AC bonus, amount = bonus value
                 else if (propType == 1)
                 {
                     if (amount > 0)
@@ -611,7 +611,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_ENHANCEMENT_BONUS (5): Enhancement bonus (attack/damage)
-                // Based on swkotor2.exe: Property type 5 = enhancement bonus, affects both attack and damage
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 5 = enhancement bonus, affects both attack and damage
                 else if (propType == 5)
                 {
                     if (amount > 0)
@@ -622,7 +622,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_ATTACK_BONUS (38): Attack bonus
-                // Based on swkotor2.exe: Property type 38 = attack bonus, amount = bonus value
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 38 = attack bonus, amount = bonus value
                 else if (propType == 38)
                 {
                     if (amount > 0)
@@ -631,7 +631,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_DAMAGE_BONUS (11): Damage bonus
-                // Based on swkotor2.exe: Property type 11 = damage bonus, amount = bonus value
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 11 = damage bonus, amount = bonus value
                 else if (propType == 11)
                 {
                     if (amount > 0)
@@ -640,7 +640,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_IMPROVED_SAVING_THROW (26): Saving throw bonus (all saves)
-                // Based on swkotor2.exe: Property type 26 = saving throw bonus, affects all saves
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 26 = saving throw bonus, affects all saves
                 else if (propType == 26)
                 {
                     if (amount > 0)
@@ -652,7 +652,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_IMPROVED_SAVING_THROW_SPECIFIC (27): Specific saving throw bonus
-                // Based on swkotor2.exe: Property type 27 = specific saving throw bonus, subtype = save type (0=Fort, 1=Ref, 2=Will)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 27 = specific saving throw bonus, subtype = save type (0=Fort, 1=Ref, 2=Will)
                 else if (propType == 27)
                 {
                     if (amount > 0 && subtype >= 0 && subtype <= 2)
@@ -672,7 +672,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_SKILL_BONUS (36): Skill bonus
-                // Based on swkotor2.exe: Property type 36 = skill bonus, subtype = skill ID, amount = bonus value
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property type 36 = skill bonus, subtype = skill ID, amount = bonus value
                 else if (propType == 36)
                 {
                     if (amount > 0 && subtype >= 0)
@@ -685,7 +685,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_CRITICAL_THREAT_BONUS (various): Critical threat range bonus
-                // Based on swkotor2.exe: Some property types modify critical threat range
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Some property types modify critical threat range
                 // Note: Exact property type varies by engine, checking common patterns
                 else if (propType == 45 || propType == 46) // Common critical threat bonus types
                 {
@@ -695,7 +695,7 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_CRITICAL_MULTIPLIER_BONUS (various): Critical multiplier bonus
-                // Based on swkotor2.exe: Some property types modify critical multiplier
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Some property types modify critical multiplier
                 // Note: Exact property type varies by engine, checking common patterns
                 else if (propType == 47 || propType == 48) // Common critical multiplier bonus types
                 {
@@ -707,7 +707,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Calculate final stats: base + cumulative bonuses
-            // Based on swkotor2.exe: Final stats = base stats + all property bonuses
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Final stats = base stats + all property bonuses
             int finalDamageBonus = baseDamageBonus + totalDamageBonus;
             int finalAC = baseAC + totalACBonus;
             int finalAttackBonus = totalAttackBonus + totalEnhancementBonus;
@@ -715,7 +715,7 @@ namespace Andastra.Runtime.Games.Common
             int finalCriticalMultiplier = baseCriticalMultiplier + criticalMultiplierBonus;
 
             // Store calculated stats on item entity for UI display and combat calculations
-            // Based on swkotor2.exe: Calculated item stats are stored on item object for display and combat
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Calculated item stats are stored on item object for display and combat
             // Located via string references: Item stat fields in item object structure
             // Original implementation: Stats stored in item object for quick access during combat and UI display
             item.SetData("CalculatedDamageBonus", finalDamageBonus);
@@ -729,22 +729,22 @@ namespace Andastra.Runtime.Games.Common
             item.SetData("CalculatedSavingThrowBonus", totalSavingThrowBonus);
 
             // Store ability bonuses dictionary
-            // Based on swkotor2.exe: Ability bonuses stored per ability ID
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ability bonuses stored per ability ID
             item.SetData("CalculatedAbilityBonuses", abilityBonuses);
 
             // Store skill bonuses dictionary
-            // Based on swkotor2.exe: Skill bonuses stored per skill ID
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Skill bonuses stored per skill ID
             item.SetData("CalculatedSkillBonuses", skillBonuses);
 
             // Store base stats for reference
-            // Based on swkotor2.exe: Base stats stored separately for UI display (showing base vs. modified)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base stats stored separately for UI display (showing base vs. modified)
             item.SetData("BaseDamageBonus", baseDamageBonus);
             item.SetData("BaseAC", baseAC);
             item.SetData("BaseCriticalThreat", baseCriticalThreat);
             item.SetData("BaseCriticalMultiplier", baseCriticalMultiplier);
 
             // Store property bonus totals for UI display
-            // Based on swkotor2.exe: Property bonuses shown separately in UI (base + bonuses breakdown)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Property bonuses shown separately in UI (base + bonuses breakdown)
             item.SetData("PropertyDamageBonus", totalDamageBonus);
             item.SetData("PropertyACBonus", totalACBonus);
             item.SetData("PropertyAttackBonus", totalAttackBonus);
@@ -831,7 +831,7 @@ namespace Andastra.Runtime.Games.Common
         /// Extracts character skills from the current character entity.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Character skills extraction for item creation/upgrading (NOT IMPLEMENTED in original)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills extraction for item creation/upgrading (NOT IMPLEMENTED in original)
         /// Located via string references: Character skills stored in IStatsComponent via GetSkillRank()
         /// Original implementation: Character skills were NOT used in original ShowUpgradeScreen implementation
         /// This implementation extracts all skills when character is set and uses them for:
@@ -861,7 +861,7 @@ namespace Andastra.Runtime.Games.Common
             if (character == null)
             {
                 // Get player character from world using multiple fallback strategies
-                // Based on swkotor2.exe: Player entity lookup patterns from multiple functions
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player entity lookup patterns from multiple functions
                 character = _world.GetEntityByTag("Player", 0);
 
                 if (character == null)
@@ -907,7 +907,7 @@ namespace Andastra.Runtime.Games.Common
                 if (stats != null)
                 {
                     // Extract all skills (KOTOR has 8 skills: 0-7)
-                    // Based on swkotor2.exe: Skills stored in IStatsComponent, accessed via GetSkillRank(skillId)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Skills stored in IStatsComponent, accessed via GetSkillRank(skillId)
                     // Located via string references: "GetSkillRank" @ routine 783 (GetFeatAcquired), skill system
                     // Original implementation: Skills stored in creature UTC template and accessed via stats component
                     for (int skillId = 0; skillId < 8; skillId++)
@@ -929,7 +929,7 @@ namespace Andastra.Runtime.Games.Common
         /// <param name="skillId">Skill ID (0-7 for KOTOR).</param>
         /// <returns>Skill rank if character has the skill, 0 otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Character skills used for item creation/upgrading (NOT IMPLEMENTED in original)
         /// Skills are used for:
         /// - Upgrade availability checks (some upgrades require minimum skill ranks)
         /// - Item creation success rates (higher skills = better success)

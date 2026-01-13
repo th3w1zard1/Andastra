@@ -7,13 +7,13 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Windows;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Tools;
-using ModuleClass = Andastra.Parsing.Common.Module;
-using GameModule = Andastra.Parsing.Common.Module;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Tools;
+using ModuleClass = BioWare.NET.Common.Module;
+using GameModule = BioWare.NET.Common.Module;
 
 namespace HolocronToolset.Windows
 {

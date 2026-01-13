@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Core.Entities
     /// </summary>
     /// <remarks>
     /// Odyssey World/Entity Management:
-    /// - Based on swkotor2.exe world management system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) world management system
     /// - Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
     /// - "AreaId" @ 0x007bef48 (entity area association), "Area" @ 0x007be340 (area name)
     /// - Object logging format: "OID: %08x, Tag: %s, %s" @ 0x007c76b8 used for debug/error logging
@@ -54,14 +54,14 @@ namespace Andastra.Runtime.Core.Entities
         private readonly Dictionary<string, List<IEntity>> _entitiesByTag;
         private readonly Dictionary<ObjectType, List<IEntity>> _entitiesByType;
 
-        // Based on swkotor2.exe: Tag lookup is case-insensitive
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Tag lookup is case-insensitive
         // Located via string references: "GetObjectByTag" function uses case-insensitive tag comparison
         // Original implementation: Tag matching ignores case differences
         private static readonly StringComparer TagComparer = StringComparer.OrdinalIgnoreCase;
         private readonly List<IEntity> _allEntities;
 
         // Area ID assignment: Areas get sequential IDs starting from 0x7F000010
-        // Based on swkotor2.exe: AreaId @ 0x007bef48, areas are objects with ObjectIds
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AreaId @ 0x007bef48, areas are objects with ObjectIds
         // Located via string references: "AreaId" @ 0x007bef48 (entity area association)
         // Original implementation: Areas assigned ObjectIds similar to entities
         // Area ObjectId range: 0x7F000010+ (special object ID range for areas)
@@ -69,7 +69,7 @@ namespace Andastra.Runtime.Core.Entities
         private readonly Dictionary<IArea, uint> _areaIds;
 
         // Module ID assignment: Modules get a fixed ObjectId of 0x7F000002
-        // Based on swkotor2.exe: Module object ID constant
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module object ID constant
         // Located via string references: "GetModule" NWScript function, module object references
         // Original implementation: Modules are special objects with fixed ObjectId (0x7F000002)
         // Module ObjectId: 0x7F000002 (special object ID for module, between OBJECT_SELF 0x7F000001 and area IDs 0x7F000010+)
@@ -124,7 +124,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Registers an area with the world and assigns it an AreaId.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area registration system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area registration system
         /// Located via string references: "AreaId" @ 0x007bef48
         /// Original implementation: Areas are registered in world with AreaId for entity lookup
         /// Area ObjectId assignment: Sequential uint32 starting from 0x7F000010 (special object ID range)
@@ -153,7 +153,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Unregisters an area from the world.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area unregistration system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area unregistration system
         /// Removes area from lookup tables when area is unloaded
         /// </remarks>
         public void UnregisterArea(IArea area)
@@ -174,7 +174,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets an area by its AreaId.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetArea function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetArea function
         /// Located via string references: "AreaId" @ 0x007bef48
         /// Original implementation: O(1) dictionary lookup by AreaId (uint32)
         /// Returns null if AreaId not found
@@ -193,7 +193,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets the AreaId for an area.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: AreaId lookup
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AreaId lookup
         /// Returns the AreaId assigned to an area, or 0 if area is not registered
         /// </remarks>
         public uint GetAreaId(IArea area)
@@ -214,7 +214,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets all registered areas in the world.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area registration system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area registration system
         /// Returns all areas that have been registered with the world via RegisterArea.
         /// Used by GetAreaByTag to search through all loaded areas.
         /// </remarks>
@@ -227,7 +227,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Sets the current module.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Module registration system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module registration system
         /// Located via string references: "Module" @ 0x007bc4e0, "ModuleName" @ 0x007bde2c, "ModuleLoaded" @ 0x007bdd70
         /// Original implementation: Module is registered when set as current module
         /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
@@ -243,7 +243,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets the ModuleId for a module.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Module object ID lookup
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module object ID lookup
         /// Returns the ModuleId assigned to a module, or 0 if module is not registered
         /// Module ObjectId: Fixed value 0x7F000002 (special object ID for module)
         /// Common across all engines: Modules use fixed ObjectId (0x7F000002) for script references
@@ -309,7 +309,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Destroys an entity by its ObjectId.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: DestroyObject NWScript function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DestroyObject NWScript function
         /// Located via string references: "EVENT_DESTROY_OBJECT" @ 0x007bcd48 (destroy object event, case 0xb in FUN_004dcfb0)
         /// Original implementation: Unregisters entity from world, fires destroy events, marks as invalid
         /// Destroy sequence: Fire OnDeath script event (for creatures), unregister from world indices, mark entity as invalid
@@ -322,7 +322,7 @@ namespace Andastra.Runtime.Core.Entities
             if (entity != null)
             {
                 // Fire OnDeath script event for creatures before destruction
-                // Based on swkotor2.exe: OnDeath script fires before entity is destroyed
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnDeath script fires before entity is destroyed
                 // Located via string reference: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DEATH" @ 0x007bca54 (case 0xa in FUN_004dcfb0)
                 if (EventBus != null && (entity.ObjectType & ObjectType.Creature) != 0)
                 {
@@ -342,7 +342,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets an entity by its ObjectId.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetObject function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetObject function
         /// Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
         /// Original implementation: FUN_004dc030 @ 0x004dc030 (wrapper that calls FUN_004e9de0)
         /// ObjectId lookup: O(1) dictionary lookup by ObjectId (uint32)
@@ -361,7 +361,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Gets an entity by its Tag string.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: GetObjectByTag NWScript function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetObjectByTag NWScript function
         /// Located via string references: "GetObjectByTag" function uses case-insensitive tag comparison
         /// Original implementation: Tag lookup is case-insensitive, supports nth parameter for multiple entities with same tag
         /// Tag matching: Uses case-insensitive string comparison (StringComparer.OrdinalIgnoreCase)
@@ -427,7 +427,7 @@ namespace Andastra.Runtime.Core.Entities
 
         public void RegisterEntity(IEntity entity)
         {
-            // Based on swkotor2.exe: Entity registration system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity registration system
             // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
             // Original implementation: Entities registered in world with ObjectId, Tag, and ObjectType indices
             // Entity lookup: GetEntity by ObjectId (O(1) lookup), GetEntityByTag searches by tag string (case-insensitive)
@@ -466,7 +466,7 @@ namespace Andastra.Runtime.Core.Entities
             typeList.Add(entity);
 
             // Set entity's AreaId based on current area
-            // Based on swkotor2.exe: Entity AreaId assignment
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId assignment
             // Located via string references: "AreaId" @ 0x007bef48
             // Original implementation: Entities store AreaId of area they belong to
             // Entity AreaId is set when entity is registered to world
@@ -480,7 +480,7 @@ namespace Andastra.Runtime.Core.Entities
             }
 
             // Fire OnSpawn script event
-            // Based on swkotor2.exe: CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN fires when entity is spawned/created
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN fires when entity is spawned/created
             // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPAWN_IN" @ 0x007bc7d0 (0x8), "ScriptSpawn" @ 0x007bee30
             // Original implementation: OnSpawn script fires on entity when it's first created/spawned into the world
             // OnSpawn fires after entity is fully initialized and registered in the world
@@ -520,7 +520,7 @@ namespace Andastra.Runtime.Core.Entities
         /// Updates all entities for a single frame.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 (area update function).
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404cf0 @ 0x00404cf0 (area update function).
         /// Called from main game loop via FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0.
         /// 
         /// Execution flow (swkotor2.exe: 0x00404250):
@@ -565,7 +565,7 @@ namespace Andastra.Runtime.Core.Entities
             CombatSystem.Update(deltaTime);
 
             // Update current area (CRITICAL: Must be called every frame)
-            // Based on swkotor2.exe: FUN_00404cf0 @ 0x00404cf0 updates area state
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404cf0 @ 0x00404cf0 updates area state
             // Located via call chain: FUN_00638ca0 → FUN_0063de50 → FUN_0077f790 → FUN_00404cf0
             // Original implementation: Area update handles area effects, lighting, weather, entity spawning/despawning
             if (CurrentArea != null)

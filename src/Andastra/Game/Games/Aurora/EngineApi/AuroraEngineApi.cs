@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Common.Script;
+using BioWare.NET.Common.Script;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Aurora.EngineApi
+namespace Andastra.Game.Engines.Aurora.EngineApi
 {
     /// <summary>
     /// Aurora Engine engine API implementation for Neverwinter Nights and Neverwinter Nights 2.

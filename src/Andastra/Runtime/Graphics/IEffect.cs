@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Effect (Shader) Interface:
-    /// - Based on swkotor2.exe rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system
     /// - Located via string references: Original game uses DirectX 8/9 fixed-function pipeline (no shaders)
     /// - Vertex program for skinned animations @ 0x0081c228, 0x0081fe20 (GPU skinning shader)
     /// - Original implementation: DirectX 8/9 fixed-function pipeline, no programmable shaders

@@ -5,7 +5,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.MonoGame.Audio;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.Graphics
+namespace Andastra.Game.Graphics.MonoGame.Graphics
 {
     /// <summary>
     /// MonoGame implementation of ISpatialAudio.

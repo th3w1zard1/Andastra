@@ -2,7 +2,7 @@ using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Collision
+namespace Andastra.Game.Games.Odyssey.Collision
 {
     /// <summary>
     /// Base class for Odyssey-specific creature collision detection.
@@ -66,7 +66,7 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
         /// <summary>
         /// Gets the bounding box for a creature entity.
         /// Defaults to K2 (swkotor2.exe) behavior for backward compatibility.
-        /// Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0 uses creature bounding box from entity structure at offset 0x380.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005479f0 @ 0x005479f0 uses creature bounding box from entity structure at offset 0x380.
         /// </summary>
         /// <param name="entity">The creature entity.</param>
         /// <returns>The creature's bounding box.</returns>
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
             int appearanceType = GetAppearanceType(entity);
 
             // Get bounding box dimensions from GameDataProvider
-            // Based on swkotor2.exe: FUN_005479f0 @ 0x005479f0 gets width and height from entity structure
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005479f0 @ 0x005479f0 gets width and height from entity structure
             // Width stored at offset 0x380 + 0x14: `fVar8 = *(float *)(iVar1 + 0x14) + fVar9 + _DAT_007b6888;`
             // Height stored at offset 0x380 + 0xbc: `uVar12 = *(undefined4 *)(iVar1 + 0xbc);`
             // Initialization (FUN_0050e170 @ 0x0050e170):
@@ -106,7 +106,7 @@ namespace Andastra.Runtime.Games.Odyssey.Collision
                 radius = entity.World.GameDataProvider.GetCreatureRadius(appearanceType, 0.5f);
             }
 
-            // Based on swkotor2.exe: Bounding box uses width and height separately for collision detection
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Bounding box uses width and height separately for collision detection
             // Width (at +0x14) is the horizontal extent (X/Z plane), typically defaults to 1.0f
             // Height (at +0xbc) is the vertical extent (Y axis)
             // In the original engine:

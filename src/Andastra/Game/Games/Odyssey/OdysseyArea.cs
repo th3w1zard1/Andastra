@@ -2,31 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Engines.Odyssey.Loading;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.Graphics.Common.Effects;
 using JetBrains.Annotations;
-// Removed: ParsingIModule - IModule does not exist in Andastra.Parsing.Common
+// Removed: ParsingIModule - IModule does not exist in BioWare.NET.Common
 // Use RuntimeIModule (Andastra.Runtime.Core.Interfaces.IModule) instead if needed
 using RuntimeIModule = Andastra.Runtime.Core.Interfaces.IModule;
 using RuntimeObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey Engine (KotOR/KotOR2) specific area implementation.
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Games.Odyssey
         private IAreaRenderContext _renderContext;
 
         // Module reference for loading WOK files (optional, set when available)
-        private Andastra.Parsing.Installation.Module _module;
+        private BioWare.NET.Extract.Installation.Module _module;
 
         // Area heartbeat and transition state
         private float _areaHeartbeatTimer;
@@ -100,12 +100,12 @@ namespace Andastra.Runtime.Games.Odyssey
         private byte _transPendCurrId;
 
         // Area local variables storage
-        // Based on swkotor2.exe: Area local variable storage system
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variable storage system
         // Area variables are stored separately from entity variables and persist across area loads
         private Andastra.Runtime.Core.Save.LocalVariableSet _localVariables;
 
         // Area entity for script execution context
-        // Based on swkotor2.exe: Area entities are created dynamically for script execution
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities are created dynamically for script execution
         // Area entities don't have physical presence but serve as script execution context
         // Stored here for proper lifecycle management and cleanup
         private IEntity _areaEntityForScripts;
@@ -127,7 +127,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public OdysseyArea(string resRef, byte[] areData, byte[] gitData, Andastra.Parsing.Installation.Module module = null)
+        public OdysseyArea(string resRef, byte[] areData, byte[] gitData, BioWare.NET.Extract.Installation.Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -156,7 +156,7 @@ namespace Andastra.Runtime.Games.Odyssey
             _transPendCurrId = 0;
 
             // Initialize area local variables storage
-            // Based on swkotor2.exe: Area variables are initialized when area is created
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variables are initialized when area is created
             _localVariables = new Andastra.Runtime.Core.Save.LocalVariableSet();
 
             LoadAreaGeometry(areData);
@@ -170,11 +170,11 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="module">The Module instance for resource access.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Module reference is required for loading WOK files.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module reference is required for loading WOK files.
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(Andastra.Parsing.Installation.Module module)
+        public void SetModule(BioWare.NET.Extract.Installation.Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now
@@ -633,7 +633,7 @@ namespace Andastra.Runtime.Games.Odyssey
             root.SetSingle("SunFogFar", _fogFar);
 
             // Create AreaProperties nested struct (based on Ghidra analysis: FUN_004136d0 creates/gets struct)
-            // Based on swkotor2.exe: SaveAreaProperties @ 0x004e11d0 line 12
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SaveAreaProperties @ 0x004e11d0 line 12
             // FUN_004136d0(param_1, (uint *)&param_2, param_2, "AreaProperties", 100)
             var areaProperties = new GFFStruct();
             root.SetStruct("AreaProperties", areaProperties);
@@ -817,12 +817,12 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // ObjectId counter for entities without ObjectId in GIT
                 // Start from high range (1000000) to avoid conflicts with World.CreateEntity counter
-                // Based on swkotor2.exe: ObjectIds are assigned sequentially, starting from 1
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ObjectIds are assigned sequentially, starting from 1
                 // OBJECT_INVALID = 0x7F000000, OBJECT_SELF = 0x7F000001
                 uint nextObjectId = 1000000;
 
                 // Helper function to get or generate ObjectId
-                // Based on swkotor2.exe: FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
                 uint GetObjectId(uint? gitObjectId)
                 {
                     if (gitObjectId.HasValue && gitObjectId.Value != 0 && gitObjectId.Value != 0x7F000000)
@@ -833,7 +833,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Load creatures from GIT
-                // Based on swkotor2.exe: FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004dfbb0 @ 0x004dfbb0 loads creature instances from GIT "Creature List"
                 foreach (Parsing.Resource.Generics.GITCreature creature in git.Creatures)
                 {
                     // Create entity with ObjectId, ObjectType, and Tag
@@ -843,7 +843,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Creature, creature.ResRef?.ToString() ?? string.Empty);
 
                     // Set position from GIT
-                    // Based on swkotor2.exe: FUN_004dfbb0 reads XPosition, YPosition, ZPosition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004dfbb0 reads XPosition, YPosition, ZPosition
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -852,7 +852,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Validate position on walkmesh if available
-                    // Based on swkotor2.exe: FUN_004f7590 validates position on walkmesh (20.0 unit radius check)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f7590 validates position on walkmesh (20.0 unit radius check)
                     if (_navigationMesh != null)
                     {
                         Vector3 validatedPosition;
@@ -872,14 +872,14 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Load doors from GIT
-                // Based on swkotor2.exe: FUN_004e08e0 @ 0x004e08e0 loads door instances from GIT "Door List"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads door instances from GIT "Door List"
                 foreach (Parsing.Resource.Generics.GITDoor door in git.Doors)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Door, door.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
-                    // Based on swkotor2.exe: FUN_004e08e0 reads X, Y, Z, Bearing
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 reads X, Y, Z, Bearing
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -888,7 +888,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Set door-specific properties from GIT
-                    // Based on swkotor2.exe: Door properties loaded from GIT struct
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door properties loaded from GIT struct
                     var doorComponent = entity.GetComponent<IDoorComponent>();
                     if (doorComponent != null)
                     {
@@ -906,14 +906,14 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Load placeables from GIT
-                // Based on swkotor2.exe: FUN_004e08e0 @ 0x004e08e0 loads placeable instances from GIT "Placeable List"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads placeable instances from GIT "Placeable List"
                 foreach (Parsing.Resource.Generics.GITPlaceable placeable in git.Placeables)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Placeable, placeable.ResRef?.ToString() ?? string.Empty);
 
                     // Set position and orientation from GIT
-                    // Based on swkotor2.exe: FUN_004e08e0 reads X, Y, Z, Bearing
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 reads X, Y, Z, Bearing
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -931,14 +931,14 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Load triggers from GIT
-                // Based on swkotor2.exe: FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT "TriggerList"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 @ 0x004e5920 loads trigger instances from GIT "TriggerList"
                 foreach (Parsing.Resource.Generics.GITTrigger trigger in git.Triggers)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Trigger, trigger.Tag ?? string.Empty);
 
                     // Set position from GIT
-                    // Based on swkotor2.exe: FUN_004e5920 reads XPosition, YPosition, ZPosition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 reads XPosition, YPosition, ZPosition
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -946,7 +946,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Set trigger geometry from GIT
-                    // Based on swkotor2.exe: FUN_004e5920 reads Geometry list (polygon vertices)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e5920 reads Geometry list (polygon vertices)
                     var triggerComponent = entity.GetComponent<ITriggerComponent>();
                     if (triggerComponent != null)
                     {
@@ -971,14 +971,14 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Load waypoints from GIT
-                // Based on swkotor2.exe: FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT "WaypointList"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 @ 0x004e04a0 loads waypoint instances from GIT "WaypointList"
                 foreach (Parsing.Resource.Generics.GITWaypoint waypoint in git.Waypoints)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Waypoint, waypoint.Tag ?? string.Empty);
 
                     // Set position and orientation from GIT
-                    // Based on swkotor2.exe: FUN_004e04a0 reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 reads XPosition, YPosition, ZPosition, XOrientation, YOrientation
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -987,7 +987,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Set waypoint-specific properties from GIT
-                    // Based on swkotor2.exe: FUN_004e04a0 reads MapNote, MapNoteEnabled, HasMapNote
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e04a0 reads MapNote, MapNoteEnabled, HasMapNote
                     var waypointComponent = entity.GetComponent<IWaypointComponent>();
                     if (waypointComponent != null && waypointComponent is Components.OdysseyWaypointComponent odysseyWaypoint)
                     {
@@ -1020,14 +1020,14 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Load sounds from GIT
-                // Based on swkotor2.exe: FUN_004e06a0 @ 0x004e06a0 loads sound instances from GIT "SoundList"
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e06a0 @ 0x004e06a0 loads sound instances from GIT "SoundList"
                 foreach (Parsing.Resource.Generics.GITSound sound in git.Sounds)
                 {
                     uint objectId = GetObjectId(null);
                     var entity = new OdysseyEntity(objectId, RuntimeObjectType.Sound, sound.ResRef?.ToString() ?? string.Empty);
 
                     // Set position from GIT
-                    // Based on swkotor2.exe: FUN_004e06a0 reads XPosition, YPosition, ZPosition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e06a0 reads XPosition, YPosition, ZPosition
                     var transformComponent = entity.GetComponent<ITransformComponent>();
                     if (transformComponent != null)
                     {
@@ -1045,8 +1045,8 @@ namespace Andastra.Runtime.Games.Odyssey
 
                 // Note: Encounters and Stores are not currently supported in BaseArea entity collections
                 // They would be added here if support is added in the future
-                // Based on swkotor2.exe: FUN_004e2b20 @ 0x004e2b20 loads encounter instances
-                // Based on swkotor2.exe: FUN_004e08e0 @ 0x004e08e0 loads store instances
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e2b20 @ 0x004e2b20 loads encounter instances
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e08e0 @ 0x004e08e0 loads store instances
             }
             catch (Exception)
             {
@@ -1189,7 +1189,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="navMesh">The NavigationMesh to convert.</param>
         /// <returns>An OdysseyNavigationMesh with the same data.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Area stores walkmesh with Odyssey-specific navigation behavior.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area stores walkmesh with Odyssey-specific navigation behavior.
         /// This conversion ensures proper abstraction: OdysseyArea uses OdysseyNavigationMesh instead
         /// of the core NavigationMesh class.
         ///
@@ -1198,7 +1198,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 2. Rebuild AABB tree using NavigationMesh.BuildAabbTreeFromFaces (static method)
         /// 3. Create OdysseyNavigationMesh with extracted data
         ///
-        /// Based on swkotor2.exe: FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
         /// </remarks>
         private static OdysseyNavigationMesh ConvertToOdysseyNavigationMesh(INavigationMesh navMesh)
         {
@@ -1276,7 +1276,7 @@ namespace Andastra.Runtime.Games.Odyssey
             try
             {
                 // Use NavigationMeshFactory to create combined navigation mesh from all room walkmeshes
-                // Based on swkotor2.exe: ModuleLoader.LoadWalkmesh pattern
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ModuleLoader.LoadWalkmesh pattern
                 var navMeshFactory = new Andastra.Runtime.Engines.Odyssey.Loading.NavigationMeshFactory();
                 INavigationMesh combinedNavMesh = navMeshFactory.CreateFromModule(_module, _rooms);
 
@@ -1284,7 +1284,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 {
                     // NavigationMeshFactory returns NavigationMesh (core/engine-agnostic class)
                     // For proper Odyssey abstraction, we wrap it in OdysseyNavigationMesh (engine-specific)
-                    // Based on swkotor2.exe: Area stores walkmesh with Odyssey-specific navigation behavior
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area stores walkmesh with Odyssey-specific navigation behavior
                     // swkotor2.exe: FUN_004f5070 @ 0x004f5070 - walkmesh projection with Odyssey-specific logic
                     _navigationMesh = ConvertToOdysseyNavigationMesh(combinedNavMesh);
                 }
@@ -1644,7 +1644,7 @@ namespace Andastra.Runtime.Games.Odyssey
             _areaHeartbeatTimer += deltaTime;
 
             // Fire heartbeat script every 6 seconds (HeartbeatInterval)
-            // Based on swkotor2.exe: Heartbeat scripts fire at regular intervals
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Heartbeat scripts fire at regular intervals
             const float HeartbeatInterval = 6.0f;
             if (_areaHeartbeatTimer >= HeartbeatInterval)
             {
@@ -1655,7 +1655,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 if (world != null && world.EventBus != null)
                 {
                     // Get or create area entity for script execution context
-                    // Based on swkotor2.exe: Area heartbeat scripts use area ResRef as entity context
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area heartbeat scripts use area ResRef as entity context
                     IEntity areaEntity = GetOrCreateAreaEntityForScripts(world);
                     if (areaEntity != null)
                     {
@@ -1672,14 +1672,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update.</param>
         /// <remarks>
-        /// Based on swkotor2.exe area transition processing.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) area transition processing.
         /// Handles TransPending, TransPendNextID, TransPendCurrID from ARE file AreaProperties.
         ///
         /// Transition processing:
         /// - Checks if TransPending flag is set
         /// - Processes transition IDs (NextID, CurrID) for pending transitions
         /// - Based on LoadAreaProperties @ 0x004e26d0 and area update logic
-        /// - Based on swkotor2.exe: FUN_004e3ff0 @ 0x004e3ff0 processes area transitions during update
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e3ff0 @ 0x004e3ff0 processes area transitions during update
         ///
         /// Transition ID resolution:
         /// - TransPendNextID: Index into module's area list (Mod_Area_list from IFO)
@@ -1694,18 +1694,18 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 4. Use EventDispatcher to handle area transition for each entity
         /// 5. Clear TransPending flag after processing
         ///
-        /// Based on swkotor2.exe: Transitions are processed once then cleared (TransPending reset to false)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Transitions are processed once then cleared (TransPending reset to false)
         /// </remarks>
         private void ProcessPendingAreaTransitions(float deltaTime)
         {
             // Process pending area transitions if TransPending is set
-            // Based on swkotor2.exe: FUN_004e3ff0 processes area transitions during update
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004e3ff0 processes area transitions during update
             if (_transPending)
             {
                 Console.WriteLine($"[OdysseyArea] Processing pending area transitions: NextID={_transPendNextId}, CurrID={_transPendCurrId}");
 
                 // Get world reference from area entities
-                // Based on swkotor2.exe: Area transitions require world context for module/area management
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transitions require world context for module/area management
                 IWorld world = GetWorldFromAreaEntities();
                 if (world == null)
                 {
@@ -1725,7 +1725,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Resolve target area ResRef from transition ID
-                // Based on swkotor2.exe: TransPendNextID indexes into module's area list
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TransPendNextID indexes into module's area list
                 string targetAreaResRef = ResolveTransitionTargetArea(module, _transPendNextId);
                 if (string.IsNullOrEmpty(targetAreaResRef))
                 {
@@ -1737,7 +1737,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 Console.WriteLine($"[OdysseyArea] ProcessPendingAreaTransitions: Resolved target area: {targetAreaResRef} (from transition ID {_transPendNextId})");
 
                 // Get event dispatcher from world
-                // Based on swkotor2.exe: EventDispatcher handles area transitions via HandleAreaTransition
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EventDispatcher handles area transitions via HandleAreaTransition
                 OdysseyEventDispatcher eventDispatcher = world.EventBus as OdysseyEventDispatcher;
                 if (eventDispatcher == null)
                 {
@@ -1748,12 +1748,12 @@ namespace Andastra.Runtime.Games.Odyssey
                 else
                 {
                     // Use EventDispatcher to handle transitions for all entities in current area
-                    // Based on swkotor2.exe: HandleAreaTransition processes entity movement between areas
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): HandleAreaTransition processes entity movement between areas
                     HandleAreaTransitionViaEventDispatcher(world, eventDispatcher, targetAreaResRef);
                 }
 
                 // Reset pending flag after processing
-                // Based on swkotor2.exe: Transitions are processed once then cleared
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Transitions are processed once then cleared
                 _transPending = false;
                 Console.WriteLine($"[OdysseyArea] ProcessPendingAreaTransitions: Completed area transition to {targetAreaResRef}");
             }
@@ -1766,7 +1766,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="transitionId">Transition ID (0-based index into area list).</param>
         /// <returns>Target area ResRef, or null if transition ID is invalid.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: TransPendNextID indexes into module's Mod_Area_list from IFO.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): TransPendNextID indexes into module's Mod_Area_list from IFO.
         /// Transition IDs are 0-based indices into the module's area list.
         /// Area list is stored in module IFO file as Mod_Area_list (list of area ResRefs).
         ///
@@ -1784,7 +1784,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Try to get area list from module IFO first
-            // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list contains ordered list of area ResRefs
             List<string> areaList = GetAreaListFromModule(module);
             if (areaList == null || areaList.Count == 0)
             {
@@ -1824,7 +1824,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="module">Module to get area list from.</param>
         /// <returns>List of area ResRefs from Mod_Area_list, or null if not available.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Mod_Area_list is stored in module IFO file.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list is stored in module IFO file.
         /// Each entry in Mod_Area_list contains an Area_Name field with the area ResRef.
         /// This method attempts to access the IFO data if available.
         /// </remarks>
@@ -1836,7 +1836,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Try to access IFO data to get Mod_Area_list
-            // Based on swkotor2.exe: Mod_Area_list contains ordered list of area ResRefs
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list contains ordered list of area ResRefs
             try
             {
                 // RuntimeModule now stores the area list from IFO during loading
@@ -1853,7 +1853,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // If we can access parsing Module directly, read Mod_Area_list
-                var parsingModule = module as Andastra.Parsing.Installation.Module;
+                var parsingModule = module as BioWare.NET.Extract.Installation.Module;
                 if (parsingModule != null)
                 {
                     return ReadAreaListFromIFO(parsingModule);
@@ -1873,11 +1873,11 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="module">Parsing Module instance with access to IFO.</param>
         /// <returns>List of area ResRefs from Mod_Area_list, or null if not available.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Mod_Area_list is stored in module IFO file.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list is stored in module IFO file.
         /// Each entry contains Area_Name field with the area ResRef.
         /// This matches the IFO format specification in vendor/PyKotor/wiki/GFF-IFO.md.
         /// </remarks>
-        private List<string> ReadAreaListFromIFO(Andastra.Parsing.Installation.Module module)
+        private List<string> ReadAreaListFromIFO(BioWare.NET.Extract.Installation.Module module)
         {
             if (module == null)
             {
@@ -1963,7 +1963,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="eventDispatcher">Event dispatcher to use for transitions.</param>
         /// <param name="targetAreaResRef">Target area ResRef.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: HandleAreaTransition processes entity movement between areas.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): HandleAreaTransition processes entity movement between areas.
         /// Transitions all entities in the current area to the target area.
         /// Typically transitions player entity and party members.
         /// </remarks>
@@ -1975,7 +1975,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Get all entities in current area
-            // Based on swkotor2.exe: Area transitions affect all entities in the area
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transitions affect all entities in the area
             List<IEntity> entitiesToTransition = GetEntitiesInCurrentArea(world);
             if (entitiesToTransition.Count == 0)
             {
@@ -1986,14 +1986,14 @@ namespace Andastra.Runtime.Games.Odyssey
             Console.WriteLine($"[OdysseyArea] HandleAreaTransitionViaEventDispatcher: Transitioning {entitiesToTransition.Count} entities to area {targetAreaResRef}");
 
             // Transition each entity using EventDispatcher
-            // Based on swkotor2.exe: HandleAreaTransition handles individual entity transitions
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): HandleAreaTransition handles individual entity transitions
             foreach (IEntity entity in entitiesToTransition)
             {
                 if (entity != null && entity.IsValid)
                 {
                     // Use EventDispatcher's public TransitionEntityToArea method
                     // This will handle area loading, entity movement, and event firing
-                    // Based on swkotor2.exe: HandleAreaTransition processes entity movement between areas
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): HandleAreaTransition processes entity movement between areas
                     eventDispatcher.TransitionEntityToArea(entity, targetAreaResRef);
                     Console.WriteLine($"[OdysseyArea] HandleAreaTransitionViaEventDispatcher: Transitioned entity {entity.Tag ?? "null"} ({entity.ObjectId}) to area {targetAreaResRef}");
                 }
@@ -2033,14 +2033,14 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Move each entity to target area
-            // Based on swkotor2.exe: Area transition system (FUN_004e3ff0 @ 0x004e3ff0)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transition system (FUN_004e3ff0 @ 0x004e3ff0)
             // Full transition flow: Remove from current area -> Project position -> Add to target area -> Update AreaId
             foreach (IEntity entity in entitiesToTransition)
             {
                 if (entity != null && entity.IsValid)
                 {
                     // Step 1: Remove entity from current area (this area)
-                    // Based on swkotor2.exe: RemoveEntityFromArea removes entity from type-specific lists
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RemoveEntityFromArea removes entity from type-specific lists
                     RemoveEntityFromArea(entity);
                     Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Removed entity {entity.Tag ?? "null"} ({entity.ObjectId}) from current area {this.ResRef}");
 
@@ -2049,7 +2049,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     OnBeforeTransition(entity, this);
 
                     // Step 3: Project entity position to target area walkmesh
-                    // Based on swkotor2.exe: Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh projection system (FUN_004f5070 @ 0x004f5070)
                     // Projects position to walkable surface for accurate positioning
                     ProjectEntityToTargetArea(entity, targetArea);
 
@@ -2058,12 +2058,12 @@ namespace Andastra.Runtime.Games.Odyssey
                     OnAfterTransition(entity, targetArea, this);
 
                     // Step 5: Add entity to target area
-                    // Based on swkotor2.exe: AddEntityToArea adds entity to type-specific lists
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AddEntityToArea adds entity to type-specific lists
                     AddEntityToTargetArea(entity, targetArea);
                     Console.WriteLine($"[OdysseyArea] HandleDirectAreaTransition: Added entity {entity.Tag ?? "null"} ({entity.ObjectId}) to target area {targetAreaResRef}");
 
                     // Step 6: Update entity's AreaId
-                    // Based on swkotor2.exe: Entity AreaId is updated after successful area transition
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId is updated after successful area transition
                     uint targetAreaId = world.GetAreaId(targetArea);
                     if (targetAreaId != 0)
                     {
@@ -2081,7 +2081,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="world">World instance.</param>
         /// <returns>List of entities in the current area.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Area transitions affect all entities in the area.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area transitions affect all entities in the area.
         /// Typically includes player entity and party members.
         /// </remarks>
         private List<IEntity> GetEntitiesInCurrentArea(IWorld world)
@@ -2102,7 +2102,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Collect all entities from area's entity lists
-            // Based on swkotor2.exe: Areas maintain lists of creatures, placeables, doors, etc.
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Areas maintain lists of creatures, placeables, doors, etc.
             entities.AddRange(_creatures);
             entities.AddRange(_placeables);
             entities.AddRange(_doors);
@@ -2111,7 +2111,7 @@ namespace Andastra.Runtime.Games.Odyssey
             entities.AddRange(_sounds);
 
             // Filter to only valid entities that are in this area
-            // Based on swkotor2.exe: Entity AreaId must match area's AreaId
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity AreaId must match area's AreaId
             uint currentAreaId = world.GetAreaId(currentArea);
             List<IEntity> validEntities = new List<IEntity>();
             foreach (IEntity entity in entities)
@@ -2148,11 +2148,11 @@ namespace Andastra.Runtime.Games.Odyssey
         private void UpdateEnvironmentalEffects(float deltaTime)
         {
             // Update ambient lighting based on time/weather conditions
-            // Based on swkotor2.exe: Dynamic lighting updates during area updates
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Dynamic lighting updates during area updates
             UpdateDynamicLighting(deltaTime);
 
             // Update fog parameters for weather/environmental effects
-            // Based on swkotor2.exe: Fog updates during area rendering/environment updates
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog updates during area rendering/environment updates
             UpdateDynamicFog(deltaTime);
         }
 
@@ -2161,14 +2161,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update.</param>
         /// <remarks>
-        /// Based on swkotor2.exe lighting system updates.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) lighting system updates.
         /// Updates ambient colors, sun colors, and lighting conditions.
         /// Normalizes colors to BGR format and validates ranges.
         /// </remarks>
         private void UpdateDynamicLighting(float deltaTime)
         {
             // Validate and update ambient lighting colors
-            // Based on swkotor2.exe: Lighting validation during area updates
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Lighting validation during area updates
             if (_dynamicAmbientColor == 0)
             {
                 // Use default ambient if dynamic color is zero
@@ -2203,14 +2203,14 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="deltaTime">Time elapsed since last update.</param>
         /// <remarks>
-        /// Based on swkotor2.exe fog system updates.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) fog system updates.
         /// Updates fog distances and colors for environmental effects.
         /// Validates fog parameters remain within engine limits.
         /// </remarks>
         private void UpdateDynamicFog(float deltaTime)
         {
             // Update fog parameters if fog is enabled
-            // Based on swkotor2.exe: Fog updates during environmental effect processing
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog updates during environmental effect processing
             if (_fogEnabled)
             {
                 // Validate fog distances
@@ -2294,7 +2294,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="world">World instance to create entity in if needed.</param>
         /// <returns>Area entity for script execution, or null if world is invalid.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Area scripts use area ResRef as entity context.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area scripts use area ResRef as entity context.
         /// Creates area entity if it doesn't exist for script execution.
         /// Area scripts don't require physical entities in the world.
         /// </remarks>
@@ -2320,7 +2320,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Try to get existing entity by area ResRef tag
-            // Based on swkotor2.exe: Area scripts use area ResRef as entity tag for execution
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area scripts use area ResRef as entity tag for execution
             IEntity areaEntity = world.GetEntityByTag(_resRef, 0);
             if (areaEntity != null && areaEntity.IsValid)
             {
@@ -2342,7 +2342,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Create area entity for script execution if it doesn't exist
-            // Based on swkotor2.exe: Area entities are created dynamically for script context
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities are created dynamically for script context
             // Area entities don't have physical presence but serve as script execution context
             try
             {
@@ -2371,7 +2371,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Create area entity with ResRef as tag
-                // Based on swkotor2.exe: Area entities use ObjectType.Area (if it exists) or ObjectType.Invalid
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities use ObjectType.Area (if it exists) or ObjectType.Invalid
                 var areaEntityObj = new OdysseyEntity(areaObjectId, ObjectType.Invalid, _resRef);
                 areaEntityObj.DisplayName = _displayName ?? _resRef;
                 areaEntityObj.SetData("IsAreaEntity", true); // Mark as area entity for script context
@@ -2379,7 +2379,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 // Register area entity with world for proper lookup and lifecycle management
                 // Special handling: Area entities are registered but marked as script-only entities
                 // They are not part of normal entity collections but must be findable by GetEntityByTag
-                // Based on swkotor2.exe: Area entities are registered in world's entity lookup tables
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities are registered in world's entity lookup tables
                 // but are not added to area's entity collections (Creatures, Placeables, etc.)
                 world.RegisterEntity(areaEntityObj);
 
@@ -2406,7 +2406,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="context">The rendering context providing graphics services.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Area rendering uses graphics device, room mesh renderer, and basic effect.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area rendering uses graphics device, room mesh renderer, and basic effect.
         /// The rendering context is set by the game loop before calling Render().
         /// </remarks>
         public void SetRenderContext(IAreaRenderContext context)
@@ -2419,7 +2419,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="rooms">List of room information from LYT file.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: LYT file loading populates room list with model names and positions.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LYT file loading populates room list with model names and positions.
         /// Called during area loading from ModuleLoader.
         ///
         /// If Module is available, this will automatically trigger walkmesh loading from WOK files.
@@ -2455,7 +2455,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <param name="vis">VIS file data for room visibility culling.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: VIS file defines which rooms are visible from each room.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): VIS file defines which rooms are visible from each room.
         /// Used for frustum culling optimization during rendering.
         /// </remarks>
         public void SetVisibilityData(VIS vis)
@@ -2467,7 +2467,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets or sets the ambient color (RGBA).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Ambient color from ARE file AreaProperties.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ambient color from ARE file AreaProperties.
         /// Controls base lighting level for the area.
         /// </remarks>
         public uint AmbientColor
@@ -2480,7 +2480,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets or sets the fog color (RGBA).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Fog color from ARE file AreaProperties.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog color from ARE file AreaProperties.
         /// </remarks>
         public uint FogColor
         {
@@ -2492,7 +2492,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets or sets whether fog is enabled.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Fog enabled flag from ARE file AreaProperties.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog enabled flag from ARE file AreaProperties.
         /// </remarks>
         public bool FogEnabled
         {
@@ -2504,7 +2504,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets or sets the fog near distance.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Fog near distance from ARE file AreaProperties.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog near distance from ARE file AreaProperties.
         /// </remarks>
         public float FogNear
         {
@@ -2516,7 +2516,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets or sets the fog far distance.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Fog far distance from ARE file AreaProperties.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog far distance from ARE file AreaProperties.
         /// </remarks>
         public float FogFar
         {
@@ -2531,7 +2531,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Handles VIS culling, transparency sorting, and lighting.
         /// Renders static geometry, area effects, and environmental elements.
         ///
-        /// Based on swkotor2.exe: Area rendering functions
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area rendering functions
         /// - Room mesh rendering with VIS culling (swkotor2.exe: FUN_0041b6b0 @ 0x0041b6b0)
         /// - VIS culling: Uses VIS file to determine which rooms are visible from current room
         /// - Lighting: Applies ambient, diffuse, and fog effects from ARE file
@@ -2559,13 +2559,13 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Apply fog settings if enabled
-            // Based on swkotor2.exe: Fog parameters are applied to graphics device/effect during rendering
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fog parameters are applied to graphics device/effect during rendering
             // Original engine behavior: DirectX fixed-function fog states (D3DRS_FOGENABLE, D3DRS_FOGCOLOR, etc.)
             // Modern implementation: Shader-based fog via BasicEffect parameters
             if (_fogEnabled)
             {
                 // Select effective fog color (prefer SunFogColor, fallback to FogColor, default to gray)
-                // Based on swkotor2.exe: SunFogColor takes precedence over FogColor when available
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SunFogColor takes precedence over FogColor when available
                 uint effectiveFogColor = _sunFogColor;
                 if (effectiveFogColor == 0)
                 {
@@ -2586,7 +2586,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 );
 
                 // Apply fog parameters to BasicEffect
-                // Based on swkotor2.exe: D3DRS_FOGENABLE = TRUE, D3DRS_FOGCOLOR, D3DRS_FOGSTART, D3DRS_FOGEND
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): D3DRS_FOGENABLE = TRUE, D3DRS_FOGCOLOR, D3DRS_FOGSTART, D3DRS_FOGEND
                 // Modern implementation: BasicEffect fog parameters for shader-based fog
                 basicEffect.FogEnabled = true;
                 basicEffect.FogColor = fogColorVec;
@@ -2596,7 +2596,7 @@ namespace Andastra.Runtime.Games.Odyssey
             else
             {
                 // Disable fog when fog is not enabled
-                // Based on swkotor2.exe: D3DRS_FOGENABLE = FALSE when SunFogOn is 0
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): D3DRS_FOGENABLE = FALSE when SunFogOn is 0
                 basicEffect.FogEnabled = false;
             }
 
@@ -2639,7 +2639,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     if (!_roomMeshes.TryGetValue(room.ModelName, out meshData))
                     {
                         // Try to load mesh on-demand from Module
-                        // Based on swkotor2.exe: Room meshes are loaded from MDL files referenced in LYT file
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room meshes are loaded from MDL files referenced in LYT file
                         // Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
                         // Original implementation: Loads room MDL models from module archives when needed for rendering
                         // swkotor2.exe: FUN_004e3ff0 @ 0x004e3ff0 - Room mesh loading function
@@ -2713,7 +2713,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="roomRenderer">The room mesh renderer to use for creating mesh data.</param>
         /// <returns>The loaded room mesh data, or null if loading failed.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Room meshes are loaded on-demand when needed for rendering.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room meshes are loaded on-demand when needed for rendering.
         /// Located via string references: "Rooms" @ 0x007bd490, "RoomName" @ 0x007bd484
         /// Original implementation: Loads MDL/MDX files from module archives and creates renderable mesh data.
         ///
@@ -2754,7 +2754,7 @@ namespace Andastra.Runtime.Games.Odyssey
             try
             {
                 // Load MDL file from Module or Installation
-                // Based on swkotor2.exe: Room models are loaded from module archives or installation (chitin/override)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room models are loaded from module archives or installation (chitin/override)
                 // Original implementation: Uses Module.Resource() first, then falls back to Installation.Resource()
                 // swkotor2.exe: Resource search order is Module -> Override -> Chitin
                 byte[] mdlData = null;
@@ -2780,7 +2780,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     }
 
                     // Load MDX file from Module (contains vertex data)
-                    // Based on swkotor2.exe: MDX files are companion files to MDL files
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): MDX files are companion files to MDL files
                     ModuleResource mdxResource = _module.ModelExt(modelResRef);
                     if (mdxResource != null)
                     {
@@ -2789,7 +2789,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // If not found in Module, try Installation (chitin/override)
-                // Based on swkotor2.exe: Resources can be in override directory or chitin.key
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Resources can be in override directory or chitin.key
                 if ((mdlData == null || mdlData.Length == 0) && _module != null && _module.Installation != null)
                 {
                     Installation installation = _module.Installation;
@@ -2819,10 +2819,10 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Parse MDL file
-                // Based on swkotor2.exe: MDL files are binary format containing model structure
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): MDL files are binary format containing model structure
                 // Original implementation: Parses MDL binary format to extract mesh geometry
                 // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
-                Andastra.Parsing.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                BioWare.NET.Resource.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
                 if (mdl == null)
                 {
                     // Failed to parse MDL
@@ -2830,7 +2830,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Create mesh data using room renderer
-                // Based on swkotor2.exe: Room renderer extracts geometry from MDL and creates GPU buffers
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room renderer extracts geometry from MDL and creates GPU buffers
                 // Original implementation: Converts MDL geometry to vertex/index buffers for rendering
                 IRoomMeshData meshData = roomRenderer.LoadRoomMesh(modelResRef, mdl);
                 if (meshData == null)
@@ -2857,7 +2857,7 @@ namespace Andastra.Runtime.Games.Odyssey
             catch (Exception ex)
             {
                 // Log error but don't throw - just return null to skip this room
-                // Based on swkotor2.exe: Room loading failures don't crash the game, rooms are just skipped
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room loading failures don't crash the game, rooms are just skipped
                 Console.WriteLine($"[OdysseyArea] Failed to load room mesh '{modelResRef}': {ex.Message}");
                 return null;
             }
@@ -2865,12 +2865,12 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Calculates the bounding box of an MDL model by recursively traversing all nodes.
-        /// Based on swkotor2.exe: Room bounding boxes are calculated from MDL model geometry.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room bounding boxes are calculated from MDL model geometry.
         /// Reference: vendor/PyKotor/Libraries/PyKotor/src/pykotor/gl/models/mdl.py:95-156
         /// </summary>
         /// <param name="mdl">The MDL model to calculate bounding box for.</param>
         /// <returns>A tuple containing (Min, Max) bounding box in local model space, or null if invalid.</returns>
-        private (Vector3 Min, Vector3 Max)? CalculateModelBoundingBox(Andastra.Parsing.Formats.MDLData.MDL mdl)
+        private (Vector3 Min, Vector3 Max)? CalculateModelBoundingBox(BioWare.NET.Resource.Formats.MDLData.MDL mdl)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -2878,7 +2878,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Use model-level bounding box if available (from MDL header)
-            // Based on swkotor2.exe: MDL header contains overall bounding box (BMin, BMax)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): MDL header contains overall bounding box (BMin, BMax)
             if (mdl.BMin.X < 1000000 && mdl.BMax.X > -1000000)
             {
                 // Valid model-level bounding box
@@ -2973,7 +2973,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Transforms a point by a node's local position and orientation.
-        /// Based on swkotor2.exe: Node transforms are applied during geometry processing.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Node transforms are applied during geometry processing.
         /// </summary>
         /// <param name="point">Point in local space.</param>
         /// <param name="node">Node containing transform information.</param>
@@ -2995,7 +2995,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <summary>
         /// Gets or calculates the bounding box for a room model.
         /// Caches the result for performance.
-        /// Based on swkotor2.exe: Room bounding boxes are cached after first calculation.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room bounding boxes are cached after first calculation.
         /// </summary>
         /// <param name="modelResRef">Model resource reference (room model name).</param>
         /// <returns>Bounding box (Min, Max) in local model space, or null if model cannot be loaded.</returns>
@@ -3013,7 +3013,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Load MDL model to calculate bounding box
-            // Based on swkotor2.exe: Room models are loaded from Module or Installation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room models are loaded from Module or Installation
             try
             {
                 byte[] mdlData = null;
@@ -3066,7 +3066,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Parse MDL file
-                Andastra.Parsing.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
+                BioWare.NET.Resource.Formats.MDLData.MDL mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
                 if (mdl == null)
                 {
                     return null;
@@ -3096,7 +3096,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Transforms a bounding box by room position and rotation, then checks if a point is inside.
-        /// Based on swkotor2.exe: Room bounds are transformed by room position/rotation from LYT file.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room bounds are transformed by room position/rotation from LYT file.
         /// </summary>
         /// <param name="point">Point to test (in world space).</param>
         /// <param name="bboxMin">Bounding box minimum (in local model space).</param>
@@ -3110,7 +3110,7 @@ namespace Andastra.Runtime.Games.Odyssey
             Vector3 localPoint = point - roomPosition;
 
             // Apply inverse rotation if room is rotated
-            // Based on swkotor2.exe: Room rotation is around Y-axis (vertical axis)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room rotation is around Y-axis (vertical axis)
             if (Math.Abs(roomRotation) > 0.001f)
             {
                 // Convert rotation from degrees to radians
@@ -3135,13 +3135,13 @@ namespace Andastra.Runtime.Games.Odyssey
 
         /// <summary>
         /// Finds the current room index based on camera/player position.
-        /// Based on swkotor2.exe: Room finding logic checks if position is inside room bounds.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room finding logic checks if position is inside room bounds.
         /// swkotor2.exe: Room bounds checking is performed via spatial queries on room geometry.
         /// </summary>
         /// <param name="position">Camera or player position.</param>
         /// <returns>Room index, or -1 if not found.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Room finding logic checks if position is inside room bounds.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room finding logic checks if position is inside room bounds.
         /// If multiple rooms contain the position, returns the first match.
         /// If no room contains the position, falls back to distance-based selection.
         /// </remarks>
@@ -3153,7 +3153,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // First, try to find a room that contains the position using bounding box checks
-            // Based on swkotor2.exe: Room finding prioritizes rooms that contain the position
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Room finding prioritizes rooms that contain the position
             for (int i = 0; i < _rooms.Count; i++)
             {
                 RoomInfo room = _rooms[i];
@@ -3182,7 +3182,7 @@ namespace Andastra.Runtime.Games.Odyssey
 
             // Fallback: If no room contains the position, use distance-based approach
             // This handles edge cases where position is outside all room bounds (e.g., at area boundaries)
-            // Based on swkotor2.exe: Distance-based fallback is used when position is outside all rooms
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Distance-based fallback is used when position is outside all rooms
             int closestRoomIndex = 0;
             float closestDistance = float.MaxValue;
 
@@ -3207,7 +3207,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="targetRoomIndex">Index of the room to check visibility for.</param>
         /// <returns>True if the target room is visible from the current room.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: VIS file defines visibility graph between rooms.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): VIS file defines visibility graph between rooms.
         /// If no VIS data, all rooms are considered visible (fallback behavior).
         /// </remarks>
         private bool IsRoomVisible(int currentRoomIndex, int targetRoomIndex)
@@ -3353,7 +3353,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Clean up area entity for script execution
-            // Based on swkotor2.exe: Area entities are destroyed when area is unloaded
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area entities are destroyed when area is unloaded
             // Area entities are registered with world but not in area's entity collections
             // Must be explicitly unregistered and destroyed during area unload
             if (_areaEntityForScripts != null && _areaEntityForScripts.IsValid)
@@ -3395,7 +3395,7 @@ namespace Andastra.Runtime.Games.Odyssey
             _tag = null;
 
             // Clear area local variables
-            // Based on swkotor2.exe: Area variables are cleared during unload
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variables are cleared during unload
             if (_localVariables != null)
             {
                 _localVariables.Ints.Clear();
@@ -3410,7 +3410,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets the area local variables storage.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area local variable storage
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area local variable storage
         /// Area variables are stored separately from entity variables
         /// </remarks>
         public Andastra.Runtime.Core.Save.LocalVariableSet GetLocalVariables()
@@ -3426,7 +3426,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Sets area local integer variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public void SetLocalInt(string name, int value)
         {
@@ -3445,7 +3445,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets area local integer variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public int GetLocalInt(string name)
         {
@@ -3464,7 +3464,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Sets area local float variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public void SetLocalFloat(string name, float value)
         {
@@ -3483,7 +3483,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets area local float variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public float GetLocalFloat(string name)
         {
@@ -3502,7 +3502,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Sets area local string variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public void SetLocalString(string name, string value)
         {
@@ -3521,7 +3521,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets area local string variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public string GetLocalString(string name)
         {
@@ -3540,7 +3540,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Sets area local object reference variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public void SetLocalObject(string name, uint objectId)
         {
@@ -3559,7 +3559,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets area local object reference variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public uint GetLocalObject(string name)
         {
@@ -3578,7 +3578,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Sets area local location variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public void SetLocalLocation(string name, Andastra.Runtime.Core.Save.SavedLocation location)
         {
@@ -3597,7 +3597,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets area local location variable.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Area variable storage system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area variable storage system
         /// </remarks>
         public Andastra.Runtime.Core.Save.SavedLocation GetLocalLocation(string name)
         {

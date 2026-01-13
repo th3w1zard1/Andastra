@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Common.Script;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Optimizers;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Common.Script;
+using BioWare.NET.Resource.Formats.NCS;
+using BioWare.NET.Resource.Formats.NCS.Optimizers;
 
 namespace NSSComp
 {
@@ -248,11 +248,11 @@ namespace NSSComp
                 {
                     if (arg == "1" || arg == "k1" || arg.Equals("kotor1", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = Andastra.Parsing.Common.BioWareGame.K1;
+                        result.Game = BioWare.NET.Common.BioWareGame.K1;
                     }
                     else if (arg == "2" || arg == "k2" || arg.Equals("kotor2", StringComparison.OrdinalIgnoreCase) || arg.Equals("tsl", StringComparison.OrdinalIgnoreCase))
                     {
-                        result.Game = Andastra.Parsing.Common.BioWareGame.K2;
+                        result.Game = BioWare.NET.Common.BioWareGame.K2;
                     }
                     else
                     {
@@ -451,11 +451,11 @@ namespace NSSComp
                 }
                 else if (arg == "-k1" || arg == "--kotor1")
                 {
-                    result.Game = Andastra.Parsing.Common.BioWareGame.K1;
+                    result.Game = BioWare.NET.Common.BioWareGame.K1;
                 }
                 else if (arg == "-k2" || arg == "--kotor2" || arg == "--tsl")
                 {
-                    result.Game = Andastra.Parsing.Common.BioWareGame.K2;
+                    result.Game = BioWare.NET.Common.BioWareGame.K2;
                 }
                 else if (arg == "-i" || arg == "--include" || arg == "--input")
                 {
@@ -716,7 +716,7 @@ namespace NSSComp
             {
                 // Try to infer from source file location or content
                 // Default to K2 (TSL) as it's more common
-                result.Game = Andastra.Parsing.Common.BioWareGame.K2;
+                result.Game = BioWare.NET.Common.BioWareGame.K2;
             }
 
             return result;
@@ -744,7 +744,7 @@ namespace NSSComp
                 }
 
                 string source = File.ReadAllText(args.SourceFile, Encoding.UTF8);
-                BioWareGame game = args.Game ?? Andastra.Parsing.Common.BioWareGame.K2;
+                BioWareGame game = args.Game ?? BioWare.NET.Common.BioWareGame.K2;
 
                 // Build library lookup paths
                 List<string> libraryLookup = new List<string>();
@@ -828,7 +828,7 @@ namespace NSSComp
         {
             try
             {
-                BioWareGame game = args.Game ?? Andastra.Parsing.Common.BioWareGame.K2;
+                BioWareGame game = args.Game ?? BioWare.NET.Common.BioWareGame.K2;
                 Encoding encoding = GetEncoding(args.Encoding);
 
                 // Collect all input files

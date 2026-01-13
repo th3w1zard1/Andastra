@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Dialogue
     /// </summary>
     /// <remarks>
     /// Lip Sync Controller:
-    /// - Based on swkotor2.exe lip sync system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) lip sync system
     /// - Located via string references: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668 (LIP file path format)
     /// - LIP directories: ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840 (LIP file search directories)
     /// - "=Lip Delay" @ 0x007c7fb7 (lip sync timing offset parameter)
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Core.Dialogue
             else
             {
                 // Interpolate between keyframes
-                // Based on swkotor2.exe: Lip sync interpolation implementation
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Lip sync interpolation implementation
                 // Located via string references: "LIPS:localization" @ 0x007be654, ".\lips" @ 0x007c6838
                 // Original implementation: Linear interpolation between keyframes for smooth animation
                 // Phoneme shapes blended with weights based on time position between keyframes

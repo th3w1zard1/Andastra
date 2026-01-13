@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource;
 
 namespace Andastra.Runtime.Content.Interfaces
 {
@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Content.Interfaces
     /// </summary>
     /// <remarks>
     /// Content Converter Interface:
-    /// - Based on swkotor2.exe asset loading and conversion system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) asset loading and conversion system
     /// - Located via string references: "Resource" @ 0x007c14d4, "Loading" @ 0x007c7e40, CExoKeyTable resource loading
     /// - Original implementation: Converts KOTOR file formats (MDL, TPC, BWM, etc.) to runtime formats
     /// - MDL conversion: Converts MDL/MDX (model/animation) to runtime model format

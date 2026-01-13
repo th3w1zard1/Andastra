@@ -15,7 +15,7 @@ using Stride.Shaders;
 using Stride.Shaders.Compiler;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Upscaling
+namespace Andastra.Game.Stride.Upscaling
 {
     /// <summary>
     /// Stride implementation of AMD FSR (FidelityFX Super Resolution).

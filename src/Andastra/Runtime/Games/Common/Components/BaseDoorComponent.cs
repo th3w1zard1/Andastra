@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// Transition Destination:
         /// - Common across all engines that support door transitions
         /// - Based on nwmain.exe: CNWSDoor::LoadDoor loads TransitionDestin field from GIT
-        /// - Based on swkotor2.exe: FUN_005838d0 @ 0x005838d0 reads TransitionDestination from UTD template
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005838d0 @ 0x005838d0 reads TransitionDestination from UTD template
         /// - Located via string references: "TransitionDestin" @ 0x007bd7a4 (swkotor2.exe), "TransitionDestin" in GIT format
         /// - Original implementation: TransitionDestin/TransitionDestination specifies waypoint tag where party spawns after transition
         /// - For module transitions: Waypoint tag in destination module where party spawns
@@ -165,7 +165,7 @@ namespace Andastra.Runtime.Games.Common.Components
         /// <remarks>
         /// Conversation Property:
         /// - Common across all engines that support door conversations
-        /// - Based on swkotor2.exe: FUN_00580330 @ 0x00580330 saves door data including Conversation field
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00580330 @ 0x00580330 saves door data including Conversation field
         /// - Located via string reference: "Conversation" @ 0x007c1abc
         /// - Original implementation: Conversation field in UTD template contains dialogue ResRef
         /// - Engine-specific: Field names and storage may differ, but concept is common

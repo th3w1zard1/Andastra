@@ -1,9 +1,9 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
+using BioWare.NET;
 
 namespace HolocronToolset.Widgets.Edit
 {

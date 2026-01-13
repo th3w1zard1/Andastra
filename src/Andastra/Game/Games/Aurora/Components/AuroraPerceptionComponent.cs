@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Aurora-specific implementation of perception component for Neverwinter Nights.

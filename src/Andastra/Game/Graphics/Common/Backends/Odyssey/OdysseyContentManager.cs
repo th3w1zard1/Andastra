@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey engine content manager implementation.
@@ -258,7 +258,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     if (data != null && data.Length > 0)
                     {
                         // Convert TPC/TGA data to texture
-                        // Based on swkotor2.exe texture loading system
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system
                         // Based on xoreos: texture.cpp texture loading
                         // Based on PyKotor: texture_loader.py load_tpc
                         ITexture2D texture = ConvertTpcTgaToTexture(data);
@@ -369,7 +369,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Converts TPC/TGA data to an ITexture2D.
         /// Handles all TPC formats: RGBA, RGB, BGRA, BGR, Greyscale, DXT1, DXT3, DXT5.
-        /// Based on swkotor2.exe texture loading system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system
         /// Based on xoreos: texture.cpp texture loading
         /// Based on PyKotor: texture_loader.py load_tpc
         /// </summary>

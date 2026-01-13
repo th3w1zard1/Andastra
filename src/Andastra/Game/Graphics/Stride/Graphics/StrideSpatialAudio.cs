@@ -5,7 +5,7 @@ using Andastra.Runtime.Graphics;
 using Stride.Audio;
 using Vector3Stride = Stride.Core.Mathematics.Vector3;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of ISpatialAudio using Stride's AudioEmitter and AudioListener classes.

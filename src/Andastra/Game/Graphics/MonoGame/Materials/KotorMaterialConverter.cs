@@ -3,7 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Materials
+namespace Andastra.Game.Graphics.MonoGame.Materials
 {
     /// <summary>
     /// Converts KOTOR's legacy Blinn-Phong materials to modern PBR workflow.
@@ -26,7 +26,7 @@ namespace Andastra.Runtime.MonoGame.Materials
     /// </summary>
     /// <remarks>
     /// KOTOR Material Converter:
-    /// - Based on swkotor2.exe material/shader system (modern PBR enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) material/shader system (modern PBR enhancement)
     /// - Located via string references: "glMaterialfv" @ 0x0080ad74 (OpenGL material function), "glColorMaterial" @ 0x0080ad84 (OpenGL color material function)
     /// - "glBindMaterialParameterEXT" @ 0x007b77b0 (OpenGL material parameter binding), "it_materialcloth" @ 0x007cab4c (material cloth item)
     /// - Original implementation: KOTOR uses Blinn-Phong shading model with OpenGL/DirectX fixed-function pipeline

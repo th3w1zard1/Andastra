@@ -1,13 +1,13 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
-using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 
 namespace HolocronToolset.Editors
 {

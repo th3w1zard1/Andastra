@@ -56,7 +56,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// <returns>The instruction count from the last update, or 0 if no scripts were executed.</returns>
         /// <remarks>
         /// Instruction Count Tracking:
-        /// - Based on swkotor2.exe script budget system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script budget system
         /// - Located via string references: Script execution budget limits per frame
         /// - Original implementation: Tracks instruction count to enforce per-frame script budget limits
         /// - Used by game loop to prevent script lockups (MaxScriptBudget constant)

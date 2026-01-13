@@ -4,14 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Mods;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.TSLPatcher;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Resource;
+using BioWare.NET.TSLPatcher.Mods;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Extract;
+using BioWare.NET.Installation;
+using BioWare.NET.TSLPatcher;
+using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Resource;
 using KotorDiff.Cache;
 using CachedFileComparison = KotorDiff.Cache.CachedFileComparison;
 using KotorDiff.Resolution;
@@ -535,7 +535,7 @@ namespace KotorDiff.Diff
                     if (result != null && modificationsByType != null)
                     {
                         // Add modifications
-                        if (result is Andastra.Parsing.Mods.GFF.ModificationsGFF modGff)
+                        if (result is BioWare.NET.TSLPatcher.Mods.GFF.ModificationsGFF modGff)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modGff.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -588,7 +588,7 @@ namespace KotorDiff.Diff
                     var result = analyzer.Analyze(data1, data2, context.Where);
                     if (result != null)
                     {
-                        if (result is Andastra.Parsing.Mods.TwoDA.Modifications2DA mod2da)
+                        if (result is BioWare.NET.TSLPatcher.Mods.TwoDA.Modifications2DA mod2da)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             mod2da.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -645,7 +645,7 @@ namespace KotorDiff.Diff
                     if (result != null)
                     {
                         // TLK analyzer returns tuple: (ModificationsTLK, strref_mappings)
-                        if (result is ValueTuple<Andastra.Parsing.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
+                        if (result is ValueTuple<BioWare.NET.TSLPatcher.Mods.TLK.ModificationsTLK, Dictionary<int, int>> tuple)
                         {
                             var modTlk = tuple.Item1;
 
@@ -695,7 +695,7 @@ namespace KotorDiff.Diff
                     var result = analyzer.Analyze(data1, data2, context.Where);
                     if (result != null)
                     {
-                        if (result is Andastra.Parsing.Mods.SSF.ModificationsSSF modSsf)
+                        if (result is BioWare.NET.TSLPatcher.Mods.SSF.ModificationsSSF modSsf)
                         {
                             string resourceName = Path.GetFileName(context.Where);
                             modSsf.Destination = DiffEngineUtils.DetermineDestinationForSource(context.File2Rel);
@@ -811,12 +811,12 @@ namespace KotorDiff.Diff
             }
 
             // Load capsules (composite module loading is handled by CompositeModuleCapsule if needed)
-            Andastra.Parsing.Formats.Capsule.Capsule file1Capsule = null;
-            Andastra.Parsing.Formats.Capsule.Capsule file2Capsule = null;
+            BioWare.NET.Resource.Formats.Capsule.Capsule file1Capsule = null;
+            BioWare.NET.Resource.Formats.Capsule.Capsule file2Capsule = null;
 
             try
             {
-                file1Capsule = new Andastra.Parsing.Formats.Capsule.Capsule(cFile1);
+                file1Capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(cFile1);
             }
             catch (Exception e)
             {
@@ -826,7 +826,7 @@ namespace KotorDiff.Diff
 
             try
             {
-                file2Capsule = new Andastra.Parsing.Formats.Capsule.Capsule(cFile2);
+                file2Capsule = new BioWare.NET.Resource.Formats.Capsule.Capsule(cFile2);
             }
             catch (Exception e)
             {
@@ -835,8 +835,8 @@ namespace KotorDiff.Diff
             }
 
             // Build dict of resources
-            var capsule1Resources = new Dictionary<string, Andastra.Parsing.Formats.Capsule.CapsuleResource>();
-            var capsule2Resources = new Dictionary<string, Andastra.Parsing.Formats.Capsule.CapsuleResource>();
+            var capsule1Resources = new Dictionary<string, BioWare.NET.Resource.Formats.Capsule.CapsuleResource>();
+            var capsule2Resources = new Dictionary<string, BioWare.NET.Resource.Formats.Capsule.CapsuleResource>();
 
             foreach (var res in file1Capsule)
             {

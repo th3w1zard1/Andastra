@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Systems
+namespace Andastra.Game.Games.Odyssey.Systems.PerceptionManager
 {
     /// <summary>
     /// System that fires OnHeartbeat script events at regular intervals.
@@ -13,7 +13,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Systems
     /// </summary>
     /// <remarks>
     /// Heartbeat System:
-    /// - Based on swkotor2.exe heartbeat system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) heartbeat system
     /// - Located via string references: "ScriptHeartbeat" @ 0x007beeb0 (heartbeat script field), "OnHeartbeat" @ 0x007bd720 (heartbeat script event)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90 (heartbeat script event type, 0x0)
     /// - "HEARTBEAT" @ 0x007c1348 (heartbeat constant), "HeartbeatTime" @ 0x007c0c30 (heartbeat timer field)

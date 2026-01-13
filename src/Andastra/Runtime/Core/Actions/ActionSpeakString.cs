@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Speak String Action:
-    /// - Based on swkotor2.exe speech/bark system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) speech/bark system
     /// - Located via string references: "TalkString" @ 0x007c14f8, "Speaker" @ 0x007c35f8
     /// - "SpeakString" NWScript function, "ActionSpeakString" action type
     /// - Talk volume enumeration: 0=Normal, 1=Whisper, 2=Shout, 3=Party, 4=Silent
@@ -42,7 +42,7 @@ namespace Andastra.Runtime.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            // Based on swkotor2.exe: ActionSpeakString implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionSpeakString implementation
             // Located via string references: "SpeakString" NWScript function, "TalkString" @ 0x007c14f8
             // Original implementation: Action completes immediately after queuing speech display
             // The actual UI display (speech bubble) is handled by the game layer asynchronously

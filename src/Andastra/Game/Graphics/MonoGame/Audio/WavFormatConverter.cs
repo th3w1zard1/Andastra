@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using Andastra.Parsing.Formats.WAV;
+using BioWare.NET.Resource.Formats.WAV;
 
-namespace Andastra.Runtime.MonoGame.Audio
+namespace Andastra.Game.Graphics.MonoGame.Audio
 {
     /// <summary>
     /// Converts WAV files from various formats to MonoGame-compatible PCM format.

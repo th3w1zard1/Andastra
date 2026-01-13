@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Converters
+namespace Andastra.Game.Graphics.MonoGame.Converters
 {
     /// <summary>
     /// Renders room meshes from MDL models with full support for materials, textures, UVs, normals, and all node types.
     /// </summary>
     /// <remarks>
     /// Room Mesh Renderer:
-    /// - Based on swkotor2.exe room rendering system (swkotor2.exe: 0x004e3ff0)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) room rendering system (swkotor2.exe: 0x004e3ff0)
     /// - Located via string references: "Rooms" @ 0x007bd490 (room list), "RoomName" @ 0x007bd484 (room name field)
     /// - "roomcount" @ 0x007b96c0 (room count field), "gui3D_room" @ 0x007cc144 (room GUI)
     /// - Original implementation: Renders room MDL models positioned according to LYT layout
@@ -328,7 +328,7 @@ namespace Andastra.Runtime.MonoGame.Converters
             // Add faces as indices
             foreach (MDLFace face in mesh.Faces)
             {
-                // MDL faces are 0-indexed in Andastra.Parsing
+                // MDL faces are 0-indexed in BioWare.NET
                 // Ensure indices are within valid range
                 int v1 = face.V1;
                 int v2 = face.V2;
@@ -452,7 +452,7 @@ namespace Andastra.Runtime.MonoGame.Converters
 
         /// <summary>
         /// Extracts geometry from a referenced external MDL model.
-        /// Based on swkotor2.exe reference node handling (swkotor2.exe: 0x004e3ff0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) reference node handling (swkotor2.exe: 0x004e3ff0)
         /// Reference: vendor/reone/src/libs/scene/node/model.cpp:84-94 - Reference model loading
         /// Reference: vendor/KotOR.js/src/three/odyssey/OdysseyModel3D.ts:1012-1026 - Child model loading
         /// </summary>
@@ -524,7 +524,7 @@ namespace Andastra.Runtime.MonoGame.Converters
 
         /// <summary>
         /// Loads a referenced MDL model from the installation.
-        /// Based on swkotor2.exe model loading (swkotor2.exe: FUN_005261b0 @ 0x005261b0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model loading (swkotor2.exe: FUN_005261b0 @ 0x005261b0)
         /// Reference: vendor/reone/src/libs/resource/provider/models.cpp:38-76 - Model loading
         /// </summary>
         private MDL LoadReferencedMDL(string modelResRef)
@@ -550,9 +550,9 @@ namespace Andastra.Runtime.MonoGame.Converters
                     return null;
                 }
 
-                // Parse MDL using Andastra.Parsing MDL parser
+                // Parse MDL using BioWare.NET MDL parser
                 // Reference: EntityModelRenderer.LoadMDLModel for consistent implementation
-                return Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

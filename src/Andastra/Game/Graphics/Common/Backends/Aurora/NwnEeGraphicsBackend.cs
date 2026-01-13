@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.TXI;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.TXI;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ParsingResourceType = Andastra.Parsing.Common.ResourceType;
+using ParsingResourceType = BioWare.NET.Common.ResourceType;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
+namespace Andastra.Game.Graphics.Common.Backends.Aurora
 {
     /// <summary>
     /// Graphics backend for Neverwinter Nights Enhanced Edition, matching nwmain.exe rendering exactly 1:1.
@@ -388,7 +388,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
                             tpc.Txi = txiText;
                             try
                             {
-                                tpc.TxiObject = new Andastra.Parsing.Formats.TXI.TXI(txiText);
+                                tpc.TxiObject = new BioWare.NET.Resource.Formats.TXI.TXI(txiText);
                             }
                             catch
                             {
@@ -710,7 +710,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         /// - vendor/reone/src/libs/graphics/textureutil.cpp:123-143 (TXI to OpenGL parameter mapping)
         /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
         /// </remarks>
-        private void ApplyTxiParameters(Andastra.Parsing.Formats.TXI.TXI txi, uint textureTarget)
+        private void ApplyTxiParameters(BioWare.NET.Resource.Formats.TXI.TXI txi, uint textureTarget)
         {
             if (txi == null || txi.Features == null)
             {
@@ -1517,7 +1517,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Aurora
         /// - vendor/xoreos/src/graphics/images/txi.cpp:105-106,143-144,172-173 (TXI clamp, filter, mipmap parsing)
         /// - nwmain.exe: DirectX 9 texture parameter storage and application (SetTextureParameters during texture creation)
         /// </remarks>
-        private void StoreDirectX9TxiParameters(IntPtr texture, Andastra.Parsing.Formats.TXI.TXI txi)
+        private void StoreDirectX9TxiParameters(IntPtr texture, BioWare.NET.Resource.Formats.TXI.TXI txi)
         {
             if (txi == null || txi.Features == null || texture == IntPtr.Zero)
             {

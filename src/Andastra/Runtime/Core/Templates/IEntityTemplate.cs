@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Templates
     /// </summary>
     /// <remarks>
     /// Entity Template System:
-    /// - Based on swkotor2.exe template loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) template loading system
     /// - Located via string references: Template loading from GFF files with signatures
     /// - GFF template signatures: "UTC " (Creature), "UTP " (Placeable), "UTD " (Door), "UTT " (Trigger)
     /// - "UTW " (Waypoint), "UTS " (Sound), "UTE " (Encounter), "UTI " (Item), "UTM " (Store)

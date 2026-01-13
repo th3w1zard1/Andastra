@@ -1,20 +1,20 @@
 using System;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Engines.Common;
-using Andastra.Runtime.Games.Odyssey;
+using Andastra.Game.Games.Odyssey;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey
+namespace Andastra.Game.Engines.Odyssey
 {
     /// <summary>
     /// Odyssey Engine implementation for KOTOR 1/2.
     /// </summary>
     /// <remarks>
     /// Engine Initialization:
-    /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 (WinMain equivalent, engine initialization)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 (WinMain equivalent, engine initialization)
     /// - Located via string references: "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58, engine initialization in FUN_00404250 @ 0x00404250
     /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngine (Runtime.Games.Common) implements common engine initialization

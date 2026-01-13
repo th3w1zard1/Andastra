@@ -8,14 +8,14 @@ using XnaColor = Microsoft.Xna.Framework.Color;
 using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using XnaVector2 = Microsoft.Xna.Framework.Vector2;
 
-namespace Andastra.Runtime.Game.GUI
+namespace Andastra.Game.Game.GUI
 {
     /// <summary>
     /// Menu renderer with text labels and click handling using graphics abstraction layer.
     /// </summary>
     /// <remarks>
     /// Menu Renderer:
-    /// - Based on swkotor2.exe menu rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) menu rendering system
     /// - Located via string references: "RIMS:MAINMENU" @ 0x007b6044 (main menu RIM), "MAINMENU" @ 0x007cc030 (main menu constant)
     /// - "mainmenu_p" @ 0x007cc000 (main menu panel), "mainmenu8x6_p" @ 0x007cc00c (main menu 8x6 panel)
     /// - "mainmenu01" @ 0x007cc108, "mainmenu02" @ 0x007cc138, "mainmenu03" @ 0x007cc12c, "mainmenu04" @ 0x007cc120, "mainmenu05" @ 0x007cc114 (main menu variants)
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Game.GUI
     /// - "gui_mp_arrun00" through "gui_mp_arrun15" @ 0x007b5a0c-0x007b59dc (area run GUI elements)
     /// - Original implementation: Renders main menu with buttons (Start Game, Options, Exit), handles input and selection
     /// - Menu panels: Uses GUI panel system with background textures and button overlays
-    /// - Based on swkotor2.exe: Main menu uses GUI system with panel-based rendering
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Main menu uses GUI system with panel-based rendering
     /// </remarks>
     public class MenuRenderer
     {

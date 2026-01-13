@@ -4,7 +4,7 @@ using Andastra.Runtime.Content.MDL;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Models
+namespace Andastra.Game.Graphics.MonoGame.Models
 {
     /// <summary>
     /// High-performance converter from MDL model data to MonoGame rendering structures.
@@ -293,7 +293,7 @@ namespace Andastra.Runtime.MonoGame.Models
 
         private Matrix CreateNodeTransform(MDLNodeData node)
         {
-            // Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590
             // The headconjure and handconjure dummy nodes must have identity orientation (0,0,0,1)
             // Otherwise spell visuals will not be correct
             // Original engine checks: if (node->GetNode("headconjure") && orientation != identity) -> error

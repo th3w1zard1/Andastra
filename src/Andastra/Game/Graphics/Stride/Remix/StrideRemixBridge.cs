@@ -6,7 +6,7 @@ using Andastra.Runtime.Graphics.Common.Remix;
 using Stride.Engine;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Remix
+namespace Andastra.Game.Stride.Remix
 {
     /// <summary>
     /// Stride implementation of NVIDIA RTX Remix bridge.

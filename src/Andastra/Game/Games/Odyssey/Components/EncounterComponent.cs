@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Component for encounter spawner entities.
     /// </summary>
     /// <remarks>
     /// Encounter Component:
-    /// - Based on swkotor2.exe encounter system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) encounter system
     /// - Located via string references: "Encounter" @ 0x007bc524 (encounter entity type), "Encounter List" @ 0x007bd050 (GIT encounter list)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_ENCOUNTER_EXHAUSTED" @ 0x007bc868 (encounter exhausted script event, 0x11)
     /// - Error messages:

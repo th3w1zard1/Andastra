@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Graphics Device Interface:
-    /// - Based on swkotor2.exe DirectX device system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX device system
     /// - Located via string references: "Render Window" @ 0x007b5680, "render" @ 0x007bab34
     /// - "WGL_NV_render_texture_rectangle" @ 0x007b880c, "WGL_ARB_render_texture" @ 0x007b8890 (OpenGL extensions)
     /// - Original game uses DirectX 8/9 device (IDirect3DDevice8/IDirect3DDevice9)

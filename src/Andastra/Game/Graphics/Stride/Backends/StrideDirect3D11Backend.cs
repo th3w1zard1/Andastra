@@ -9,7 +9,7 @@ using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Backends
+namespace Andastra.Game.Stride.Backends
 {
     /// <summary>
     /// Stride implementation of DirectX 11 backend.

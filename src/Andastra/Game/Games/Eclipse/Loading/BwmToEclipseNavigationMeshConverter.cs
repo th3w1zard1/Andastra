@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Runtime.Games.Eclipse;
+using BioWare.NET.Resource.Formats.BWM;
+using Andastra.Game.Games.Eclipse;
 
-namespace Andastra.Runtime.Games.Eclipse.Loading
+namespace Andastra.Game.Games.Eclipse.Loading
 {
     /// <summary>
-    /// Converts Andastra.Parsing BWM walkmesh data to EclipseNavigationMesh.
+    /// Converts BioWare.NET BWM walkmesh data to EclipseNavigationMesh.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -172,9 +172,9 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
     public static class BwmToEclipseNavigationMeshConverter
     {
         /// <summary>
-        /// Converts an Andastra.Parsing BWM to an EclipseNavigationMesh.
+        /// Converts an BioWare.NET BWM to an EclipseNavigationMesh.
         /// </summary>
-        /// <param name="bwm">The source BWM data from Andastra.Parsing</param>
+        /// <param name="bwm">The source BWM data from BioWare.NET</param>
         /// <returns>An EclipseNavigationMesh ready for pathfinding and collision</returns>
         public static EclipseNavigationMesh Convert(BWM bwm)
         {
@@ -228,7 +228,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
         }
 
         /// <summary>
-        /// Converts an Andastra.Parsing BWM to EclipseNavigationMesh with a position offset.
+        /// Converts an BioWare.NET BWM to EclipseNavigationMesh with a position offset.
         /// Used when placing room walkmeshes in the world.
         /// </summary>
         public static EclipseNavigationMesh ConvertWithOffset(BWM bwm, Vector3 offset)
@@ -486,7 +486,7 @@ namespace Andastra.Runtime.Games.Eclipse.Loading
 
         private static EclipseNavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
         {
-            // Use Andastra.Parsing's AABB generation
+            // Use BioWare.NET's AABB generation
             List<BWMNodeAABB> aabbs = bwm.Aabbs();
             if (aabbs.Count == 0)
             {

@@ -6,7 +6,7 @@ using Avalonia.Markup.Xaml;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets;
 using HolocronToolset.Widgets.Edit;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 
 namespace HolocronToolset.Widgets.Settings
 {

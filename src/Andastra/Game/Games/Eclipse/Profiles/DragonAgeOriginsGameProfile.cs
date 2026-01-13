@@ -3,7 +3,7 @@ using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Engines.Eclipse.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Eclipse.Profiles
+namespace Andastra.Game.Engines.Eclipse.Profiles
 {
     /// <summary>
     /// Game profile for Dragon Age: Origins (DA:O).

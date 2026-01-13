@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Templates
     /// </summary>
     /// <remarks>
     /// Store Template:
-    /// - Based on swkotor2.exe store/merchant system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) store/merchant system
     /// - Located via string references: Store functions handle merchant interactions
     /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references store templates)
     /// - Original implementation: UTM (Store) GFF templates define store properties

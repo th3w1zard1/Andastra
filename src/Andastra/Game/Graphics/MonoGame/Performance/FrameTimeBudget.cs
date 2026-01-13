@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Andastra.Runtime.MonoGame.Performance
+namespace Andastra.Game.Graphics.MonoGame.Performance
 {
     /// <summary>
     /// Frame time budgeting system for maintaining consistent frame rates.

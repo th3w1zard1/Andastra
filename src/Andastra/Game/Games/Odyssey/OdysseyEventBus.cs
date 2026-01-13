@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey Engine event bus implementation.
@@ -127,7 +127,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// <param name="eventType">The script event type.</param>
         /// <param name="triggerer">The triggering entity (optional).</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Script event firing implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script event firing implementation
         /// Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 (swkotor2.exe) handles all script event dispatching
         /// Located via string references: "EventQueue" @ 0x007bce74, "EventId" @ 0x007bce48, "EventData" @ 0x007bce3c
         /// Original implementation: FUN_004dcfb0 formats event name from type (e.g., "EVENT_OPEN_OBJECT" for case 7),
@@ -145,7 +145,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Create script event args and queue for processing
-            // Based on swkotor2.exe: Events are queued and processed at frame boundary
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Events are queued and processed at frame boundary
             var evt = new ScriptEventArgs(entity, eventType, triggerer);
             ((IEventBus)this).QueueEvent(evt);
         }
@@ -155,7 +155,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Odyssey-specific script event arguments structure.
-        /// Based on swkotor2.exe event data structure.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) event data structure.
         /// </remarks>
         private class ScriptEventArgs : IGameEvent
         {

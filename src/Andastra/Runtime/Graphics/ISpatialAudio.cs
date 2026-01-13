@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Spatial Audio Interface:
-    /// - Based on swkotor2.exe 3D audio system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) 3D audio system
     /// - Located via string references: "EnvAudio" @ 0x007bd478 (environmental audio)
     /// - "EAX2 room rolloff" @ 0x007c5f24, "EAX3 room LF" @ 0x007c6010, "EAX3 room LF " @ 0x007c6030
     /// - "EAX2 room HF" @ 0x007c6040, "EAX2 room" @ 0x007c6050 (EAX audio environment)

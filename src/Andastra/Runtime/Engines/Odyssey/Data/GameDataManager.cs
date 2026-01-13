@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Extract.Installation;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Engines.Odyssey.Data
@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
     /// </summary>
     /// <remarks>
     /// Game Data Manager (Odyssey-specific):
-    /// - Based on swkotor2.exe: FUN_005edd20 @ 0x005edd20 (2DA table loading)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
     /// - Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
     /// - Error messages: "CSWClass::LoadFeatGain: can't load featgain.2da" @ 0x007c46bc, "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
     /// - Cross-engine analysis:
@@ -61,7 +61,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             // Load from installation
             try
             {
-                ResourceResult resource = _installation.Resources.LookupResource(tableName, Andastra.Parsing.Common.ResourceType.TwoDA);
+                ResourceResult resource = _installation.Resources.LookupResource(tableName, BioWare.NET.Common.ResourceType.TwoDA);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -247,7 +247,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>Feat data if found, null otherwise.</returns>
         /// <remarks>
         /// Feat Lookup by Label:
-        /// - Based on swkotor2.exe: FUN_005edd20 @ 0x005edd20 (2DA table loading)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
         /// - Located via string references: "CSWClass::LoadFeatTable: Can't load feat.2da" @ 0x007c4720
         /// - Original implementation: Looks up feat by row label in feat.2da table
         /// - Row labels in feat.2da match feat constant names (e.g., "FEAT_SEE_INVISIBILITY")
@@ -310,7 +310,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>Feat ID (row index) if found, -1 otherwise.</returns>
         /// <remarks>
         /// Feat ID Lookup by Label:
-        /// - Based on swkotor2.exe: FUN_005edd20 @ 0x005edd20 (2DA table loading)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005edd20 @ 0x005edd20 (2DA table loading)
         /// - Original implementation: Looks up feat ID by row label in feat.2da table
         /// - Returns the row index as the feat ID, or -1 if not found
         /// - More efficient than GetFeatByLabel when only the ID is needed
@@ -330,7 +330,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <remarks>
         /// Starting Feats from featgain.2da:
         /// - Based on swkotor.exe: FUN_005bcf70 @ 0x005bcf70 (LoadFeatGain)
-        /// - Based on swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 (LoadFeatGain)
         /// - Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
         /// - Original implementation: Loads featgain.2da table, looks up class-specific columns with "_REG" and "_BON" suffixes
         /// - featgain.2da structure (based on Ghidra analysis):
@@ -482,7 +482,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// - _REG column contains regular starting feats, _BON column contains bonus starting feats
         /// - Each column can contain up to 50 feat IDs (loop iterates 0 to 0x32 = 50 times)
         /// - Feat IDs are stored as integers in the 2DA cells
-        /// - Based on swkotor2.exe: FUN_0060d1d0 reads feat IDs from featgain.2da _REG and _BON columns and stores them in class data structure
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads feat IDs from featgain.2da _REG and _BON columns and stores them in class data structure
         /// </remarks>
         public List<int> GetStartingFeats(int classId)
         {
@@ -503,7 +503,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Get FeatGain row label from classes.2da (stored in a column we need to read)
-            // Based on swkotor2.exe: FUN_005d63d0 reads "FeatGain" column from classes.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads "FeatGain" column from classes.2da
             TwoDA classesTable = GetTable("classes");
             if (classesTable == null || classId < 0 || classId >= classesTable.GetHeight())
             {
@@ -540,7 +540,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Read feat IDs from _REG column (regular starting feats)
-            // Based on swkotor2.exe: FUN_0060d1d0 reads from "_REG" column (loop 0 to 0x32 = 50)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads from "_REG" column (loop 0 to 0x32 = 50)
             // The columns might be _REG0, _REG1, ..., _REG49, or a single _REG column with comma-separated values
             // Try both patterns: indexed columns first, then single column with comma-separated values
             bool foundIndexedColumns = false;
@@ -586,7 +586,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
             }
 
             // Read feat IDs from _BON column (bonus starting feats)
-            // Based on swkotor2.exe: FUN_0060d1d0 reads from "_BON" column (loop 0 to 0x32 = 50)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads from "_BON" column (loop 0 to 0x32 = 50)
             foundIndexedColumns = false;
             for (int i = 0; i < 50; i++)
             {
@@ -734,7 +734,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// </summary>
         /// <remarks>
         /// Spell Data Access:
-        /// - Based on swkotor2.exe spell system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) spell system
         /// - Located via string references: "spells.2da" @ 0x007c2e60
         /// - Original implementation: Loads spell data from spells.2da for Force powers
         /// - Spell ID is row index in spells.2da
@@ -781,7 +781,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// </summary>
         /// <remarks>
         /// Force Point Cost:
-        /// - Based on swkotor2.exe Force point calculation
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) Force point calculation
         /// - Located via string references: "GetSpellBaseForcePointCost" @ 0x007c2e60
         /// - Original implementation: Calculates base Force point cost from spell level and innate value
         /// - Base cost = spell level (from innate column) * 2, minimum 1
@@ -831,7 +831,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Data
         /// <returns>The duration in seconds, or 2.0f as default if not found.</returns>
         /// <remarks>
         /// Visual Effect Duration:
-        /// - Based on swkotor2.exe: Visual effects duration from visualeffects.2da
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Visual effects duration from visualeffects.2da
         /// - Located via string references: "visualeffects" @ 0x007c4a7c
         /// - Original implementation: Loads visualeffects.2da table, reads "duration" column for the visual effect ID
         /// - Visual effect ID is row index in visualeffects.2da

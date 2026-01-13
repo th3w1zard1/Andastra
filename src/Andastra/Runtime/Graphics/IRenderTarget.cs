@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Render Target Interface:
-    /// - Based on swkotor2.exe DirectX render target system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) DirectX render target system
     /// - Located via string references: "WGL_NV_render_texture_rectangle" @ 0x007b880c, "WGL_ARB_render_texture" @ 0x007b8890
     /// - "m_sDepthTextureName" @ 0x007baaa8, "depth_texture" @ 0x007bab5c (depth render targets)
     /// - Original implementation: DirectX 8/9 render targets (IDirect3DSurface8/IDirect3DSurface9) for off-screen rendering

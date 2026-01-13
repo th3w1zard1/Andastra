@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Content.MDL
     /// </summary>
     /// <remarks>
     /// MDL Constants:
-    /// - Based on swkotor2.exe MDL/MDX file format
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) MDL/MDX file format
     /// - Located via string references: "DoubleMdlVar" @ 0x007d05d8, "ShortMdlVar" @ 0x007d05e8, "LongMdlVar" @ 0x007d05f4
     /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models, uses MDL file format structures
     /// - Original implementation: MDL file format uses specific header sizes, offsets, and structures

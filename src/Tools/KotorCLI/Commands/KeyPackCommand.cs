@@ -2,7 +2,7 @@ using System;
 using System.CommandLine;
 using System.IO;
 using KotorCLI.Logging;
-using Andastra.Parsing.Tools;
+using BioWare.NET.Tools;
 
 namespace KotorCLI.Commands
 {

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Andastra.Parsing.Formats.WAV;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Graphics;
@@ -12,7 +12,7 @@ using Stride.Audio;
 using SoundPlayState = Stride.Media.PlayState;
 using StrideAudioLayer = Stride.Audio.AudioLayer;
 
-namespace Andastra.Runtime.Stride.Audio
+namespace Andastra.Game.Stride.Audio
 {
     /// <summary>
     /// Stride implementation of IVoicePlayer for playing voice-over audio.
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// </summary>
     /// <remarks>
     /// Voice Player (Stride Implementation):
-    /// - Based on swkotor2.exe voice-over system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) voice-over system
     /// - Located via string references: Voice-over playback functions
     /// - Original implementation: Plays voice-over audio files (WAV format) during dialogue
     /// - Voice-over files: Stored in VO folder, referenced by dialogue entries (VoiceOverId)

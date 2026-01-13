@@ -1,18 +1,18 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
 using ClassData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.ClassData;
 using FeatData = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager.FeatData;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Component for creature entities (NPCs and PCs).
     /// </summary>
     /// <remarks>
     /// Creature Component:
-    /// - Based on swkotor2.exe creature system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) creature system
     /// - Located via string references: "Creature" @ 0x007bc544, "Creature List" @ 0x007bd01c
     /// - "CreatureSize" @ 0x007bf680, "CreatureSpeed" @ 0x007c4b8c
     /// - "CreatureList" @ 0x007c0c80, "RecCreatures" @ 0x007c0cb4, "MaxCreatures" @ 0x007c0cc4 (encounter creature lists)
@@ -184,7 +184,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// Stored in UTC template as "ScriptDialogue" field.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
         /// Located via string reference: "ScriptDialogue" @ 0x007bee40, "Conversation" @ 0x007c1abc
         /// </remarks>
         public string Conversation { get; set; }
@@ -263,7 +263,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// - Each class has an attackbonustable column in classes.2da that references a BAB progression table
         /// - BAB progression tables (e.g., cls_atk_jedi_guardian.2da) contain BAB values per level
         /// - For multi-class characters, BAB from all classes is summed together
-        /// - Based on swkotor2.exe: FUN_005d63d0 @ 0x005d63d0 reads classes.2da, loads attack bonus tables, calculates BAB per level
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 @ 0x005d63d0 reads classes.2da, loads attack bonus tables, calculates BAB per level
         /// </summary>
         /// <param name="gameDataManager">GameDataManager to look up class data and attack bonus tables.</param>
         /// <returns>Total base attack bonus from all class levels, or simplified calculation if game data unavailable.</returns>
@@ -315,7 +315,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 }
 
                 // Get attack bonus table name from classes.2da
-                // Based on swkotor2.exe: FUN_005d63d0 reads "attackbonustable" column from classes.2da
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads "attackbonustable" column from classes.2da
                 string attackBonusTableName = classRow.GetString("attackbonustable");
                 if (string.IsNullOrEmpty(attackBonusTableName) || attackBonusTableName == "****")
                 {
@@ -330,7 +330,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                 }
 
                 // Sum BAB from all levels in this class (levels 1 through cls.Level)
-                // Based on swkotor2.exe: BAB is looked up per level from the attack bonus table
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): BAB is looked up per level from the attack bonus table
                 for (int level = 1; level <= cls.Level; level++)
                 {
                     // Level is 1-based, table rows are 0-based
@@ -348,7 +348,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
 
                     // Get BAB value from row
                     // Column names may vary: "BAB", "Value", "attackbonus", or similar
-                    // Based on swkotor2.exe: Attack bonus tables typically have "BAB" or "Value" column
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack bonus tables typically have "BAB" or "Value" column
                     int? babValue = babRow.GetInteger("BAB");
                     if (!babValue.HasValue)
                     {
@@ -361,7 +361,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                     if (!babValue.HasValue)
                     {
                         // Try to find first integer column that's not "level", "Label", or "Name"
-                        // Based on swkotor2.exe: Attack bonus tables may have different column structures
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Attack bonus tables may have different column structures
                         try
                         {
                             var allData = babRow.GetData();
@@ -540,8 +540,8 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// 2. Check featgain.2da - if feat is only available through one class's feat gain table, it's class-specific
         /// 3. Most special feats in Odyssey are not class-specific (return -1 to use total level)
         /// 
-        /// Based on swkotor2.exe: FUN_005d63d0 @ 0x005d63d0 reads classes.2da and checks classfeat column
-        /// Based on swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 @ 0x005d63d0 reads classes.2da and checks classfeat column
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
         /// </remarks>
         protected override int GetFeatClassId(int featId, object gameDataProvider)
         {
@@ -558,21 +558,21 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Method 1: Check classes.2da "classfeat" column
-            // Based on swkotor2.exe: FUN_005d63d0 @ 0x005d63d0 reads "classfeat" column from classes.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 @ 0x005d63d0 reads "classfeat" column from classes.2da
             // Each class may have a class-specific feat defined in the "classfeat" column
             // If the feat ID matches a class's classfeat value, that class is associated with the feat
             Parsing.Formats.TwoDA.TwoDA classesTable = gameDataManager.GetTable("classes");
             if (classesTable != null)
             {
                 // Iterate through all classes to find if any class has this feat as its classfeat
-                // Based on swkotor2.exe: Classes.2da has rows for each class (0=Soldier, 1=Scout, 2=Scoundrel, 3=JediGuardian, etc.)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Classes.2da has rows for each class (0=Soldier, 1=Scout, 2=Scoundrel, 3=JediGuardian, etc.)
                 for (int classId = 0; classId < classesTable.GetHeight(); classId++)
                 {
                     Parsing.Formats.TwoDA.TwoDARow classRow = classesTable.GetRow(classId);
                     if (classRow != null)
                     {
                         // Check if this class has the feat as its class-specific feat
-                        // Based on swkotor2.exe: "classfeat" column contains the feat ID for class-specific feats
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "classfeat" column contains the feat ID for class-specific feats
                         int? classFeatId = classRow.GetInteger("classfeat");
                         if (classFeatId.HasValue && classFeatId.Value == featId)
                         {
@@ -584,7 +584,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Method 2: Check featgain.2da to see if feat is only available through one class
-            // Based on swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 reads featgain.2da for class-specific feat availability
             // If a feat appears only in one class's feat gain table and not in others, it's class-specific
             Parsing.Formats.TwoDA.TwoDA featgainTable = gameDataManager.GetTable("featgain");
             if (featgainTable != null && classesTable != null)
@@ -623,7 +623,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                     }
 
                     // Check if feat appears in this class's feat gain columns (_REG and _BON)
-                    // Based on swkotor2.exe: FUN_0060d1d0 reads from "_REG" and "_BON" columns (loop 0 to 0x32 = 50)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 reads from "_REG" and "_BON" columns (loop 0 to 0x32 = 50)
                     bool foundInThisClass = false;
 
                     // Check indexed columns (_REG0, _REG1, ..., _REG49, _BON0, _BON1, ..., _BON49)
@@ -704,7 +704,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Method 3: Check feat.2da for class-specific indicators
-            // Based on swkotor2.exe: Some feats may have class-specific requirements in feat.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Some feats may have class-specific requirements in feat.2da
             // Check if feat has minlevelclass requirement that might indicate class specificity
             Data.GameDataManager.FeatData featData = gameDataManager.GetFeat(featId);
             if (featData != null && featData.MinLevelClass > 0)
@@ -717,7 +717,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Feat is not class-specific - return -1 to use total level as fallback
-            // Based on swkotor2.exe: Most special feats in Odyssey use total character level for uses per day
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Most special feats in Odyssey use total character level for uses per day
             return -1;
         }
 
@@ -728,7 +728,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <param name="classId">The class ID.</param>
         /// <returns>The column name prefix, or null if class ID is unknown.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0060d1d0 @ 0x0060d1d0 uses class column names in featgain.2da
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0060d1d0 @ 0x0060d1d0 uses class column names in featgain.2da
         /// Class column name mapping:
         /// - Soldier (0) -> "soldier"
         /// - Scout (1) -> "scout"

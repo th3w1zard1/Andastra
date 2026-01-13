@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Andastra.Runtime.Core.Save;
 
-namespace Andastra.Runtime.Games.Common.Save
+namespace Andastra.Game.Games.Common.Save
 {
     /// <summary>
     /// Base implementation of save game management shared across engines that use numbered save directory naming.

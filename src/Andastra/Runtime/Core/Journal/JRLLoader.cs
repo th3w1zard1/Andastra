@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource.Formats.TLK;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Extract.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.GFF.Generics;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Extract;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using JetBrains.Annotations;
 
 namespace Andastra.Runtime.Core.Journal
@@ -16,7 +16,7 @@ namespace Andastra.Runtime.Core.Journal
     /// </summary>
     /// <remarks>
     /// Odyssey JRL Loader (swkotor.exe, swkotor2.exe):
-    /// - Based on swkotor2.exe journal system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) journal system
     /// - Located via string references: "JOURNAL" @ 0x007bdf44, "NW_JOURNAL" @ 0x007c20e8
     /// - JRL file format: GFF with "JRL " signature containing journal entry definitions
     /// - Original implementation:
@@ -87,7 +87,7 @@ namespace Andastra.Runtime.Core.Journal
             try
             {
                 // Load JRL file from installation
-                // Based on swkotor2.exe: JRL files are loaded from resource system
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL files are loaded from resource system
                 // Original implementation: Loads JRL files from chitin.key or module archives
                 ResourceResult resource = _installation.Resources.LookupResource(jrlResRef, ResourceType.JRL);
                 if (resource == null || resource.Data == null || resource.Data.Length == 0)

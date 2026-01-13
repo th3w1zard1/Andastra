@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.DDS;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.TXI;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.TEX;
-using Andastra.Runtime.Games.Common;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.DDS;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.TXI;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.TEX;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
@@ -16,7 +16,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
-namespace Andastra.Runtime.Games.Eclipse.Fonts
+namespace Andastra.Game.Games.Eclipse.Fonts
 {
     /// <summary>
     /// Eclipse engine (Dragon Age Origins, Dragon Age 2) bitmap font implementation.

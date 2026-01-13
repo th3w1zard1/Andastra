@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Andastra.Runtime.MonoGame.Memory
+namespace Andastra.Game.Graphics.MonoGame.Memory
 {
     /// <summary>
     /// Memory tracking system for detailed memory usage monitoring.

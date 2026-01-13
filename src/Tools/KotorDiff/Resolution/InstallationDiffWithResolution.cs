@@ -6,13 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Mods;
+using BioWare.NET;
+using BioWare.NET.Extract;
+using BioWare.NET.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.TSLPatcher.Mods;
 using KotorDiff.Diff;
-using Andastra.Parsing.TSLPatcher;
+using BioWare.NET.TSLPatcher;
 using JetBrains.Annotations;
 
 namespace KotorDiff.Resolution
@@ -187,7 +187,7 @@ namespace KotorDiff.Resolution
             logFunc("Building resource indices for fast lookups...");
 
             // Build indices for all installations
-            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>>>();
+            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>>>();
             var allIdentifiersSet = new HashSet<ResourceIdentifier>();
 
             for (int idx = 0; idx < allInstallations.Count; idx++)
@@ -901,7 +901,7 @@ namespace KotorDiff.Resolution
             logFunc("Building resource indices for fast lookups...");
 
             // Build indices for all installations
-            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<Andastra.Parsing.Extract.FileResource>>>();
+            var installIndices = new Dictionary<int, Dictionary<ResourceIdentifier, List<BioWare.NET.Extract.FileResource>>>();
             var allIdentifiersSet = new HashSet<ResourceIdentifier>();
 
             for (int idx = 0; idx < allInstallations.Count; idx++)

@@ -1,13 +1,13 @@
 using System;
-using Andastra.Parsing.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Components;
-using Andastra.Runtime.Games.Aurora.Data;
-using Andastra.Runtime.Games.Common.Combat;
+using Andastra.Game.Games.Aurora.Components;
+using Andastra.Game.Games.Aurora.Data;
+using Andastra.Game.Games.Common.Combat;
 
-namespace Andastra.Runtime.Games.Aurora.Combat
+namespace Andastra.Game.Games.Aurora.Combat
 {
     /// <summary>
     /// Calculates weapon damage from equipped items using baseitems.2da (Aurora engine).

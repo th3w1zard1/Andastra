@@ -1,19 +1,19 @@
 using System;
 using System.IO;
-using Andastra.Parsing.Formats.LIP;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.LIP;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 
-namespace Andastra.Runtime.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Engines.Odyssey.Dialogue
 {
     /// <summary>
-    /// Loads LIP (lip sync) files using Andastra.Parsing.
+    /// Loads LIP (lip sync) files using BioWare.NET.
     /// </summary>
     /// <remarks>
     /// LIP Data Loader (Odyssey-specific):
-    /// - Based on swkotor2.exe: LIP file loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LIP file loading system
     /// - Located via string references: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668, "LIP V1.0" @ 0x007d98d4
     /// - LIP directories: ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840 (LIP file search directories)
     /// - Cross-engine analysis:
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     return null;
                 }
 
-                // Parse LIP file using Andastra.Parsing
+                // Parse LIP file using BioWare.NET
                 LIP lipFile;
                 using (var stream = new MemoryStream(lipBytes))
                 using (var reader = new LIPBinaryReader(stream))
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                     return null;
                 }
 
-                // Convert Andastra.Parsing LIP to Andastra.Runtime.Core LipSyncData
+                // Convert BioWare.NET LIP to Andastra.Runtime.Core LipSyncData
                 var lipSyncData = new LipSyncData();
                 lipSyncData.Duration = lipFile.Length;
 

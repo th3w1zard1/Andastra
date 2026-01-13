@@ -7,11 +7,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.MDL;
 using Andastra.Runtime.Core;
@@ -24,10 +24,10 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Rendering;
 using Andastra.Runtime.Graphics.Common.Structs;
-using ParsingResourceType = Andastra.Parsing.Common.ResourceType;
-using ResourceType = Andastra.Parsing.Common.ResourceType;
+using ParsingResourceType = BioWare.NET.Common.ResourceType;
+using ResourceType = BioWare.NET.Common.ResourceType;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Eclipse
+namespace Andastra.Game.Graphics.Common.Backends.Eclipse
 {
     /// <summary>
     /// Graphics backend for Dragon Age Origins, matching daorigins.exe rendering exactly 1:1.

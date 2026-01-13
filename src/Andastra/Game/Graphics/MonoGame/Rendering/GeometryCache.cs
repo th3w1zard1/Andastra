@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Geometry cache for efficient mesh reuse.
@@ -19,7 +19,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Geometry Cache System (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: "Geometry" @ 0x007bd044, "m_bIsBackgroundGeometry" @ 0x007baebc
     /// - "vertexindices" @ 0x007baee0, "vertexindicescount" @ 0x007baf00 (vertex index data)
     /// - "Disable Vertex Buffer Objects" @ 0x007b56bc (VBO disable option)

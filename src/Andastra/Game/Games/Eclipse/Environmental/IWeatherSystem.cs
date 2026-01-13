@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
-using Andastra.Runtime.Games.Eclipse;
+using Andastra.Game.Games.Eclipse;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Environmental
+namespace Andastra.Game.Games.Eclipse.Environmental
 {
     /// <summary>
     /// Interface for weather simulation system in Eclipse engine.

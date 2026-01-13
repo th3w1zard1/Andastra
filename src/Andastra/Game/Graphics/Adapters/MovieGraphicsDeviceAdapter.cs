@@ -2,7 +2,7 @@ using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Graphics.Adapters
+namespace Andastra.Game.Graphics.Adapters
 {
     /// <summary>
     /// Adapter that makes IGraphicsDevice implement IMovieGraphicsDevice.

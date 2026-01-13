@@ -38,7 +38,7 @@ namespace Andastra.Runtime.Core.Combat
     /// </summary>
     /// <remarks>
     /// KOTOR Combat System Overview:
-    /// - Based on swkotor2.exe combat system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) combat system
     /// - EndCombatRound @ 0x00529c30 - Ends combat round and resets combat state (located via "CSWSCombatRound::EndCombatRound - %x Combat Slave (%x) not found!" @ 0x007bfb80)
     /// - SaveEntityState @ 0x005226d0 - Saves entity state including CombatRoundData (located via "CombatRoundData" @ 0x007bf6b4)
     /// - Located via string references: "CombatRoundData" @ 0x007bf6b4, "CombatInfo" @ 0x007c2e60
@@ -625,7 +625,7 @@ namespace Andastra.Runtime.Core.Combat
         /// <returns>Total damage reduction amount (0 if immunity exists, otherwise sum of resistances and reductions).</returns>
         /// <remarks>
         /// Damage Reduction System:
-        /// - Based on swkotor2.exe damage reduction system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) damage reduction system
         /// - Located via string references: EffectList @ 0x007bebe8, damage calculation routines
         /// - Original implementation: FUN_0050b540 loads EffectList, effects are checked during damage calculation
         /// - Damage immunity: Completely negates damage of matching type (or Universal)
@@ -712,7 +712,7 @@ namespace Andastra.Runtime.Core.Combat
                 if (effect.Type == EffectType.DamageReduction && !hasImmunity)
                 {
                     // Damage reduction: If SubType is set, it's type-specific; if 0 or negative, it's universal
-                    // Based on swkotor2.exe: Damage reduction effects can be universal or type-specific
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Damage reduction effects can be universal or type-specific
                     if (effect.SubType <= 0)
                     {
                         // Universal damage reduction (applies to all damage types)
@@ -746,7 +746,7 @@ namespace Andastra.Runtime.Core.Combat
             }
 
             // Try to get weapon damage calculator from world (engine-specific)
-            // Based on swkotor2.exe: Weapon damage calculation uses baseitems.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Weapon damage calculation uses baseitems.2da
             // Located via string references: "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30
             // Original implementation: FUN_005d7fc0 @ 0x005d7fc0 saves DamageDice/DamageDie to GFF
             // Damage formula: Roll(damagedice * damagedie) + damagebonus + ability modifier
@@ -767,7 +767,7 @@ namespace Andastra.Runtime.Core.Combat
         /// </summary>
         /// <returns>The weapon damage calculator, or null if not available.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Weapon damage calculation system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Weapon damage calculation system
         /// Uses reflection to find engine-specific weapon damage calculator from world
         /// Engine-specific implementations: WeaponDamageCalculator (Odyssey), AuroraWeaponDamageCalculator (Aurora), EclipseWeaponDamageCalculator (Eclipse)
         /// </remarks>
@@ -820,7 +820,7 @@ namespace Andastra.Runtime.Core.Combat
         /// <param name="attacker">The attacking entity.</param>
         /// <returns>Damage amount.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Fallback damage calculation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fallback damage calculation
         /// Calculates damage directly from equipped weapon data
         /// Uses entity data fields: "DamageDice", "DamageDie", "DamageBonus"
         /// Falls back to unarmed damage (1d3) if no weapon equipped
@@ -841,7 +841,7 @@ namespace Andastra.Runtime.Core.Combat
             }
 
             // Try main hand weapon slot (engine-specific, but common slots are 4 for main hand, 5 for offhand)
-            // Based on swkotor2.exe: RIGHTWEAPON slot 4, LEFTWEAPON slot 5
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): RIGHTWEAPON slot 4, LEFTWEAPON slot 5
             IEntity weapon = inventory.GetItemInSlot(4); // Main hand
             if (weapon == null)
             {
@@ -855,7 +855,7 @@ namespace Andastra.Runtime.Core.Combat
             }
 
             // Get damage dice from weapon entity data
-            // Based on swkotor2.exe: DamageDice and DamageDie stored in entity data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DamageDice and DamageDie stored in entity data
             // Located via string references: "DamageDice" @ 0x007c2d3c, "DamageDie" @ 0x007c2d30
             int damageDice = 1;
             int damageDie = 8;
@@ -915,7 +915,7 @@ namespace Andastra.Runtime.Core.Combat
         /// <param name="dieSize">Size of each die (e.g., 6 for d6).</param>
         /// <returns>Total of all dice rolls.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Dice rolling system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Dice rolling system
         /// Common across all engines: Rolls multiple dice and sums the results
         /// Used for weapon damage, unarmed damage, and other dice-based calculations
         /// </remarks>

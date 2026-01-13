@@ -44,7 +44,7 @@ namespace Andastra.Runtime.Core.Save
     /// - [module]_s.rim - Per-module state (positions, etc.)
     /// - NFO.res - Save metadata (name, time, screenshot)
     ///
-    /// Based on swkotor2.exe save system implementation:
+    /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save system implementation:
     /// - Main save function: SerializeSaveNfo @ 0x004eb750 (located via "savenfo" @ 0x007be1f0)
     /// - Save global variables: SaveGlobalVariables @ 0x005ac670 (located via "GLOBALVARS" @ 0x007c27bc)
     /// - Save party table: SavePartyTable @ 0x0057bd70 (located via "PARTYTABLE" @ 0x007c1910)
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="saveType">Type of save.</param>
         /// <returns>True if save succeeded.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
         /// Located via string reference: "savenfo" @ 0x007be1f0
         /// Original implementation:
         /// 1. Creates save directory "SAVES:\{saveName}"
@@ -186,7 +186,7 @@ namespace Andastra.Runtime.Core.Save
         /// Creates save data from current game state.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: SerializeSaveNfo @ 0x004eb750
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SerializeSaveNfo @ 0x004eb750
         /// Original implementation: Collects module info (current module, entry position/facing), game time (year/month/day/hour/minute),
         /// global variables (via SaveGlobalVariables @ 0x005ac670), party state (via SavePartyTable @ 0x0057bd70), and area states.
         /// Saves entity positions, HP, door/placeable states for current area.
@@ -239,7 +239,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Save global variables to save data structure
-        // Based on swkotor2.exe: SaveGlobalVariables @ 0x005ac670
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SaveGlobalVariables @ 0x005ac670
         // Located via string reference: "GLOBALVARS" @ 0x007c27bc
         // Original implementation: Constructs path "{savePath}\GLOBALVARS", writes GFF file containing all global int/bool/string variables
         // Uses reflection to access private dictionaries in ScriptGlobals (_globalInts, _globalBools, _globalStrings)
@@ -296,7 +296,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Save party member list and selection state
-        // Based on swkotor2.exe: SavePartyTable @ 0x0057bd70
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): SavePartyTable @ 0x0057bd70
         // Located via string reference: "PARTYTABLE" @ 0x007c1910
         // Original implementation: Writes GFF file with "PT  " signature (V2.0) containing party members, puppets, available NPCs,
         // influence values, gold, XP pool, solo mode flag, cheat used flag, and various game state flags
@@ -365,7 +365,7 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         /// <remarks>
         /// Plot State Saving (swkotor2.exe):
-        /// - Based on swkotor2.exe: Plot state is saved as part of game state
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is saved as part of game state
         /// - Original implementation: Plot states are tracked and saved to prevent duplicate processing
         /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
         /// </remarks>
@@ -401,7 +401,7 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         /// <remarks>
         /// Faction Reputation Saving (swkotor2.exe):
-        /// - Based on swkotor2.exe: Faction reputation is saved as REPUTE.fac file in savegame.sav
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction reputation is saved as REPUTE.fac file in savegame.sav
         /// - Located via string reference: "REPUTE" @ (needs verification)
         /// - Original implementation: Faction relationships stored in GFF structures with FactionID, FactionRep fields
         /// - Faction reputation matrix: Dictionary&lt;sourceFaction, Dictionary&lt;targetFaction, reputation&gt;&gt;
@@ -476,7 +476,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Save module-to-area mapping for the current module
-            // Based on swkotor2.exe: Mod_Area_list in module IFO file
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list in module IFO file
             // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
             // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
             // This allows verification of area-to-module relationships without loading the module IFO
@@ -593,7 +593,7 @@ namespace Andastra.Runtime.Core.Save
         /// Creates a creature state from an entity.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (save creature data to GFF)
         /// Original implementation saves complete creature state including:
         /// - Position, orientation, HP, FP
         /// - Level, XP, ClassLevels, Skills, Attributes
@@ -782,7 +782,7 @@ namespace Andastra.Runtime.Core.Save
             if (inventory != null)
             {
                 // Save equipped items (KOTOR equipment slots)
-                // Based on swkotor2.exe: Equipment slots saved in PARTYTABLE.res
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Equipment slots saved in PARTYTABLE.res
                 // Slot constants: INVENTORY_SLOT_HEAD=0, INVENTORY_SLOT_BODY=1, INVENTORY_SLOT_HANDS=3,
                 // INVENTORY_SLOT_RIGHTWEAPON=4, INVENTORY_SLOT_LEFTWEAPON=5, INVENTORY_SLOT_LEFTARM=7,
                 // INVENTORY_SLOT_RIGHTARM=8, INVENTORY_SLOT_IMPLANT=9, INVENTORY_SLOT_BELT=10
@@ -841,7 +841,7 @@ namespace Andastra.Runtime.Core.Save
                 }
 
                 // Save all inventory items (non-equipped items in inventory bag)
-                // Based on swkotor2.exe: Inventory items saved in PARTYTABLE.res
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Inventory items saved in PARTYTABLE.res
                 foreach (IEntity invItem in inventory.GetAllItems())
                 {
                     // Skip items that are already saved as equipped items
@@ -874,7 +874,7 @@ namespace Andastra.Runtime.Core.Save
         /// Creates an item state from an item entity.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Item data saved in PARTYTABLE.res
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item data saved in PARTYTABLE.res
         /// Saves item template ResRef, stack size, charges, identified flag, and upgrades
         /// </remarks>
         private ItemState CreateItemState(IEntity itemEntity)
@@ -896,7 +896,7 @@ namespace Andastra.Runtime.Core.Save
                 itemState.Identified = itemComponent.Identified;
 
                 // Save item upgrades
-                // Based on swkotor2.exe: Item upgrades saved in save files
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item upgrades saved in save files
                 foreach (Interfaces.Components.ItemUpgrade upgrade in itemComponent.Upgrades)
                 {
                     itemState.Upgrades.Add(new ItemUpgrade
@@ -920,7 +920,7 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="saveName">Name of the save to load.</param>
         /// <returns>True if load succeeded.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00708990 @ 0x00708990
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00708990 @ 0x00708990
         /// Located via string reference: "LoadSavegame" @ 0x007bdc90 (also "savenfo" @ 0x007be1f0)
         /// Original implementation:
         /// 1. Reads savegame.sav ERF archive (signature "MOD V1.0")
@@ -999,7 +999,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Restore global variables from save data
-        // Based on swkotor2.exe: FUN_005ac740 @ 0x005ac740
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005ac740 @ 0x005ac740
         // Located via string reference: "GLOBALVARS" @ 0x007c27bc
         // Original implementation: Reads GFF file from "SAVES:\{saveName}\GLOBALVARS", restores all global int/bool/string variables
         // Uses reflection to call SetGlobalInt, SetGlobalBool, SetGlobalString methods on ScriptGlobals
@@ -1043,7 +1043,7 @@ namespace Andastra.Runtime.Core.Save
         }
 
         // Restore party member list and selection state
-        // Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0
         // Located via string reference: "PARTYTABLE" @ 0x007c1910
         // Original implementation: Reads GFF file with "PT  " signature, restores party members, puppets, available NPCs,
         // influence values, gold, XP pool, solo mode flag, and various game state flags
@@ -1148,7 +1148,7 @@ namespace Andastra.Runtime.Core.Save
         /// Restores creature state to an entity.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
         /// Original implementation restores complete creature state including:
         /// - Position, orientation, HP, FP
         /// - Level, XP, ClassLevels, Skills, Attributes
@@ -1324,7 +1324,7 @@ namespace Andastra.Runtime.Core.Save
             if (inventory != null)
             {
                 // Restore equipped items (KOTOR equipment slots)
-                // Based on swkotor2.exe: Equipment slots restored from PARTYTABLE.res
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Equipment slots restored from PARTYTABLE.res
                 if (state.Equipment != null)
                 {
                     if (state.Equipment.Head != null)
@@ -1410,7 +1410,7 @@ namespace Andastra.Runtime.Core.Save
                 }
 
                 // Restore inventory items (non-equipped items in inventory bag)
-                // Based on swkotor2.exe: Inventory items restored from PARTYTABLE.res
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Inventory items restored from PARTYTABLE.res
                 if (state.Inventory != null)
                 {
                     foreach (ItemState itemState in state.Inventory)
@@ -1439,10 +1439,10 @@ namespace Andastra.Runtime.Core.Save
         /// Restores an item entity from item state.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Item data restored from PARTYTABLE.res
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item data restored from PARTYTABLE.res
         /// Creates item entity from template ResRef and restores stack size, charges, identified flag, and upgrades
         /// Uses EntityFactory to create items from templates (via reflection to avoid direct dependency)
-        /// Based on swkotor2.exe: FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057dcd0 @ 0x0057dcd0 (load party data from PARTYTABLE.res)
         /// Original implementation: Items restored from save files with all properties (StackSize, Charges, Identified, Upgrades)
         /// </remarks>
         private IEntity RestoreItemFromState(ItemState itemState)
@@ -1479,7 +1479,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Convert IModule to parsing Module type if needed
-            // EntityFactory.CreateItemFromTemplate expects Andastra.Parsing.Installation.Module
+            // EntityFactory.CreateItemFromTemplate expects BioWare.NET.Extract.Installation.Module
             object parsingModule = GetParsingModule(currentModule);
             if (parsingModule == null)
             {
@@ -1510,7 +1510,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // Restore item properties from saved state
-            // Based on swkotor2.exe: Item properties restored from PARTYTABLE.res
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties restored from PARTYTABLE.res
             Interfaces.Components.IItemComponent itemComponent = itemEntity.GetComponent<Interfaces.Components.IItemComponent>();
             if (itemComponent != null)
             {
@@ -1524,7 +1524,7 @@ namespace Andastra.Runtime.Core.Save
                 itemComponent.Identified = itemState.Identified;
 
                 // Restore item upgrades
-                // Based on swkotor2.exe: Item upgrades saved in PARTYTABLE.res
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item upgrades saved in PARTYTABLE.res
                 // Upgrades are stored as ItemUpgrade structures with UpgradeSlot and UpgradeResRef
                 if (itemState.Upgrades != null && itemState.Upgrades.Count > 0)
                 {
@@ -1652,7 +1652,7 @@ namespace Andastra.Runtime.Core.Save
             }
 
             // If module is already the parsing Module type, return it
-            var parsingModuleTypeName = "Andastra.Parsing.Installation.Module";
+            var parsingModuleTypeName = "BioWare.NET.Extract.Installation.Module";
             var parsingModuleType = System.Type.GetType(parsingModuleTypeName);
             if (parsingModuleType != null && parsingModuleType.IsAssignableFrom(module.GetType()))
             {
@@ -1709,7 +1709,7 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         /// <remarks>
         /// Plot State Restoration (swkotor2.exe):
-        /// - Based on swkotor2.exe: Plot state is restored from save data
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is restored from save data
         /// - Original implementation: Plot states are restored to prevent duplicate processing
         /// - Plot state includes: plot index, label, triggered status, completed status, trigger count
         /// </remarks>
@@ -1748,7 +1748,7 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         /// <remarks>
         /// Faction Reputation Restoration (swkotor2.exe):
-        /// - Based on swkotor2.exe: Faction reputation is restored from REPUTE.fac file in savegame.sav
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Faction reputation is restored from REPUTE.fac file in savegame.sav
         /// - Original implementation: Faction relationships restored from GFF structures with FactionID, FactionRep fields
         /// - Faction reputation matrix: Dictionary&lt;sourceFaction, Dictionary&lt;targetFaction, reputation&gt;&gt;
         /// - Reputation values: 0-100 range (0-10=hostile, 11-89=neutral, 90-100=friendly)
@@ -1852,7 +1852,7 @@ namespace Andastra.Runtime.Core.Save
         /// Module states persist across module transitions within a game session.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Module state persistence
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state persistence
         /// Original implementation: Module states cached in memory during gameplay
         /// States are saved to save files when Save() is called
         /// </remarks>
@@ -1886,7 +1886,7 @@ namespace Andastra.Runtime.Core.Save
         /// Checks if module state exists for the given module.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Module state validation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state validation
         /// Original implementation: Verifies that area states belong to the specified module
         /// by checking if areas are present in the module's Mod_Area_list
         /// </remarks>
@@ -1921,7 +1921,7 @@ namespace Andastra.Runtime.Core.Save
         /// <param name="moduleResRef">The resource reference of the module.</param>
         /// <returns>True if the area belongs to the module, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Area-to-module relationship validation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area-to-module relationship validation
         /// Original implementation: Checks if area ResRef exists in module's Mod_Area_list
         /// Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
         /// Module IFO file contains Mod_Area_list field (GFF List) with area ResRefs
@@ -1956,7 +1956,7 @@ namespace Andastra.Runtime.Core.Save
             else
             {
                 // Module is not currently loaded - use saved module-to-area mapping
-                // Based on swkotor2.exe: Mod_Area_list in module IFO file
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list in module IFO file
                 // Original implementation: Module IFO contains Mod_Area_list field (GFF List) with area ResRefs
                 // Located via string references: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
                 // The mapping is populated when saving by extracting the area list from the module
@@ -1998,7 +1998,7 @@ namespace Andastra.Runtime.Core.Save
         /// Gets module state for the given module.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Module state retrieval
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state retrieval
         /// Original implementation: Retrieves module state by verifying that the current area
         /// belongs to the specified module before returning the state
         /// </remarks>

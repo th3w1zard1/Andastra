@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Depth pre-pass (Z-prepass) rendering system.
@@ -18,7 +18,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Depth Pre-Pass (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Original implementation: KOTOR uses immediate-mode rendering with depth buffer testing
     /// - Original engine: DirectX 8/9 fixed-function pipeline, no explicit depth pre-pass
     /// - Original rendering: Single-pass rendering with depth testing enabled

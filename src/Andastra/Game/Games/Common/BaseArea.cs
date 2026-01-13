@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of area functionality shared across all BioWare engines.
@@ -421,7 +421,7 @@ namespace Andastra.Runtime.Games.Common
             }
 
             // Check if area is already loaded in current module
-            // Based on swkotor2.exe: Areas are stored in module's area list for lookup
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Areas are stored in module's area list for lookup
             // IModule.GetArea(resRef) provides O(1) lookup by ResRef
             if (world.CurrentModule != null)
             {

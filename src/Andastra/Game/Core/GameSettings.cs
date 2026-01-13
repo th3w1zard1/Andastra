@@ -1,14 +1,14 @@
 using System;
 using Andastra.Runtime.Core;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Game settings and configuration with command-line parsing.
     /// </summary>
     /// <remarks>
     /// Game Settings Extensions:
-    /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (initializes directory aliases and configuration)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (initializes directory aliases and configuration)
     /// - Located via string references: "swkotor2.ini" @ 0x007b5740, ".\swkotor2.ini" @ 0x007b5644, "config.txt" @ 0x007b5750
     /// - "DiffSettings" @ 0x007c2cdc (display settings, referenced by FUN_005d7ce0 @ 0x005d7ce0)
     /// - INI loading: FUN_00630a90 @ 0x00630a90 (string constructor for INI values), FUN_00631ea0 @ 0x00631ea0 (calls FUN_00633270)

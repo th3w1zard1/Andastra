@@ -11,7 +11,7 @@ using Vector2 = Stride.Core.Mathematics.Vector2;
 using Vector3 = Stride.Core.Mathematics.Vector3;
 using Vector4 = Stride.Core.Mathematics.Vector4;
 
-namespace Andastra.Runtime.Stride.PostProcessing
+namespace Andastra.Game.Stride.PostProcessing
 {
     /// <summary>
     /// Stride implementation of Tone Mapping post-processing effect.

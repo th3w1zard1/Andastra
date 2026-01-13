@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of delay scheduler shared across all BioWare engines.

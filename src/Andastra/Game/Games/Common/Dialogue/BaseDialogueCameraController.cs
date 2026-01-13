@@ -3,7 +3,7 @@ using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Common.Dialogue
+namespace Andastra.Game.Games.Common.Dialogue
 {
     /// <summary>
     /// Abstract base class for dialogue camera controllers across all engines.

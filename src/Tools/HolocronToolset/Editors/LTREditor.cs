@@ -10,8 +10,8 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Styling;
-using Andastra.Parsing.Formats.LTR;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.LTR;
+using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

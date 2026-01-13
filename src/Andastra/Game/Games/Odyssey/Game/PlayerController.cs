@@ -10,14 +10,14 @@ using Andastra.Runtime.Engines.Odyssey.Components;
 using Andastra.Runtime.Engines.Odyssey.Dialogue;
 using Andastra.Runtime.Engines.Odyssey.Systems;
 
-namespace Andastra.Runtime.Engines.Odyssey.Game
+namespace Andastra.Game.Engines.Odyssey.Game
 {
     /// <summary>
     /// Handles player input and movement.
     /// </summary>
     /// <remarks>
     /// Player Controller:
-    /// - Based on swkotor2.exe player input/movement system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) player input/movement system
     /// - Located via string references: "Player" @ 0x007be628 (player entity type), "PlayerList" @ 0x007bdcf4 (player list field)
     /// - "GetPlayerList" @ 0x007bdd00 (get player list function), "Mod_PlayerList" @ 0x007be060 (module player list)
     /// - "SetByPlayerParty" @ 0x007c1d04 (set by player party flag), "MaxPlayers" @ 0x007bdb48 (max players constant)
@@ -47,7 +47,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
     /// - Right-click: Context menu or alternative action (examine, attack, etc.)
     /// - Party members follow leader, respond to same commands (party control system)
     /// - Movement speeds: Walk speed (default 2.5 units/sec), run speed (default 5.0 units/sec, can be modified by effects)
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (player input handling and movement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (player input handling and movement)
     /// </remarks>
     public class PlayerController
     {
@@ -127,7 +127,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Project position onto walkmesh
-            // Based on swkotor2.exe: Projects click position onto walkmesh surface
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Projects click position onto walkmesh surface
             // INavigationMesh.ProjectToSurface projects point onto walkmesh surface
             Vector3? projectedPosition = null;
             if (area.NavigationMesh != null)
@@ -205,7 +205,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// </summary>
         /// <remarks>
         /// Creature Click Handling:
-        /// - Based on swkotor2.exe creature interaction system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) creature interaction system
         /// - Original implementation: Check hostility -> attack if hostile, dialogue if friendly
         /// - Hostility check via FactionManager.IsHostile
         /// - Dialogue started via DialogueManager if creature has dialogue ResRef
@@ -274,7 +274,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// </summary>
         /// <remarks>
         /// Door Click Handling:
-        /// - Based on swkotor2.exe door interaction system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door interaction system
         /// - Original implementation: Check lock -> try key -> try lockpicking -> try bashing -> open
         /// - Key check: HasItemByTag(KeyName)
         /// - Lockpicking: Security skill check vs LockDC
@@ -335,7 +335,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// <param name="doorComponent">The door component.</param>
         /// <remarks>
         /// Door Unlocking Logic:
-        /// - Based on swkotor2.exe door unlocking system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door unlocking system
         /// - Priority: 1) Key check, 2) Lockpicking (Security skill), 3) Bashing (if no key required)
         /// - Key check: Inventory.HasItemByTag(KeyName)
         /// - Lockpicking: Security skill + d20 vs LockDC
@@ -417,7 +417,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// </summary>
         /// <remarks>
         /// Placeable Click Handling:
-        /// - Based on swkotor2.exe placeable interaction system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) placeable interaction system
         /// - Original implementation: Queue ActionUseObject if placeable is useable
         /// - ActionUseObject moves to use point and triggers OnUsed script
         /// </remarks>
@@ -459,7 +459,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
         /// <summary>
         /// Find an entity at a world position using spatial queries.
-        /// Based on swkotor2.exe entity selection system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity selection system
         /// Located via string references: Entity selection/picking functions
         /// Original implementation: Uses spatial queries to find entities near click position
         /// </summary>
@@ -476,7 +476,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             float closestDistance = clickRadius;
 
             // Use spatial query to find all interactable entities within click radius
-            // Based on swkotor2.exe: Uses GetEntitiesInRadius for efficient spatial queries
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Uses GetEntitiesInRadius for efficient spatial queries
             // Original implementation: Queries entities by type mask (Creature | Placeable | Door)
             ObjectType interactableTypes = ObjectType.Creature | ObjectType.Placeable | ObjectType.Door | ObjectType.Item;
             IEnumerable<IEntity> nearbyEntities = _world.GetEntitiesInRadius(position, clickRadius, interactableTypes);

@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAge
+namespace Andastra.Game.Engines.Eclipse.DragonAge
 {
     /// <summary>
     /// Base module loader for Dragon Age series (DA:O and DA2).
@@ -113,7 +113,7 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
                 {
                     // Parse the RIM file to validate it's a valid RIM archive
                     // This ensures the file is properly formatted before adding to resource provider
-                    var rim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
+                    var rim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(moduleRimPath);
 
                     // Add the module RIM file to the resource provider
                     // This makes all resources in the RIM file available for lookup
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Engines.Eclipse.DragonAge
                     try
                     {
                         // Parse the extension RIM file to validate it's a valid RIM archive
-                        var extensionRim = Andastra.Parsing.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
+                        var extensionRim = BioWare.NET.Resource.Formats.RIM.RIMAuto.ReadRim(extensionRimPath);
 
                         // Add the extension RIM file to the resource provider
                         // Extension RIMs are added after base RIM, so they override base RIM resources

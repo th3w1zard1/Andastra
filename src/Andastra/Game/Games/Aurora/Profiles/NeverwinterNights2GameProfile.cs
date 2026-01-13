@@ -1,7 +1,7 @@
-using Andastra.Parsing;
+using BioWare.NET;
 using Andastra.Runtime.Engines.Common;
 
-namespace Andastra.Runtime.Engines.Aurora.Profiles
+namespace Andastra.Game.Engines.Aurora.Profiles
 {
     /// <summary>
     /// Game profile for Neverwinter Nights 2 (Aurora Engine).

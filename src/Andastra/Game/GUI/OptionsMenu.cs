@@ -5,7 +5,7 @@ using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Game.GUI
+namespace Andastra.Game.Game.GUI
 {
     /// <summary>
     /// Handles options menu rendering and input.
@@ -157,7 +157,7 @@ namespace Andastra.Runtime.Game.GUI
         /// Key Binding Rebind Handler:
         /// - Based on swkotor.exe and swkotor2.exe key binding system
         /// - Original implementation: When rebinding a key, waits for next key press and assigns it to the action
-        /// - Based on swkotor2.exe: Key binding UI captures next key press and updates binding
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Key binding UI captures next key press and updates binding
         /// </remarks>
         private static void HandleKeyBindingRebind(
             IKeyboardState currentKeyboard,
@@ -343,8 +343,8 @@ namespace Andastra.Runtime.Game.GUI
         /// - Music Volume: Stored in GameSettings.Audio.MusicVolume (applied when music is played)
         /// - Effects Volume: Stored in GameSettings.Audio.SfxVolume (applied when sounds are played)
         /// - Voice Volume: Stored in GameSettings.Audio.VoiceVolume (applied when voice-overs are played)
-        /// - Based on swkotor2.exe: FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
-        /// - Based on swkotor2.exe: FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00631ff0 @ 0x00631ff0 (writes INI values for audio settings)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00633270 @ 0x00633270 (loads audio settings from INI file)
         /// </remarks>
         public static Dictionary<OptionsCategory, List<OptionItem>> CreateDefaultOptions(GameSettings settings, ISoundPlayer soundPlayer = null, IMusicPlayer musicPlayer = null, Andastra.Runtime.Core.Audio.IVoicePlayer voicePlayer = null)
         {
@@ -417,7 +417,7 @@ namespace Andastra.Runtime.Game.GUI
                         float volume = (float)v / 100.0f;
                         settings.Audio.VoiceVolume = volume;
                         // Apply voice volume to voice player immediately if available
-                        // Based on swkotor2.exe: VoiceVolume setting applied to voice-over playback
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): VoiceVolume setting applied to voice-over playback
                         if (voicePlayer != null)
                         {
                             voicePlayer.SetMasterVolume(volume);
@@ -463,7 +463,7 @@ namespace Andastra.Runtime.Game.GUI
             // Located via string references: "Mouse Sensitivity" @ 0x007c85cc, "Mouse Look" @ 0x007c8608, "Reverse Mouse Buttons" @ 0x007c8628
             // "keymap" @ 0x007c4cbc (keymap.2da file reference), "Pause" @ 0x007c4de8
             // Original implementation: Key bindings stored in keymap.2da, mouse settings in INI file
-            // Based on swkotor2.exe: CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CExoInputInternal input system (exoinputinternal.cpp @ 0x007c64dc)
             // Initialize default controls settings if not already initialized
             if (settings.Controls.KeyBindings.Count == 0)
             {
@@ -651,7 +651,7 @@ namespace Andastra.Runtime.Game.GUI
         /// - Based on swkotor.exe and swkotor2.exe key binding system
         /// - Located via string references: "keymap" @ 0x007c4cbc (keymap.2da file reference)
         /// - Original implementation: Key bindings can be changed in options menu by selecting and pressing a new key
-        /// - Based on swkotor2.exe: Key binding UI allows rebinding any action to any key
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Key binding UI allows rebinding any action to any key
         /// </remarks>
         public class KeyBindingOptionItem : OptionItem
         {
@@ -684,7 +684,7 @@ namespace Andastra.Runtime.Game.GUI
         /// - Based on swkotor.exe and swkotor2.exe mouse input system
         /// - Located via string references: "Reverse Mouse Buttons" @ 0x007c8628
         /// - Original implementation: Mouse buttons can be rebound in options menu
-        /// - Based on swkotor2.exe: Mouse button configuration allows rebinding actions to different mouse buttons
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mouse button configuration allows rebinding actions to different mouse buttons
         /// </remarks>
         public class MouseButtonBindingOptionItem : OptionItem
         {

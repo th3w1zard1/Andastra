@@ -1,7 +1,7 @@
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Scripting.VM
+namespace Andastra.Game.Scripting.VM
 {
     /// <summary>
     /// Factory for creating game-specific script globals instances.

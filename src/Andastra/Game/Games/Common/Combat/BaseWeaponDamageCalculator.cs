@@ -3,7 +3,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Common.Combat
+namespace Andastra.Game.Games.Common.Combat
 {
     /// <summary>
     /// Abstract base class for weapon damage calculation across all BioWare engines.

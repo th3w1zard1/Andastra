@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Font Interface:
-    /// - Based on swkotor2.exe font rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) font rendering system
     /// - Located via string references: "dialogfont16x16" @ 0x007b6380, "fontheight" @ 0x007b6eb8
     /// - "Use Small Fonts" @ 0x007c8538 (font size option)
     /// - Original implementation: Renders text using bitmap fonts (dialogfont16x16.tga, etc.)

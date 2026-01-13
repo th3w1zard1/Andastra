@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Content.MDL
     /// </summary>
     /// <remarks>
     /// MDL Model Cache:
-    /// - Based on swkotor2.exe model caching system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) model caching system
     /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, CExoKeyTable resource management
     /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
     /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature models from appearance.2da

@@ -2,7 +2,7 @@ using System;
 using Stride.Core.Mathematics;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Wrapper structs for Stride render state descriptions.

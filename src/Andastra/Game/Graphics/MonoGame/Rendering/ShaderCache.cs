@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Shader cache system for efficient shader compilation and reuse.
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Shader Cache System (Modern Enhancement):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: OpenGL shader extension functions
     /// - Vertex shader extensions: glGenVertexShadersEXT, glBindVertexShaderEXT, glBeginVertexShaderEXT, glEndVertexShaderEXT
     /// - glDeleteVertexShadersEXT, glShaderOp1EXT, glShaderOp2EXT, glShaderOp3EXT

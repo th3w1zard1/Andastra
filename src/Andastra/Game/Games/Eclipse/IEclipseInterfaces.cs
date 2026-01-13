@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Eclipse.Physics;
+using Andastra.Game.Games.Eclipse.Physics;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Interface for objects that can be updated each frame.

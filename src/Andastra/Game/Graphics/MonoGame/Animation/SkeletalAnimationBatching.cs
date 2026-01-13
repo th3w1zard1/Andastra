@@ -5,7 +5,7 @@ using Andastra.Runtime.MonoGame.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Animation
+namespace Andastra.Game.Graphics.MonoGame.Animation
 {
     /// <summary>
     /// Skeletal animation batching for efficient character rendering.

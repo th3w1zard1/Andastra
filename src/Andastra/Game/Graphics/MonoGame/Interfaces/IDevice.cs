@@ -2,7 +2,7 @@ using System;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Rendering;
 
-namespace Andastra.Runtime.MonoGame.Interfaces
+namespace Andastra.Game.Graphics.MonoGame.Interfaces
 {
     /// <summary>
     /// Graphics device abstraction following NVRHI-style patterns.

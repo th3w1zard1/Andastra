@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Eclipse.EngineApi
+namespace Andastra.Game.Engines.Eclipse.EngineApi
 {
     /// <summary>
     /// Dragon Age 2 specific engine API implementation (DragonAge2.exe).

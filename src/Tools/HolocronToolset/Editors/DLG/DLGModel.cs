@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 
 namespace HolocronToolset.Editors.DLG
 {

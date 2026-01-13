@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Content.MDL
     /// </summary>
     /// <remarks>
     /// MDL/MDX Fast Reader:
-    /// - Based on swkotor2.exe MDL/MDX file format and loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) MDL/MDX file format and loading system
     /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, "ModelResRef" @ 0x007c2f6c
     /// - "CSWCCreature::LoadModel(): Failed to load creature model '%s'." @ 0x007c82fc (model loading error)
     /// - "Model %s nor the default model %s could be loaded." @ 0x007cad14 (model loading fallback error)

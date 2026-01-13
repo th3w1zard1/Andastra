@@ -3,14 +3,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Andastra.Runtime.MonoGame.UI
+namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Pause menu UI component using MonoGame SpriteBatch rendering.
     /// </summary>
     /// <remarks>
     /// Pause Menu:
-    /// - Based on swkotor2.exe pause menu system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) pause menu system
     /// - Located via string references: "Pause" @ 0x007c4de8, "PauseTimer" @ 0x007bfad4
     /// - "InfinitePause" @ 0x007bfae0, "RoundPaused" @ 0x007bfb00, "RoundPausedBy" @ 0x007bfaf0
     /// - "TIME_PAUSETIME" @ 0x007bdf88, "TIME_PAUSEDAY" @ 0x007bdf98 (pause time tracking)

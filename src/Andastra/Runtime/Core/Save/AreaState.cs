@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Save
     /// </summary>
     /// <remarks>
     /// Area State:
-    /// - Based on swkotor2.exe area save system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) area save system
     /// - Located via string references: Area state serialization in save system
     /// - Original implementation: Area state stored in [module]_s.rim files within savegame.sav ERF archive
     /// - FUN_005226d0 @ 0x005226d0 saves entity states to GFF format

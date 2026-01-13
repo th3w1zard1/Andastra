@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Andastra.Runtime.Stride.Upscaling
+namespace Andastra.Game.Stride.Upscaling
 {
     /// <summary>
     /// Native interop declarations for NVIDIA NGX SDK (Neural Graphics Framework).

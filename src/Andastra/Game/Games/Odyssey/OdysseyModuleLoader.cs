@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.ResourceProviders;
 using Andastra.Runtime.Core.Interfaces;
@@ -11,14 +11,14 @@ using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Engines.Common;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey
+namespace Andastra.Game.Engines.Odyssey
 {
     /// <summary>
     /// Odyssey Engine module loader implementation for KOTOR 1/2.
     /// </summary>
     /// <remarks>
     /// Module Loading Process:
-    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser, handles module loading commands)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006caab0 @ 0x006caab0 (server command parser, handles module loading commands)
     /// - Located via string references: "MODULES:" @ 0x007b58b4, "MODULES" @ 0x007c6bc4, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - Cross-engine: Similar functions in swkotor.exe (K1), nwmain.exe (Aurora), daorigins.exe (Eclipse)
     /// - Inheritance: BaseEngineModule (Runtime.Games.Common) implements common module loading/unloading
@@ -80,7 +80,7 @@ namespace Andastra.Runtime.Engines.Odyssey
             {
                 // Load entry area if not already loaded
                 RuntimeArea entryArea = _internalLoader.LoadArea(
-                    new Andastra.Parsing.Installation.Module(moduleName, _installation),
+                    new BioWare.NET.Extract.Installation.Module(moduleName, _installation),
                     _currentRuntimeModule.EntryArea);
                 if (entryArea != null)
                 {
@@ -107,7 +107,7 @@ namespace Andastra.Runtime.Engines.Odyssey
 
             try
             {
-                var module = new Andastra.Parsing.Installation.Module(moduleName, _installation);
+                var module = new BioWare.NET.Extract.Installation.Module(moduleName, _installation);
                 return module.Info() != null;
             }
             catch

@@ -5,17 +5,17 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.BWM;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.MDL;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Tools;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.BWM;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.MDL;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Tools;
 using Andastra.Runtime.Content.Converters;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Collision;
@@ -23,12 +23,12 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Eclipse;
-using Andastra.Runtime.Games.Eclipse.Environmental;
-using Andastra.Runtime.Games.Eclipse.Lighting;
-using Andastra.Runtime.Games.Eclipse.Loading;
-using Andastra.Runtime.Games.Eclipse.Physics;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Eclipse;
+using Andastra.Game.Games.Eclipse.Environmental;
+using Andastra.Game.Games.Eclipse.Lighting;
+using Andastra.Game.Games.Eclipse.Loading;
+using Andastra.Game.Games.Eclipse.Physics;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common;
 using Andastra.Runtime.MonoGame.Converters;
@@ -63,9 +63,9 @@ using MonoGameRectangle = Andastra.Runtime.MonoGame.Interfaces.Rectangle;
 using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 using MonoGameViewport = Andastra.Runtime.MonoGame.Interfaces.Viewport;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
-using ParsingColor = Andastra.Parsing.Common.Color;
-using ParsingResourceType = Andastra.Parsing.Common.ResourceType;
-using ParsingSearchLocation = Andastra.Parsing.Installation.SearchLocation;
+using ParsingColor = BioWare.NET.Common.Color;
+using ParsingResourceType = BioWare.NET.Common.ResourceType;
+using ParsingSearchLocation = BioWare.NET.Extract.Installation.SearchLocation;
 using XnaBlendState = Microsoft.Xna.Framework.Graphics.BlendState;
 using XnaColor = Microsoft.Xna.Framework.Color;
 // Type aliases to resolve ambiguity between XNA and System.Numerics types
@@ -75,7 +75,7 @@ using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using XnaSpriteSortMode = Microsoft.Xna.Framework.Graphics.SpriteSortMode;
 using XnaVertexPositionColor = Microsoft.Xna.Framework.Graphics.VertexPositionColor;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Eclipse Engine (Dragon Age) specific area implementation.
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Games.Eclipse
         private ShaderCache _shaderCache;
 
         // Module reference for loading WOK walkmesh files (optional)
-        private Andastra.Parsing.Installation.Module _module;
+        private BioWare.NET.Extract.Installation.Module _module;
 
         // Resource provider for loading MDL/MDX and other resources (optional)
         // Based on daorigins.exe/DragonAge2.exe: Eclipse uses IGameResourceProvider for resource loading
@@ -397,7 +397,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// - Required for full walkmesh functionality when rooms are available
         /// - Can be set later via SetModule() if not available at construction time
         /// </remarks>
-        public EclipseArea(string resRef, byte[] areaData, Andastra.Parsing.Installation.Module module = null)
+        public EclipseArea(string resRef, byte[] areaData, BioWare.NET.Extract.Installation.Module module = null)
         {
             _resRef = resRef ?? throw new ArgumentNullException(nameof(resRef));
             _tag = resRef; // Default tag to resref
@@ -446,7 +446,7 @@ namespace Andastra.Runtime.Games.Eclipse
         /// Call this method if Module was not available at construction time.
         /// If rooms are already set, this will trigger walkmesh loading.
         /// </remarks>
-        public void SetModule(Andastra.Parsing.Installation.Module module)
+        public void SetModule(BioWare.NET.Extract.Installation.Module module)
         {
             _module = module;
             // If rooms are already set, try to load walkmesh now
@@ -1108,7 +1108,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // ResRef field - based on ARE format specification
             if (!string.IsNullOrEmpty(_resRef))
             {
-                Andastra.Parsing.Common.ResRef resRefObj = Andastra.Parsing.Common.ResRef.FromString(_resRef);
+                BioWare.NET.Common.ResRef resRefObj = BioWare.NET.Common.ResRef.FromString(_resRef);
                 root.SetResRef("ResRef", resRefObj);
             }
 
@@ -1136,10 +1136,10 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Script hooks - set to empty ResRefs if not specified
             // Based on ARE format specification
-            root.SetResRef("OnEnter", Andastra.Parsing.Common.ResRef.FromBlank());
-            root.SetResRef("OnExit", Andastra.Parsing.Common.ResRef.FromBlank());
-            root.SetResRef("OnHeartbeat", Andastra.Parsing.Common.ResRef.FromBlank());
-            root.SetResRef("OnUserDefined", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("OnEnter", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnExit", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnHeartbeat", BioWare.NET.Common.ResRef.FromBlank());
+            root.SetResRef("OnUserDefined", BioWare.NET.Common.ResRef.FromBlank());
 
             // Lighting defaults - based on ARE format specification
             // Eclipse has advanced lighting system, but we save defaults for compatibility
@@ -1199,7 +1199,7 @@ namespace Andastra.Runtime.Games.Eclipse
 
             // Grass properties - based on ARE format specification
             // Eclipse may use these for environmental effects
-            root.SetResRef("Grass_TexName", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("Grass_TexName", BioWare.NET.Common.ResRef.FromBlank());
             root.SetSingle("Grass_Density", 0.0f);
             root.SetSingle("Grass_QuadSize", 0.0f);
             root.SetSingle("Grass_Prob_LL", 0.0f);
@@ -1214,7 +1214,7 @@ namespace Andastra.Runtime.Games.Eclipse
             // Default value: 0.2, but using 0.0 for Eclipse compatibility
             root.SetSingle("AlphaTest", 0.0f);
             root.SetInt32("CameraStyle", 0);
-            root.SetResRef("DefaultEnvMap", Andastra.Parsing.Common.ResRef.FromBlank());
+            root.SetResRef("DefaultEnvMap", BioWare.NET.Common.ResRef.FromBlank());
             root.SetUInt8("DisableTransit", 0);
             root.SetUInt8("StealthXPEnabled", 0);
             root.SetUInt32("StealthXPLoss", 0);
@@ -8466,7 +8466,7 @@ namespace Andastra.Runtime.Games.Eclipse
                     // Based on daorigins.exe/DragonAge2.exe: MDL files use binary format (similar to Odyssey)
                     // MDLAuto.ReadMdl can parse both binary MDL (with MDX data) and ASCII MDL formats
                     // If MDX is null, MDLAuto.ReadMdl will attempt to parse as ASCII MDL
-                    Andastra.Parsing.Formats.MDLData.MDL mdl = null;
+                    BioWare.NET.Resource.Formats.MDLData.MDL mdl = null;
                     try
                     {
                         mdl = MDLAuto.ReadMdl(mdlData, sourceExt: mdxData);
@@ -8958,7 +8958,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Handle opacity for alpha blending
-            // Based on swkotor2.exe: Entity opacity is used for fade-in/fade-out effects
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity opacity is used for fade-in/fade-out effects
             float opacity = renderable.Opacity;
             bool needsAlphaBlending = opacity < 1.0f;
 
@@ -8968,7 +8968,7 @@ namespace Andastra.Runtime.Games.Eclipse
             contextGraphicsDevice.SetRasterizerState(contextGraphicsDevice.CreateRasterizerState());
 
             // Set up blend state for opacity/alpha blending if needed
-            // Based on swkotor2.exe: Entities with opacity < 1.0 use alpha blending
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities with opacity < 1.0 use alpha blending
             // Original implementation: DirectX 8/9 render states D3DRS_ALPHABLENDENABLE, D3DRS_SRCBLEND, D3DRS_DESTBLEND
             // Standard alpha blending: SrcAlpha * SourceColor + (1 - SrcAlpha) * DestinationColor
             if (needsAlphaBlending)
@@ -8977,7 +8977,7 @@ namespace Andastra.Runtime.Games.Eclipse
                 // Configure blend state for standard alpha blending:
                 // - Color: SourceAlpha * SourceColor + InverseSourceAlpha * DestinationColor
                 // - Alpha: SourceAlpha * SourceAlpha + InverseSourceAlpha * DestinationAlpha
-                // Based on swkotor2.exe: Standard alpha blending uses D3DBLEND_SRCALPHA and D3DBLEND_INVSRCALPHA
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Standard alpha blending uses D3DBLEND_SRCALPHA and D3DBLEND_INVSRCALPHA
                 IBlendState blendState = contextGraphicsDevice.CreateBlendState();
                 blendState.BlendEnable = true;
                 blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
@@ -8994,7 +8994,7 @@ namespace Andastra.Runtime.Games.Eclipse
             else
             {
                 // Opaque rendering: disable blending for maximum performance
-                // Based on swkotor2.exe: Opaque entities use no blending (One/Zero blend factors)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Opaque entities use no blending (One/Zero blend factors)
                 IBlendState blendState = graphicsDevice.CreateBlendState();
                 blendState.BlendEnable = false;
                 blendState.ColorBlendFunction = GraphicsBlendFunction.Add;
@@ -9010,7 +9010,7 @@ namespace Andastra.Runtime.Games.Eclipse
             }
 
             // Apply opacity to basic effect
-            // Based on swkotor2.exe: Entity opacity is applied to material alpha for fade-in/fade-out effects
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity opacity is applied to material alpha for fade-in/fade-out effects
             // IBasicEffect.Alpha property controls the alpha channel of the rendered output
             basicEffect.Alpha = opacity;
 
@@ -13756,7 +13756,7 @@ technique ColorGrading
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: MDL geometry extraction from all mesh nodes.
         /// </remarks>
-        private void ExtractGeometryFromMDL(Andastra.Parsing.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
+        private void ExtractGeometryFromMDL(BioWare.NET.Resource.Formats.MDLData.MDL mdl, List<Vector3> vertices, List<int> indices)
         {
             if (mdl == null || mdl.Root == null)
             {
@@ -13776,7 +13776,7 @@ technique ColorGrading
         /// <remarks>
         /// Based on daorigins.exe/DragonAge2.exe: Recursive geometry extraction from MDL node hierarchy.
         /// </remarks>
-        private void ExtractGeometryFromNode(Andastra.Parsing.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
+        private void ExtractGeometryFromNode(BioWare.NET.Resource.Formats.MDLData.MDLNode node, List<Vector3> vertices, List<int> indices)
         {
             if (node == null)
             {

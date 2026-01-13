@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Resource.Formats.LYT;
+using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Resource.Formats.LYT;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Scene;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey.Scene
+namespace Andastra.Game.Games.Odyssey.Scene
 {
     /// <summary>
     /// Odyssey engine (KOTOR 1 &amp; 2) scene builder (graphics-backend agnostic).
@@ -174,7 +174,7 @@ namespace Andastra.Runtime.Games.Odyssey.Scene
     /// </summary>
     /// <remarks>
     /// Scene Data Structure:
-    /// - Based on swkotor2.exe area/room structure
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) area/room structure
     /// - Rooms: List of rooms with positions and mesh data references
     /// - VisibilityGraph: VIS data for room visibility culling
     /// - CurrentRoom: Currently active room for visibility determination
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Games.Odyssey.Scene
     /// </summary>
     /// <remarks>
     /// Scene Room:
-    /// - Based on swkotor2.exe room structure
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) room structure
     /// - ModelResRef: Model resource reference (e.g., "m01aa")
     /// - Position: World position from LYT data
     /// - IsVisible: Visibility flag updated by VIS culling

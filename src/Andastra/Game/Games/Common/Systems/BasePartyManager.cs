@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common.Systems
+namespace Andastra.Game.Games.Common.Systems
 {
     /// <summary>
     /// Abstract base class for party managers across all engines.

@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Use Object Action:
-    /// - Based on swkotor2.exe placeable interaction system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) placeable interaction system
     /// - Located via string references: "OnUsed" @ 0x007c1f70 (placeable script event)
     /// - Object events: "EVENT_OPEN_OBJECT" @ 0x007bcda0, "EVENT_CLOSE_OBJECT" @ 0x007bcdb4
     /// - "EVENT_LOCK_OBJECT" @ 0x007bcd20, "EVENT_UNLOCK_OBJECT" @ 0x007bcd34
@@ -90,7 +90,7 @@ namespace Andastra.Runtime.Core.Actions
             _approached = true;
 
             // Use the placeable
-            // Based on swkotor2.exe: Placeable interaction implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable interaction implementation
             // Located via string references: "OnUsed" @ 0x007c1f70, "EVENT_OPEN_OBJECT" @ 0x007bcda0
             // Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles object events
             // Original implementation: Checks Useable flag (from UTP template), Locked state, HasInventory flag to determine behavior
@@ -111,7 +111,7 @@ namespace Andastra.Runtime.Core.Actions
                 if (placeableState.IsLocked)
                 {
                     // Fire OnLock script event
-                    // Based on swkotor2.exe: EVENT_LOCK_OBJECT fires OnLock script event
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_LOCK_OBJECT fires OnLock script event
                     // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd), "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                     IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
@@ -123,7 +123,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Record entering/clicking object for GetEnteringObject() and GetClickingObject() functions
-                // Based on swkotor2.exe: GetEnteringObject/GetClickingObject track last entity that interacted with placeable
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetEnteringObject/GetClickingObject track last entity that interacted with placeable
                 // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnClick" @ 0x007c1a20
                 // Original implementation: Stores last interacting entity ID for script queries
                 if (placeable is Entities.Entity placeableEntityImpl)
@@ -133,7 +133,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Handle containers (open/close instead of use)
-                // Based on swkotor2.exe: HasInventory flag determines if placeable is a container
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): HasInventory flag determines if placeable is a container
                 // Original implementation: Containers toggle open/close state, non-containers fire OnUsed
                 if (placeableState.HasInventory)
                 {
@@ -142,7 +142,7 @@ namespace Andastra.Runtime.Core.Actions
                     placeableState.AnimationState = placeableState.IsOpen ? 1 : 0; // 0=closed, 1=open
 
                     // Fire OnOpen/OnClose script events
-                    // Based on swkotor2.exe: EVENT_OPEN_OBJECT/EVENT_CLOSE_OBJECT fire OnOpen/OnClose script events
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT/EVENT_CLOSE_OBJECT fire OnOpen/OnClose script events
                     // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "EVENT_CLOSE_OBJECT" @ 0x007bcdb4 (case 6)
                     IEventBus eventBus2 = actor.World.EventBus;
                     if (eventBus2 != null)
@@ -162,7 +162,7 @@ namespace Andastra.Runtime.Core.Actions
                 else
                 {
                     // Fire OnUsed script event for non-container placeables
-                    // Based on swkotor2.exe: EVENT_OPEN_OBJECT fires OnUsed script event for non-containers
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT fires OnUsed script event for non-containers
                     // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "CSWSSCRIPTEVENT_EVENTTYPE_ON_USED" @ 0x007bc7d8 (0x19), "OnUsed" @ 0x007c1f70
                     IEventBus eventBus3 = actor.World.EventBus;
                     if (eventBus3 != null)

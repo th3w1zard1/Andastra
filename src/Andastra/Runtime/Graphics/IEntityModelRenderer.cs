@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Entity Model Renderer Interface:
-    /// - Based on swkotor2.exe entity model rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity model rendering system
     /// - Located via string references: "ModelName" @ 0x007c1c8c, "Model" @ 0x007c1ca8, "VisibleModel" @ 0x007c1c98
     /// - "ModelType" @ 0x007c4568, "MODELTYPE" @ 0x007c036c, "ModelVariation" @ 0x007c0990
     /// - "ModelPart" @ 0x007bd42c, "ModelPart1" @ 0x007c0acc, "ModelA" @ 0x007bf4bc

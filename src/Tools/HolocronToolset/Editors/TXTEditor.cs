@@ -5,7 +5,7 @@ using System.Text;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
 
 namespace HolocronToolset.Editors

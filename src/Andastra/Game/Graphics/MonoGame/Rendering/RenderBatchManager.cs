@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Render batch manager for reducing draw calls through batching.
@@ -19,7 +19,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Render Batch Manager (Based on Original Engine):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: "renderorder" @ 0x007bab50 (render order sorting)
     /// - "Apropagaterender" @ 0x007bb10f (render propagation), "renderbmlmtype" @ 0x007bb26c (billboard/lightmap type)
     /// - Original implementation: KOTOR sorts objects by material/shader for efficient rendering

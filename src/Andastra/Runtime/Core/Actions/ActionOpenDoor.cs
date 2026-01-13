@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Open Door Action:
-    /// - Based on swkotor2.exe door interaction system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door interaction system
     /// - Door loading: FUN_00580ed0 @ 0x00580ed0 (load door from UTD GFF template)
     /// - Door loading with transitions: FUN_005838d0 @ 0x005838d0 (load door with LinkedToModule/LinkedToFlags)
     /// - Located via string references: "OnOpen" @ 0x007be1b0 (door script event), "ScriptOnOpen" @ 0x007beeb8
@@ -100,7 +100,7 @@ namespace Andastra.Runtime.Core.Actions
                 if (doorState.IsLocked)
                 {
                     // Fire OnLock script event
-                    // Based on swkotor2.exe: EVENT_LOCK_OBJECT fires OnLock script event
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_LOCK_OBJECT fires OnLock script event
                     // Located via string references: "EVENT_LOCK_OBJECT" @ 0x007bcd20 (case 0xd), "CSWSSCRIPTEVENT_EVENTTYPE_ON_LOCKED" @ 0x007bc754 (0x1c)
                     IEventBus eventBus = actor.World.EventBus;
                     if (eventBus != null)
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Core.Actions
                 doorState.OpenState = 1; // Open state
 
                 // Record entering/clicking object for GetEnteringObject() and GetClickingObject() functions
-                // Based on swkotor2.exe: GetEnteringObject/GetClickingObject track last entity that interacted with door
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GetEnteringObject/GetClickingObject track last entity that interacted with door
                 // Located via string references: "EVENT_ENTERED_TRIGGER" @ 0x007bce08, "OnClick" @ 0x007c1a20
                 // Original implementation: Stores last interacting entity ID for script queries
                 if (door is Entities.Entity doorEntityImpl)
@@ -125,7 +125,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Fire OnOpen script event
-                // Based on swkotor2.exe: EVENT_OPEN_OBJECT fires OnOpen script event
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): EVENT_OPEN_OBJECT fires OnOpen script event
                 // Located via string references: "EVENT_OPEN_OBJECT" @ 0x007bcda0 (case 7), "CSWSSCRIPTEVENT_EVENTTYPE_ON_OPEN" @ 0x007bc844 (0x16)
                 IEventBus eventBus2 = actor.World.EventBus;
                 if (eventBus2 != null)
@@ -135,7 +135,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Check for module/area transition
-                // Based on swkotor2.exe door transition system
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door transition system
                 // Door loading with transitions: FUN_005838d0 @ 0x005838d0 (reads LinkedToModule, LinkedToFlags, TransitionDestination from UTD)
                 // Located via string references: "LinkedToModule" @ 0x007bd7bc, "LinkedToFlags" @ 0x007bd788, "TransitionDestination" @ 0x007bd7a4
                 // Original implementation: Doors with LinkedToModule trigger module transitions when opened
@@ -193,7 +193,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Door Transition Event:
-    /// - Based on swkotor2.exe door transition system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door transition system
     /// - Located via string references: "LinkedToModule" @ 0x007bd7bc, "TransitionDestination" @ 0x007bd7a4
     /// - Original implementation: Doors with LinkedToModule trigger module/area transitions
     /// - GameSession listens for this event and initiates the transition

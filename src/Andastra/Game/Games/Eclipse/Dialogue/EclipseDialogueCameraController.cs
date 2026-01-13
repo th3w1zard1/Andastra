@@ -2,9 +2,9 @@ using System;
 using System.Numerics;
 using Andastra.Runtime.Core.Camera;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Game.Games.Common.Dialogue;
 
-namespace Andastra.Runtime.Games.Eclipse.Dialogue
+namespace Andastra.Game.Games.Eclipse.Dialogue
 {
     /// <summary>
     /// Eclipse engine implementation of dialogue camera controller.

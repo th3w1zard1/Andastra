@@ -2,7 +2,7 @@ using Andastra.Runtime.Core.Collision;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Aurora.Collision
+namespace Andastra.Game.Games.Aurora.Collision
 {
     /// <summary>
     /// Neverwinter Nights: Enhanced Edition (nwmain.exe) specific creature collision detection.

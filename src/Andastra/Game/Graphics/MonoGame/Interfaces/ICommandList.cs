@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace Andastra.Runtime.MonoGame.Interfaces
+namespace Andastra.Game.Graphics.MonoGame.Interfaces
 {
     /// <summary>
     /// Command list interface for recording rendering commands.

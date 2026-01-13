@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Formats.Capsule;
-using FileResource = Andastra.Parsing.Extract.FileResource;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.Capsule;
+using FileResource = BioWare.NET.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
 {

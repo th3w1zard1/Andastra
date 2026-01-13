@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.KEY;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.BIF;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.KEY;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.BIF;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders
@@ -1556,7 +1556,7 @@ endmodel
         /// Creates a ResourceIdentifier internally and delegates to GetResourceBytes(ResourceIdentifier).
         /// Based on Aurora Engine resource loading system (KEY/BIF files, ERF archives, HAK files, Override directory).
         /// </remarks>
-        public byte[] LoadResource(Andastra.Parsing.Common.ResRef resRef, ResourceType resourceType)
+        public byte[] LoadResource(BioWare.NET.Common.ResRef resRef, ResourceType resourceType)
         {
             if (resRef == null || resRef.IsBlank() || resourceType == null || resourceType.IsInvalid)
             {

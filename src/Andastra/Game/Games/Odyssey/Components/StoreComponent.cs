@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Component for merchant store entities.
     /// </summary>
     /// <remarks>
     /// Store Component:
-    /// - Based on swkotor2.exe store/merchant system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) store/merchant system
     /// - Located via string references: "Store" @ 0x007bc4f8 (store entity type), "StoreList" @ 0x007bd098 (GIT store list)
     /// - "store" @ 0x007b6068 (store constant), "OnOpenStore" @ 0x007c1200 (store script event hook)
     /// - Store fields: "MarkUp" @ 0x007c03f0, "MarkDown" @ 0x007c0400 (store pricing fields)

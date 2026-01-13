@@ -3,7 +3,7 @@ using Stride.Input;
 using Keys = Andastra.Runtime.Graphics.Keys;
 using GraphicsMouseButton = Andastra.Runtime.Graphics.MouseButton;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IInputManager.

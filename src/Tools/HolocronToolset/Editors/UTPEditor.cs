@@ -1,4 +1,4 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,22 +6,22 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource;
-using DLGType = Andastra.Parsing.Resource.Generics.DLG.DLG;
-using DLGHelper = Andastra.Parsing.Resource.Generics.DLG.DLGHelper;
-using Andastra.Parsing.Formats.Capsule;
+using BioWare.NET;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource;
+using DLGType = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG;
+using DLGHelper = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper;
+using BioWare.NET.Resource.Formats.Capsule;
 using Avalonia.Controls.Primitives;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Utils;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
+using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
 using Window = Avalonia.Controls.Window;
 
 namespace HolocronToolset.Editors

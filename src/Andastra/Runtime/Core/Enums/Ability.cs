@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Core.Enums
     /// </summary>
     /// <remarks>
     /// Ability Enum (D20 System):
-    /// - Based on swkotor2.exe D20 ability system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) D20 ability system
     /// - Located via string references: Ability scores stored in creature templates (UTC GFF)
     /// - Ability field names: "STR" @ 0x007c3a44, "DEX" @ 0x007c3a54, "CON" @ 0x007c3a64
     /// - "INT" @ 0x007c3a74, "WIS" @ 0x007c3a84, "CHA" @ 0x007c3a94

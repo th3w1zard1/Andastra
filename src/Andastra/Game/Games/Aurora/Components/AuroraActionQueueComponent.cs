@@ -1,10 +1,10 @@
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Aurora.Actions;
+using Andastra.Game.Games.Aurora.Actions;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Aurora.Components
+namespace Andastra.Game.Games.Aurora.Components
 {
     /// <summary>
     /// Component that wraps an AuroraActionQueue for entity action management in Aurora engine.

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Numerics;
 using HolocronToolset.Data;
 using KitComponent = HolocronToolset.Data.KitComponent;
-using BWM = Andastra.Parsing.Formats.BWM.BWM;
-using BWMFace = Andastra.Parsing.Formats.BWM.BWMFace;
+using BWM = BioWare.NET.Resource.Formats.BWM.BWM;
+using BWMFace = BioWare.NET.Resource.Formats.BWM.BWMFace;
 using JetBrains.Annotations;
 
 namespace HolocronToolset.Windows
@@ -326,7 +326,7 @@ namespace HolocronToolset.Windows
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/windows/indoor_builder.py:2710-2712
         // Original: def set_material_colors(self, material_colors: dict[SurfaceMaterial, QColor]):
-        public void SetMaterialColors(Dictionary<Andastra.Parsing.Common.SurfaceMaterial, object> materialColors)
+        public void SetMaterialColors(Dictionary<BioWare.NET.Common.SurfaceMaterial, object> materialColors)
         {
             // Note: Material colors will be stored when material rendering is fully implemented
             MarkDirty();

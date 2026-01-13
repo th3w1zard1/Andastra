@@ -2,14 +2,14 @@ using System.Threading;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Scripting.VM
+namespace Andastra.Game.Scripting.VM
 {
     /// <summary>
     /// Execution context for a script run.
     /// </summary>
     /// <remarks>
     /// Script Execution Context:
-    /// - Based on swkotor2.exe script execution context system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script execution context system
     /// - Located via string references: Script execution functions maintain context for each script run
     /// - NCS VM: NCS file format "NCS " signature @ offset 0, "V1.0" version @ offset 4, 0x42 marker @ offset 8, instructions start @ offset 0x0D
     /// - OBJECT_SELF: Set to caller entity ObjectId (constant 0x7F000001, used in NWScript GetObjectSelf function)
@@ -25,7 +25,7 @@ namespace Andastra.Runtime.Scripting.VM
     /// - Context cloning: WithCaller/WithTriggerer create new contexts with modified caller/triggerer (for nested script calls)
     /// - Additional context: Stores extra context data (DialogueManager, GameSession, etc.) for system-specific access
     /// - Current context tracking: Uses AsyncLocal to track the current execution context for delayed script execution (DelayCommand)
-    ///   - Based on swkotor2.exe: Execution context stack tracking for nested script calls and delayed actions
+    ///   - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking for nested script calls and delayed actions
     ///   - Original implementation: Maintains execution context stack to allow delayed actions to access original caller/triggerer
     /// - Based on NCS VM execution model in vendor/PyKotor/wiki/NCS-File-Format.md
     /// </remarks>
@@ -36,7 +36,7 @@ namespace Andastra.Runtime.Scripting.VM
         /// Used to track the active execution context during script execution for delayed script context capture.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Execution context stack tracking system.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking system.
         /// Located via string references: Execution context maintained for each script execution.
         /// Original implementation: Execution context stack allows nested script calls and delayed actions
         /// (DelayCommand) to access the original caller and triggerer from when the script was first executed.
@@ -104,7 +104,7 @@ namespace Andastra.Runtime.Scripting.VM
         /// </summary>
         /// <returns>The current execution context, or null if no context is active.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Execution context stack tracking system.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking system.
         /// Original implementation: Allows code to retrieve the current execution context
         /// for delayed script execution and other operations that need access to the
         /// current script's caller and triggerer.
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Scripting.VM
         /// </summary>
         /// <param name="context">The execution context to set as current, or null to clear.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Execution context stack tracking system.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking system.
         /// Original implementation: Sets the current execution context so that delayed
         /// script execution and other operations can access the current script's caller
         /// and triggerer. Should be called by NcsVm when starting and ending script execution.

@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Andastra.Runtime.MonoGame.UI
+namespace Andastra.Game.Graphics.MonoGame.UI
 {
     /// <summary>
     /// Dialogue panel UI component using MonoGame SpriteBatch rendering.
@@ -13,7 +13,7 @@ namespace Andastra.Runtime.MonoGame.UI
     /// </summary>
     /// <remarks>
     /// Dialogue Panel Rendering:
-    /// - Based on swkotor2.exe dialogue UI system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) dialogue UI system
     /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4
     /// - "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - "OnEndDialogue" @ 0x007c1f60 (end dialogue script event)

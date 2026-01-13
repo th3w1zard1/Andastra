@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Odyssey-specific implementation of perception component for KOTOR (K1 and K2).
@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// Perception Component (Odyssey-specific):
     /// - Inherits from BasePerceptionComponent (common functionality)
     /// - Based on swkotor.exe: FUN_00500610 @ 0x00500610, FUN_005afce0 @ 0x005afce0 (perception data serialization)
-    /// - Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking), FUN_005226d0 @ 0x005226d0 (perception data serialization)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception checking), FUN_005226d0 @ 0x005226d0 (perception data serialization)
     /// - Located via string references: "PerceptionData" @ 0x007bf6c4 (swkotor2.exe), "PerceptionList" @ 0x007bf6d4 (swkotor2.exe)
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_PERCEPTION" @ 0x007bcb68 (swkotor2.exe), "PerceptionRange" @ 0x007c4080 (swkotor2.exe)
     /// - "PERCEPTIONDIST" @ 0x007c4070 (swkotor2.exe), "PERCEPTIONDIST" @ 0x0074ae10 (swkotor.exe)
@@ -51,7 +51,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Odyssey-specific: Uses PerceptionManager for centralized tracking when available.
-        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
         /// Falls back to base class implementation for local tracking.
         /// </remarks>
         public override IEnumerable<IEntity> GetSeenObjects()
@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// </summary>
         /// <remarks>
         /// Odyssey-specific: Uses PerceptionManager for centralized tracking when available.
-        /// Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 (perception checking)
         /// Falls back to base class implementation for local tracking.
         /// </remarks>
         public override IEnumerable<IEntity> GetHeardObjects()

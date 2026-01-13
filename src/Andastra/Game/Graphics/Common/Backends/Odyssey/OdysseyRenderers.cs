@@ -6,10 +6,10 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Formats.WAV;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Core.Interfaces;
@@ -17,7 +17,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Graphics;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey
 {
     /// <summary>
     /// Odyssey room mesh renderer implementation.
@@ -155,7 +155,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/widgets/renderer/model.py:103-141
         // Original: def paintGL(self): - entity rendering in OpenGL scene
-        // Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (entity model rendering)
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005261b0 @ 0x005261b0 (entity model rendering)
         public void RenderEntity([NotNull] IEntity entity, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix)
         {
             if (entity == null)
@@ -218,7 +218,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 odysseyEffect.Projection = projectionMatrix;
 
                 // Set opacity from renderable component for fade-in/fade-out effects
-                // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                 // Opacity is updated by AppearAnimationFadeSystem for appear animations
                 // Opacity is updated by ActionDestroyObject for destroy animations
                 odysseyEffect.Alpha = opacity;
@@ -255,7 +255,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 _device.SetIndexBuffer(mesh.IndexBuffer);
 
                 // Apply view/projection matrices and opacity via OpenGL state
-                // Based on swkotor2.exe: glDrawElements with proper matrix setup
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): glDrawElements with proper matrix setup
                 // Based on xoreos: graphics.cpp renderWorld() @ lines 1059-1081
                 if (effect is OdysseyBasicEffect odysseyEffectForMesh2)
                 {
@@ -365,8 +365,8 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                     return null;
                 }
 
-                // Use Andastra.Parsing MDL parser
-                return Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                // Use BioWare.NET MDL parser
+                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {
@@ -734,7 +734,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// - Sound files: Stored as WAV resources, referenced by ResRef (e.g., "sound01")
     /// - Positional audio: Sounds can be played at 3D positions with distance attenuation
     /// - This implementation: Uses Windows waveOut APIs for sound playback (similar to OdysseyMusicPlayer)
-    /// - Based on swkotor2.exe: Sound effect playback functions @ various addresses
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound effect playback functions @ various addresses
     /// - Sound directories: "STREAMSOUNDS" @ 0x007c69dc, "HD0:STREAMSOUNDS" @ 0x007c771c
     /// - Sound settings: "Sound Volume" @ 0x007c83cc, "Number 3D Sounds" @ 0x007c7258
     /// - Supports multiple simultaneous sound instances (unlike music/voice which play one at a time)
@@ -768,7 +768,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Plays a sound effect by ResRef.
-        /// Based on swkotor2.exe: Sound effect playback system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound effect playback system
         /// </summary>
         /// <param name="soundResRef">The ResRef of the sound file (e.g., "sound01").</param>
         public void Play(string soundResRef)
@@ -778,7 +778,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Plays a 3D positioned sound effect by ResRef.
-        /// Based on swkotor2.exe: 3D sound effect playback system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 3D sound effect playback system
         /// </summary>
         /// <param name="soundResRef">The ResRef of the sound file (e.g., "sound01").</param>
         /// <param name="position">3D position for spatial audio (Vector3.Zero for non-positional).</param>
@@ -862,7 +862,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Asynchronously plays sound audio using Windows waveOut APIs.
-        /// Based on swkotor2.exe: Sound effect playback system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound effect playback system
         /// </summary>
         private void PlaySoundAsync(uint instanceId, string soundResRef, WAV wavFile, Vector3 position, bool is3D, CancellationToken cancellationToken)
         {
@@ -1016,7 +1016,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Stops all currently playing sounds.
-        /// Based on swkotor2.exe: Sound stop functionality
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound stop functionality
         /// </summary>
         public void Stop()
         {
@@ -1070,7 +1070,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets the master volume for all sounds.
-        /// Based on swkotor2.exe: "Sound Volume" @ 0x007c83cc
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Sound Volume" @ 0x007c83cc
         /// Volume is clamped to 0.0-1.0 range and applied immediately to all active sounds.
         /// </summary>
         /// <param name="volume">Volume (0.0 to 1.0). Values outside this range are clamped.</param>
@@ -1100,7 +1100,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Applies the current master volume to a specific sound instance.
         /// Uses Windows waveOutSetVolume API to set the volume for the waveOut device.
-        /// Based on swkotor2.exe: Sound volume control system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound volume control system
         /// </summary>
         private void ApplyVolumeToSound(uint instanceId, IntPtr waveOutHandle)
         {
@@ -1156,7 +1156,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         #region Windows waveOut API P/Invoke
         // Windows waveOut API for sound playback
-        // Based on swkotor2.exe: Sound playback uses Miles Sound System (MSS) or DirectSound
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound playback uses Miles Sound System (MSS) or DirectSound
         // This implementation uses waveOut for Windows compatibility
         // For cross-platform support, consider OpenAL or NAudio
 
@@ -1226,7 +1226,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// - Music playback: Original engine uses Miles Sound System (MSS) for background music
     /// - Music files: Stored as WAV or MP3 resources, referenced by ResRef (e.g., "mus_theme")
     /// - Volume control: Original engine has separate music volume setting
-    /// - Based on swkotor2.exe: Music playback functions @ various addresses
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music playback functions @ various addresses
     /// - Music directories: "STREAMMUSIC" @ 0x007c69dc, "HD0:STREAMMUSIC" @ 0x007c771c
     /// - Music settings: "Music Volume" @ 0x007c83cc, "Music Enabled" @ 0x007c7258
     /// - This implementation: Uses Windows waveOut APIs for music playback with looping and volume control
@@ -1269,7 +1269,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Gets or sets the music volume (0.0f to 1.0f).
-        /// Based on swkotor2.exe: "Music Volume" @ 0x007c83cc
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Music Volume" @ 0x007c83cc
         /// </summary>
         public float Volume
         {
@@ -1288,7 +1288,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Plays a music file by ResRef. Music loops continuously until stopped.
-        /// Based on swkotor2.exe: Music playback system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music playback system
         /// </summary>
         /// <param name="musicResRef">The ResRef of the music file (e.g., "mus_theme_cult").</param>
         /// <param name="volume">Volume level (0.0f to 1.0f, default 1.0f).</param>
@@ -1402,7 +1402,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Stops music playback.
-        /// Based on swkotor2.exe: Music stop functionality
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music stop functionality
         /// </summary>
         public void Stop()
         {
@@ -1456,7 +1456,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Pauses music playback (can be resumed with Resume()).
-        /// Based on swkotor2.exe: Music pause functionality
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music pause functionality
         /// </summary>
         public void Pause()
         {
@@ -1480,7 +1480,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Resumes paused music playback.
-        /// Based on swkotor2.exe: Music resume functionality
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music resume functionality
         /// </summary>
         public void Resume()
         {
@@ -1504,7 +1504,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets the music volume.
-        /// Based on swkotor2.exe: "Music Volume" @ 0x007c83cc
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Music Volume" @ 0x007c83cc
         /// Volume is clamped to 0.0-1.0 range and applied immediately to active playback.
         /// </summary>
         /// <param name="volume">Volume (0.0 to 1.0). Values outside this range are clamped.</param>
@@ -1545,7 +1545,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// Applies the current volume setting to any active music playback.
         /// This method is called when volume changes and when music starts playing.
         /// Uses Windows waveOutSetVolume API to set the volume for the waveOut device.
-        /// Based on swkotor2.exe: Music volume control system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music volume control system
         /// </summary>
         private void ApplyVolumeToCurrentPlayback()
         {
@@ -1578,7 +1578,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Main playback loop that plays music with looping support.
         /// Uses Windows waveOut APIs to stream PCM audio data.
-        /// Based on swkotor2.exe: Music streaming and looping system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music streaming and looping system
         /// </summary>
         private void PlayMusicLoop(CancellationToken cancellationToken)
         {
@@ -1782,7 +1782,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         #region Windows waveOut API P/Invoke
         // Windows waveOut API for music playback with looping and volume control
-        // Based on swkotor2.exe: Music playback uses Miles Sound System (MSS), but we use waveOut for Windows compatibility
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Music playback uses Miles Sound System (MSS), but we use waveOut for Windows compatibility
         // For cross-platform support, consider OpenAL or NAudio
 
         [DllImport("winmm.dll", EntryPoint = "waveOutOpen", SetLastError = true)]
@@ -1857,7 +1857,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
     /// - Voice playback: Original engine uses Miles Sound System (MSS) or DirectSound
     /// - Voice files: Stored as WAV resources, referenced by ResRef (e.g., "n_darthmalak01")
     /// - This implementation: Uses Windows API PlaySound for simple playback (can be extended with OpenAL)
-    /// - Based on swkotor2.exe: Voice-over playback functions @ various addresses
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice-over playback functions @ various addresses
     /// - Voice directories: "STREAMVOICE" @ 0x007c69dc, "HD0:STREAMVOICE" @ 0x007c771c
     /// - Voice settings: "Voiceover Volume" @ 0x007c83cc, "Number 3D Voices" @ 0x007c7258
     /// </remarks>
@@ -1878,7 +1878,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
         /// <summary>
         /// Plays a voice-over audio file by ResRef.
         /// Matching PyKotor and StrideVoicePlayer pattern: Load WAV, parse, play.
-        /// Based on swkotor2.exe: Voice-over playback system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice-over playback system
         /// </summary>
         /// <param name="voiceResRef">The voice resource reference (e.g., "n_darthmalak01").</param>
         public void Play(string voiceResRef)
@@ -1960,7 +1960,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
                 }
 
                 // Play audio using Windows API PlaySound
-                // Based on swkotor2.exe: Voice playback uses DirectSound/MSS, but we use PlaySound for simplicity
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice playback uses DirectSound/MSS, but we use PlaySound for simplicity
                 // Note: PlaySound is Windows-only; for cross-platform, consider OpenAL or NAudio
                 PlayWavAudio(wavData, wavFile, cancellationToken);
 
@@ -1998,13 +1998,13 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Plays WAV audio data using Windows API PlaySound.
-        /// Based on swkotor2.exe: Voice playback system
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice playback system
         /// Note: This is a Windows-only implementation. For cross-platform, use OpenAL or NAudio.
         /// </summary>
         private void PlayWavAudio(byte[] wavData, WAV wavFile, CancellationToken cancellationToken)
         {
             // Windows API PlaySound implementation
-            // Based on swkotor2.exe: Voice playback uses DirectSound/MSS
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice playback uses DirectSound/MSS
             // This implementation uses PlaySound for simplicity (can be extended with OpenAL)
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -2089,7 +2089,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Stops the currently playing voice-over.
-        /// Based on swkotor2.exe: Voice stop functionality
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice stop functionality
         /// </summary>
         public void Stop()
         {
@@ -2123,7 +2123,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         /// <summary>
         /// Sets the voice volume.
-        /// Based on swkotor2.exe: "Voiceover Volume" @ 0x007c83cc
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "Voiceover Volume" @ 0x007c83cc
         /// Note: PlaySound has limited volume control; for full volume control, use OpenAL or DirectSound.
         /// </summary>
         /// <param name="volume">Volume (0.0 to 1.0).</param>
@@ -2164,7 +2164,7 @@ namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey
 
         #region Windows API P/Invoke for PlaySound
         // Windows API PlaySound for voice playback
-        // Based on swkotor2.exe: Voice playback uses DirectSound/MSS
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Voice playback uses DirectSound/MSS
         // This is a simple implementation using PlaySound; for full features, use OpenAL or DirectSound
         [DllImport("winmm.dll", EntryPoint = "PlaySound", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern bool PlaySound(string pszSound, IntPtr hmod, uint fdwSound);

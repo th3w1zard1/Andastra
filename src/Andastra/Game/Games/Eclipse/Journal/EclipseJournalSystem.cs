@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Runtime.Games.Common.Journal;
+using Andastra.Game.Games.Common.Journal;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse.Journal
+namespace Andastra.Game.Games.Eclipse.Journal
 {
     /// <summary>
     /// Eclipse-specific journal system implementation (daorigins.exe, DragonAge2.exe - Dragon Age series).

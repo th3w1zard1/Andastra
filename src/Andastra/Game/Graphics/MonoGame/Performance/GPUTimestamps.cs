@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Performance
+namespace Andastra.Game.Graphics.MonoGame.Performance
 {
     /// <summary>
     /// GPU timestamp query system for performance profiling.

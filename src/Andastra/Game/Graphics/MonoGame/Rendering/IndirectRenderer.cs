@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework;
 using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 using XnaVector4 = Microsoft.Xna.Framework.Vector4;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// GPU-driven indirect rendering using command buffers.

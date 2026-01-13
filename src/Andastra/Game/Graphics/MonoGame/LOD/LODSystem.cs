@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.LOD
+namespace Andastra.Game.Graphics.MonoGame.LOD
 {
     /// <summary>
     /// Level of Detail (LOD) system for managing mesh detail levels.
@@ -14,7 +14,7 @@ namespace Andastra.Runtime.MonoGame.LOD
     /// </summary>
     /// <remarks>
     /// LOD System (Based on Original Engine):
-    /// - Based on swkotor2.exe rendering system architecture
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture
     /// - Located via string references: Original engine uses distance-based LOD for models
     /// - Original implementation: KOTOR performs distance culling and LOD selection for rendering optimization
     /// - Distance-based rendering: Objects beyond certain distance thresholds are rendered at lower detail or culled

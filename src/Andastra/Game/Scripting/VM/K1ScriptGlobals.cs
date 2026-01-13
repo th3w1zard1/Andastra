@@ -1,6 +1,6 @@
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Scripting.VM
+namespace Andastra.Game.Scripting.VM
 {
     /// <summary>
     /// KOTOR 1-specific implementation of script globals and local variables.

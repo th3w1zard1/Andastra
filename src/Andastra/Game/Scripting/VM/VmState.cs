@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Andastra.Runtime.Scripting.Types;
 
-namespace Andastra.Runtime.Scripting.VM
+namespace Andastra.Game.Scripting.VM
 {
     /// <summary>
     /// Represents the serialized state of the NCS VM stack and local variables.
@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Scripting.VM
     /// </summary>
     /// <remarks>
     /// VM State Serialization:
-    /// - Based on swkotor2.exe: STORE_STATE opcode implementation
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): STORE_STATE opcode implementation
     /// - Located via string references: "DelayCommand" @ 0x007be900 (NWScript DelayCommand function)
     /// - Original implementation: STORE_STATE opcode serializes stack and local variable state
     /// - Stack state: Captures stack region from (SP - stackBytes) to SP

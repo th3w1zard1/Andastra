@@ -6,7 +6,7 @@ using Andastra.Runtime.MonoGame.Spatial;
 using Microsoft.Xna.Framework;
 using XnaVector3 = Microsoft.Xna.Framework.Vector3;
 
-namespace Andastra.Runtime.MonoGame.Lighting
+namespace Andastra.Game.Graphics.MonoGame.Lighting
 {
     /// <summary>
     /// MonoGame implementation of light probe system for global illumination approximation.

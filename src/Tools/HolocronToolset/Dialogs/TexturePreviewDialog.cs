@@ -4,7 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Andastra.Parsing.Formats.TPC;
+using BioWare.NET.Resource.Formats.TPC;
 using JetBrains.Annotations;
 using Avalonia;
 

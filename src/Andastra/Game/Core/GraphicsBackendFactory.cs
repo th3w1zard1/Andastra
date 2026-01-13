@@ -4,7 +4,7 @@ using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.Common.Backends.Odyssey;
 using Andastra.Runtime.Graphics.Common.Enums;
 
-namespace Andastra.Runtime.Game.Core
+namespace Andastra.Game.Game.Core
 {
     /// <summary>
     /// Factory for creating graphics backend instances.
@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Game.Core
     /// </summary>
     /// <remarks>
     /// Graphics Backend Factory:
-    /// - Based on swkotor2.exe graphics initialization system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) graphics initialization system
     /// - Original game uses DirectX 8/9 for rendering (D3D8.dll, D3D9.dll)
     /// - Located via string references: "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064
     /// - "2D3DBias" @ 0x007c612c, "2D3D Bias" @ 0x007c71f8 (graphics settings)

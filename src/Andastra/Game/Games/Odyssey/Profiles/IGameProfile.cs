@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Odyssey.Profiles
+namespace Andastra.Game.Engines.Odyssey.Profiles
 {
     /// <summary>
     /// Defines game-specific behavior for different Aurora/Odyssey engine games.
     /// </summary>
     /// <remarks>
     /// Game Profile Interface:
-    /// - Based on swkotor2.exe game profile system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game profile system
     /// - Located via string references: Game version detection, resource path resolution, FUN_00633270 @ 0x00633270 sets up resource directories
     /// - Original implementation: Provides game-specific configuration for resource loading, NWScript functions, and feature support
     /// - The engine is designed for extensibility to support:

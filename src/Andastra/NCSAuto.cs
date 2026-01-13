@@ -5,18 +5,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS;
-using Andastra.Parsing.Formats.NCS.Compiler;
-using Andastra.Parsing.Formats.NCS.NCSDecomp;
-using Andastra.Parsing.Formats.NCS.NCSDecomp.Utils;
-using Andastra.Parsing.Common.Script;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.NCS;
+using BioWare.NET.Resource.Formats.NCS.Compiler;
+using BioWare.NET.Resource.Formats.NCS.Decomp;
+using BioWare.NET.Resource.Formats.NCS.Decomp.Utils;
+using BioWare.NET.Common.Script;
 using Andastra.Script;
 using JetBrains.Annotations;
 // Note: NCSBinaryReader/Writer use NCS from Resource assembly, so use that NCS type here
 // ResourceNCS alias is for types that specifically need the Resource.NCS assembly version
-using FileScriptData = ResourceNCS::Andastra.Parsing.Formats.NCS.NCSDecomp.Utils.FileScriptData;
+using FileScriptData = ResourceNCS::BioWare.NET.Resource.Formats.NCS.NCSDecomp.Utils.FileScriptData;
 
 namespace Andastra
 {

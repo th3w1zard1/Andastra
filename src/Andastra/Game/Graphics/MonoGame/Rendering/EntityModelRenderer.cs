@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.MDLData;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.MDLData;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.MonoGame.Converters;
@@ -10,14 +10,14 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Renders entity models (creatures, doors, placeables) using MDL models.
     /// </summary>
     /// <remarks>
     /// Entity Model Renderer:
-    /// - Based on swkotor2.exe entity rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity rendering system
     /// - Located via string references: Model loading and rendering for entities
     /// - "ModelResRef" @ 0x007c2f6c (model resource reference field), "Appearance_Type" @ 0x007c40f0 (appearance type field)
     /// - Model loading: FUN_005261b0 @ 0x005261b0 loads creature model from appearance.2da
@@ -28,7 +28,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// - Model conversion: MDL format (KOTOR native) converted to MonoGame Model format for rendering
     /// - Material resolution: BasicEffect created per texture/material (texture loading from TPC files)
     /// - Render transform: Entity position/orientation applied via world matrix for rendering
-    /// - Based on swkotor2.exe: FUN_005261b0 @ 0x005261b0 (load creature model)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005261b0 @ 0x005261b0 (load creature model)
     /// </remarks>
     public class EntityModelRenderer
     {
@@ -231,7 +231,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
                 effect.LightingEnabled = true;
 
                 // Apply opacity from renderable component for fade-in/fade-out effects
-                // Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
                 // Opacity is updated by AppearAnimationFadeSystem for appear animations
                 // Opacity is updated by ActionDestroyObject for destroy animations
                 float opacity = renderable.Opacity;
@@ -264,14 +264,14 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             try
             {
-                Andastra.Parsing.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, Andastra.Parsing.Common.ResourceType.MDL);
+                BioWare.NET.Extract.Installation.ResourceResult result = _installation.Resources.LookupResource(modelResRef, BioWare.NET.Common.ResourceType.MDL);
                 if (result == null || result.Data == null)
                 {
                     return null;
                 }
 
-                // Use Andastra.Parsing MDL parser
-                return Andastra.Parsing.Formats.MDL.MDLAuto.ReadMdl(result.Data);
+                // Use BioWare.NET MDL parser
+                return BioWare.NET.Resource.Formats.MDL.MDLAuto.ReadMdl(result.Data);
             }
             catch (Exception ex)
             {

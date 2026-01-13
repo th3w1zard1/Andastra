@@ -1,7 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Textures
+namespace Andastra.Game.Graphics.MonoGame.Textures
 {
     /// <summary>
     /// Texture format conversion system for optimal texture formats.

@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.GUI;
-using Andastra.Runtime.Games.Aurora.Fonts;
-using Andastra.Runtime.Games.Common;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
+using Andastra.Game.Games.Aurora.Fonts;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
@@ -19,7 +19,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace Andastra.Runtime.Games.Aurora.GUI
+namespace Andastra.Game.Games.Aurora.GUI
 {
     /// <summary>
     /// Aurora engine (Neverwinter Nights) GUI manager implementation.
@@ -156,7 +156,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 // CAuroraStringWrapper::LoadGffTextData @ 0x1401fe680 loads text data from GFF GUI files
                 // GUIReader handles GFF-based format parsing (same parser used by Odyssey/Eclipse engines)
                 GUIReader guiReader = new GUIReader(resourceResult.Data);
-                Andastra.Parsing.Resource.Generics.GUI.GUI gui = guiReader.Load();
+                BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI gui = guiReader.Load();
 
                 if (gui == null || gui.Controls == null || gui.Controls.Count == 0)
                 {
@@ -766,7 +766,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new Andastra.Parsing.Common.Color(selected.Color) : null,
+                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -785,7 +785,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new Andastra.Parsing.Common.Color(hilightSelected.Color) : null,
+                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }
@@ -795,7 +795,7 @@ namespace Andastra.Runtime.Games.Aurora.GUI
         /// </summary>
         private class LoadedGui
         {
-            public Andastra.Parsing.Resource.Generics.GUI.GUI Gui { get; set; }
+            public BioWare.NET.Resource.Formats.GFF.Generics.GUI.GUI Gui { get; set; }
             public string Name { get; set; }
             public int Width { get; set; }
             public int Height { get; set; }

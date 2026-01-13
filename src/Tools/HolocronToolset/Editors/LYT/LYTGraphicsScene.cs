@@ -4,8 +4,8 @@ using System.Numerics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Andastra.Parsing.Resource.Formats.LYT;
-using ResRef = Andastra.Parsing.Common.ResRef;
+using BioWare.NET.Resource.Formats.LYT;
+using ResRef = BioWare.NET.Common.ResRef;
 
 namespace HolocronToolset.Editors.LYT
 {

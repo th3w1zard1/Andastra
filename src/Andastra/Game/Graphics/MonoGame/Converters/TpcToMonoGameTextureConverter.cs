@@ -1,19 +1,19 @@
 using System;
-using Andastra.Parsing.Formats.TPC;
+using BioWare.NET.Resource.Formats.TPC;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Converters
+namespace Andastra.Game.Graphics.MonoGame.Converters
 {
     /// <summary>
-    /// Converts Andastra.Parsing TPC texture data to MonoGame Texture2D.
+    /// Converts BioWare.NET TPC texture data to MonoGame Texture2D.
     /// Handles DXT1/DXT3/DXT5 compressed formats, RGB/RGBA uncompressed,
     /// and grayscale textures.
     /// </summary>
     /// <remarks>
     /// TPC to MonoGame Texture Converter:
-    /// - Based on swkotor2.exe texture loading system (modern MonoGame adaptation)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading system (modern MonoGame adaptation)
     /// - Located via string references: "Texture" @ 0x007c71b4, "texture" @ 0x007bab24
     /// - "texturewidth" @ 0x007b6e98, "texturenames" @ 0x007bacb0
     /// - "texture0" @ 0x007bb018, "texture1" @ 0x007bb00c (texture unit references)
@@ -78,7 +78,7 @@ namespace Andastra.Runtime.MonoGame.Converters
             TPCTextureFormat format = tpc.Format();
 
             // Handle cube maps - Convert to MonoGame TextureCube
-            // Based on swkotor2.exe cube map texture loading (swkotor2.exe: texture cube map handling)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) cube map texture loading (swkotor2.exe: texture cube map handling)
             // TPC cube maps have 6 layers, one for each face in DirectX/OpenGL order:
             // 0: PositiveX (right), 1: NegativeX (left), 2: PositiveY (top), 
             // 3: NegativeY (bottom), 4: PositiveZ (front), 5: NegativeZ (back)
@@ -121,7 +121,7 @@ namespace Andastra.Runtime.MonoGame.Converters
         /// <returns>A MonoGame TextureCube ready for rendering.</returns>
         /// <remarks>
         /// Cube Map Conversion:
-        /// - Based on swkotor2.exe cube map texture loading system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) cube map texture loading system
         /// - TPC cube maps store 6 faces as separate layers
         /// - DirectX/XNA cube map face order: PositiveX, NegativeX, PositiveY, NegativeY, PositiveZ, NegativeZ
         /// - MonoGame TextureCube uses CubeMapFace enum for face indexing
@@ -257,7 +257,7 @@ namespace Andastra.Runtime.MonoGame.Converters
         /// <returns>Downsampled RGBA data at half size ((width/2) x (height/2) x 4 bytes).</returns>
         /// <remarks>
         /// Mipmap Downsampling Algorithm:
-        /// - Based on swkotor2.exe texture mipmap generation (D3DXFilterTexture uses box filter)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture mipmap generation (D3DXFilterTexture uses box filter)
         /// - Based on PyKotor downsample_rgb implementation (vendor/PyKotor/Libraries/PyKotor/src/pykotor/resource/formats/tpc/manipulate/downsample.py:104-131)
         /// - Uses box filter: each output pixel = average of 2x2 input block
         /// - Standard approach for mipmap generation in graphics pipelines

@@ -1,7 +1,7 @@
 using System.ComponentModel;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TLK;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TLK;
 
 namespace HolocronToolset.Editors
 {

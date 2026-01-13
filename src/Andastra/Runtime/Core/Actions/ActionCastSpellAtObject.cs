@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Cast Spell Action:
-    /// - Based on swkotor2.exe spell casting system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) spell casting system
     /// - Located via string references: "ScriptSpellAt" @ 0x007bee90, "OnSpellCastAt" @ 0x007c1a44
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_SPELLCASTAT" @ 0x007bcb3c, "EVENT_SPELL_IMPACT" @ 0x007bcd8c
     /// - "EVENT_ITEM_ON_HIT_SPELL_IMPACT" @ 0x007bcc8c (item spell impact event)
@@ -44,14 +44,14 @@ namespace Andastra.Runtime.Core.Actions
     ///   - "CSWCAnimBase::LoadModel(): The headconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce278
     ///   - "CSWCAnimBase::LoadModel(): The handconjure dummy has an orientation....It shouldn't!!  The %s model needs to be fixed or else the spell visuals will not be correct." @ 0x007ce320
     ///   - Fixed: headconjure and handconjure dummy nodes are forced to identity orientation (0,0,0,1) in model converters to ensure spell visuals work correctly
-    ///   - Based on swkotor2.exe: FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
+    ///   - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006f8590 @ 0x006f8590 checks for headconjure/handconjure nodes and validates orientation
     /// - GUI: "LBL_FORCE" @ 0x007cfc30, "LBL_FORCE_STAT" @ 0x007cfc5c, "LBL_FORCEMASTERY" @ 0x007cfd20
     /// - "PB_FORCE%d" @ 0x007ccf6c (force progress bar format), "ForceDisplay" @ 0x007d2e70
     /// - Original implementation: Moves caster to range, faces target, plays casting animation, applies spell effects
     /// - Spell casting range: ~10.0 units (CastRange)
     /// - Checks Force points, spell knowledge, applies effects via EffectSystem
     /// - Spell effects applied to target based on spell ID (lookup via spells.2da)
-    /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (spell casting logic)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (spell casting logic)
     /// - Force point consumption: GetSpellBaseForcePointCost calculates cost from spell level
     /// </remarks>
     public class ActionCastSpellAtObject : ActionBase
@@ -115,7 +115,7 @@ namespace Andastra.Runtime.Core.Actions
                 Vector3 newPosition = transform.Position + direction * moveDistance;
 
                 // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-                // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
                 IArea area = actor.World?.CurrentArea;
                 if (area != null && area.NavigationMesh != null)
                 {
@@ -260,13 +260,13 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Spell Effect Application:
-        /// - Based on swkotor2.exe spell effect system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) spell effect system
         /// - Original implementation: Effects created from spell ID, applied via EffectSystem
         /// - Spell effects can be: damage, healing, status effects, visual effects
         /// - Impact scripts (impactscript column) contain primary spell effect logic
         /// - Visual effects (conjhandvfx, conjheadvfx, castgrndvisual) are applied directly from spells.2da
         /// - Full implementation resolves effects through impact scripts and visual effects from spell data
-        /// - Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 (spell casting logic)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 (spell casting logic)
         /// - swkotor2.exe: Spell effect application applies visual effects and executes impact scripts
         /// - swkotor2.exe: FUN_006efe40 handles visual effect loading (castvisual, castgroundvisual)
         /// - CastGrndVisual @ 0x007c3240, CastSound @ 0x007c3250, CastAnim @ 0x007c32dc
@@ -297,7 +297,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 1. Apply visual effects from spell data
-            // Based on swkotor2.exe: Visual effects are applied from spells.2da columns
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Visual effects are applied from spells.2da columns
             // Located via string references: "CastHandVisual" @ 0x007c325c, "CastHeadVisual" @ 0x007c326c, "CastGrndVisual" @ 0x007c3240
             // Original implementation: Applies hand, head, and ground visual effects from spells.2da
             // swkotor2.exe: FUN_006efe40 loads castvisual (hand/head) and castgroundvisual effects
@@ -340,7 +340,7 @@ namespace Andastra.Runtime.Core.Actions
                     }
 
                     // Apply ground visual effect (castgrndvisual)
-                    // Based on swkotor2.exe: Ground visual effects are applied to the spell location/area
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ground visual effects are applied to the spell location/area
                     // Located via string references: "CastGrndVisual" @ 0x007c3240, "castgroundvisual" @ 0x007cdbb8
                     int castGrndVfx = spell.CastGrndVisual as int? ?? 0;
                     if (castGrndVfx <= 0)
@@ -365,7 +365,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 2. Play spell casting sound
-            // Based on swkotor2.exe: CastSound column contains sound resource reference
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CastSound column contains sound resource reference
             // Located via string references: "CastSound" @ 0x007c3250
             // Original implementation: Plays casting sound when spell is cast
             if (spell != null)
@@ -385,7 +385,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 3. Play spell casting animation
-            // Based on swkotor2.exe: CastAnim column contains animation name
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CastAnim column contains animation name
             // Located via string references: "CastAnim" @ 0x007c32dc
             // Original implementation: Plays casting animation on caster during spell cast
             if (spell != null)
@@ -405,7 +405,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // 2. Execute impact script directly if present
-            // Based on swkotor2.exe: Impact scripts (impactscript column) contain spell effect logic
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts (impactscript column) contain spell effect logic
             // Impact scripts apply damage, healing, status effects based on spell ID and caster level
             // Located via string references: "ImpactScript" @ spells.2da, impact scripts execute on spell impact
             // Original implementation: Direct script execution with target as OBJECT_SELF, caster as triggerer
@@ -417,11 +417,11 @@ namespace Andastra.Runtime.Core.Actions
                     if (!string.IsNullOrEmpty(impactScript))
                     {
                         // Try to execute impact script directly using script executor
-                        // Based on swkotor2.exe: Impact scripts receive target as OBJECT_SELF, caster as triggerer
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts receive target as OBJECT_SELF, caster as triggerer
                         bool scriptExecuted = ExecuteImpactScript(target, impactScript, caster);
 
                         // Also fire script event for compatibility (some systems may rely on events)
-                        // Based on swkotor2.exe: Script events provide additional hooks for spell effects
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script events provide additional hooks for spell effects
                         IEventBus eventBus = caster.World?.EventBus;
                         if (eventBus != null)
                         {
@@ -451,11 +451,11 @@ namespace Andastra.Runtime.Core.Actions
         /// <returns>True if script was executed successfully, false otherwise.</returns>
         /// <remarks>
         /// Impact Script Execution:
-        /// - Based on swkotor2.exe: Direct script execution for impact scripts
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Direct script execution for impact scripts
         /// - Located via string references: Script executor access via World interface
         /// - Original implementation: Attempts to access script executor through World interface using reflection
         /// - Falls back gracefully if script executor is not available
-        /// - Based on swkotor2.exe: Impact scripts execute with target as OBJECT_SELF, caster as triggerer
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Impact scripts execute with target as OBJECT_SELF, caster as triggerer
         /// - Script executor interface: ExecuteScript(IEntity caller, string scriptResRef, IEntity triggerer)
         /// </remarks>
         private bool ExecuteImpactScript(IEntity target, string scriptResRef, IEntity triggerer)
@@ -542,7 +542,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <param name="soundResRef">The sound resource reference to play.</param>
         /// <remarks>
         /// Spell Sound Playback:
-        /// - Based on swkotor2.exe: CastSound column from spells.2da
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CastSound column from spells.2da
         /// - Located via string references: "CastSound" @ 0x007c3250
         /// - Original implementation: Plays sound effect during spell casting
         /// - Uses audio system to play sound at caster location
@@ -623,7 +623,7 @@ namespace Andastra.Runtime.Core.Actions
         /// <param name="animationName">The animation name to play.</param>
         /// <remarks>
         /// Spell Animation Playback:
-        /// - Based on swkotor2.exe: CastAnim column from spells.2da
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CastAnim column from spells.2da
         /// - Located via string references: "CastAnim" @ 0x007c32dc
         /// - Original implementation: Plays casting animation on caster
         /// - Uses animation system to play animation with appropriate blending

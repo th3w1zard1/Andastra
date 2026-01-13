@@ -102,7 +102,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// Conversation file (dialogue ResRef).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
         /// Located via string reference: "Conversation" @ 0x007c1abc
         /// Original implementation: Conversation field in UTP template contains dialogue ResRef
         /// </remarks>

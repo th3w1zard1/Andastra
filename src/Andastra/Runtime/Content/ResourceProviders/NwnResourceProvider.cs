@@ -1,5 +1,5 @@
 using System;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 
 namespace Andastra.Runtime.Content.ResourceProviders

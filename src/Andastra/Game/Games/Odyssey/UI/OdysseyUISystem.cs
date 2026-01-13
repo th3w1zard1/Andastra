@@ -1,11 +1,11 @@
 using System;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 
-namespace Andastra.Runtime.Engines.Odyssey.UI
+namespace Andastra.Game.Engines.Odyssey.UI
 {
     /// <summary>
     /// UI system implementation for Odyssey engine (KOTOR/TSL).
@@ -44,11 +44,11 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
 
             // Create appropriate upgrade screen based on game type
             // K1 uses K1UpgradeScreen (swkotor.exe), K2 uses K2UpgradeScreen (swkotor2.exe)
-            if (installation.Game == Andastra.Parsing.Common.BioWareGame.K1)
+            if (installation.Game == BioWare.NET.Common.BioWareGame.K1)
             {
                 _upgradeScreen = new K1UpgradeScreen(installation, world);
             }
-            else if (installation.Game == Andastra.Parsing.Common.BioWareGame.TSL)
+            else if (installation.Game == BioWare.NET.Common.BioWareGame.TSL)
             {
                 _upgradeScreen = new K2UpgradeScreen(installation, world);
             }
@@ -68,7 +68,7 @@ namespace Andastra.Runtime.Engines.Odyssey.UI
         /// <param name="disableUpgrade">If true, force straight to item creation and disable upgrading.</param>
         /// <param name="override2DA">Override 2DA file name (empty string for default).</param>
         /// <remarks>
-        /// Based on swkotor2.exe: ShowUpgradeScreen @ 0x00680cb0
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ShowUpgradeScreen @ 0x00680cb0
         /// Original implementation:
         /// - Creates upgrade selection screen GUI ("upgradesel_p") with item type filters
         /// - Creates upgrade items screen GUI ("upgradeitems_p") with item list and upgrade buttons

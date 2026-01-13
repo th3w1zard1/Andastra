@@ -6,14 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.NCS.Compiler;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.NCS.Compiler;
 using JetBrains.Annotations;
-using NCS = ResourceNCS::Andastra.Parsing.Formats.NCS.NCS;
+using NCS = ResourceNCS::BioWare.NET.Resource.Formats.NCS.NCS;
 // NCSOptimizer comes from Resource project (not ResourceNCS) to match base class
 // Using fully qualified name to avoid ambiguity with ResourceNCS
-using NCSOptimizer = Andastra.Parsing.Formats.NCS.NCSOptimizer;
+using NCSOptimizer = BioWare.NET.Resource.Formats.NCS.NCSOptimizer;
 
 namespace Andastra
 {
@@ -239,7 +239,7 @@ namespace Andastra
     /// This compiler provides full NSS compilation without external dependencies,
     /// using the internal parser and code generator.
     /// </summary>
-    public class InbuiltNCSCompiler : Andastra.Parsing.Formats.NCS.NCSCompiler
+    public class InbuiltNCSCompiler : BioWare.NET.Resource.Formats.NCS.NCSCompiler
     {
         public override void CompileScript(
             string sourcePath,
@@ -278,7 +278,7 @@ namespace Andastra
     /// <summary>
     /// External NSS compiler wrapper for nwnnsscomp.exe.
     /// </summary>
-    public class ExternalNCSCompiler : Andastra.Parsing.Formats.NCS.NCSCompiler
+    public class ExternalNCSCompiler : BioWare.NET.Resource.Formats.NCS.NCSCompiler
     {
         private string _nwnnsscompPath;
         private string _fileHash;

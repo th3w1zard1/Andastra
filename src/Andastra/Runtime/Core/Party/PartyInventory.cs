@@ -9,7 +9,7 @@ namespace Andastra.Runtime.Core.Party
     /// </summary>
     /// <remarks>
     /// Party Inventory:
-    /// - Based on swkotor2.exe inventory system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) inventory system
     /// - Located via string references: "Inventory" @ 0x007c2504, "InventoryRes" @ 0x007bf570, "InventorySlot" @ 0x007bf7d0
     /// - "GAMEINPROGRESS:INVENTORY" @ 0x007c1570, "=INVENTORY" @ 0x007c1927, "HasInventory" @ 0x007c1fb0
     /// - "GuiInventory" @ 0x007c24f4, "InventorySound" @ 0x007c7164, "inventorysnds" @ 0x007c7174

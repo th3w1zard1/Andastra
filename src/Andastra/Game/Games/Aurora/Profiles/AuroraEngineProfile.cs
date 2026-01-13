@@ -3,7 +3,7 @@ using Andastra.Runtime.Engines.Aurora.EngineApi;
 using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Engines.Aurora.Profiles
+namespace Andastra.Game.Engines.Aurora.Profiles
 {
     /// <summary>
     /// Abstract base class for Aurora Engine game profiles (Neverwinter Nights, Neverwinter Nights 2).

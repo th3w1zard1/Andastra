@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Content.Interfaces;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of content management shared across all BioWare engines.

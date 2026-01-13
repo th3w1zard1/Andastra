@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Andastra.Parsing.Resource;
-using FileResource = Andastra.Parsing.Extract.FileResource;
+using BioWare.NET.Resource;
+using FileResource = BioWare.NET.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
 {

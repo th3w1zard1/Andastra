@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Snow particle system for Aurora area weather rendering.

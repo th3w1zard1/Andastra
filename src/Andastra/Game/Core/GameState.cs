@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Game.Core
     /// </summary>
     /// <remarks>
     /// Game State Enum:
-    /// - Based on swkotor2.exe game state management system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) game state management system
     /// - Located via string references: "GameState" @ 0x007c15d0 (game state field), "GameMode" @ 0x007c15e0 (game mode field)
     /// - "GAMEINPROGRESS" @ 0x007c15c8 (game in progress flag), "ModuleLoaded" @ 0x007bdd70 (module loaded flag)
     /// - "ModuleRunning" @ 0x007bdd58 (module running flag)
@@ -74,7 +74,7 @@ namespace Andastra.Runtime.Game.Core
         /// - Based on swkotor.exe and swkotor2.exe options menu system
         /// - Located via string references: "BTN_OPTIONS" (options button in main menu)
         /// - GUI Panel: "optionsmain" (main menu options) or "optionsingame" (in-game options)
-        /// - Based on swkotor2.exe: CSWGuiOptionsMain class @ 0x006e3e80 (constructor), FUN_006de240 (OnGameplayOpt), FUN_006de2c0 (OnAutopauseOpt), FUN_006e2df0 (OnFeedbackOpt), FUN_006e3d80 (OnGraphicsOpt), FUN_006e3e00 (OnSoundOpt), FUN_006de340 (SetDescription), FUN_006dff10 (HandleInputEvent)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain class @ 0x006e3e80 (constructor), FUN_006de240 (OnGameplayOpt), FUN_006de2c0 (OnAutopauseOpt), FUN_006e2df0 (OnFeedbackOpt), FUN_006e3d80 (OnGraphicsOpt), FUN_006e3e00 (OnSoundOpt), FUN_006de340 (SetDescription), FUN_006dff10 (HandleInputEvent)
         /// - Settings categories: Graphics, Sound, Gameplay, Feedback, Autopause
         /// - Graphics: Resolution, Texture Quality, Shadow Quality, VSync, Fullscreen
         /// - Sound: Master Volume, Music Volume, Effects Volume, Voice Volume
@@ -92,7 +92,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Gameplay Options Menu State:
-        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnGameplayOpt @ 0x006de240
         /// - GUI Panel: "optionsgameplay" (gameplay options submenu)
         /// - Settings: Mouse Sensitivity, Invert Mouse Y, Auto-save, Tooltips, Difficulty
         /// - Original implementation: Submenu opened from main options menu via "BTN_GAMEPLAY" button
@@ -105,7 +105,7 @@ namespace Andastra.Runtime.Game.Core
         /// </summary>
         /// <remarks>
         /// Graphics Options Menu State:
-        /// - Based on swkotor2.exe: CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): CSWGuiOptionsMain::OnGraphicsOpt @ 0x006e3d80
         /// - GUI Panel: "optionsgraphics" (graphics options submenu)
         /// - Settings: Resolution, Fullscreen, VSync, Texture Quality, Shadow Quality, Anisotropic Filtering, Anti-Aliasing
         /// - Original implementation: Submenu opened from main options menu via "BTN_GRAPHICS" button

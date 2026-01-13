@@ -1,12 +1,12 @@
 using System.Numerics;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Common;
+using BioWare.NET.Extract.Installation;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Eclipse.Loading;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Eclipse.Loading;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Eclipse
+namespace Andastra.Game.Games.Eclipse
 {
     /// <summary>
     /// Eclipse engine family implementation of entity template factory.

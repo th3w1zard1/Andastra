@@ -2,9 +2,9 @@ using System;
 using Andastra.Runtime.Content.MDL;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
+using Andastra.Game.Games.Common.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Odyssey engine-specific implementation of animation component.
@@ -23,7 +23,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
     /// - MDL format: References MDX files and contains animation array indices
     /// - Animation system updates animation time each frame, triggers completion events
     /// - Animation duration loaded from MDX animation header at offset 0x50 (80 bytes) as float
-    /// - Based on swkotor2.exe: AnimationLength field accessed from MDL animation data structure
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AnimationLength field accessed from MDL animation data structure
     /// </remarks>
     public class OdysseyAnimationComponent : BaseAnimationComponent
     {
@@ -43,7 +43,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <returns>Animation duration in seconds from MDX data, or 1.0 if not available.</returns>
         /// <remarks>
         /// Animation Duration Loading:
-        /// - Based on swkotor2.exe: AnimationLength field accessed from MDL animation data
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): AnimationLength field accessed from MDL animation data
         /// - Located via string references: "AnimationLength" @ 0x007bf980 (swkotor2.exe)
         /// - MDX format: Animation header contains duration at offset 0x50 (80 bytes) as float
         /// - MDL format: MDLAnimationData.Length field contains animation duration in seconds

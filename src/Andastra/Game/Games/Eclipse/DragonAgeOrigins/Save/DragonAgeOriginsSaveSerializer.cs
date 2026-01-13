@@ -3,7 +3,7 @@ using System.IO;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Engines.Eclipse.Save;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins.Save
+namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins.Save
 {
     /// <summary>
     /// Save serializer for Dragon Age: Origins (.das save files).

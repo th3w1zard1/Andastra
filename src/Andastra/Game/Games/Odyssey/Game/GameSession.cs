@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core;
 using Andastra.Runtime.Core.Actions;
 using Andastra.Runtime.Core.Combat;
@@ -27,22 +27,22 @@ using Andastra.Runtime.Engines.Odyssey.Dialogue;
 using Andastra.Runtime.Engines.Odyssey.EngineApi;
 using Andastra.Runtime.Engines.Odyssey.Loading;
 using Andastra.Runtime.Engines.Odyssey.Systems;
-using Andastra.Runtime.Games.Odyssey;
-using Andastra.Runtime.Games.Odyssey.Input;
+using Andastra.Game.Games.Odyssey;
+using Andastra.Game.Games.Odyssey.Input;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 using JetBrains.Annotations;
 using GameDataManager = Andastra.Runtime.Engines.Odyssey.Data.GameDataManager;
 using Systems = Andastra.Runtime.Games.Odyssey.Systems;
 
-namespace Andastra.Runtime.Engines.Odyssey.Game
+namespace Andastra.Game.Engines.Odyssey.Game
 {
     /// <summary>
     /// Main game session manager that coordinates all game systems.
     /// </summary>
     /// <remarks>
     /// Game Session System (Odyssey-specific):
-    /// - Based on swkotor2.exe: FUN_006caab0 @ 0x006caab0 (server command parser, handles module commands)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006caab0 @ 0x006caab0 (server command parser, handles module commands)
     /// - Located via string references: "GAMEINPROGRESS" @ 0x007c15c8, "ModuleLoaded" @ 0x007bdd70, "ModuleRunning" @ 0x007bdd58
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): CServerExoApp::LoadModule, CNWSModule::LoadModule - similar module loading system, different file formats
@@ -159,13 +159,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         }
 
         /// <summary>
-        /// Gets the cached Andastra.Parsing Module object for the currently loaded module.
+        /// Gets the cached BioWare.NET Module object for the currently loaded module.
         /// Returns null if no module is loaded. This provides efficient access to module resources
         /// without creating a new Module object on every access.
-        /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
         [CanBeNull]
-        public Andastra.Parsing.Installation.Module GetCurrentParsingModule()
+        public BioWare.NET.Extract.Installation.Module GetCurrentParsingModule()
         {
             return _moduleLoader?.GetCurrentModule();
         }
@@ -185,7 +185,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Pauses the game.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: PauseGame implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): PauseGame implementation
         /// Located via string references: Game pause system
         /// Original implementation: Pauses all game systems except UI (combat, movement, scripts suspended)
         /// </remarks>
@@ -198,7 +198,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Resumes the game.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: ResumeGame implementation
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ResumeGame implementation
         /// Located via string references: Game pause system
         /// Original implementation: Resumes all game systems (combat, movement, scripts resume)
         /// </remarks>
@@ -230,7 +230,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Initialize game data provider for world
-            // Based on swkotor2.exe: GameDataManager provides access to 2DA tables (appearance.2da, etc.)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GameDataManager provides access to 2DA tables (appearance.2da, etc.)
             // Located via string references: "2DAName" @ 0x007c3980, " 2DA file" @ 0x007c4674
             // Original implementation: GameDataManager loads and caches 2DA tables from installation
             _gameDataManager = new GameDataManager(_installation);
@@ -242,7 +242,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _perceptionManager = new PerceptionManager(_world, _world.EffectSystem);
 
             // Create entity template factory for party system
-            // Based on swkotor2.exe: Party members are created from UTC templates stored in module
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Party members are created from UTC templates stored in module
             // Located via string references: "TemplateResRef" @ 0x007bd00c
             // Original implementation: Party members use TemplateResRef to load UTC templates from module archives
             // Use lazy template factory that retrieves module from ModuleLoader on demand
@@ -269,7 +269,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _aiController = new AIController(_world, FireScriptEvent);
 
             // Initialize JRL loader for quest entry text lookup
-            // Based on swkotor2.exe: JRL files contain quest entry text
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): JRL files contain quest entry text
             // Original implementation: Loads JRL files to look up quest entry text
             JRLLoader jrlLoader = new JRLLoader(_installation);
 
@@ -352,7 +352,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Update fixed-timestep game loop (handles all simulation phases)
-            // Based on swkotor2.exe: Fixed-timestep game loop at 60 Hz
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Fixed-timestep game loop at 60 Hz
             // Located via string references: Game loop runs at fixed timestep for deterministic simulation
             // Original implementation: Fixed timestep ensures deterministic behavior for scripts, combat, AI
             // Game loop phases: Input, Script, Simulation, Animation, Scene Sync, Render, Audio
@@ -374,7 +374,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Update module heartbeat (fires every 6 seconds)
-            // Based on swkotor2.exe: FUN_00501fa0 @ 0x00501fa0 (module loading), FUN_00501fa0 reads "Mod_OnHeartbeat" script from module GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00501fa0 @ 0x00501fa0 (module loading), FUN_00501fa0 reads "Mod_OnHeartbeat" script from module GFF
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
             // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
             // Module heartbeat script is loaded from Mod_OnHeartbeat field in module IFO GFF during module load
@@ -442,14 +442,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// FUN_006d0b00 (New Game Handler) -> Module Initialization -> Module Load -> Player Entity Creation
         ///
         /// Module name casing: Ghidra shows "001ebo" (lowercase) and "END_M01AA" (uppercase)
-        /// Resource lookup is case-insensitive, we use lowercase to match Andastra.Parsing conventions
+        /// Resource lookup is case-insensitive, we use lowercase to match BioWare.NET conventions
         /// </remarks>
         public void StartNewGame([CanBeNull] CharacterCreationData characterData = null)
         {
             Console.WriteLine("[GameSession] Starting new game");
 
             // Clear world - remove all entities
-            // Based on swkotor2.exe: World is cleared before loading new module
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): World is cleared before loading new module
             var entities = new System.Collections.Generic.List<IEntity>(_world.GetAllEntities());
             foreach (IEntity entity in entities)
             {
@@ -460,19 +460,19 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             _pendingCharacterData = characterData;
 
             // Determine starting module using exact logic from FUN_006d0b00 (swkotor2.exe: 0x006d0b00)
-            // Based on swkotor2.exe FUN_006d0b00: Module selection logic
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00: Module selection logic
             string startingModule = DetermineStartingModule();
 
             // Initialize module loading system (equivalent to FUN_00401380)
-            // Based on swkotor2.exe FUN_00401380 @ 0x00401380: Module initialization
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380 @ 0x00401380: Module initialization
             InitializeModuleLoading();
 
             // Load HD0:effects directory (equivalent to FUN_00630a90(local_40,"HD0:effects"))
-            // Based on swkotor2.exe FUN_006d0b00 line 31: Load effects directory
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 line 31: Load effects directory
             // Note: HD0:effects is a directory alias, resource system handles this automatically
 
             // Load module synchronously
-            // Based on swkotor2.exe FUN_0074a700 @ 0x0074a700: Module loader/creator function
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_0074a700 @ 0x0074a700: Module loader/creator function
             // Original implementation: Takes module name and creates/loads the module into game world
             // Module loading is synchronous in the original engine - all resources are loaded before gameplay begins
             bool success = LoadModule(startingModule);
@@ -491,7 +491,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// </summary>
         /// <returns>The starting module name to load.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe FUN_006d0b00 @ 0x006d0b00 (New Game Button Handler):
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 @ 0x006d0b00 (New Game Button Handler):
         /// - Line 29: Sets default to "001ebo" (prologue module)
         /// - Lines 43-50: Checks for alternative modules with codes 0x7db and 0xbba
         /// - If alternatives don't exist, falls back to "001ebo"
@@ -507,12 +507,12 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Default starting modules based on game version
-            // Based on swkotor2.exe FUN_006d0b00 line 29: "001ebo" (K2 prologue)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 line 29: "001ebo" (K2 prologue)
             // Based on swkotor.exe: "END_M01AA" (K1 Endar Spire)
             string defaultModule = _settings.Game == KotorGame.K1 ? "end_m01aa" : "001ebo";
 
             // Check for alternative modules with codes 0x7db (MOD) and 0xbba (RIM) (K2 only)
-            // Based on swkotor2.exe FUN_006d0b00 lines 43-50:
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0b00 lines 43-50:
             // - FUN_00408df0(DAT_008283c0,local_30,0x7db,(undefined4 *)0x0) - Check module code 0x7db (MOD resource type)
             // - If 0x7db fails: FUN_00408df0(DAT_008283c0,local_30,0xbba,(undefined4 *)0x0) - Check module code 0xbba (RIM resource type)
             // - If both fail: FUN_00630d10(local_38,"001ebo") - Fallback to "001ebo"
@@ -545,13 +545,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
         /// <summary>
         /// Checks if a module resource exists with the specified resource type.
-        /// Based on swkotor2.exe FUN_00408df0 @ 0x00408df0: Resource existence check
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00408df0 @ 0x00408df0: Resource existence check
         /// </summary>
         /// <param name="moduleName">The module name to check.</param>
         /// <param name="resourceType">The resource type to check (MOD = 0x7db, RIM = 0xbba).</param>
         /// <returns>True if the module resource exists, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe FUN_00408df0 @ 0x00408df0:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00408df0 @ 0x00408df0:
         /// - Calls FUN_00407300 to search for resources with the specified name and type
         /// - Returns non-zero if resource exists, zero if not found
         /// - Resource type 0x7db (MOD) checks for .mod files
@@ -608,7 +608,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// Initializes the module loading system (equivalent to FUN_00401380 @ 0x00401380).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe FUN_00401380 @ 0x00401380 (Module Initialization):
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380 @ 0x00401380 (Module Initialization):
         /// - Called early in FUN_006d0b00 (line 24) to prepare game state for module loading
         /// - Sets up module loading context and prepares game systems for the new module
         /// - Original implementation: FUN_00401380(DAT_008283d4) initializes module loading system
@@ -619,7 +619,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             Console.WriteLine("[GameSession] Initializing module loading system");
 
             // Clear any existing module state
-            // Based on swkotor2.exe FUN_00401380: Clears previous module state
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380: Clears previous module state
             if (_currentModule != null)
             {
                 _currentModule = null;
@@ -627,7 +627,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Prepare game systems for module loading
-            // Based on swkotor2.exe FUN_00401380: Prepares game systems
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_00401380: Prepares game systems
             // This includes clearing entity lists, resetting world state, etc.
             // (Already done in StartNewGame by clearing world entities)
 
@@ -640,7 +640,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// <param name="moduleName">The module name to load.</param>
         /// <returns>True if the module was loaded successfully, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe FUN_0074a700 @ 0x0074a700: Module loader/creator function
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_0074a700 @ 0x0074a700: Module loader/creator function
         /// - Takes module name and creates/loads the module into game world
         /// - Original implementation: Module loading is synchronous - all resources are loaded before gameplay begins
         /// - Module loading sequence:
@@ -664,7 +664,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 Console.WriteLine("[GameSession] Loading module: " + moduleName);
 
                 // Load module
-                // Based on swkotor2.exe: Module loading loads IFO, ARE, GIT, LYT, VIS, walkmesh resources
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loading loads IFO, ARE, GIT, LYT, VIS, walkmesh resources
                 // Located via string references: "MODULES:" @ 0x007b58b4, module resource loading
                 // Original implementation: FUN_0074a700 loads module resources synchronously
                 RuntimeModule module = _moduleLoader.LoadModule(moduleName);
@@ -675,7 +675,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 }
 
                 // Set current module
-                // Based on swkotor2.exe: Module state is set after successful load
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state is set after successful load
                 // Original implementation: Module state flags updated in DAT_008283d4 structure
                 _currentModule = module;
                 _currentModuleName = moduleName;
@@ -687,7 +687,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 // No need to update it here - it will retrieve the module on-demand during template creation
 
                 // Set world's current area
-                // Based on swkotor2.exe: Entry area is set as current area after module load
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entry area is set as current area after module load
                 // Original implementation: Mod_Entry_Area from IFO determines which area is loaded first
                 if (!string.IsNullOrEmpty(module.EntryArea))
                 {
@@ -697,7 +697,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                         _world.SetCurrentArea(entryArea);
 
                         // Register all entities from area into world
-                        // Based on swkotor2.exe: Entities must be registered in world for lookups to work
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities must be registered in world for lookups to work
                         // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
                         // Original implementation: All entities are registered in world's ObjectId, Tag, and ObjectType indices
                         // Entity registration allows GetEntity, GetEntityByTag, GetEntityByObjectType lookups to work
@@ -711,7 +711,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                                     _world.RegisterEntity(entity);
 
                                     // Register encounters with encounter system
-                                    // Based on swkotor2.exe: Encounters are registered with encounter system for spawning
+                                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Encounters are registered with encounter system for spawning
                                     // Original implementation: Encounter system tracks encounter entities and spawns creatures when triggered
                                     if (_encounterSystem != null && entity.ObjectType == Andastra.Runtime.Core.Enums.ObjectType.Encounter)
                                     {
@@ -724,7 +724,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 }
 
                 // Spawn player at entry position if not already spawned
-                // Based on swkotor2.exe: Player is spawned at Mod_Entry_X/Y/Z with Mod_Entry_Dir_X/Y facing
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Player is spawned at Mod_Entry_X/Y/Z with Mod_Entry_Dir_X/Y facing
                 // Original implementation: Player entity created at module entry position after module load
                 if (_playerEntity == null)
                 {
@@ -733,7 +733,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 else
                 {
                     // Reposition existing player
-                    // Based on swkotor2.exe: Existing player is repositioned at entry when transitioning between modules
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Existing player is repositioned at entry when transitioning between modules
                     // Original implementation: Player position updated to module entry position
                     PositionPlayerAtEntry();
                 }
@@ -761,7 +761,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         private Task<bool> LoadModuleAsync(string moduleName)
         {
             // Wrap synchronous LoadModule in Task.FromResult since module loading is inherently synchronous
-            // Based on swkotor2.exe: Module loading is synchronous - all resources loaded before gameplay begins
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loading is synchronous - all resources loaded before gameplay begins
             // This async wrapper allows ModuleTransitionSystem to use async/await patterns without blocking
             return Task.FromResult(LoadModule(moduleName));
         }
@@ -927,7 +927,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 creatureComp.RaceId = 0; // Default to Human (0) - can be customized later if needed
                 creatureComp.PortraitId = characterData.Portrait;
                 // Gender is typically stored in entity data, not CreatureComponent directly
-                // Based on swkotor2.exe: Gender stored in UTC template as "Gender" field (integer: 0=Male, 1=Female)
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Gender stored in UTC template as "Gender" field (integer: 0=Male, 1=Female)
 
                 // Set class
                 creatureComp.ClassList.Clear();
@@ -1062,7 +1062,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             // Based on swkotor.exe and swkotor2.exe: Starting feats come from class featgain.2da
             // Located via string references: "CSWClass::LoadFeatGain: can't load featgain.2da" @ swkotor.exe: 0x0074b370, swkotor2.exe: 0x007c46bc
             // Original implementation: FUN_005bcf70 @ 0x005bcf70 (swkotor.exe), FUN_0060d1d0 @ 0x0060d1d0 (swkotor2.exe)
-            // Based on swkotor2.exe: FUN_005d63d0 reads "FeatGain" column from classes.2da for each class, then calls FUN_0060d1d0 (LoadFeatGain)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005d63d0 reads "FeatGain" column from classes.2da for each class, then calls FUN_0060d1d0 (LoadFeatGain)
             // LoadFeatGain loads featgain.2da table, finds row by label (from FeatGain column), reads "_REG" and "_BON" columns
             // Each class has automatic feats granted at level 1 from featgain.2da
             if (_gameDataManager != null && creatureComp != null && creatureComp.FeatList != null)
@@ -1163,7 +1163,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// <returns>The module entity, or null if module is invalid.</returns>
         /// <remarks>
         /// Module Entity Creation (Odyssey-specific):
-        /// - Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with fixed ObjectId 0x7F000002
         /// - Located via string references: Module entity ObjectId constant, GetModule() NWScript function
         /// - Cross-engine analysis:
         ///   - Aurora (nwmain.exe): Similar module entity system with fixed ObjectId
@@ -1189,7 +1189,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Check if module entity with fixed ObjectId already exists (canonical check)
-            // Based on swkotor2.exe: Module entity has fixed ObjectId 0x7F000002
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity has fixed ObjectId 0x7F000002
             // Original implementation: Module entity persists across module heartbeat calls
             // Module entity is created during module load and reused for all module script execution
             IEntity existingModuleEntity = _world.GetEntity(World.ModuleObjectId);
@@ -1206,7 +1206,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Create new module entity with fixed ObjectId
-            // Based on swkotor2.exe: Module entity created with ObjectId 0x7F000002
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with ObjectId 0x7F000002
             // Entity constructor: Entity(uint objectId, ObjectType objectType)
             var entity = new Entity(World.ModuleObjectId, Andastra.Runtime.Core.Enums.ObjectType.Invalid);
             entity.World = _world;
@@ -1217,7 +1217,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             // Initialize components for module entity
             // Module entities need IScriptHooksComponent for script execution
-            // Based on swkotor2.exe: Module scripts require script hooks component
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts require script hooks component
             // ComponentInitializer.InitializeComponents adds IScriptHooksComponent to all entities
             Andastra.Runtime.Games.Odyssey.Systems.ComponentInitializer.InitializeComponents(entity);
 
@@ -1228,7 +1228,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Load module scripts into script hooks component
-            // Based on swkotor2.exe: Module scripts (OnModuleLoad, OnModuleStart, etc.) stored in module entity
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module scripts (OnModuleLoad, OnModuleStart, etc.) stored in module entity
             // This allows GetModule() NWScript function to access module scripts via GetScript()
             IScriptHooksComponent scriptHooks = entity.GetComponent<IScriptHooksComponent>();
             if (scriptHooks != null)
@@ -1258,7 +1258,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Register module entity with world
-            // Based on swkotor2.exe: Module entity registered in world for GetEntityByTag and GetEntity lookups
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity registered in world for GetEntityByTag and GetEntity lookups
             // Module entity can be looked up by Tag (module ResRef) or by ObjectId (ModuleObjectId)
             _world.RegisterEntity(entity);
 
@@ -1283,11 +1283,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Execute module heartbeat script
-            // Based on swkotor2.exe: Module heartbeat script execution
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module heartbeat script execution
             // Located via string references: "Mod_OnHeartbeat" @ 0x007be840
             // Original implementation: Module heartbeat fires every 6 seconds for module-level scripts
             // Module scripts use module entity with fixed ObjectId 0x7F000002 (World.ModuleObjectId)
-            // Based on swkotor2.exe: Module entity created with fixed ObjectId 0x7F000002 for script execution
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module entity created with fixed ObjectId 0x7F000002 for script execution
             // Module entity has IScriptHooksComponent for script execution, Tag set to module ResRef
             IEntity moduleEntity = CreateOrGetModuleEntity(_currentModule);
             if (moduleEntity != null)
@@ -1319,7 +1319,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
         /// <summary>
         /// Loads a dialogue file.
         /// </summary>
-        private Andastra.Parsing.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
+        private BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG LoadDialogue(string resRef)
         {
             if (string.IsNullOrEmpty(resRef) || _installation == null)
             {
@@ -1328,13 +1328,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             try
             {
-                Andastra.Parsing.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
+                BioWare.NET.Extract.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.DLG);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
                 }
 
-                return Andastra.Parsing.Resource.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
+                return BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper.ReadDlg(resource.Data);
             }
             catch (Exception ex)
             {
@@ -1355,7 +1355,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
 
             try
             {
-                Andastra.Parsing.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
+                BioWare.NET.Extract.Installation.ResourceResult resource = _installation.Resources.LookupResource(resRef, ResourceType.NCS);
                 if (resource == null || resource.Data == null)
                 {
                     return null;
@@ -1447,7 +1447,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             if (string.IsNullOrEmpty(dialogueResRef))
             {
                 // Try to get from creature component
-                // Based on swkotor2.exe: Conversation ResRef stored in creature template
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Conversation ResRef stored in creature template
                 // Located via string references: "Conversation" @ creature template fields
                 // Original implementation: Conversation field in UTC template contains dialogue ResRef
                 Console.WriteLine("[GameSession] No conversation found for entity: " + target.Tag);
@@ -1497,7 +1497,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
             }
 
             // Get quick slot item/ability and use it
-            // Based on swkotor2.exe: Quick slot system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quick slot system
             // Located via string references: "QuickSlot" @ inventory/ability system
             // Original implementation: Quick slots store items/abilities, using slot triggers use action
             Core.Interfaces.Components.IQuickSlotComponent quickSlots = _playerEntity.GetComponent<Core.Interfaces.Components.IQuickSlotComponent>();
@@ -1519,7 +1519,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 if (item != null && item.IsValid)
                 {
                     // Queue ActionUseItem action
-                    // Based on swkotor2.exe: Item usage system
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage system
                     // Original implementation: ActionUseItem queues item use action, applies item effects
                     Core.Interfaces.Components.IActionQueueComponent actionQueue = _playerEntity.GetComponent<Core.Interfaces.Components.IActionQueueComponent>();
                     if (actionQueue != null)
@@ -1537,7 +1537,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Game
                 if (abilityId >= 0)
                 {
                     // Queue ActionCastSpellAtObject action (target self for now)
-                    // Based on swkotor2.exe: Spell casting from quick slots
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spell casting from quick slots
                     // Located via string references: Quick slot system handles spell casting
                     // Original implementation: Quick slot ability usage casts spell at self or selected target
                     // Spell data (cast time, Force point cost, effects) is looked up from spells.2da via GameDataManager

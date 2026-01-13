@@ -10,8 +10,8 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Common;
+using BioWare.NET.Installation;
+using BioWare.NET.Common;
 using KotorDiff.AppCore;
 using KotorDiff.Cli;
 

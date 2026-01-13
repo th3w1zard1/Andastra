@@ -4,14 +4,14 @@ using System.Linq;
 using Andastra.Runtime.Core.Save;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.Game.GUI
+namespace Andastra.Game.Game.GUI
 {
     /// <summary>
     /// Handles save/load menu rendering and input.
     /// </summary>
     /// <remarks>
     /// Save/Load Menu:
-    /// - Based on swkotor2.exe save/load menu system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save/load menu system
     /// - Located via string references: "LoadSavegame" @ 0x007bdc90, "SaveGame" @ 0x007be1d0
     /// - "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284, "savenfo" @ 0x007be1f0
     /// - "SavegameList" @ 0x007bdca0, "GetSavegameList" @ 0x007bdcb0, "SAVEGAMENAME" @ 0x007be1a8

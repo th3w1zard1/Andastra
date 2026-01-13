@@ -5,19 +5,19 @@ using System.Linq;
 using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Save;
-using Andastra.Runtime.Games.Common.Save;
+using Andastra.Game.Games.Common.Save;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
-namespace Andastra.Runtime.Games.Aurora.Save
+namespace Andastra.Game.Games.Aurora.Save
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) save game manager implementation.

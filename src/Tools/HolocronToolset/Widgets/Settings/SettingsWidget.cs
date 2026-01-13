@@ -7,7 +7,7 @@ using Avalonia.Interactivity;
 using HolocronToolset.Data;
 using HolocronToolset.Widgets.Edit;
 using HolocronToolset.Common;
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Utility;
 using SettingsBase = HolocronToolset.Data.Settings;
 
@@ -155,7 +155,7 @@ namespace HolocronToolset.Widgets.Settings
             // Get raw value from settings (may be any type) and validate it
             object rawValue = _settings.GetValue<object>(colourName, 0);
             int colorValue = ValidateColour(colourName, rawValue);
-            widget.SetColor(Andastra.Parsing.Common.ParsingColor.FromRgbaInteger(colorValue));
+            widget.SetColor(BioWare.NET.Common.ParsingColor.FromRgbaInteger(colorValue));
             _colours[colourName] = widget;
         }
 

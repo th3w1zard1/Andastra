@@ -1,7 +1,7 @@
 using System;
 using Andastra.Runtime.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Graphics.Cursor
+namespace Andastra.Game.Graphics.MonoGame.Graphics.Cursor
 {
     /// <summary>
     /// MonoGame implementation of ICursor.

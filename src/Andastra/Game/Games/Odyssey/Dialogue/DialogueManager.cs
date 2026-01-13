@@ -1,22 +1,22 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Journal;
 using Andastra.Runtime.Core.Party;
 using Andastra.Runtime.Core.Plot;
 using Andastra.Runtime.Engines.Odyssey.Data;
-using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Game.Games.Common.Dialogue;
 using Andastra.Runtime.Scripting.Interfaces;
 using JetBrains.Annotations;
-using ResRef = Andastra.Parsing.Common.ResRef;
+using ResRef = BioWare.NET.Common.ResRef;
 
-namespace Andastra.Runtime.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Engines.Odyssey.Dialogue
 {
     /// <summary>
     /// Event arguments for dialogue events (Odyssey-specific: DLG-based).
@@ -35,7 +35,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     /// </summary>
     /// <remarks>
     /// Dialogue System (Odyssey-specific):
-    /// - Based on swkotor2.exe dialogue system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) dialogue system
     /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - "CSWSSCRIPTEVENT_EVENTTYPE_ON_DIALOGUE" @ 0x007bcac4, "OnEndDialogue" @ 0x007c1f60
     /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730
@@ -59,7 +59,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
     public class DialogueManager : BaseDialogueManager
     {
         // Plot XP calculation multipliers (swkotor2.exe data addresses)
-        // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870 and FUN_0057eb20 @ 0x0057eb20
+        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6870 @ 0x005e6870 and FUN_0057eb20 @ 0x0057eb20
         // _DAT_007b99b4: Base multiplier applied to plotXpPercentage
         // _DAT_007b5f88: Additional multiplier applied to final XP calculation
         // Verified via Ghidra reverse engineering:
@@ -443,7 +443,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             ExecuteNodeScript(entry.Script1, entry);
 
             // Process quest fields if present
-            // Based on swkotor2.exe: FUN_005e61d0 @ 0x005e61d0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e61d0 @ 0x005e61d0
             // Located via string references: "Quest" @ 0x007c35e4, "QuestEntry" @ 0x007c35d8
             // Called from FUN_005e7cb0 @ 0x005e7f85 and FUN_005ec340 @ 0x005ec6a9
             // Original implementation: Processes quest fields when dialogue entry node is entered
@@ -462,7 +462,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             IEntity listener = _currentState.GetCurrentListener();
 
             // Play voiceover if available
-            // Based on swkotor2.exe: FUN_005e6ac0 @ 0x005e6ac0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6ac0 @ 0x005e6ac0
             // Located via string reference: "VO_ResRef" @ 0x007c4eb8, "SoundExists" @ 0x007c4ec8
             // Original implementation: Plays voiceover and waits for completion before advancing
             string voResRef = GetVoiceoverResRef(entry);
@@ -489,7 +489,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Calculate display time based on text length or delay
-            // Based on swkotor2.exe: FUN_005e6ac0 @ 0x005e6ac0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6ac0 @ 0x005e6ac0
             // Located via string reference: "Delay" @ 0x007c35b0
             // Original implementation: If Delay == -1 and voiceover exists, uses voiceover duration
             // If Delay == -1 and no voiceover, uses default delay from WaitFlags
@@ -558,7 +558,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             ExecuteNodeScript(reply.Script1, reply);
 
             // Process quest fields if present
-            // Based on swkotor2.exe: FUN_005e61d0 @ 0x005e61d0
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e61d0 @ 0x005e61d0
             // Called from FUN_005ec340 @ 0x005ec6a9 (dialogue reply processing)
             // Reply nodes also have quest fields that need processing
             ProcessQuestFields(reply);
@@ -925,7 +925,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         /// <param name="caller">The calling entity (OBJECT_SELF).</param>
         /// <returns>Execution context with engine API, world, globals.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe: Script execution context for dialogue scripts
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script execution context for dialogue scripts
         /// - Located via string references: "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
         /// - ExecuteDialogue @ 0x005e9920: Creates execution context with caller entity, world, engine API, globals
         /// - Original implementation: Execution context provides script access to:
@@ -989,24 +989,24 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             int questEntryIndex = node.QuestEntry ?? 0;
 
             // Get current quest entry count
-            // Based on swkotor2.exe: FUN_00600c30 - Get quest entry count
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00600c30 - Get quest entry count
             // Original implementation checks if entry index < current count
             List<JournalEntry> existingEntries = _journalSystem.GetEntriesForQuest(questTag);
             int currentEntryCount = existingEntries.Count;
 
             // Process quest entry
-            // Based on swkotor2.exe: If entry index < current count, update existing entry
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If entry index < current count, update existing entry
             // Otherwise, add new entry
             if (questEntryIndex < currentEntryCount)
             {
                 // Update existing entry
-                // Based on swkotor2.exe: FUN_00601780 - Set quest entry text
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00601780 - Set quest entry text
                 // Original implementation updates existing entry text and state
                 JournalEntry existingEntry = existingEntries[questEntryIndex];
                 if (existingEntry != null)
                 {
                     // Look up quest entry text from JRL file
-                    // Based on swkotor2.exe: Quest entry text is loaded from JRL files
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quest entry text is loaded from JRL files
                     // Original implementation: Looks up text from JRL file using quest tag and entry ID
                     string entryText = GetQuestEntryTextFromJRL(questTag, questEntryIndex);
 
@@ -1045,7 +1045,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             else
             {
                 // Add new quest entry
-                // Based on swkotor2.exe: FUN_00600dd0 - Add quest entry
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00600dd0 - Add quest entry
                 // Original implementation:
                 // - Sets quest entry text (from JRL file or dialogue)
                 // - Sets quest entry state
@@ -1054,7 +1054,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 // - Notifies journal system
 
                 // Look up quest entry text from JRL file
-                // Based on swkotor2.exe: Quest entry text is loaded from JRL files
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quest entry text is loaded from JRL files
                 // Original implementation: Looks up text from JRL file using quest tag and entry ID
                 string entryText = GetQuestEntryTextFromJRL(questTag, questEntryIndex);
 
@@ -1073,14 +1073,14 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 }
 
                 // If still no text, use empty string (original engine behavior)
-                // Based on swkotor2.exe: If JRL lookup fails, entry text may be empty
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): If JRL lookup fails, entry text may be empty
                 if (string.IsNullOrEmpty(entryText))
                 {
                     entryText = string.Empty;
                 }
 
                 // Add journal entry
-                // Based on swkotor2.exe: Journal entry addition
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Journal entry addition
                 // Original implementation adds entry and updates quest state
                 _journalSystem.AddEntry(questTag, questEntryIndex, entryText, 0);
 
@@ -1094,7 +1094,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Process plot index and XP percentage if present
-            // Based on swkotor2.exe: FUN_005e6870 @ 0x005e6870
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6870 @ 0x005e6870
             // Located via string references: "PlotIndex" @ 0x007c35c4, "PlotXPPercentage" @ 0x007c35cc
             // Original implementation: Updates plot flags and awards XP based on PlotIndex and PlotXpPercentage
             // Flow: FUN_005e6870 -> FUN_0057eb20
@@ -1147,7 +1147,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Look up plot.2da row using PlotIndex
-            // Based on swkotor2.exe: FUN_0057eb20 looks up plot.2da data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057eb20 looks up plot.2da data
             TwoDA plotTable = _gameDataManager.GetTable("plot");
             if (plotTable == null)
             {
@@ -1171,7 +1171,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             int? baseXP = plotRow.GetInteger("xp");
 
             // Register plot in plot system (if plot system is available)
-            // Based on swkotor2.exe: Plot state is tracked to prevent duplicate processing
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is tracked to prevent duplicate processing
             // Original implementation tracks which plots have been triggered
             if (_plotSystem != null)
             {
@@ -1179,7 +1179,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Check if plot has already been triggered to prevent duplicate XP awards
-            // Based on swkotor2.exe: Plot completion is tracked to prevent duplicate XP awards
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot completion is tracked to prevent duplicate XP awards
             // Original implementation: Only awards XP if plot has not been triggered before
             bool plotAlreadyTriggered = false;
             if (_plotSystem != null)
@@ -1188,7 +1188,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Process plot XP (swkotor2.exe: FUN_005e6870 @ 0x005e6870 -> FUN_0057eb20 @ 0x0057eb20)
-            // Based on swkotor2.exe: FUN_005e6870 checks if plotIndex != -1 and threshold < plotXpPercentage
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005e6870 checks if plotIndex != -1 and threshold < plotXpPercentage
             // Original implementation flow:
             //   1. Check threshold < plotXpPercentage
             //   2. Calculate: plotXpPercentage * _DAT_007b99b4 (base multiplier)
@@ -1217,7 +1217,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 {
                     // Award XP to all active party members (swkotor2.exe: FUN_0057ccd0 @ 0x0057ccd0)
                     // Original implementation awards XP to all active party members
-                    // Based on swkotor2.exe: FUN_0057ccd0 awards XP to party
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_0057ccd0 awards XP to party
                     _partySystem.AwardXP(finalXP);
 
                     // Notify journal system (swkotor2.exe: FUN_00681a10 @ 0x00681a10)
@@ -1233,7 +1233,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Trigger plot state tracking
-            // Based on swkotor2.exe: Plot state is tracked to prevent duplicate processing
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot state is tracked to prevent duplicate processing
             // Original implementation tracks which plots have been triggered
             if (_plotSystem != null)
             {
@@ -1241,7 +1241,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
             }
 
             // Update quest/journal state if plot label matches a quest
-            // Based on swkotor2.exe: Plot labels can be used as quest identifiers
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot labels can be used as quest identifiers
             // Original implementation: If plot label matches a quest tag, update quest state
             if (_journalSystem != null && !string.IsNullOrEmpty(plotLabel))
             {
@@ -1298,7 +1298,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
                 {
                     // Update the entry's XPReward with plot XP
                     // Original implementation: Plot XP replaces or adds to existing XPReward
-                    // Based on swkotor2.exe behavior: Plot XP is the actual reward, so we set it
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) behavior: Plot XP is the actual reward, so we set it
                     string entryText = entry.Text ?? string.Empty;
                     _journalSystem.UpdateEntry(questTag, questEntryIndex, entryText, plotXP);
                     return;
@@ -1335,7 +1335,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
 
                     // If no entry exists, create one with plot XP
                     // This ensures XP rewards are tracked even if no journal entry was created yet
-                    // Based on swkotor2.exe: Journal entries can be created when plot XP is awarded
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Journal entries can be created when plot XP is awarded
                     string entryText = GetQuestEntryTextFromJRL(plotLabel, 0);
                     if (string.IsNullOrEmpty(entryText))
                     {
@@ -1355,7 +1355,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Dialogue
         /// <returns>The entry text, or null if not found.</returns>
         /// <remarks>
         /// Quest Entry Text Lookup (swkotor2.exe):
-        /// - Based on swkotor2.exe: Quest entry text is loaded from JRL files
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Quest entry text is loaded from JRL files
         /// - Original implementation:
         ///   1. Loads JRL file by quest tag (or uses global.jrl)
         ///   2. Finds quest by tag in JRL

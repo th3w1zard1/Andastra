@@ -1,17 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing.Formats.BWM;
+using BioWare.NET.Resource.Formats.BWM;
 using Andastra.Runtime.Core.Navigation;
 
 namespace Andastra.Runtime.Content.Converters
 {
     /// <summary>
-    /// Converts Andastra.Parsing BWM walkmesh data to Odyssey NavigationMesh.
+    /// Converts BioWare.NET BWM walkmesh data to Odyssey NavigationMesh.
     /// </summary>
     /// <remarks>
     /// BWM to NavigationMesh Converter:
-    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh/navigation system
     /// - WriteBWMFile @ 0x0055aef0 - Writes BWM file with "BWM V1.0" signature (located via "BWM V1.0" @ 0x007c061c)
     /// - ValidateBWMHeader @ 0x006160c0 - Validates BWM file header signature (located via "BWM V1.0" @ 0x007c061c)
     /// - Located via string references: "nwsareapathfind.cpp" @ 0x007be3ff (pathfinding implementation file reference)
@@ -28,9 +28,9 @@ namespace Andastra.Runtime.Content.Converters
     public static class BwmToNavigationMeshConverter
     {
         /// <summary>
-        /// Converts an Andastra.Parsing BWM to an Odyssey NavigationMesh.
+        /// Converts an BioWare.NET BWM to an Odyssey NavigationMesh.
         /// </summary>
-        /// <param name="bwm">The source BWM data from Andastra.Parsing</param>
+        /// <param name="bwm">The source BWM data from BioWare.NET</param>
         /// <returns>A NavigationMesh ready for pathfinding and collision</returns>
         public static NavigationMesh Convert(BWM bwm)
         {
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Content.Converters
         }
 
         /// <summary>
-        /// Converts an Andastra.Parsing BWM to NavigationMesh with a position offset.
+        /// Converts an BioWare.NET BWM to NavigationMesh with a position offset.
         /// Used when placing room walkmeshes in the world.
         /// </summary>
         public static NavigationMesh ConvertWithOffset(BWM bwm, Vector3 offset)
@@ -309,7 +309,7 @@ namespace Andastra.Runtime.Content.Converters
 
             // Build AABB tree from combined geometry
             // Uses recursive top-down construction with longest-axis splitting for efficient spatial queries
-            // Based on swkotor2.exe walkmesh AABB tree construction
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh AABB tree construction
             Vector3[] combinedVerticesArray = combinedVertices.ToArray();
             int[] combinedFaceIndicesArray = combinedFaceIndices.ToArray();
             int[] combinedMaterialsArray = combinedMaterials.ToArray();
@@ -764,7 +764,7 @@ namespace Andastra.Runtime.Content.Converters
 
         private static NavigationMesh.AabbNode BuildAabbTree(BWM bwm, Vector3[] vertices, int[] faces)
         {
-            // Use Andastra.Parsing's AABB generation
+            // Use BioWare.NET's AABB generation
             List<BWMNodeAABB> aabbs = bwm.Aabbs();
             if (aabbs.Count == 0)
             {

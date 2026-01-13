@@ -8,7 +8,7 @@ using Andastra.Runtime.Graphics.Common.Upscaling;
 using Andastra.Runtime.Stride.Graphics;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Upscaling
+namespace Andastra.Game.Stride.Upscaling
 {
     /// <summary>
     /// Stride implementation of NVIDIA DLSS (Deep Learning Super Sampling).

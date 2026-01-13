@@ -1,9 +1,9 @@
 using System;
 using System.CommandLine;
 using System.IO;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Tools;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
+using BioWare.NET.Tools;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands
@@ -85,7 +85,7 @@ namespace KotorCLI.Commands
                 var input = parseResult.GetValue(inputArg);
                 var output = parseResult.GetValue(outputOpt);
                 var logger = new StandardLogger();
-                logger.Warning("TODO: STUB - JSON to GFF conversion not yet implemented in Andastra.Parsing");
+                logger.Warning("TODO: STUB - JSON to GFF conversion not yet implemented in BioWare.NET");
                 Environment.Exit(1);
             });
             rootCommand.Add(cmd);

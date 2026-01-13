@@ -7,7 +7,7 @@ using Andastra.Runtime.Stride.Graphics;
 using Stride.Engine;
 using Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Backends
+namespace Andastra.Game.Stride.Backends
 {
     /// <summary>
     /// Factory for creating Stride graphics backends.
@@ -20,7 +20,7 @@ namespace Andastra.Runtime.Stride.Backends
     /// </summary>
     /// <remarks>
     /// Graphics Backend Factory:
-    /// - Based on swkotor2.exe graphics initialization system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) graphics initialization system
     /// - Original game uses DirectX 8/9 for rendering (D3D8.dll, D3D9.dll)
     /// - Located via string references: "Graphics Options" @ 0x007b56a8, "BTN_GRAPHICS" @ 0x007d0d8c, "optgraphics_p" @ 0x007d2064
     /// - "2D3DBias" @ 0x007c612c, "2D3D Bias" @ 0x007c71f8 (graphics settings)
@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Creates the appropriate backend for the current platform and settings.
         /// </summary>
-        public static ILowLevelBackend Create(Andastra.Parsing.Common.BioWareGame game, RenderSettings settings)
+        public static ILowLevelBackend Create(BioWare.NET.Common.BioWareGame game, RenderSettings settings)
         {
             if (game == null)
             {
@@ -98,7 +98,7 @@ namespace Andastra.Runtime.Stride.Backends
         /// <summary>
         /// Creates a specific backend type.
         /// </summary>
-        private static ILowLevelBackend CreateBackend(Andastra.Parsing.Common.BioWareGame game, GraphicsBackendType backendType, RenderSettings settings)
+        private static ILowLevelBackend CreateBackend(BioWare.NET.Common.BioWareGame game, GraphicsBackendType backendType, RenderSettings settings)
         {
             Console.WriteLine($"[StrideBackendFactory] Creating {backendType} backend");
 

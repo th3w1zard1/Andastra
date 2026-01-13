@@ -3,10 +3,10 @@ using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.RIM;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.RIM;
+using BioWare.NET.Resource;
 using KotorCLI.Logging;
 
 namespace KotorCLI.Commands

@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Andastra.Runtime.Graphics.Common.Culling;
 
-namespace Andastra.Runtime.Graphics.Common.Backends.Odyssey.Culling
+namespace Andastra.Game.Graphics.Common.Backends.Odyssey.Culling
 {
     /// <summary>
     /// Hi-Z occlusion culling implementation for KOTOR2 graphics backend (swkotor2.exe).

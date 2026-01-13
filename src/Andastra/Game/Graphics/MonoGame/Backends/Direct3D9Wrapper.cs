@@ -7,7 +7,7 @@ using Andastra.Runtime.MonoGame.Remix;
 using Andastra.Runtime.MonoGame.Rendering;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.MonoGame.Backends
+namespace Andastra.Game.Graphics.MonoGame.Backends
 {
     /// <summary>
     /// DirectX 9 wrapper backend for NVIDIA RTX Remix integration.

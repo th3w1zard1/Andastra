@@ -5,7 +5,7 @@ using Andastra.Runtime.Graphics.Common.Lighting;
 using Andastra.Runtime.Stride.Spatial;
 using BaseLightProbeSystem = Andastra.Runtime.Graphics.Common.Lighting.BaseLightProbeSystem;
 
-namespace Andastra.Runtime.Stride.Lighting
+namespace Andastra.Game.Stride.Lighting
 {
     /// <summary>
     /// Stride-specific light probe structure.

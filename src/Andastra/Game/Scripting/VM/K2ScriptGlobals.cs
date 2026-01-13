@@ -1,13 +1,13 @@
 using Andastra.Runtime.Scripting.Interfaces;
 
-namespace Andastra.Runtime.Scripting.VM
+namespace Andastra.Game.Scripting.VM
 {
     /// <summary>
     /// KOTOR 2-specific implementation of script globals and local variables.
     /// </summary>
     /// <remarks>
     /// K2 Script Globals System:
-    /// - Based on swkotor2.exe script variable system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script variable system
     /// - Located via string references: "GLOBALVARS" @ 0x007c27bc (save file global variables GFF field name)
     /// - "Global" @ 0x007c29b0 (global constant), "GLOBAL" @ 0x007c7550 (global constant uppercase)
     /// - "RIMS:GLOBAL" @ 0x007c7544 (global RIM directory path), "globalcat" @ 0x007bddd0 (global catalog field)
@@ -34,7 +34,7 @@ namespace Andastra.Runtime.Scripting.VM
         /// </summary>
         /// <remarks>
         /// K2 Script Globals Initialization:
-        /// - Based on swkotor2.exe: FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_00404250 @ 0x00404250 (WinMain equivalent, initializes game)
         /// - Script globals system initializes global variables at game start
         /// - Original implementation: Global variables initialized from GLOBALVARS.res if present, otherwise empty
         /// - K2-specific initialization can be added here if needed (e.g., default story flags, quest states, influence system)

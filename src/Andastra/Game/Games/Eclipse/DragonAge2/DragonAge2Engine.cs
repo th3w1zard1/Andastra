@@ -1,7 +1,7 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Engines.Common;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAge2
+namespace Andastra.Game.Engines.Eclipse.DragonAge2
 {
     /// <summary>
     /// Dragon Age 2 engine implementation (DragonAge2.exe).

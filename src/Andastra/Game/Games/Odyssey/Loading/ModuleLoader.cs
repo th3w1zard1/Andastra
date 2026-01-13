@@ -3,29 +3,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LYT;
-using Andastra.Parsing.Formats.VIS;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.LYT;
+using BioWare.NET.Resource.Formats.VIS;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Module;
 using JetBrains.Annotations;
-using LYT = Andastra.Parsing.Resource.Formats.LYT.LYT;
+using LYT = BioWare.NET.Resource.Formats.LYT.LYT;
 using Vector3 = System.Numerics.Vector3;
 
-namespace Andastra.Runtime.Engines.Odyssey.Loading
+namespace Andastra.Game.Engines.Odyssey.Loading
 {
     /// <summary>
-    /// Loads KotOR modules from Andastra.Parsing data structures into Odyssey runtime format.
+    /// Loads KotOR modules from BioWare.NET data structures into Odyssey runtime format.
     /// </summary>
     /// <remarks>
     /// Module Loading Sequence (from IFO spec):
-    /// - Based on swkotor2.exe module loading system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module loading system
     /// - LoadModule @ 0x004f20d0 - Main module loading function (located via "MODULES:" @ 0x007b58b4)
     ///   - Loads IFO file, checks module requirements, mounts HAK files, loads entry area, spawns player at entry position, fires OnModLoad and OnModStart scripts
     /// - LoadModuleFromPath @ 0x004f3460 - Loads module from path with save integration (located via "MODULES:" @ 0x007b58b4 and "modulesave" @ 0x007bde20)
@@ -127,11 +127,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
                 throw new ArgumentException("Module name cannot be null or empty", "moduleName");
             }
 
-            // Create Andastra.Parsing Module wrapper
+            // Create BioWare.NET Module wrapper
             var module = new Module(moduleName, _installation);
 
             // Cache the Module object for efficient resource access
-            // Based on swkotor2.exe: Module objects are cached and reused for resource lookups
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups
             _cachedParsingModule = module;
 
             // Create runtime module
@@ -303,7 +303,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// <param name="root">IFO GFF root structure.</param>
         /// <param name="runtimeModule">Runtime module to store area list in.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Mod_Area_list is stored in module IFO file.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list is stored in module IFO file.
         /// Each entry contains Area_Name field with the area ResRef.
         /// This list is used for resolving transition targets by index (TransPendNextID).
         /// This matches the IFO format specification in vendor/PyKotor/wiki/GFF-IFO.md.
@@ -371,7 +371,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// Loads an area from ARE + GIT + LYT + VIS.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: LoadAreaProperties @ 0x004e26d0
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LoadAreaProperties @ 0x004e26d0
         /// Loads area resources by ResRef from module archives.
         ///
         /// Area loading sequence:
@@ -402,7 +402,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             area.ResRef = areaResRef;
 
             // Load ARE (area properties) - area-specific resource
-            // Based on swkotor2.exe: ARE files contain area lighting, fog, grass, walkmesh references
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ARE files contain area lighting, fog, grass, walkmesh references
             // Use module.Resource() to get ARE file by areaResRef (not module ID)
             ModuleResource areResource = module.Resource(areaResRef, ResourceType.ARE);
             if (areResource != null)
@@ -416,7 +416,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             // Load GIT (dynamic objects) - area-specific resource
-            // Based on swkotor2.exe: GIT files contain creature, door, placeable, trigger, waypoint instances
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): GIT files contain creature, door, placeable, trigger, waypoint instances
             // Use module.Resource() to get GIT file by areaResRef (not module ID)
             ModuleResource gitResource = module.Resource(areaResRef, ResourceType.GIT);
             if (gitResource != null)
@@ -430,7 +430,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             // Load LYT (room layout) - module-level resource
-            // Based on swkotor2.exe: LYT files are module-level, not area-specific
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LYT files are module-level, not area-specific
             // Use module.Layout() to get LYT file by module ID
             ModuleResource lytResource = module.Layout();
             if (lytResource != null)
@@ -439,7 +439,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             // Load VIS (visibility) - module-level resource
-            // Based on swkotor2.exe: VIS files are module-level, not area-specific
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): VIS files are module-level, not area-specific
             // Use module.Vis() to get VIS file by module ID
             ModuleResource visResource = module.Vis();
             if (visResource != null)
@@ -448,7 +448,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             // Load navigation mesh from BWM files
-            // Based on swkotor2.exe: Walkmesh is loaded from BWM files referenced in ARE
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Walkmesh is loaded from BWM files referenced in ARE
             LoadNavigationMesh(module, area);
 
             return area;
@@ -571,7 +571,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
 
             area.Rooms = new List<RoomInfo>();
 
-            foreach (Andastra.Parsing.Resource.Formats.LYT.LYTRoom room in lyt.Rooms)
+            foreach (BioWare.NET.Resource.Formats.LYT.LYTRoom room in lyt.Rooms)
             {
                 var roomInfo = new RoomInfo
                 {
@@ -809,11 +809,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         private RuntimeModule _currentModule;
 
         /// <summary>
-        /// Cached Andastra.Parsing Module object for the currently loaded module.
+        /// Cached BioWare.NET Module object for the currently loaded module.
         /// This avoids creating a new Module object every time resources are accessed.
-        /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
-        private Andastra.Parsing.Installation.Module _cachedParsingModule;
+        private BioWare.NET.Extract.Installation.Module _cachedParsingModule;
 
         /// <summary>
         /// Gets the currently loaded module.
@@ -826,11 +826,11 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         public EntityFactory EntityFactory => _entityFactory;
 
         /// <summary>
-        /// Gets the cached Andastra.Parsing Module for the currently loaded runtime module.
+        /// Gets the cached BioWare.NET Module for the currently loaded runtime module.
         /// Returns the cached Module object to avoid recreating it on every access.
-        /// Based on swkotor2.exe: Module objects are cached and reused for resource lookups.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module objects are cached and reused for resource lookups.
         /// </summary>
-        public Andastra.Parsing.Installation.Module GetCurrentModule()
+        public BioWare.NET.Extract.Installation.Module GetCurrentModule()
         {
             return _cachedParsingModule;
         }
@@ -838,7 +838,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
         /// <summary>
         /// Loads a dialogue by ResRef.
         /// </summary>
-        public Andastra.Parsing.Resource.Generics.DLG.DLG LoadDialogue(string resRef)
+        public BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG LoadDialogue(string resRef)
         {
             if (_cachedParsingModule == null)
             {
@@ -853,7 +853,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             object dlgData = dlgResource.Resource();
-            return dlgData as Andastra.Parsing.Resource.Generics.DLG.DLG;
+            return dlgData as BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG;
         }
 
         /// <summary>
@@ -881,7 +881,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Loading
             }
 
             // Read NCS bytes using ResourceAuto
-            return Andastra.Parsing.Resource.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
+            return BioWare.NET.Resource.ResourceAuto.ReadResource(activePath, ResourceType.NCS);
         }
 
         /// <summary>

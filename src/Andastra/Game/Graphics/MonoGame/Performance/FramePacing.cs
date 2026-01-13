@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Andastra.Runtime.MonoGame.Performance
+namespace Andastra.Game.Graphics.MonoGame.Performance
 {
     /// <summary>
     /// Frame pacing system for consistent frame timing.

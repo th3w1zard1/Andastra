@@ -33,7 +33,7 @@ namespace Andastra.Runtime.Core.Interfaces
         /// </summary>
         /// <param name="imageResRef">Resource reference for the loading screen image (TPC format). If null or empty, uses default loading screen.</param>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_006cff90 @ 0x006cff90 initializes loading screen GUI
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006cff90 @ 0x006cff90 initializes loading screen GUI
         /// - Loads "loadscreen_p" GUI panel
         /// - Sets loading screen image via LoadScreenResRef (TPC texture)
         /// - Displays progress bar, hints, and logo
@@ -45,7 +45,7 @@ namespace Andastra.Runtime.Core.Interfaces
         /// Hides the loading screen.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Loading screen is hidden after module load completes
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen is hidden after module load completes
         /// - Hides "loadscreen_p" GUI panel
         /// - Clears loading screen state
         /// - Original implementation: Called after module transition completes
@@ -57,7 +57,7 @@ namespace Andastra.Runtime.Core.Interfaces
         /// </summary>
         /// <param name="progress">Progress value (0-100).</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Progress bar updates during resource loading
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Progress bar updates during resource loading
         /// - "PB_PROGRESS" control shows loading progress
         /// - "Load Bar = %d" @ 0x007c760c (progress debug output)
         /// - Original implementation: Progress bar updates as resources are loaded

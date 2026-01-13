@@ -6,7 +6,7 @@ using Andastra.Runtime.MonoGame.Performance;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Unified render pipeline orchestrating all rendering systems.
@@ -116,7 +116,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// resource management, and execution order. This ensures optimal rendering performance
         /// by managing resource lifetimes and pass ordering.
         ///
-        /// Based on swkotor2.exe rendering system architecture:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system architecture:
         /// - Original implementation: Render order sorting by material/shader (swkotor2.exe: "renderorder" @ 0x007bab50)
         /// - Original rendering: Single-pass rendering with depth testing (no explicit frame graph)
         /// - Modern enhancement: Frame graph system for advanced resource management and pass scheduling
@@ -173,7 +173,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
             // Shadow maps must be rendered before lighting calculations
             // This is a modern enhancement - original KOTOR used simple depth testing
             // Check if we need shadow rendering (this would be determined by light setup)
-            // Based on swkotor2.exe shadow system: "SunShadows" @ 0x007bd5d8, "MoonShadows" @ 0x007bd628
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) shadow system: "SunShadows" @ 0x007bd5d8, "MoonShadows" @ 0x007bd628
             // Original implementation: KOTOR 2 had shadow support with configurable sun/moon shadows
             // Modern enhancement: Check all active lights for shadow casting capability
             bool hasShadowCastingLights = HasShadowCastingLights();
@@ -437,7 +437,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         /// 8. Post-processing pass (tone mapping, bloom, TAA, etc.) - if enabled
         /// 9. Overlay/UI pass (UI elements rendered on top)
         ///
-        /// Based on swkotor2.exe rendering system:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering system:
         /// - Original implementation: Single-pass rendering with render order sorting (swkotor2.exe: "renderorder" @ 0x007bab50)
         /// - Modern enhancement: Frame graph system for advanced pass scheduling and resource management
         /// </summary>
@@ -586,7 +586,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
         ///
         /// If no lighting system is provided, returns false (no shadow-casting lights).
         ///
-        /// Based on swkotor2.exe shadow system:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) shadow system:
         /// - Original implementation: "SunShadows" @ 0x007bd5d8, "MoonShadows" @ 0x007bd628
         /// - Original behavior: KOTOR 2 checked sun/moon light shadow casting flags
         /// - Modern enhancement: Checks all dynamic lights for shadow casting capability
@@ -681,7 +681,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
 
             // Check if tone mapping is enabled
             // Tone mapping is enabled when the operator is not None
-            // Based on swkotor2.exe: Original engine used LDR rendering with gamma correction (gamma @ 0x007b6fcc)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Original engine used LDR rendering with gamma correction (gamma @ 0x007b6fcc)
             // Modern enhancement: HDR rendering with tone mapping operators (Reinhard, ACES, Uncharted2, etc.)
             // The None operator indicates tone mapping is disabled
             if (_settings.Tonemapper != TonemapOperator.None)

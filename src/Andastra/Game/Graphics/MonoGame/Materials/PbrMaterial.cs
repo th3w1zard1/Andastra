@@ -3,7 +3,7 @@ using System.Numerics;
 using Andastra.Runtime.MonoGame.Enums;
 using Andastra.Runtime.MonoGame.Interfaces;
 
-namespace Andastra.Runtime.MonoGame.Materials
+namespace Andastra.Game.Graphics.MonoGame.Materials
 {
     /// <summary>
     /// Physically-based rendering material implementation.

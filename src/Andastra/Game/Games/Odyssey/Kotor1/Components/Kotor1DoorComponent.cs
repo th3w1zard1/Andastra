@@ -1,10 +1,10 @@
 using System;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Game.Games.Common.Components;
+using Andastra.Game.Games.Odyssey.Components;
 
-namespace Andastra.Runtime.Games.Odyssey.Kotor1.Components
+namespace Andastra.Game.Games.Odyssey.Kotor1.Components
 {
     /// <summary>
     /// KOTOR 1 (swkotor.exe) specific door component implementation.

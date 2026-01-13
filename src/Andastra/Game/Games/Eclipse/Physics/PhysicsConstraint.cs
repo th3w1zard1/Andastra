@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Andastra.Runtime.Core.Interfaces;
 
-namespace Andastra.Runtime.Games.Eclipse.Physics
+namespace Andastra.Game.Games.Eclipse.Physics
 {
     /// <summary>
     /// Physics constraint for Eclipse engine physics system.

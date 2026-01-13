@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Games.Common.Components
+namespace Andastra.Game.Games.Common.Components
 {
     /// <summary>
     /// Base class for perception components shared across all BioWare engines.

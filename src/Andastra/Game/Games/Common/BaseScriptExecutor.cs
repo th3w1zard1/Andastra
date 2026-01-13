@@ -6,7 +6,7 @@ using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common
+namespace Andastra.Game.Games.Common
 {
     /// <summary>
     /// Base implementation of script execution shared across all BioWare engines.
@@ -240,7 +240,7 @@ namespace Andastra.Runtime.Games.Common
             IEntity capturedTriggerer = null;
 
             // Get triggerer from current execution context if available
-            // Based on swkotor2.exe: Execution context stack tracking for delayed script execution
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Execution context stack tracking for delayed script execution
             // Located via string references: Execution context maintained for each script execution
             // Original implementation: Delayed actions (DelayCommand) capture the current execution context's
             // triggerer so that when the delayed script executes, it has access to the original triggerer

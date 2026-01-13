@@ -8,8 +8,8 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource;
 using HolocronToolset.Common;
 using HolocronToolset.Data;
 

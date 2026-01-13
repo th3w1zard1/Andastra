@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Audio
     /// </summary>
     /// <remarks>
     /// Sound Player Interface:
-    /// - Based on swkotor2.exe sound playback system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) sound playback system
     /// - Located via string references: "PlaySound" @ 0x007c5f70, "Sound" @ 0x007bc558 (sound entity type)
     /// - "Sound List" @ 0x007bd290 (sound entity list in area), "AmbientSound" @ 0x007c0e98 (ambient sound field)
     /// - "SoundVolume" @ 0x007c0eb0 (sound volume), "SoundDistance" @ 0x007c0ec8 (sound distance/range)

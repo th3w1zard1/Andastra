@@ -5,14 +5,14 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 
-namespace Andastra.Runtime.Engines.Odyssey.Components
+namespace Andastra.Game.Engines.Odyssey.Components
 {
     /// <summary>
     /// Concrete implementation of creature stats for KOTOR.
     /// </summary>
     /// <remarks>
     /// KOTOR D20 System:
-    /// - Based on swkotor2.exe stats system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) stats system
     /// - Located via string references: "CurrentHP" @ 0x007c1b40 (current HP field), "CurrentHP: " @ 0x007cb168 (debug display)
     /// - "Max_HPs" @ 0x007cb714 (max HP field), "InCombatHPBase" @ 0x007bf224 (in-combat HP base), "OutOfCombatHPBase" @ 0x007bf210 (out-of-combat HP base)
     /// - "DAM_HP" @ 0x007bf130 (HP damage type identifier)
@@ -516,7 +516,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// Loads stats from entity's stored data.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads creature data from GFF
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005223a0 @ 0x005223a0 loads creature data from GFF
         /// - Loads AreaId, creature template data, DetectMode, StealthMode, CreatureSize
         /// - Loads BonusForcePoints, AssignedPup, PlayerCreated, AmbientAnimState, Animation
         /// - Calls FUN_0050c510 (load creature scripts), FUN_00521d40 (load creature equipment)
@@ -539,7 +539,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load HP from entity data
-            // Based on swkotor2.exe: FUN_005fb0f0 loads CurrentHitPoints and MaxHitPoints from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads CurrentHitPoints and MaxHitPoints from UTC template
             // EntityFactory stores "CurrentHP" and "HP" via SetData when loading from GIT
             if (Owner.HasData("CurrentHP"))
             {
@@ -574,7 +574,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load Force Points from entity data
-            // Based on swkotor2.exe: FUN_005fb0f0 loads CurrentForce and ForcePoints from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads CurrentForce and ForcePoints from UTC template
             if (Owner.HasData("CurrentFP"))
             {
                 int currentFP = Owner.GetData<int>("CurrentFP", 0);
@@ -594,7 +594,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load ability scores from entity data
-            // Based on swkotor2.exe: FUN_005fb0f0 loads Str, Dex, Con, Int, Wis, Cha from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads Str, Dex, Con, Int, Wis, Cha from UTC template
             // OdysseyEntity.Serialize() saves abilities in "Abilities" struct with keys "STR", "DEX", etc.
             if (Owner.HasData("Abilities"))
             {
@@ -676,7 +676,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load base attack bonus from entity data
-            // Based on swkotor2.exe: BAB calculated from class levels and stored in creature object
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): BAB calculated from class levels and stored in creature object
             if (Owner.HasData("BaseAttackBonus") || Owner.HasData("BAB"))
             {
                 int bab = Owner.GetData<int>("BaseAttackBonus", Owner.GetData<int>("BAB", 0));
@@ -687,7 +687,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load base saving throws from entity data
-            // Based on swkotor2.exe: FUN_005fb0f0 loads fortbonus, refbonus, willbonus from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads fortbonus, refbonus, willbonus from UTC template
             int fortitude = Owner.GetData<int>("FortitudeSave", Owner.GetData<int>("fortbonus", -1));
             int reflex = Owner.GetData<int>("ReflexSave", Owner.GetData<int>("refbonus", -1));
             int will = Owner.GetData<int>("WillSave", Owner.GetData<int>("willbonus", -1));
@@ -701,7 +701,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load level from entity data
-            // Based on swkotor2.exe: Level stored in creature object, calculated from class levels
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Level stored in creature object, calculated from class levels
             if (Owner.HasData("Level"))
             {
                 int level = Owner.GetData<int>("Level", 1);
@@ -722,7 +722,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load armor bonuses from entity data
-            // Based on swkotor2.exe: NaturalAC loaded from UTC template, armor bonuses from equipped items
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): NaturalAC loaded from UTC template, armor bonuses from equipped items
             if (Owner.HasData("NaturalArmor") || Owner.HasData("NaturalAC"))
             {
                 int naturalArmor = Owner.GetData<int>("NaturalArmor", Owner.GetData<int>("NaturalAC", 0));
@@ -751,7 +751,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load movement speeds from entity data
-            // Based on swkotor2.exe: WalkRate loaded from UTC template, converted to WalkSpeed/RunSpeed via appearance.2da
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): WalkRate loaded from UTC template, converted to WalkSpeed/RunSpeed via appearance.2da
             if (Owner.HasData("WalkSpeed"))
             {
                 float walkSpeed = Owner.GetData<float>("WalkSpeed", 0f);
@@ -771,7 +771,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load skills from entity data
-            // Based on swkotor2.exe: FUN_005fb0f0 loads skills from SkillList in UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads skills from SkillList in UTC template
             // KOTOR has 8 skills: COMPUTER_USE (0), DEMOLITIONS (1), STEALTH (2), AWARENESS (3), PERSUADE (4), REPAIR (5), SECURITY (6), TREAT_INJURY (7)
             for (int skillId = 0; skillId < 8; skillId++)
             {
@@ -787,7 +787,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
             }
 
             // Load known spells from entity data
-            // Based on swkotor2.exe: Known spells stored in creature object, loaded from UTC template or save game
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Known spells stored in creature object, loaded from UTC template or save game
             if (Owner.HasData("KnownSpells"))
             {
                 object spellsObj = Owner.GetData("KnownSpells");
@@ -831,7 +831,7 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
         /// <returns>Final movement speed with all effects applied</returns>
         /// <remarks>
         /// Movement Speed Calculation (swkotor2.exe, nwmain.exe):
-        /// - Based on swkotor2.exe: Haste/Slow effects modify movement speed
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Haste/Slow effects modify movement speed
         ///   Located via string references: "Haste" @ routine 119, "Slow" @ routine 120
         ///   Original implementation: Haste doubles speed (2.0x), Slow halves speed (0.5x)
         /// - Based on nwmain.exe: GetWalkRate returns GetMovementRateFactor(this) * baseWalkRate * constant
@@ -875,13 +875,13 @@ namespace Andastra.Runtime.Engines.Odyssey.Components
                     if (effectType == EffectType.Haste)
                     {
                         // Haste doubles movement speed (100% increase = 2.0x multiplier)
-                        // Based on swkotor2.exe: Haste effect @ routine 119
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Haste effect @ routine 119
                         speedMultiplier *= 2.0f;
                     }
                     else if (effectType == EffectType.Slow)
                     {
                         // Slow halves movement speed (50% reduction = 0.5x multiplier)
-                        // Based on swkotor2.exe: Slow effect @ routine 120
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Slow effect @ routine 120
                         speedMultiplier *= 0.5f;
                     }
                     else if (effectType == EffectType.MovementSpeedIncrease)

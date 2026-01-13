@@ -5,11 +5,11 @@ using System.Numerics;
 namespace Andastra.Runtime.Core.Navigation
 {
     /// <summary>
-    /// Factory for creating NavigationMesh instances from Andastra.Parsing BWM data.
+    /// Factory for creating NavigationMesh instances from BioWare.NET BWM data.
     /// </summary>
     /// <remarks>
     /// Navigation Mesh Factory:
-    /// - Based on swkotor2.exe walkmesh/navigation system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) walkmesh/navigation system
     /// - Located via string references: "walkmesh" pathfinding functions, "nwsareapathfind.cpp" @ 0x007be3ff
     /// - BWM file format: "BWM V1.0" @ 0x007c061c (BWM file signature)
     /// - Error messages:

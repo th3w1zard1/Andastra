@@ -4,7 +4,7 @@ using Andastra.Runtime.Graphics;
 using Stride.Core.Mathematics;
 using Stride.Games;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IWindow.

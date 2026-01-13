@@ -3,7 +3,7 @@ using Andastra.Runtime.Graphics.Common.Enums;
 using Andastra.Runtime.Graphics.Common.Interfaces;
 using Andastra.Runtime.Graphics.Common.Structs;
 
-namespace Andastra.Runtime.Graphics.Common.Backends
+namespace Andastra.Game.Graphics.Common.Backends
 {
     /// <summary>
     /// Abstract base class for DirectX 12 backend implementations.

@@ -1,7 +1,7 @@
 using System;
-using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
@@ -9,14 +9,14 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Runtime.Scripting
+namespace Andastra.Game.Scripting
 {
     /// <summary>
     /// Odyssey Engine script executor implementation.
     /// </summary>
     /// <remarks>
     /// Odyssey Script Executor:
-    /// - Based on swkotor2.exe: DispatchScriptEvent @ 0x004dd730
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DispatchScriptEvent @ 0x004dd730
     /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_HEARTBEAT" @ 0x007bcb90, "ACTION" @ 0x007cd138
     /// - Script loading: Loads NCS bytecode from resource provider (IGameResourceProvider or Installation)
     /// - Script execution: Executes NCS bytecode via NCS VM with entity as caller (OBJECT_SELF)
@@ -60,7 +60,7 @@ namespace Andastra.Runtime.Scripting
         /// </summary>
         /// <remarks>
         /// Odyssey-specific script execution using Installation resource provider.
-        /// Based on swkotor2.exe script loading and execution patterns.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script loading and execution patterns.
         /// </remarks>
         public int ExecuteScript(string scriptResRef, IEntity owner, IEntity triggerer)
         {
@@ -84,7 +84,7 @@ namespace Andastra.Runtime.Scripting
                 context.SetTriggerer(triggerer);
 
                 // Execute script via VM
-                // Based on swkotor2.exe: Script execution with instruction budget tracking
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Script execution with instruction budget tracking
                 // Located via string references: Script execution budget limits per frame
                 // Original implementation: Tracks instruction count per entity for budget enforcement
                 int returnValue = _vm.Execute(bytecode, context);
@@ -108,7 +108,7 @@ namespace Andastra.Runtime.Scripting
         /// </summary>
         /// <remarks>
         /// Odyssey-specific: Uses Installation.ResourceLookup for NCS files.
-        /// Based on swkotor2.exe resource loading patterns.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) resource loading patterns.
         /// </remarks>
         private byte[] LoadNcsBytecode(string scriptResRef)
         {

@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.ERF;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Generics.UTC;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.ERF;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTC;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Content.Loaders;
 using Andastra.Runtime.Content.ResourceProviders;
@@ -18,13 +18,13 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Runtime.Engines.Common;
 using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Games.Aurora.Components;
-using Andastra.Runtime.Games.Common.Components;
-using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Game.Games.Aurora.Components;
+using Andastra.Game.Games.Common.Components;
+using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 
-namespace Andastra.Runtime.Games.Aurora
+namespace Andastra.Game.Games.Aurora
 {
     /// <summary>
     /// Aurora Engine (Neverwinter Nights) module loader implementation.

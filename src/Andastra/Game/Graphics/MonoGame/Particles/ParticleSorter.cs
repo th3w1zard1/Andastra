@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.Particles
+namespace Andastra.Game.Graphics.MonoGame.Particles
 {
     /// <summary>
     /// Particle sorting system for proper alpha blending.

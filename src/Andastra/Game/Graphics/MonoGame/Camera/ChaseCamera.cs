@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace Andastra.Runtime.MonoGame.Camera
+namespace Andastra.Game.Graphics.MonoGame.Camera
 {
     /// <summary>
     /// KOTOR-style chase camera that follows the player character.
@@ -11,7 +11,7 @@ namespace Andastra.Runtime.MonoGame.Camera
     /// </summary>
     /// <remarks>
     /// Chase Camera:
-    /// - Based on swkotor2.exe camera system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) camera system
     /// - Located via string references: Camera system references (see CameraController.cs for details)
     /// - "CameraRotate" @ 0x007cb910, "CameraViewAngle" @ 0x007cb940
     /// - "Keyboard Camera Deceleration" @ 0x007c834c, "Keyboard Camera Acceleration" @ 0x007c836c

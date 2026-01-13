@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace Andastra.Runtime.MonoGame.Rendering
+namespace Andastra.Game.Graphics.MonoGame.Rendering
 {
     /// <summary>
     /// Comprehensive render profiler for detailed performance analysis.
@@ -19,7 +19,7 @@ namespace Andastra.Runtime.MonoGame.Rendering
     /// </summary>
     /// <remarks>
     /// Render Profiler:
-    /// - Based on swkotor2.exe frame timing system (modern profiling enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) frame timing system (modern profiling enhancement)
     /// - Located via string references: "frameStart" @ 0x007ba698, "frameEnd" @ 0x007ba668
     /// - "frameStartkey" @ 0x007ba688, "frameEndkey" @ 0x007ba65c (keyframe timing)
     /// - "frameStartbezierkey" @ 0x007ba674, "frameEndbezierkey" @ 0x007ba648 (bezier keyframe timing)

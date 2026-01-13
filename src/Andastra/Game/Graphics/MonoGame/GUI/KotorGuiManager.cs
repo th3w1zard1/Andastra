@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Resource.Formats.TPC;
-using Andastra.Parsing.Extract.Installation;
-using Andastra.Parsing.Resource;
-using Andastra.Parsing.Resource.Formats.GFF.Generics.GUI;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
+using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Audio;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Graphics;
 using Andastra.Runtime.Graphics.MonoGame.Graphics;
 using Andastra.Runtime.MonoGame.Converters;
@@ -19,7 +19,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using XnaVector2 = Microsoft.Xna.Framework.Vector2; using XnaColor = Microsoft.Xna.Framework.Color;
 
-namespace Andastra.Runtime.MonoGame.GUI
+namespace Andastra.Game.Graphics.MonoGame.GUI
 {
     /// <summary>
     /// Manages KOTOR GUI rendering using MonoGame SpriteBatch.
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// Checkbox Click Event:
         /// - Based on swkotor.exe and swkotor2.exe: Checkbox click handling in options menu
         /// - Original implementation: Checkboxes toggle state when clicked (CB_VSYNC, CB_FRAMEBUFF, etc.)
-        /// - Based on swkotor2.exe: OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC @ 0x006e3e80
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC @ 0x006e3e80
         /// - When checkbox is clicked, its IsSelected state is toggled
         /// </remarks>
         public event Action<string, bool> OnCheckBoxClicked;
@@ -102,7 +102,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// - Returns null if no button is currently highlighted
         /// - Original implementation: Button hover state tracked internally for rendering and sound effects
         /// - Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Button hover state tracking
-        /// - Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Button hover state tracking
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790 @ 0x006d0790: Button hover state tracking
         /// </remarks>
         [CanBeNull]
         public string HighlightedButtonTag => _highlightedButtonTag;
@@ -149,7 +149,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <param name="height">Screen height for GUI scaling.</param>
         /// <returns>True if GUI was loaded successfully, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor2.exe GUI loading:
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) GUI loading:
         /// - FUN_0070a2e0 @ 0x0070a2e0: Demonstrates GUI loading pattern
         /// - Loads GUI files from installation using resource lookup
         /// - Parses GUI structure using GUIReader
@@ -468,7 +468,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
             // Play hover sound when button highlight changes
             // Based on swkotor.exe FUN_0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
-            // Based on swkotor2.exe FUN_006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
             if (_highlightedButtonTag != _previousHighlightedButtonTag && !string.IsNullOrEmpty(_highlightedButtonTag))
             {
                 // Button hover sound - play when entering a button
@@ -683,7 +683,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// - Based on swkotor.exe and swkotor2.exe: Mouse click handling for GUI controls
         /// - Original implementation: Buttons and checkboxes respond to mouse clicks
         /// - Checkboxes toggle their IsSelected state when clicked
-        /// - Based on swkotor2.exe: OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC checkbox clicks
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OptionsGraphicsAdvancedMenu::callbackActive handles CB_VSYNC checkbox clicks
         /// </remarks>
         private void HandleMouseClick(int mouseX, int mouseY)
         {
@@ -693,7 +693,7 @@ namespace Andastra.Runtime.MonoGame.GUI
             }
 
             // Check all checkboxes for hit first (checkboxes are typically on top of buttons)
-            // Based on swkotor2.exe: Checkbox click handling takes priority
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Checkbox click handling takes priority
             foreach (var kvp in _currentGui.CheckBoxMap)
             {
                 var checkBox = kvp.Value;
@@ -711,7 +711,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 if (mouseX >= left && mouseX <= right && mouseY >= top && mouseY <= bottom)
                 {
                     // Checkbox clicked - toggle state
-                    // Based on swkotor2.exe: Checkbox state toggled on click (OptionsGraphicsAdvancedMenu::callbackActive)
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Checkbox state toggled on click (OptionsGraphicsAdvancedMenu::callbackActive)
                     bool wasSelected = checkBox.IsSelected.HasValue && checkBox.IsSelected.Value != 0;
                     bool newState = !wasSelected;
                     checkBox.IsSelected = newState ? 1 : 0;
@@ -1592,7 +1592,7 @@ namespace Andastra.Runtime.MonoGame.GUI
 
         /// <summary>
         /// Draws a line using a pixel texture with pixel-perfect accuracy.
-        /// Based on swkotor2.exe: glLineWidth usage for OpenGL line rendering (0x0080ade4)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): glLineWidth usage for OpenGL line rendering (0x0080ade4)
         /// Implements Bresenham's line algorithm with proper thickness handling for accurate line rendering.
         /// </summary>
         /// <param name="pixel">The 1x1 pixel texture to use for drawing.</param>
@@ -2187,7 +2187,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Dimension = selected.Dimension,
                 InnerOffset = selected.InnerOffset,
                 InnerOffsetY = selected.InnerOffsetY,
-                Color = selected.Color != null ? new Andastra.Parsing.Common.Color(selected.Color) : null,
+                Color = selected.Color != null ? new BioWare.NET.Common.Color(selected.Color) : null,
                 Pulsing = selected.Pulsing
             };
         }
@@ -2206,7 +2206,7 @@ namespace Andastra.Runtime.MonoGame.GUI
                 Dimension = hilightSelected.Dimension,
                 InnerOffset = hilightSelected.InnerOffset,
                 InnerOffsetY = hilightSelected.InnerOffsetY,
-                Color = hilightSelected.Color != null ? new Andastra.Parsing.Common.Color(hilightSelected.Color) : null,
+                Color = hilightSelected.Color != null ? new BioWare.NET.Common.Color(hilightSelected.Color) : null,
                 Pulsing = hilightSelected.Pulsing
             };
         }
@@ -2253,7 +2253,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Plays button hover sound effect.
         /// Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Plays "gui_actscroll" or "gui_actscroll1" on button hover
-        /// Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790 @ 0x006d0790: Plays "gui_actscroll" or "gui_actscroll1" on button hover
         /// </summary>
         private void PlayButtonHoverSound()
         {
@@ -2285,7 +2285,7 @@ namespace Andastra.Runtime.MonoGame.GUI
         /// <summary>
         /// Plays button click sound effect.
         /// Based on swkotor.exe FUN_0067ace0 @ 0x0067ace0: Plays "gui_actclick" or "gui_actclick1" on button click
-        /// Based on swkotor2.exe FUN_006d0790 @ 0x006d0790: Plays "gui_actclick" or "gui_actclick1" on button click
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) FUN_006d0790 @ 0x006d0790: Plays "gui_actclick" or "gui_actclick1" on button click
         /// </summary>
         private void PlayButtonClickSound()
         {

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Extract.Installation;
 using JetBrains.Annotations;
-using JRL = Andastra.Parsing.Resource.Generics.JRL;
+using JRL = BioWare.NET.Resource.Formats.GFF.Generics.JRL;
 
 namespace Andastra.Runtime.Games.Common.Journal
 {

@@ -1,6 +1,6 @@
 using Andastra.Runtime.Engines.Eclipse;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins
+namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins
 {
     /// <summary>
     /// Dragon Age: Origins game session implementation (daorigins.exe).

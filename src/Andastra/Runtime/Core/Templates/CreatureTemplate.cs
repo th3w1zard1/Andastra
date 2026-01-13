@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Templates
     /// </summary>
     /// <remarks>
     /// Creature Template:
-    /// - Based on swkotor2.exe creature template system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) creature template system
     /// - Located via string references: "Creature" @ 0x007bc544, "Creature List" @ 0x007bd01c
     /// - Template loading: FUN_005226d0 @ 0x005226d0 (entity serialization references creature templates)
     /// - Original implementation: UTC (Creature) GFF templates define creature properties, stats, scripts
@@ -160,7 +160,7 @@ namespace Andastra.Runtime.Core.Templates
             }
 
             // Apply script hooks
-            // Based on swkotor2.exe: Creature script hooks from UTC template
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Creature script hooks from UTC template
             // Located via string references: "ScriptSpawn" @ 0x007bee30, "ScriptHeartbeat" @ 0x007beeb0, "ScriptOnNotice" @ 0x007beea0
             // Original implementation: FUN_0050c510 @ 0x0050c510 loads creature script hooks from UTC template
             Interfaces.Components.IScriptHooksComponent scripts = entity.GetComponent<Interfaces.Components.IScriptHooksComponent>();

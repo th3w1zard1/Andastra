@@ -9,7 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using DynamicLight = Andastra.Runtime.MonoGame.Lighting.DynamicLight;
 using IDynamicLight = Andastra.Runtime.MonoGame.Interfaces.IDynamicLight;
 
-namespace Andastra.Runtime.Games.Eclipse.Lighting
+namespace Andastra.Game.Games.Eclipse.Lighting
 {
     /// <summary>
     /// Light grid entry structure (offset + count per cluster) for GPU buffer.

@@ -36,7 +36,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Andastra\Parsing.NCS.Core\Andastra.Parsing.NCS.Core.csproj">
+    <ProjectReference Include="..\..\BioWare.NET\BioWare.NET.csproj">
       <PrivateAssets>none</PrivateAssets>
       <CopyLocal>true</CopyLocal>
     </ProjectReference>

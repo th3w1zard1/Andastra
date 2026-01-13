@@ -7,7 +7,7 @@ namespace Andastra.Runtime.Graphics
     /// </summary>
     /// <remarks>
     /// Texture 2D Interface:
-    /// - Based on swkotor2.exe texture loading and rendering system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) texture loading and rendering system
     /// - Located via string references: "texturewidth" @ 0x007b6e98, "GL_ARB_texture_compression" @ 0x007b88fc
     /// - "GL_EXT_texture_compression_s3tc" @ 0x007b88dc (S3TC/DXT texture compression)
     /// - "GL_EXT_texture_filter_anisotropic" @ 0x007b8974 (anisotropic filtering)

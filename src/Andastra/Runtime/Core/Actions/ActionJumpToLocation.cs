@@ -10,7 +10,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Jump To Location Action:
-    /// - Based on swkotor2.exe ActionJumpToLocation NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionJumpToLocation NWScript function
     /// - Located via string references: "JumpToLocation" action type (ACTION_TYPE_JUMP_TO_LOCATION constant), "Position" @ 0x007bef70 (position field)
     /// - Original implementation: Instantly teleports entity to specified location and facing without movement animation
     /// - Used for scripted movement (cutscenes, scripted sequences), area transitions, teleportation effects
@@ -37,7 +37,7 @@ namespace Andastra.Runtime.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            // Based on swkotor2.exe: ActionJumpToLocation implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionJumpToLocation implementation
             // Located via string references: "JumpToLocation" action type, "Position" @ 0x007bef70
             // Original implementation: Instantly teleports entity to location without movement animation
             // Used for scripted movement, cutscenes, area transitions

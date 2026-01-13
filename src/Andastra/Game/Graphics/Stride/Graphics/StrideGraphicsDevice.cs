@@ -9,7 +9,7 @@ using GraphicsPrimitiveType = Andastra.Runtime.Graphics.PrimitiveType;
 using StrideViewport = Stride.Graphics.Viewport;
 using StridePrimitiveType = Stride.Graphics.PrimitiveType;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of IGraphicsDevice.
@@ -28,7 +28,7 @@ namespace Andastra.Runtime.Stride.Graphics
 
         /// <summary>
         /// Pipeline state cache key for tracking state combinations.
-        /// Based on swkotor2.exe: DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
         /// Original game uses state blocks to cache and apply render states efficiently.
         /// </summary>
         private struct PipelineStateKey : IEquatable<PipelineStateKey>
@@ -465,7 +465,7 @@ namespace Andastra.Runtime.Stride.Graphics
             var commandList = ImmediateContext ?? throw new InvalidOperationException("CommandList is required for DrawIndexedPrimitives");
 
             // Apply render state before drawing
-            // Based on swkotor2.exe: DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
             // Original game applies render states before each draw call to ensure correct rendering
             ApplyRenderState();
 
@@ -490,7 +490,7 @@ namespace Andastra.Runtime.Stride.Graphics
             var commandList = ImmediateContext ?? throw new InvalidOperationException("CommandList is required for DrawPrimitives");
 
             // Apply render state before drawing
-            // Based on swkotor2.exe: DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
             // Original game applies render states before each draw call to ensure correct rendering
             ApplyRenderState();
 
@@ -613,7 +613,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// <summary>
         /// Applies the current render state (rasterizer, depth-stencil, blend) to the CommandList.
         /// In Stride, state is applied through CommandList methods or through PipelineState.
-        /// Based on swkotor2.exe: DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX 9 state management (d3d9.dll @ 0x0080a6c0)
         /// Original game uses IDirect3DDevice9::SetRenderState() to apply render states.
         /// </summary>
         private void ApplyRenderState()
@@ -850,7 +850,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// <summary>
         /// Applies the current sampler state for the specified sampler slot to the CommandList.
         /// In Stride, sampler states are set per sampler slot and are part of the resource binding.
-        /// Based on swkotor2.exe: DirectX 9 sampler state management (d3d9.dll @ 0x0080a6c0)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): DirectX 9 sampler state management (d3d9.dll @ 0x0080a6c0)
         /// </summary>
         private void ApplySamplerState(int index)
         {

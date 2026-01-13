@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.TLK;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.TLK;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Eclipse;
-using Andastra.Runtime.Games.Eclipse.Components;
+using Andastra.Game.Games.Eclipse;
+using Andastra.Game.Games.Eclipse.Components;
 using JetBrains.Annotations;
-using Gender = Andastra.Parsing.Common.Gender;
-using Language = Andastra.Parsing.Common.Language;
+using Gender = BioWare.NET.Common.Gender;
+using Language = BioWare.NET.Common.Language;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
 
-namespace Andastra.Runtime.Games.Eclipse.Loading
+namespace Andastra.Game.Games.Eclipse.Loading
 {
     /// <summary>
     /// Factory for creating runtime entities from GFF templates in Eclipse engine.

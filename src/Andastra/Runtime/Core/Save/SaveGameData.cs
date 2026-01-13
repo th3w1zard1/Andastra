@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Save
     /// </summary>
     /// <remarks>
     /// Save Game Data Structure:
-    /// - Based on swkotor2.exe save game format
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save game format
     /// - Located via string references: "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c, "SAVES:" @ 0x007be284
     /// - Save function: FUN_004eb750 @ 0x004eb750 creates save game ERF archive
     /// - Maps to KOTOR save structure:
@@ -80,7 +80,7 @@ namespace Andastra.Runtime.Core.Save
         /// Module-to-area mapping (keyed by module ResRef, value is list of area ResRefs belonging to that module).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Mod_Area_list field in module IFO file contains the list of areas belonging to each module.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Mod_Area_list field in module IFO file contains the list of areas belonging to each module.
         /// This mapping is stored in save data to enable checking if an area belongs to a module even when the module is not loaded.
         /// Original implementation: Module IFO file contains Mod_Area_list (GFF List) with Area_Name fields for each area.
         /// Located via string reference: "Mod_Area_list" @ 0x007be748 (swkotor2.exe)
@@ -97,7 +97,7 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         /// <remarks>
         /// Plot State Storage:
-        /// - Based on swkotor2.exe: Plot states are saved as part of game state
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Plot states are saved as part of game state
         /// - Original implementation: Plot states track which plots have been triggered/completed
         /// - Plot state includes: plot index, label, triggered status, completed status, trigger count, last triggered time
         /// </remarks>
@@ -152,7 +152,7 @@ namespace Andastra.Runtime.Core.Save
         /// Live content entry strings (up to 9 entries: LIVE1-9).
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750
         /// Original implementation stores LIVE1-9 as string fields in NFO GFF
         /// These are live content entry strings that correspond to the LIVECONTENT bitmask
         /// </remarks>
@@ -168,7 +168,7 @@ namespace Andastra.Runtime.Core.Save
         /// </summary>
         /// <remarks>
         /// Faction Reputation Storage:
-        /// - Based on swkotor2.exe: REPUTE.fac file format
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): REPUTE.fac file format
         /// - Located via string reference: "REPUTE" @ (needs verification)
         /// - FAC file format: GFF with "FAC " signature, contains FactionList and RepList
         /// - FactionList: List of Faction structs (FactionName: string, FactionGlobal: uint)
@@ -783,7 +783,7 @@ namespace Andastra.Runtime.Core.Save
     /// </summary>
     /// <remarks>
     /// Faction Reputation Storage:
-    /// - Based on swkotor2.exe: REPUTE.fac file format
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): REPUTE.fac file format
     /// - FAC file format: GFF with "FAC " signature, contains FactionList and RepList
     /// - FactionList: List of Faction structs (FactionName: string, FactionGlobal: uint)
     /// - RepList: List of Reputation structs (FactionID1: uint, FactionID2: uint, FactionRep: uint)

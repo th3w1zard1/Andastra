@@ -9,12 +9,12 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Common;
-using Andastra.Parsing.Formats.Capsule;
-using Andastra.Parsing.Resource.Generics.UTI;
+using BioWare.NET.Common;
+using BioWare.NET.Resource.Formats.Capsule;
+using BioWare.NET.Resource.Formats.GFF.Generics.UTI;
 using HolocronToolset.Data;
 using System.ComponentModel;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource;
 
 namespace HolocronToolset.Dialogs
 {

@@ -17,7 +17,7 @@ using GraphicsSpriteEffects = Andastra.Runtime.Graphics.SpriteEffects;
 using GraphicsBlendState = Andastra.Runtime.Graphics.BlendState;
 using GraphicsViewport = Andastra.Runtime.Graphics.Viewport;
 
-namespace Andastra.Runtime.Stride.Graphics
+namespace Andastra.Game.Stride.Graphics
 {
     /// <summary>
     /// Stride implementation of ISpriteBatch.
@@ -158,7 +158,7 @@ namespace Andastra.Runtime.Stride.Graphics
                 var strideDestRect = new RectangleF(position.X, position.Y, srcRect.Width, srcRect.Height);
                 
                 // Calculate normalized UV coordinates for source rectangle
-                // Based on swkotor2.exe: Sprite rendering with source rectangles @ 0x007b5680
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sprite rendering with source rectangles @ 0x007b5680
                 // Original game uses DirectX sprite rendering with source rectangle support
                 float u1 = (float)srcRect.X / (float)texture.Width;
                 float v1 = (float)srcRect.Y / (float)texture.Height;
@@ -229,7 +229,7 @@ namespace Andastra.Runtime.Stride.Graphics
             // Implement comprehensive Draw with all parameters
             // Stride SpriteBatch.Draw doesn't support all these parameters directly like MonoGame
             // We implement as much as possible within Stride's API constraints
-            // Based on swkotor2.exe: Sprite rendering with full transform support @ 0x007b5680
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sprite rendering with full transform support @ 0x007b5680
             // Original game uses DirectX sprite rendering with rotation, origin, effects, layer depth
             
             // Calculate normalized UV coordinates for source rectangle if provided
@@ -424,7 +424,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// <summary>
         /// Draws a quad with source rectangle support using manual rendering with UV coordinates.
         /// Uses CommandList to render a textured quad with calculated UV coordinates for source rectangle cropping.
-        /// Based on swkotor2.exe: Sprite rendering with source rectangles @ 0x007b5680
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sprite rendering with source rectangles @ 0x007b5680
         /// Original game uses DirectX sprite rendering with source rectangle support via textured quads.
         /// </summary>
         /// <param name="texture">The texture to render.</param>
@@ -638,7 +638,7 @@ namespace Andastra.Runtime.Stride.Graphics
         /// <summary>
         /// Creates a sprite effect for rendering textured quads with source rectangles.
         /// Uses Stride's Effect system to create a simple shader that samples texture with UV coordinates.
-        /// Based on swkotor2.exe: Sprite rendering with source rectangles @ 0x007b5680
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sprite rendering with source rectangles @ 0x007b5680
         /// Original game uses DirectX sprite rendering with texture sampling and color tinting.
         /// </summary>
         private EffectInstance CreateSpriteEffect(

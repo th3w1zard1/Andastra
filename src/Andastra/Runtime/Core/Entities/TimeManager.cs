@@ -15,7 +15,7 @@ namespace Andastra.Runtime.Core.Entities
     ///   - EclipseTimeManager (Runtime.Games.Eclipse) for Dragon Age/
     ///   - InfinityTimeManager (Runtime.Games.Infinity) for  games
     /// - This class throws NotSupportedException since Core cannot depend on Games.
-    /// - Based on swkotor2.exe time management system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) time management system
     /// - Located via string references: "TIME_PAUSETIME" @ 0x007bdf88 (pause time constant), "TIME_PAUSEDAY" @ 0x007bdf98 (pause day constant), "TIME_MILLISECOND" @ 0x007bdfa8 (millisecond constant)
     /// - Time unit constants: "TIME_SECOND" @ 0x007bdfbc (second constant), "TIME_MINUTE" @ 0x007bdfc8 (minute constant), "TIME_HOUR" @ 0x007bdfd4 (hour constant)
     /// - "TIME_DAY" @ 0x007bdfe0 (day constant), "TIME_MONTH" @ 0x007bdfec (month constant), "TIME_YEAR" @ 0x007bdff8 (year constant)

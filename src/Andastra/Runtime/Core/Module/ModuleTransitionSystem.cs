@@ -17,7 +17,7 @@ namespace Andastra.Runtime.Core.Module
     /// </summary>
     /// <remarks>
     /// Module Transition System:
-    /// - Based on swkotor2.exe module transition system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) module transition system
     /// - Located via string references: "Module" @ 0x007c1a70 (module object type), "ModuleName" @ 0x007bde2c (module name field)
     /// - "LASTMODULE" @ 0x007be1d0 (last module global variable), "ModuleList" @ 0x007bdd3c (module list field)
     /// - "ModuleLoaded" @ 0x007bdd70 (module loaded flag), "ModuleRunning" @ 0x007bdd58 (module running flag)
@@ -73,7 +73,7 @@ namespace Andastra.Runtime.Core.Module
         /// <param name="resourceProvider">Optional resource provider for movie playback (must implement IMovieResourceProvider or be adaptable).</param>
         /// <param name="graphicsDevice">Optional graphics device for movie playback (must implement IMovieGraphicsDevice or be adaptable).</param>
         /// <remarks>
-        /// Based on swkotor2.exe: Module transition system initialization
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module transition system initialization
         /// - Loading screen is injected to avoid Core depending on Graphics/Content
         /// - Movie player is created if resource provider and graphics device are available
         /// - Resource provider and graphics device are adapted from Content/Graphics layers if needed
@@ -185,7 +185,7 @@ namespace Andastra.Runtime.Core.Module
                     _saveSystem.StoreModuleState(_world.CurrentModule.ResRef, moduleState);
 
                     // 4. Fire OnClientLeave script (before OnModuleLeave)
-                    // Based on swkotor2.exe: Client leave script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Client leave script execution
                     // Located via string references: "Mod_OnClientLeav" @ 0x007be718
                     // Original implementation: OnClientLeave fires when player/client leaves the module (before OnModuleLeave)
                     // This is a module-level script that fires once when the player leaves the module
@@ -207,7 +207,7 @@ namespace Andastra.Runtime.Core.Module
                     }
 
                     // 4.5. Fire OnModuleLeave script
-                    // Based on swkotor2.exe: Module leave script execution
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module leave script execution
                     // Located via string references: "OnModuleLeave" @ 0x007bee50, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
                     // Original implementation: FUN_005226d0 @ 0x005226d0 executes module leave scripts before unloading
                     string leaveScript = _world.CurrentModule.GetScript(ScriptEvent.OnModuleLeave);
@@ -243,7 +243,7 @@ namespace Andastra.Runtime.Core.Module
                 }
 
                 // 7. Check if we've been here before
-                // Based on swkotor2.exe: Module state restoration
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state restoration
                 // Original implementation: Restores entity positions, door/placeable states if module was previously visited
                 if (_saveSystem.HasModuleState(moduleResRef))
                 {
@@ -275,7 +275,7 @@ namespace Andastra.Runtime.Core.Module
                 }
 
                 // 9. Fire OnModuleLoad script
-                // Based on swkotor2.exe: Module load script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module load script execution
                 // Located via string references: "OnModuleLoad" @ 0x007bee40, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_LOAD" @ 0x007bc91c
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes module load scripts after loading
                 string loadScript = newModule.GetScript(ScriptEvent.OnModuleLoad);
@@ -293,7 +293,7 @@ namespace Andastra.Runtime.Core.Module
                 }
 
                 // 10. Fire OnModuleStart script
-                // Based on swkotor2.exe: Module start script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module start script execution
                 // Located via string references: "OnModuleStart" script, "CSWSSCRIPTEVENT_EVENTTYPE_ON_MODULE_START" @ 0x007bc948 (0x15)
                 // Original implementation: OnModuleStart fires after OnModuleLoad, before gameplay starts
                 string startScript = newModule.GetScript(ScriptEvent.OnModuleStart);
@@ -311,7 +311,7 @@ namespace Andastra.Runtime.Core.Module
                 }
 
                 // 10.5. Fire OnClientEnter script
-                // Based on swkotor2.exe: Client enter script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Client enter script execution
                 // Located via string references: "Mod_OnClientEntr" @ 0x007be718, "Mod_OnClientEntrance" @ 0x007be718
                 // Original implementation: OnClientEnter fires when player/client enters the module (after OnModuleStart)
                 // This is a module-level script that fires once when the player enters the module
@@ -333,7 +333,7 @@ namespace Andastra.Runtime.Core.Module
                 }
 
                 // 11. Fire OnEnter for area
-                // Based on swkotor2.exe: Area enter script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area enter script execution
                 // Located via string references: "OnEnter" @ 0x007bee60 (area enter script)
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes area enter scripts for each party member
                 if (_world.CurrentArea != null && _world.EventBus != null)
@@ -374,7 +374,7 @@ namespace Andastra.Runtime.Core.Module
                 }
 
                 // 12. Fire OnSpawn for any new creatures
-                // Based on swkotor2.exe: Creature spawn script execution
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Creature spawn script execution
                 // Located via string references: "OnSpawn" @ 0x007beec0 (spawn script field)
                 // Original implementation: FUN_005226d0 @ 0x005226d0 executes spawn scripts when creatures are created
                 IEnumerable<IEntity> creatures = _world.GetEntitiesOfType(ObjectType.Creature);
@@ -572,7 +572,7 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Positions party at specified location.
-        /// Based on swkotor2.exe: Party positioning at waypoints
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Party positioning at waypoints
         /// Located via string references: "Waypoint" @ 0x007c1a90, "PositionParty" @ 0x007c1a94
         /// Original implementation: FUN_005226d0 @ 0x005226d0 positions all party members at waypoint with spacing
         /// </summary>
@@ -640,7 +640,7 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Gets loadscreen image for module.
-        /// Based on swkotor2.exe: Module loadscreen lookup
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module loadscreen lookup
         /// Located via string references: "LoadScreen" @ 0x007c1a98, "LoadScreenResRef" @ IFO structure
         /// Original implementation: FUN_005226d0 @ 0x005226d0 reads loadscreen from module IFO file
         /// </summary>
@@ -667,7 +667,7 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Shows loading screen.
-        /// Based on swkotor2.exe: Loading screen display during module transitions
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen display during module transitions
         /// Located via string references: "loadscreen_p" @ 0x007cbe40 (loading screen GUI panel)
         /// Original implementation: FUN_006cff90 @ 0x006cff90 initializes and shows loading screen GUI
         /// - Loads "loadscreen_p" GUI panel with progress bar, hints, and logo
@@ -685,7 +685,7 @@ namespace Andastra.Runtime.Core.Module
 
         /// <summary>
         /// Hides loading screen.
-        /// Based on swkotor2.exe: Loading screen is hidden after module load completes
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen is hidden after module load completes
         /// Original implementation: Loading screen is hidden after module transition completes
         /// - Hides "loadscreen_p" GUI panel
         /// - Clears loading screen state

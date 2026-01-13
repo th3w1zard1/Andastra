@@ -5,7 +5,7 @@ namespace Andastra.Runtime.Core.Enums
     /// </summary>
     /// <remarks>
     /// Script Event Types:
-    /// - Based on swkotor2.exe script event system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script event system
     /// - Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_*" constants throughout executable
     /// - Event dispatching: FUN_004dcfb0 @ 0x004dcfb0 handles script event dispatching (switch on event type)
     /// - Original implementation: Script events trigger NWScript execution when game events occur

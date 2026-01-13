@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Andastra.Parsing.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.TwoDA;
 using Andastra.Runtime.Core.Combat;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
@@ -97,13 +97,13 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Apply item effects
-                // Based on swkotor2.exe: Item usage applies item properties as effects
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage applies item properties as effects
                 // Located via string references: Item properties can have effects (healing, damage, status effects, etc.)
                 // Original implementation: Item properties are converted to effects and applied to target
                 ApplyItemEffects(actor, target, item, itemComponent);
 
                 // Consume charge if item has charges
-                // Based on swkotor2.exe: Consumable items have charges that are consumed on use
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Consumable items have charges that are consumed on use
                 // Located via string references: "Charges" @ 0x007c0a94 (charges field in UTI)
                 // Original implementation: Items with charges (chargesstarting > 0 in baseitems.2da) consume a charge when used
                 if (itemComponent.Charges > 0)
@@ -119,7 +119,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Fire OnUsed script event
-                // Based on swkotor2.exe: OnUsed script fires when item is used
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): OnUsed script fires when item is used
                 // Located via string references: "OnUsed" @ 0x007c1f70, "CSWSSCRIPTEVENT_EVENTTYPE_ON_ACTIVATE_ITEM" @ 0x007bc8f0
                 // Original implementation: OnUsed script executes on item entity with actor as triggerer
                 IEventBus eventBus = actor.World?.EventBus;
@@ -129,7 +129,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Fire OnInventoryDisturbed script event
-                // Based on swkotor2.exe: ON_INVENTORY_DISTURBED fires when items are used/consumed
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ON_INVENTORY_DISTURBED fires when items are used/consumed
                 // Located via string references: "CSWSSCRIPTEVENT_EVENTTYPE_ON_INVENTORY_DISTURBED" @ 0x007bc778 (0x1b)
                 // Original implementation: OnInventoryDisturbed script fires on actor entity when inventory is modified
                 if (eventBus != null)
@@ -146,7 +146,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Item Effect Application:
-        /// - Based on swkotor2.exe item effect system
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) item effect system
         /// - Original implementation: Item properties are converted to effects and applied via EffectSystem
         /// - Item properties can have various effects: healing, damage, status effects, ability bonuses, etc.
         /// - Property types: Property IDs map to effect types via itempropdef.2da lookup
@@ -163,7 +163,7 @@ namespace Andastra.Runtime.Core.Actions
             EffectSystem effectSystem = caster.World.EffectSystem;
 
             // Apply item properties as effects
-            // Based on swkotor2.exe: Item properties are converted to effects
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties are converted to effects
             // Located via string references: Item property types map to effect types
             // Original implementation: Each property type has corresponding effect type
             // Common property types (from Aurora engine standard):
@@ -181,7 +181,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // For consumable items, apply effects based on baseitems.2da item class if no properties found
-            // Based on swkotor2.exe: Item usage checks baseitems.2da for item class and chargesstarting
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage checks baseitems.2da for item class and chargesstarting
             // Located via string references: "baseitems" @ 0x007c4594, "BASEITEMS" @ 0x007c4594
             // Original implementation: FUN_005fb0f0 loads base item data from baseitems.2da
             // Items with chargesstarting > 0 in baseitems.2da are consumables that apply effects when used
@@ -192,7 +192,7 @@ namespace Andastra.Runtime.Core.Actions
                 if (baseItemId >= 0)
                 {
                     // Load baseitems.2da to get item class and consumable information
-                    // Based on swkotor2.exe: Base item stats loaded from baseitems.2da via GameDataProvider
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats loaded from baseitems.2da via GameDataProvider
                     TwoDA baseitemsTable = null;
                     if (caster.World.GameDataProvider != null)
                     {
@@ -215,15 +215,15 @@ namespace Andastra.Runtime.Core.Actions
                             if (baseItemRow != null)
                             {
                                 // Get item class from baseitems.2da
-                                // Based on swkotor2.exe: Item class determines item category and behavior
+                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item class determines item category and behavior
                                 int? itemClass = baseItemRow.GetInteger("itemclass", null);
 
                                 // Get chargesstarting to confirm it's a consumable
-                                // Based on swkotor2.exe: Items with chargesstarting > 0 are consumables
+                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Items with chargesstarting > 0 are consumables
                                 int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
 
                                 // Apply effects based on item class for consumable items
-                                // Based on swkotor2.exe: Different item classes have different effects when used
+                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Different item classes have different effects when used
                                 if (chargesStarting.HasValue && chargesStarting.Value > 0)
                                 {
                                     ApplyEffectsByItemClass(effectSystem, target, caster, baseItemRow, itemClass, itemComponent);
@@ -265,7 +265,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Item Class-Based Effect Application:
-        /// - Based on swkotor2.exe: Item usage checks baseitems.2da itemclass column to determine effects
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage checks baseitems.2da itemclass column to determine effects
         /// - Located via string references: "baseitems" @ 0x007c4594, itemclass column in baseitems.2da
         /// - Original implementation: Different item classes have different effects when used
         /// - Common consumable item classes:
@@ -287,7 +287,7 @@ namespace Andastra.Runtime.Core.Actions
             int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
 
             // Determine effect based on item class and label
-            // Based on swkotor2.exe: Item class determines what effects are applied when item is used
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item class determines what effects are applied when item is used
             // Common patterns:
             // - Medical consumables (medpacs): Apply healing
             // - Stimulants (stims): Apply ability/attack bonuses
@@ -302,7 +302,7 @@ namespace Andastra.Runtime.Core.Actions
                 string labelLower = label.ToLowerInvariant();
 
                 // Medical consumables (medpacs, medkits, etc.)
-                // Based on swkotor2.exe: Medical consumables typically have specific itemclass values or labels
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Medical consumables typically have specific itemclass values or labels
                 if (labelLower.Contains("medpac") || labelLower.Contains("medkit") || labelLower.Contains("heal"))
                 {
                     // Apply healing effect
@@ -314,7 +314,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Stimulants (stims, stimulants, etc.)
-                // Based on swkotor2.exe: Stims apply temporary ability/attack bonuses
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stims apply temporary ability/attack bonuses
                 if (labelLower.Contains("stim") || labelLower.Contains("adrenal"))
                 {
                     // Apply ability bonuses and attack bonuses
@@ -344,7 +344,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Grenades (grenades, mines, etc.)
-                // Based on swkotor2.exe: Grenades are typically thrown in combat, not consumed from inventory
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Grenades are typically thrown in combat, not consumed from inventory
                 // Note: In actual gameplay, grenades are thrown as weapons, not consumed from inventory like medpacs
                 // If a grenade is somehow used as a consumable, it typically doesn't apply effects directly
                 // Instead, grenades are handled by the combat system when thrown
@@ -357,7 +357,7 @@ namespace Andastra.Runtime.Core.Actions
                 }
 
                 // Item class-based effect determination
-                // Based on swkotor2.exe: Item class values determine item category and effects
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item class values determine item category and effects
                 // Common item class ranges:
                 // - 0-10: Weapons (not consumables)
                 // - 11-30: Armor/Shields (not consumables)
@@ -397,7 +397,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Default Consumable Effect:
-        /// - Based on swkotor2.exe: Default healing for consumable items without explicit properties
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Default healing for consumable items without explicit properties
         /// - Original implementation: Items with charges but no properties apply basic healing
         /// - Amount based on item charges or default healing value
         /// </remarks>
@@ -423,7 +423,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Calculates healing amount for medical consumables based on charges and chargesstarting.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Healing amount scales with item charges and base charges
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Healing amount scales with item charges and base charges
         /// </remarks>
         private int CalculateHealingAmount(IItemComponent itemComponent, int? chargesStarting)
         {
@@ -450,7 +450,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Calculates bonus amount for stimulants based on charges and chargesstarting.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Stim bonus amounts scale with item quality (chargesstarting)
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stim bonus amounts scale with item quality (chargesstarting)
         /// </remarks>
         private int CalculateStimBonusAmount(IItemComponent itemComponent, int? chargesStarting)
         {
@@ -480,7 +480,7 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Property to Effect Conversion:
-        /// - Based on swkotor2.exe: Item properties map to effect types via itempropdef.2da
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties map to effect types via itempropdef.2da
         /// - Located via string references: "ItemPropDef" @ 0x007c4c20, "itempropdef.2da" in resource system
         /// - Original implementation: Looks up property type in itempropdef.2da to determine effect type and parameters
         /// - itempropdef.2da columns: name, subtyperesref, param1resref, gamestrref, description
@@ -514,7 +514,7 @@ namespace Andastra.Runtime.Core.Actions
         /// Attempts to load itempropdef.2da table from the world's resource system.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: Item properties map to effect types via itempropdef.2da
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties map to effect types via itempropdef.2da
         /// - Located via string references: "ItemPropDef" @ 0x007c4c20, "itempropdef.2da" in resource system
         /// - Original implementation: Accesses itempropdef.2da through game data provider
         /// - Uses IWorld.GameDataProvider to access 2DA tables in engine-agnostic way
@@ -530,7 +530,7 @@ namespace Andastra.Runtime.Core.Actions
 
             // Access 2DA table through IWorld's GameDataProvider
             // This provides engine-agnostic access to game data tables
-            // Based on swkotor2.exe: Item properties are looked up in itempropdef.2da via game data system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item properties are looked up in itempropdef.2da via game data system
             // Original implementation: Uses game data provider to load itempropdef.2da table
             IGameDataProvider gameDataProvider = world.GameDataProvider;
             if (gameDataProvider == null)
@@ -542,7 +542,7 @@ namespace Andastra.Runtime.Core.Actions
             {
                 // Get itempropdef.2da table from game data provider
                 // Table name is "itempropdef" (without .2da extension)
-                // Based on swkotor2.exe: itempropdef.2da is loaded via game data system
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): itempropdef.2da is loaded via game data system
                 TwoDA table = gameDataProvider.GetTable("itempropdef");
                 return table;
             }

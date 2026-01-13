@@ -1,31 +1,31 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using Andastra.Parsing.Installation;
+using BioWare.NET.Installation;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
-using Andastra.Parsing;
-using Andastra.Parsing.Formats.GFF;
-using Andastra.Parsing.Formats.LTR;
-using Andastra.Parsing.Formats.TPC;
-using Andastra.Parsing.Formats.TwoDA;
-using Andastra.Parsing.Resource.Generics;
-using Andastra.Parsing.Resource;
-using UTCHelpers = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers;
-using UTCClass = Andastra.Parsing.Resource.Generics.UTC.UTCClass;
+using BioWare.NET;
+using BioWare.NET.Resource.Formats.GFF;
+using BioWare.NET.Resource.Formats.LTR;
+using BioWare.NET.Resource.Formats.TPC;
+using BioWare.NET.Resource.Formats.TwoDA;
+using BioWare.NET.Resource.Formats.GFF.Generics;
+using BioWare.NET.Resource;
+using UTCHelpers = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers;
+using UTCClass = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCClass;
 using HolocronToolset.Data;
 using HolocronToolset.Dialogs;
 using HolocronToolset.Widgets;
-using GFFAuto = Andastra.Parsing.Formats.GFF.GFFAuto;
-using UTC = Andastra.Parsing.Resource.Generics.UTC.UTC;
+using GFFAuto = BioWare.NET.Resource.Formats.GFF.GFFAuto;
+using UTC = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTC;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using Andastra.Parsing.Formats.Capsule;
+using BioWare.NET.Resource.Formats.Capsule;
 
 namespace HolocronToolset.Editors
 {
@@ -984,7 +984,7 @@ namespace HolocronToolset.Editors
 
             // Matching Python: gff: GFF = dismantle_utc(utc); write_gff(gff, data)
             Game game = _installation?.Game ?? Game.K2;
-            var gff = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.DismantleUtc(utc, game);
+            var gff = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers.DismantleUtc(utc, game);
             byte[] data = GFFAuto.BytesGff(gff, ResourceType.UTC);
             return Tuple.Create(data, new byte[0]);
         }
@@ -994,8 +994,8 @@ namespace HolocronToolset.Editors
         {
             // Use Dismantle/Construct pattern for reliable deep copy (matching Python deepcopy behavior)
             Game game = Game.K2; // Default game for serialization
-            var gff = Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.DismantleUtc(source, game);
-            return Andastra.Parsing.Resource.Generics.UTC.UTCHelpers.ConstructUtc(gff);
+            var gff = BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers.DismantleUtc(source, game);
+            return BioWare.NET.Resource.Formats.GFF.Generics.UTC.UTCHelpers.ConstructUtc(gff);
         }
 
         // Matching PyKotor implementation at Tools/HolocronToolset/src/toolset/gui/editors/utc.py:665-668
@@ -1464,8 +1464,8 @@ namespace HolocronToolset.Editors
                     {
                         filepath = System.IO.Path.Combine(overridePath, $"{resname}.dlg");
                         Game game = _installation.Game;
-                        var blankDlg = new Andastra.Parsing.Resource.Generics.DLG.DLG();
-                        var gff = Andastra.Parsing.Resource.Generics.DLG.DLGHelper.DismantleDlg(blankDlg, game);
+                        var blankDlg = new BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLG();
+                        var gff = BioWare.NET.Resource.Formats.GFF.Generics.DLG.DLGHelper.DismantleDlg(blankDlg, game);
                         data = GFFAuto.BytesGff(gff, ResourceType.DLG);
                         System.IO.File.WriteAllBytes(filepath, data);
                     }
@@ -1524,7 +1524,7 @@ namespace HolocronToolset.Editors
 
             if (_filepath != null)
             {
-                if (Andastra.Parsing.Tools.FileHelpers.IsSavFile(_filepath))
+                if (BioWare.NET.Tools.FileHelpers.IsSavFile(_filepath))
                 {
                     // Search capsules inside the .sav outer capsule
                     // Matching PyKotor: capsules_to_search = [Capsule(res.filepath()) for res in Capsule(self._filepath) if is_capsule_file(res.filename()) and res.inside_capsule]
@@ -1535,7 +1535,7 @@ namespace HolocronToolset.Editors
                         {
                             // Check if the resource name (resname + extension) is a capsule file
                             string resourceFilename = $"{res.ResName}.{res.ResType.Extension}";
-                            if (Andastra.Parsing.Tools.FileHelpers.IsCapsuleFile(resourceFilename))
+                            if (BioWare.NET.Tools.FileHelpers.IsCapsuleFile(resourceFilename))
                             {
                                 // The resource is inside a capsule (since we're iterating through a capsule)
                                 // Construct the nested capsule path: outerCapsulePath/resourceFilename
@@ -1556,7 +1556,7 @@ namespace HolocronToolset.Editors
                         // Failed to load outer capsule
                     }
                 }
-                else if (Andastra.Parsing.Tools.FileHelpers.IsCapsuleFile(_filepath))
+                else if (BioWare.NET.Tools.FileHelpers.IsCapsuleFile(_filepath))
                 {
                     // Get capsules matching the module
                     // Matching PyKotor: capsules_to_search = Module.get_capsules_tuple_matching(self._installation, self._filepath.name)

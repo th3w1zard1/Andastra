@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using Microsoft.Xna.Framework;
 
-namespace Andastra.Runtime.MonoGame.Culling
+namespace Andastra.Game.Graphics.MonoGame.Culling
 {
     /// <summary>
     /// View frustum for culling objects outside the camera's view.
@@ -16,7 +16,7 @@ namespace Andastra.Runtime.MonoGame.Culling
     /// </summary>
     /// <remarks>
     /// Frustum Culling System:
-    /// - Based on swkotor2.exe rendering and culling system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) rendering and culling system
     /// - Located via string references: "VISIBLEVALUE" @ 0x007b6a58 (visibility value for culling)
     /// - "VisibleModel" @ 0x007c1c98 (visible model flag), "NonCull" @ 0x007ccb1c (non-cullable objects)
     /// - "IsBodyBagVisible" @ 0x007c1ff0 (body bag visibility flag)

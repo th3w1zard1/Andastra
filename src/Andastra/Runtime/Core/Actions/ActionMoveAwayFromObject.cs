@@ -12,7 +12,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Move Away From Object Action:
-    /// - Based on swkotor2.exe ActionMoveAwayFromObject NWScript function
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) ActionMoveAwayFromObject NWScript function
     /// - Located via string references: "MoveAwayFromObject" action type (ACTION_TYPE_MOVE_AWAY_FROM_OBJECT constant), "MOVETO" @ 0x007b6b24 (movement action constant)
     /// - Original implementation: Moves entity away from target to maintain minimum distance
     /// - Used for backing away from threats, maintaining personal space, retreat behavior, NPC avoidance
@@ -73,7 +73,7 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // Move away from target
-            // Based on swkotor2.exe: ActionMoveAwayFromObject implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionMoveAwayFromObject implementation
             // Located via string references: "MoveAwayFromObject" action type, "MOVETO" @ 0x007b6b24
             // Original implementation: Moves entity away from target to maintain minimum distance
             // Uses direct movement (no pathfinding) - moves in opposite direction from target
@@ -94,7 +94,7 @@ namespace Andastra.Runtime.Core.Actions
             Vector3 newPosition = transform.Position + direction * moveDistance;
 
             // Project position to walkmesh surface (matches FUN_004f5070 in swkotor2.exe)
-            // Based on swkotor2.exe: UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): UpdateCreatureMovement @ 0x0054be70 projects positions to walkmesh after movement
             IArea area = actor.World.CurrentArea;
             if (area != null && area.NavigationMesh != null)
             {

@@ -6,7 +6,7 @@ using System.Text;
 using Andastra.Runtime.Content.Save;
 using Andastra.Runtime.Core.Save;
 
-namespace Andastra.Runtime.Engines.Eclipse.Save
+namespace Andastra.Game.Engines.Eclipse.Save
 {
     /// <summary>
     /// Abstract base class for Eclipse Engine save serializer implementations.

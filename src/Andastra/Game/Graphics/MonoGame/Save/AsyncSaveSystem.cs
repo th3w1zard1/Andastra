@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Andastra.Runtime.MonoGame.Save
+namespace Andastra.Game.Graphics.MonoGame.Save
 {
     /// <summary>
     /// Async save/load system for non-blocking game state persistence.
@@ -21,7 +21,7 @@ namespace Andastra.Runtime.MonoGame.Save
     /// </summary>
     /// <remarks>
     /// Async Save System (MonoGame Implementation):
-    /// - Based on swkotor2.exe save system (modern async enhancement)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) save system (modern async enhancement)
     /// - Located via string references: "SAVES:" @ 0x007be284, "savenfo" @ 0x007be1f0, "SAVEGAME" @ 0x007be28c
     /// - "SAVENUMBER" @ 0x007be188, "SAVEGAMENAME" @ 0x007be1a8, ".\saves" @ 0x007c6b0c
     /// - "modulesave" @ 0x007bde20, "AutoSave" @ 0x007bd9e8, "QUICKSAVE" @ 0x007c7368
@@ -39,7 +39,7 @@ namespace Andastra.Runtime.MonoGame.Save
     /// - Compression: Optional compression of save data (original engine doesn't compress)
     /// - Progress tracking: Reports save/load progress for loading screens
     /// - Error handling: Catches and reports save/load errors gracefully
-    /// - Based on swkotor2.exe: FUN_004eb750 @ 0x004eb750 (save metadata), FUN_00708990 @ 0x00708990 (save file operations)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_004eb750 @ 0x004eb750 (save metadata), FUN_00708990 @ 0x00708990 (save file operations)
     /// - Note: Original engine saves synchronously, async is a modern enhancement for better performance
     /// </remarks>
     public class AsyncSaveSystem

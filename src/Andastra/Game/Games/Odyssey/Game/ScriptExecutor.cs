@@ -1,10 +1,10 @@
 using System;
-using Andastra.Parsing.Installation;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Extract.Installation;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.Scripting.EngineApi;
 using Andastra.Runtime.Scripting.Interfaces;
 using Andastra.Runtime.Scripting.VM;
@@ -12,7 +12,7 @@ using JetBrains.Annotations;
 using EngineApi = Andastra.Runtime.Engines.Odyssey.EngineApi;
 using VM = Andastra.Runtime.Scripting.VM;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Base Odyssey Engine script executor implementation.
@@ -206,7 +206,7 @@ namespace Andastra.Runtime.Games.Odyssey
     /// </summary>
     /// <remarks>
     /// KOTOR 2 Script Executor:
-    /// - Based on swkotor2.exe script execution system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) script execution system
     /// - Uses TheSithLords engine API (~950 engine functions, function IDs 0-949)
     /// - TSL-specific features: Influence system, Prestige Classes, Combat Forms, Item Crafting
     /// - Enhanced script execution with additional context support

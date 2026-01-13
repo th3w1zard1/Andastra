@@ -6,7 +6,7 @@ using Andastra.Runtime.Graphics.Common.Upscaling;
 using Andastra.Runtime.Stride.Graphics;
 using StrideGraphics = Stride.Graphics;
 
-namespace Andastra.Runtime.Stride.Upscaling
+namespace Andastra.Game.Stride.Upscaling
 {
     /// <summary>
     /// Stride implementation of Intel XeSS (Xe Super Sampling).

@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using Andastra.Parsing;
-using Andastra.Parsing.Installation;
-using Andastra.Runtime.Games.Common;
+using BioWare.NET;
+using BioWare.NET.Extract.Installation;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.MonoGame.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGameTexture2D = Andastra.Runtime.Graphics.MonoGame.Graphics.MonoGameTexture2D;
 
-namespace Andastra.Runtime.MonoGame.Fonts
+namespace Andastra.Game.Graphics.MonoGame.Fonts
 {
     /// <summary>
     /// Compatibility wrapper for BitmapFont. Use OdysseyBitmapFont instead.

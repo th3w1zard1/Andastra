@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Common.Journal
+namespace Andastra.Game.Games.Common.Journal
 {
     /// <summary>
     /// Base implementation of journal/quest system shared across all BioWare engines.

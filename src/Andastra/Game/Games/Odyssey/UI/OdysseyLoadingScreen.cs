@@ -1,10 +1,10 @@
 using System;
-using Andastra.Parsing.Resource.Generics.GUI;
+using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common;
+using Andastra.Game.Games.Common;
 using Andastra.Runtime.MonoGame.GUI;
 
-namespace Andastra.Runtime.Games.Odyssey.UI
+namespace Andastra.Game.Games.Odyssey.UI
 {
     /// <summary>
     /// Odyssey engine loading screen implementation using GUI system.
@@ -60,7 +60,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
 
         /// <summary>
         /// Shows the loading screen with the specified image.
-        /// Based on swkotor2.exe: FUN_006cff90 @ 0x006cff90 initializes loading screen GUI
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_006cff90 @ 0x006cff90 initializes loading screen GUI
         /// - Loads "loadscreen_p" GUI panel
         /// - Sets loading screen image via LoadScreenResRef (TPC texture)
         /// - Displays progress bar, hints, and logo
@@ -86,7 +86,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             _currentProgress = 0;
 
             // Load the loading screen GUI panel
-            // Based on swkotor2.exe: "loadscreen_p" GUI panel is loaded and displayed
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "loadscreen_p" GUI panel is loaded and displayed
             // Original implementation: FUN_006cff90 @ 0x006cff90 loads "loadscreen_p" GUI
             int screenWidth = 800; // Default resolution
             int screenHeight = 600;
@@ -96,7 +96,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             // Screen dimensions will be set when LoadGui is called
 
             // Load the loading screen GUI
-            // Based on swkotor2.exe: Loads "loadscreen_p" GUI panel
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loads "loadscreen_p" GUI panel
             bool loaded = _guiManager.LoadGui("loadscreen_p", screenWidth, screenHeight);
             if (!loaded)
             {
@@ -128,7 +128,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
 
         /// <summary>
         /// Hides the loading screen.
-        /// Based on swkotor2.exe: Loading screen is hidden after module load completes
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen is hidden after module load completes
         /// - Hides "loadscreen_p" GUI panel
         /// - Clears loading screen state
         /// - Original implementation: Called after module transition completes
@@ -145,13 +145,13 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             _currentProgress = 0;
 
             // Unload or hide the loading screen GUI
-            // Based on swkotor2.exe: Loading screen GUI is hidden/unloaded after module transition
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen GUI is hidden/unloaded after module transition
             _guiManager.SetCurrentGui(null);
         }
 
         /// <summary>
         /// Updates the loading screen progress bar.
-        /// Based on swkotor2.exe: Progress bar updates during resource loading
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Progress bar updates during resource loading
         /// - "PB_PROGRESS" control shows loading progress
         /// - "Load Bar = %d" @ 0x007c760c (progress debug output)
         /// - Original implementation: Progress bar updates as resources are loaded
@@ -167,7 +167,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             }
 
             // Update progress bar if GUI is loaded
-            // Based on swkotor2.exe: "PB_PROGRESS" control is updated with progress value
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): "PB_PROGRESS" control is updated with progress value
             // - FUN_006cff90 @ 0x006cff90: Loading screen initialization gets PB_PROGRESS control via FUN_0040bb40 @ 0x0040bb40
             // - Line 41-43: FUN_00630a90(&local_30,"PB_PROGRESS") followed by FUN_0040bb40(this,piVar1,&local_30,1,1) retrieves the progress bar control
             // - Progress bar value is set by updating the control's current value property
@@ -194,7 +194,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
 
         /// <summary>
         /// Updates the loading screen image.
-        /// Based on swkotor2.exe: Loading screen image is set via LoadScreenResRef
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen image is set via LoadScreenResRef
         /// - Image is loaded from TPC texture resource
         /// - Set as background or border fill on loading screen panel
         /// - Original implementation: FUN_006cff90 @ 0x006cff90 sets loading screen image
@@ -210,7 +210,7 @@ namespace Andastra.Runtime.Games.Odyssey.UI
             }
 
             // Update the loading screen image on the root control's border fill
-            // Based on swkotor2.exe: Loading screen image is set on the GUI panel root control
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Loading screen image is set on the GUI panel root control
             // Based on reone implementation: _gui->rootControl().setBorderFill(resRef)
             // The root control represents the entire loading screen panel, and its border fill
             // is used as the background image for the loading screen

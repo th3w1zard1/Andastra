@@ -411,7 +411,7 @@ namespace Andastra.Runtime.Core.Movement
             }
 
             // Check faction component for hostility
-            // Based on swkotor2.exe faction system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) faction system
             // Located via string references: "Faction" @ 0x007c24dc, "IsHostile" checks
             // Original implementation: Checks faction relationships via FactionManager
             // For PlayerInputHandler, we check IFactionComponent which provides IsHostile method
@@ -439,7 +439,7 @@ namespace Andastra.Runtime.Core.Movement
             }
 
             // Check DoorComponent for conversation
-            // Based on swkotor2.exe door system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) door system
             // Located via string references: "Conversation" @ 0x007c1abc
             // Original implementation: FUN_00580330 @ 0x00580330 saves door data including Conversation field
             // Conversation field in UTD template contains dialogue ResRef
@@ -454,7 +454,7 @@ namespace Andastra.Runtime.Core.Movement
             }
 
             // Check PlaceableComponent for conversation
-            // Based on swkotor2.exe placeable system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) placeable system
             // Located via string references: "Conversation" @ 0x007c1abc
             // Original implementation: FUN_00588010 @ 0x00588010 loads placeable data including Conversation field
             // Conversation field in UTP template contains dialogue ResRef
@@ -469,7 +469,7 @@ namespace Andastra.Runtime.Core.Movement
             }
 
             // Check for creature component conversation
-            // Based on swkotor2.exe creature system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) creature system
             // Located via string references: "Conversation" @ 0x007c1abc, "ScriptDialogue" @ 0x007bee40
             // Original implementation: FUN_0050c510 @ 0x0050c510 loads creature data including ScriptDialogue field
             // ScriptDialogue field in UTC template contains dialogue ResRef (stored as Conversation property)
@@ -509,7 +509,7 @@ namespace Andastra.Runtime.Core.Movement
             }
 
             // Get equipped weapon from main hand (slot 4)
-            // Based on swkotor2.exe inventory system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) inventory system
             // Located via string references: "INVENTORY_SLOT_RIGHTWEAPON" = 4
             // Original implementation: Gets equipped weapon from right hand slot
             Interfaces.Components.IInventoryComponent inventory = leader.GetComponent<Interfaces.Components.IInventoryComponent>();
@@ -536,7 +536,7 @@ namespace Andastra.Runtime.Core.Movement
             }
 
             // Get base item ID from weapon component and look up attack range from baseitems.2da
-            // Based on swkotor2.exe weapon system
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) weapon system
             // Located via string references: "WeaponType" in baseitems.2da, "maxattackrange" column
             // Original implementation: Reads maxattackrange from baseitems.2da using BaseItem ID
             // xoreos implementation: Item::getMaxAttackRange() @ vendor/xoreos/src/engines/kotorbase/item.cpp:74
@@ -549,7 +549,7 @@ namespace Andastra.Runtime.Core.Movement
                 if (baseItemId >= 0)
                 {
                     // Read maxattackrange from baseitems.2da using GameDataProvider
-                    // Based on swkotor2.exe: Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Reads maxattackrange column from baseitems.2da row indexed by BaseItem ID
                     float maxAttackRange = _world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "maxattackrange", 0.0f);
                     if (maxAttackRange > 0.0f)
                     {
@@ -560,7 +560,7 @@ namespace Andastra.Runtime.Core.Movement
                     }
 
                     // Fallback: Check if ranged weapon to use default ranged range
-                    // Based on swkotor2.exe: Ranged weapons have longer default range than melee
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Ranged weapons have longer default range than melee
                     // Read rangedweapon flag from baseitems.2da to determine if ranged
                     int rangedWeapon = (int)_world.GameDataProvider.GetTableFloat("baseitems", baseItemId, "rangedweapon", 0.0f);
                     if (rangedWeapon != 0)

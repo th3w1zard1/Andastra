@@ -10,14 +10,14 @@ using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
-using Andastra.Parsing.Extract;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Extract;
+using BioWare.NET.Resource;
 using HolocronToolset.Data;
 using HolocronToolset.Utils;
 using HolocronToolset.Editors;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
-using FileResource = Andastra.Parsing.Extract.FileResource;
+using FileResource = BioWare.NET.Extract.FileResource;
 
 namespace HolocronToolset.Dialogs
 {

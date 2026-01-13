@@ -1,7 +1,7 @@
-using Andastra.Parsing.Common;
+using BioWare.NET.Common;
 using Andastra.Runtime.Engines.Common;
 
-namespace Andastra.Runtime.Engines.Eclipse.DragonAgeOrigins
+namespace Andastra.Game.Engines.Eclipse.DragonAgeOrigins
 {
     /// <summary>
     /// Dragon Age: Origins engine implementation (daorigins.exe).

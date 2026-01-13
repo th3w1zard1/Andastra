@@ -4,16 +4,16 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using Andastra.Parsing.Formats.GFF;
+using BioWare.NET.Resource.Formats.GFF;
 using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Engines.Odyssey.Components;
-using Andastra.Runtime.Games.Common;
-using Andastra.Runtime.Games.Odyssey.Components;
+using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Odyssey.Components;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Games.Odyssey
+namespace Andastra.Game.Games.Odyssey
 {
     /// <summary>
     /// Odyssey Engine (KotOR/KotOR2) specific entity implementation.
@@ -142,7 +142,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Gets or sets the area ID this entity belongs to.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
         /// Located via string reference: "AreaId" @ 0x007bef48
         /// AreaId identifies which area the entity is located in.
         /// Set when entity is registered to an area in the world.
@@ -158,7 +158,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// </summary>
         /// <remarks>
         /// Display name is used for UI display and can be set from template data or GIT instances.
-        /// Based on swkotor2.exe: Entity names are stored in templates and can be overridden by GIT instances.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity names are stored in templates and can be overridden by GIT instances.
         /// </remarks>
         public string DisplayName
         {
@@ -211,7 +211,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - TransformComponent: Position, orientation, scale for all entities
         /// - ScriptHooksComponent: Script event hooks and local variables for all entities
         ///
-        /// Based on swkotor2.exe: All entities have transform and script hooks capability.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): All entities have transform and script hooks capability.
         /// Script hooks are loaded from GFF templates (UTC, UTD, UTP, etc.) and can be
         /// set at runtime via SetScript functions.
         /// </remarks>
@@ -229,7 +229,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Attach script hooks component for all entities
-            // Based on swkotor2.exe: All entities support script hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): All entities support script hooks (ScriptHeartbeat, ScriptOnNotice, etc.)
             // ComponentInitializer also attaches this, but we ensure it's attached here for consistency
             // Script hooks are loaded from GFF templates and can be set/modified at runtime
             if (!HasComponent<IScriptHooksComponent>())
@@ -324,7 +324,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 var factionComponent = new OdysseyFactionComponent();
                 factionComponent.Owner = this;
                 // Set FactionID from entity data if available (loaded from UTC template)
-                // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from GFF at offset in creature structure
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads FactionID from GFF at offset in creature structure
                 // Located via string references: "FactionID" @ 0x007c40b4 (swkotor2.exe) / 0x0074ae48 (swkotor.exe)
                 if (GetData("FactionID") is int factionId)
                 {
@@ -349,7 +349,7 @@ namespace Andastra.Runtime.Games.Odyssey
         private void AttachDoorComponents()
         {
             // Attach door component if not already present
-            // Based on swkotor2.exe: Door component is attached during entity creation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Door component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             if (!HasComponent<IDoorComponent>())
             {
@@ -381,7 +381,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// - Odyssey-specific: Fort/Will/Ref saves, BodyBag, Plot flag, FactionId, AppearanceType, trap system
         ///
         /// Component attachment pattern:
-        /// - Based on swkotor2.exe: Placeable components are attached during entity creation from GIT templates
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable components are attached during entity creation from GIT templates
         /// - ComponentInitializer also handles this, but we ensure it's attached here for consistency
         /// - Component provides: IsUseable, HasInventory, IsStatic, IsOpen, IsLocked, LockDC, KeyTag, HitPoints, MaxHitPoints, Hardness, AnimationState, Conversation
         /// - Odyssey-specific properties: AppearanceType, CurrentHP, MaxHP, Fort, Will, Reflex, KeyRequired, KeyName, IsContainer, FactionId, BodyBag, Plot
@@ -389,7 +389,7 @@ namespace Andastra.Runtime.Games.Odyssey
         private void AttachPlaceableComponents()
         {
             // Attach placeable component if not already present
-            // Based on swkotor2.exe: Placeable component is attached during entity creation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Placeable component is attached during entity creation
             // ComponentInitializer also handles this, but we ensure it's attached here for consistency
             if (!HasComponent<IPlaceableComponent>())
             {
@@ -555,7 +555,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// Processes any pending script events.
         /// Handles component interactions.
         ///
-        /// Based on swkotor2.exe: Entity update loop processes components in dependency order.
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity update loop processes components in dependency order.
         /// Component update order:
         /// 1. TransformComponent (position, orientation updates)
         /// 2. ActionQueueComponent (action execution, may modify transform)
@@ -644,7 +644,7 @@ namespace Andastra.Runtime.Games.Odyssey
         /// 4. Dispose all components that implement IDisposable
         /// 5. Clear all component references
         ///
-        /// Based on swkotor2.exe: Entity destruction pattern
+        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entity destruction pattern
         /// - Located via string references: "EVENT_DESTROY_OBJECT" @ 0x00744b10 (destroy object event)
         /// - Original implementation: Entities are removed from all lookup indices when destroyed
         /// - World maintains indices: ObjectId dictionary, Tag dictionary, ObjectType dictionary, AllEntities list
@@ -665,7 +665,7 @@ namespace Andastra.Runtime.Games.Odyssey
             if (_world != null)
             {
                 // Remove from area collections first (if entity belongs to an area)
-                // Based on swkotor2.exe: Entities belong to areas and must be removed from area collections
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities belong to areas and must be removed from area collections
                 // Located via string references: "AreaId" @ 0x007bef48, "EVENT_REMOVE_FROM_AREA" @ 0x007bcddc
                 // Original implementation: Area.RemoveEntity removes entity from area's type-specific and tag collections
                 if (_areaId != 0)
@@ -674,7 +674,7 @@ namespace Andastra.Runtime.Games.Odyssey
                     if (area != null)
                     {
                         // Remove entity from area's collections
-                        // Based on swkotor2.exe: Area.RemoveEntity removes from type-specific lists and tag index
+                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Area.RemoveEntity removes from type-specific lists and tag index
                         // RuntimeArea.RemoveEntity handles removal from Creatures, Placeables, Doors, Triggers, Waypoints, Sounds, Stores, Encounters lists
                         // and from tag index for GetEntityByTag lookups
                         if (area is Core.Module.RuntimeArea runtimeArea)
@@ -685,7 +685,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Unregister from world collections
-                // Based on swkotor2.exe: World.UnregisterEntity removes entity from all world lookup indices
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): World.UnregisterEntity removes entity from all world lookup indices
                 // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
                 // Original implementation: UnregisterEntity removes from:
                 // - _entitiesById dictionary (ObjectId lookup)
@@ -697,7 +697,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Clean up components
-            // Based on swkotor2.exe: Component cleanup when entity is destroyed
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Component cleanup when entity is destroyed
             // Components that implement IDisposable are disposed to free resources
             // Component disposal order: Components are disposed in arbitrary order (no dependencies)
             foreach (var component in GetAllComponents())
@@ -709,7 +709,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Clear component references
-            // Based on swkotor2.exe: Component references are cleared after disposal
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Component references are cleared after disposal
             // Component removal: All components are removed from entity to prevent access after destruction
             // Uses reflection to call RemoveComponent<T> for each component type
             var componentTypes = GetAllComponents().Select(c => c.GetType()).ToArray();
@@ -742,7 +742,7 @@ namespace Andastra.Runtime.Games.Odyssey
         public override byte[] Serialize()
         {
             // Create GFF structure for entity data
-            // Based on swkotor2.exe: FUN_005226d0 @ 0x005226d0 saves entity to GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005226d0 @ 0x005226d0 saves entity to GFF
             // Uses generic GFF format (GFFContent.GFF) for entity serialization
             var gff = new GFF(GFFContent.GFF);
             var root = gff.Root;
@@ -857,7 +857,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Serialize sound component
-            // Based on swkotor2.exe: Sound component data is serialized to GFF save data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Sound component data is serialized to GFF save data
             // Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
             // Sound properties are saved: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
             var soundComponent = GetComponent<ISoundComponent>();
@@ -894,7 +894,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Serialize inventory component
-            // Based on swkotor2.exe: Inventory items are serialized with their slot indices
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Inventory items are serialized with their slot indices
             // Equipment slots: 0-19 (INVENTORY_SLOT_HEAD through INVENTORY_SLOT_LEFTWEAPON2)
             // Inventory bag: Typically starts at slot 20+ (varies by implementation)
             var inventoryComponent = GetComponent<IInventoryComponent>();
@@ -934,7 +934,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 }
 
                 // Serialize local variables using reflection to access private dictionaries
-                // Based on swkotor2.exe: Local variables are stored in ScriptHooksComponent
+                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Local variables are stored in ScriptHooksComponent
                 // and serialized to GFF LocalVars structure
                 var localVarsStruct = root.Acquire<GFFStruct>("LocalVariables", new GFFStruct());
 
@@ -1068,7 +1068,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Parse GFF from byte array
-            // Based on swkotor2.exe: FUN_005fb0f0 loads entity from GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 loads entity from GFF
             GFF gff = GFF.FromBytes(data);
             if (gff == null || gff.Root == null)
             {
@@ -1105,8 +1105,8 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Deserialize Transform component
-            // Based on swkotor2.exe: Position stored as X, Y, Z in GFF
-            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads entity data from GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Position stored as X, Y, Z in GFF
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads entity data from GFF
             // Transform component is always present on all entities (created in Initialize() or AttachCommonComponents())
             // If missing (edge case during deserialization), create it to match original engine behavior
             if (root.Exists("X") && root.Exists("Y") && root.Exists("Z"))
@@ -1115,7 +1115,7 @@ namespace Andastra.Runtime.Games.Odyssey
                 if (transformComponent == null)
                 {
                     // Transform component should already exist from Initialize(), but create it if missing
-                    // Based on swkotor2.exe: All entities have transform data, so component must exist
+                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): All entities have transform data, so component must exist
                     // Component creation pattern matches AttachCommonComponents() and ComponentInitializer.InitializeComponents()
                     // Located via string references: "XPosition" @ 0x007bd000, "YPosition" @ 0x007bcff4, "ZPosition" @ 0x007bcfe8 (swkotor2.exe)
                     transformComponent = new TransformComponent();
@@ -1340,7 +1340,7 @@ namespace Andastra.Runtime.Games.Odyssey
             }
 
             // Deserialize sound component
-            // Based on swkotor2.exe: FUN_005fb0f0 @ 0x005fb0f0 loads sound component data from GFF save data
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FUN_005fb0f0 @ 0x005fb0f0 loads sound component data from GFF save data
             // Located via string references: "SoundList" @ 0x007bd080 (GIT sound list), "Sound" @ 0x007bc500 (sound entity type)
             // Sound properties are loaded: Active, Continuous, Looping, Positional, Random, RandomPosition, Volume, VolumeVrtn, MaxDistance, MinDistance, Interval, IntervalVrtn, PitchVariation, SoundFiles, Hours
             if (root.Exists("Active") || root.Exists("TemplateResRef"))

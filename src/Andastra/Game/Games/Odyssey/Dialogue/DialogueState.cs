@@ -1,17 +1,17 @@
 using System.Collections.Generic;
-using Andastra.Parsing.Resource.Generics.DLG;
+using BioWare.NET.Resource.Formats.GFF.Generics.DLG;
 using Andastra.Runtime.Core.Interfaces;
-using Andastra.Runtime.Games.Common.Dialogue;
+using Andastra.Game.Games.Common.Dialogue;
 using JetBrains.Annotations;
 
-namespace Andastra.Runtime.Engines.Odyssey.Dialogue
+namespace Andastra.Game.Engines.Odyssey.Dialogue
 {
     /// <summary>
     /// Tracks the current state of a dialogue conversation in Odyssey engine (DLG-based).
     /// </summary>
     /// <remarks>
     /// Dialogue State (Odyssey-specific):
-    /// - Based on swkotor2.exe: ExecuteDialogue @ 0x005e9920 (dialogue execution)
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ExecuteDialogue @ 0x005e9920 (dialogue execution)
     /// - Located via string references: "Conversation" @ 0x007c1abc, "ScriptDialogue" @ 0x007bee40, "ScriptEndDialogue" @ 0x007bede0
     /// - Error: "Error: dialogue can't find object '%s'!" @ 0x007c3730, "CONVERSATION ERROR: Last Conversation Node Contains Either an END NODE or CONTINUE NODE" @ 0x007c3768
     /// - Cross-engine analysis:

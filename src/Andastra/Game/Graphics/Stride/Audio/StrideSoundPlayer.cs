@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using Andastra.Parsing.Formats.WAV;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Audio;
 using Andastra.Runtime.Graphics;
@@ -11,7 +11,7 @@ using Stride.Audio;
 using Stride.Media;
 using StrideAudioLayer = Stride.Audio.AudioLayer;
 
-namespace Andastra.Runtime.Stride.Audio
+namespace Andastra.Game.Stride.Audio
 {
     /// <summary>
     /// Stride implementation of ISoundPlayer for playing sound effects.
@@ -24,7 +24,7 @@ namespace Andastra.Runtime.Stride.Audio
     /// </summary>
     /// <remarks>
     /// Sound Player (Stride Implementation):
-    /// - Based on swkotor2.exe sound effect playback system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) sound effect playback system
     /// - Located via string references: "SoundResRef" @ 0x007b5f70, "SoundList" @ 0x007bd080, "Sounds" @ 0x007c1038
     /// - Original implementation: KOTOR plays WAV files for sound effects (ambient, combat, UI, etc.)
     /// - Sound files: Stored as WAV resources, referenced by ResRef
@@ -121,7 +121,7 @@ namespace Andastra.Runtime.Stride.Audio
                 }
 
                 // Parse WAV file to get audio format information
-                // Based on Andastra.Parsing.Formats.WAV for WAV file parsing
+                // Based on BioWare.NET.Resource.Formats.WAV for WAV file parsing
                 WAV wavFile = WAVAuto.ReadWav(wavData);
                 if (wavFile == null)
                 {
@@ -369,7 +369,7 @@ namespace Andastra.Runtime.Stride.Audio
             {
                 // Extract PCM data from WAV file
                 // WAV format: Header + PCM data
-                // Based on Andastra.Parsing.Formats.WAV structure
+                // Based on BioWare.NET.Resource.Formats.WAV structure
                 byte[] pcmData = wavFile.Data;
                 if (pcmData == null || pcmData.Length == 0)
                 {

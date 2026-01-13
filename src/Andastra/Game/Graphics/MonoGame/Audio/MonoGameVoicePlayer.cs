@@ -1,15 +1,15 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Andastra.Parsing.Formats.WAV;
-using Andastra.Parsing.Resource;
+using BioWare.NET.Resource.Formats.WAV;
+using BioWare.NET.Resource;
 using Andastra.Runtime.Content.Interfaces;
 using Andastra.Runtime.Core.Dialogue;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Microsoft.Xna.Framework.Audio;
 
-namespace Andastra.Runtime.MonoGame.Audio
+namespace Andastra.Game.Graphics.MonoGame.Audio
 {
     /// <summary>
     /// MonoGame implementation of IVoicePlayer for playing voice-over audio.
@@ -23,7 +23,7 @@ namespace Andastra.Runtime.MonoGame.Audio
     /// </summary>
     /// <remarks>
     /// Voice Player (MonoGame Implementation):
-    /// - Based on swkotor2.exe voice-over playback system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) voice-over playback system
     /// - Located via string references: "VO_ResRef" @ 0x007c3574, dialogue voice-over playback
     /// - Voice directories: "STREAMVOICE" @ 0x007c69dc, ".\streamvoice" @ 0x007c69e8, "d:\streamvoice" @ 0x007c69f8
     /// - "HD0:STREAMVOICE" @ 0x007c771c, "HD0:STREAMVOICE\" @ 0x007c3914

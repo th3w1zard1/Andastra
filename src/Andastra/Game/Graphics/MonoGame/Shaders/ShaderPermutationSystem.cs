@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Andastra.Runtime.MonoGame.Shaders
+namespace Andastra.Game.Graphics.MonoGame.Shaders
 {
     /// <summary>
     /// Shader permutation/variant system for efficient shader management.

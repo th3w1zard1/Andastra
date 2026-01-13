@@ -8,7 +8,7 @@ namespace Andastra.Runtime.Core.Actions
     /// </summary>
     /// <remarks>
     /// Play Animation Action:
-    /// - Based on swkotor2.exe animation system
+    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) animation system
     /// - Located via string references: "Animation" @ 0x007c3440, "AnimList" @ 0x007c3694
     /// - "PlayAnim" @ 0x007c346c, "AnimLoop" @ 0x007c4c70 (animation loop flag)
     /// - "CurrentAnim" @ 0x007c38d4, "NextAnim" @ 0x007c38c8 (animation state tracking)
@@ -41,7 +41,7 @@ namespace Andastra.Runtime.Core.Actions
 
         protected override ActionStatus ExecuteInternal(IEntity actor, float deltaTime)
         {
-            // Based on swkotor2.exe: ActionPlayAnimation implementation
+            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ActionPlayAnimation implementation
             // Located via string references: "Animation" @ 0x007c3440, "PlayAnim" @ 0x007c346c
             // Original implementation: Plays animation on entity's animation component
             // Animation ID references animation index in MDL animation array

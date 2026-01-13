@@ -70,7 +70,7 @@ namespace Andastra.Runtime.Core.Interfaces.Components
         /// <remarks>
         /// Common across all engines:
         /// - Used for fade-in/fade-out effects (appear animation, destroy animation)
-        /// - Based on swkotor2.exe: FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
+        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): FadeTime @ 0x007c60ec (fade duration), alpha blending for entity rendering
         /// - Rendering systems should apply this opacity value when rendering entities
         /// - Default value is 1.0 (fully opaque)
         /// - For appear animation: Starts at 0.0 and fades in to 1.0 over fade duration
