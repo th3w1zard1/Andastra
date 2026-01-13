@@ -16,7 +16,14 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// </summary>
     /// <remarks>
     /// Entity Factory System:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) entity creation system
+    /// - Main entry point: LoadEntitiesFromGIT @ (K1: LoadGIT @ 0x0050dd80, TSL: LoadEntitiesFromGIT @ 0x004e9440) - Main entity creation system that loads all entity types from GIT file
+    ///   - K1 (swkotor.exe): LoadGIT @ 0x0050dd80 calls LoadCreatures @ 0x00504a70 to load creatures from "Creature List"
+    ///   - TSL (swkotor2.exe): LoadEntitiesFromGIT @ 0x004e9440 calls LoadCreaturesFromGIT @ 0x004dfbb0, LoadPlaceablesFromGIT @ 0x004e5d80, and other entity loaders
+    /// - Creature loading: LoadCreatureFromGIT @ (K1: LoadCreature @ 0x00500350, TSL: LoadCreatureFromGIT @ 0x005223a0) - Loads creature instance data from GIT struct
+    ///   - K1: LoadCreatures @ 0x00504a70 iterates "Creature List", creates CSWSCreature objects, calls LoadCreature @ 0x00500350 or LoadFromTemplate @ 0x005026d0
+    ///   - TSL: LoadCreaturesFromGIT @ 0x004dfbb0 iterates "Creature List", creates creature objects (0x1220 bytes), calls LoadCreatureFromGIT @ 0x005223a0
+    ///   - LoadCreatureFromGIT @ 0x005223a0: Reads AreaId, loads template via FUN_005fb0f0, sets creature properties (DetectMode, StealthMode, CreatureSize, etc.)
+    /// - Placeable loading: LoadPlaceablesFromGIT @ (K1: LoadPlaceables @ 0x0050a7b0, TSL: LoadPlaceablesFromGIT @ 0x004e5d80) - Loads placeables from "Placeable List"
     /// - Located via string references: "TemplateResRef" @ 0x007bd00c, "ScriptHeartbeat" @ 0x007beeb0
     /// - "tmpgit" @ 0x007be618 (temporary GIT structure references during entity loading)
     /// - Template loading: 0x005fb0f0 @ 0x005fb0f0 loads creature templates from GFF, reads TemplateResRef field
@@ -57,9 +64,9 @@ namespace Andastra.Game.Games.Odyssey.Loading
     /// </remarks>
     public class EntityFactory
     {
-        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): ObjectId assignment system
+        // ObjectId assignment system: FUN_004e5920 @ (K1: TODO: Find this address, TSL: 0x004e5920) reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
         // Located via string references: "ObjectId" @ 0x007bce5c, "ObjectIDList" @ 0x007bfd7c
-        // Original implementation: 0x004e5920 @ 0x004e5920 reads ObjectId from GIT with default 0x7f000000 (OBJECT_INVALID)
+        // Original implementation: FUN_004e5920 @ 0x004e5920 (TSL) reads ObjectId field from GIT struct with default 0x7f000000 (OBJECT_INVALID)
         // ObjectIds should be unique across all entities. Use high range (1000000+) to avoid conflicts with World.CreateEntity counter
         private uint _nextObjectId = 1000000;
 
@@ -74,7 +81,8 @@ namespace Andastra.Game.Games.Odyssey.Loading
 
         /// <summary>
         /// Reads ObjectId from GIT struct if present, otherwise generates new one.
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00412d40 reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+        /// Based on FUN_00412d40 @ (K1: TODO: Find this address, TSL: 0x00412d40) which reads ObjectId field from GIT with default 0x7f000000 (OBJECT_INVALID)
+        /// Called by LoadCreaturesFromGIT @ 0x004dfbb0 (TSL) and LoadCreatures @ 0x00504a70 (K1) to read ObjectId from each creature instance in GIT "Creature List"
         /// </summary>
         private uint GetObjectIdFromGit(GFFStruct gitStruct)
         {
@@ -92,9 +100,10 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a creature from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads creature instance data from GIT struct.
-        /// Loads AreaId from GFF at offset 0x90 (via 0x00412d40 with "AreaId" field name).
+        /// Based on swkotor2.exe: LoadCreatureFromGIT @ 0x005223a0 loads creature instance data from GIT struct.
+        /// Loads AreaId from GFF at offset 0x90 (via FUN_00412d40 with "AreaId" field name).
         /// Located via string reference: "AreaId" @ 0x007bef48
+        /// Called by LoadCreaturesFromGIT @ 0x004dfbb0 after creating creature object (0x1220 bytes) and initializing with ObjectId
         /// </remarks>
         [CanBeNull]
         public IEntity CreateCreatureFromGit(GFFStruct gitStruct, Module module)
