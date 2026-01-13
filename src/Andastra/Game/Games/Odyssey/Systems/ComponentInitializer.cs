@@ -4,7 +4,7 @@ using Andastra.Runtime.Core.Enums;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Odyssey.Components;
-using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 
 namespace Andastra.Game.Games.Odyssey.Systems
@@ -244,7 +244,7 @@ namespace Andastra.Game.Games.Odyssey.Systems
                 case ObjectType.Item:
                     if (!entity.HasComponent<IItemComponent>())
                     {
-                        entity.AddComponent(new OdysseyItemComponent());
+                        entity.AddComponent(new BaseItemComponent());
                     }
                     break;
             }

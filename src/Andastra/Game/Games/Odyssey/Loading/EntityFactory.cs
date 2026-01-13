@@ -10,6 +10,7 @@ using BioWare.NET.Resource;
 using Andastra.Runtime.Core.Entities;
 using Andastra.Runtime.Core.Interfaces;
 using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
 using ObjectType = Andastra.Runtime.Core.Enums.ObjectType;
 using ScriptEvent = Andastra.Runtime.Core.Enums.ScriptEvent;
@@ -599,7 +600,7 @@ namespace Andastra.Game.Games.Odyssey.Loading
             // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item component creation from UTI template
             // Located via string references: "ItemComponent" @ 0x007c41e4, "BaseItem" @ 0x007c0a78
             // Original implementation: Items loaded from UTI templates have ItemComponent with BaseItem, Properties, Charges, etc.
-            var itemComponent = new OdysseyItemComponent
+            var itemComponent = new BaseItemComponent
             {
                 BaseItem = GetIntField(root, "BaseItem", 0),
                 StackSize = GetIntField(root, "StackSize", 1),

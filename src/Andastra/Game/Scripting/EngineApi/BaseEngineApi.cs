@@ -18,9 +18,9 @@ namespace Andastra.Game.Scripting.EngineApi
     /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) NWScript engine API system
     /// - Located via string references: ACTION opcode handler dispatches to engine function implementations
     /// - "PRINTSTRING: %s\n" @ (K1: TODO: Find this address, TSL: 0x007c29f8) (PrintString function debug output format)
-    /// - "ActionList" @ (K1: TODO: Find this address, TSL: 0x007bebdc) (action list GFF field), "ActionId" @ (K1: TODO: Find this address, TSL: 0x007bebd0), "ActionType" @ (K1: TODO: Find this address, TSL: 0x007bf7f8)
+    /// - "ActionList" @ (K1: 0x00745ea0, TSL: 0x007bebdc) (action list GFF field), "ActionId" @ (K1: 0x00745e94, TSL: 0x007bebd0), "ActionType" @ (K1: 0x00746038, TSL: 0x007bf7f8)
     /// - PrintString implementation: [0x005c4ff0] @ (K1: TODO: Find this address, TSL: 0x005c4ff0) (prints string with "PRINTSTRING: %s\n" format)
-    /// - ActionList loading: [0x00508260] @ (K1: TODO: Find this address, TSL: 0x00508260) - loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
+    /// - ActionList loading: [0x004cecb0] @ (K1: 0x004cecb0, TSL: 0x00508260) - loads ActionList from GFF, parses ActionId, GroupActionId, NumParams, Paramaters)
     ///   - Original implementation (from decompiled 0x00508260):
     ///     - Reads "ActionList" list from GFF structure
     ///     - For each action entry, reads:

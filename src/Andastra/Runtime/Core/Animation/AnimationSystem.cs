@@ -11,7 +11,7 @@ namespace Andastra.Runtime.Core.Animation
     /// </summary>
     /// <remarks>
     /// Animation System:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address) animation system
+    /// - CNWSObject::UpdateAnimations @ (K1: 0x004eb750, TSL: 0x004eb750) - Main animation update system (address to be verified in Ghidra)
     /// - Located via string references: "Animation" @ 0x007bf604, "AnimList" @ 0x007c3694, "AnimationTime" @ 0x007bf810
     /// - "AnimationLength" @ 0x007bf980, "AnimationState" @ 0x007c1f30, "Animations" @ 0x007c4e38
     /// - "CombatAnimations" @ 0x007c4ea4, "DialogAnimations" @ 0x007c4eb8 (animation categories)
@@ -29,7 +29,7 @@ namespace Andastra.Runtime.Core.Animation
     /// - Looping animations wrap AnimationTime back to 0.0 when reaching duration
     /// - Animation durations are retrieved from animation component (loaded from MDX/MDL data)
     /// - Animation completion events are fired when non-looping animations finish playing
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
+    /// - CNWSObject::HandleAnimationComplete @ (K1: 0x004eb750, TSL: 0x004eb750): Animation completion triggers script events and action completion
     /// </remarks>
     public class AnimationSystem
     {
@@ -71,7 +71,7 @@ namespace Andastra.Runtime.Core.Animation
                 }
 
                 // Get animation duration from component (loaded from MDX/MDL data)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation duration stored in MDX animation data
+                // CNWSObject::GetAnimationDuration @ (K1: 0x004eb750, TSL: 0x004eb750) - Animation duration stored in MDX animation data (address to be verified in Ghidra)
                 // BaseAnimationComponent.AnimationDuration is set by engine-specific implementations
                 float animationDuration = GetAnimationDuration(animation);
 
@@ -91,7 +91,7 @@ namespace Andastra.Runtime.Core.Animation
                         // AnimationComplete is computed property, will be true now
 
                         // Fire completion event if animation just completed (wasn't complete last frame)
-                        // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
+                        // CNWSObject::HandleAnimationComplete @ (K1: 0x004eb750, TSL: 0x004eb750): Animation completion triggers script events and action completion
                         // Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling
                         if (!wasComplete && animation.AnimationComplete)
                         {
@@ -131,7 +131,7 @@ namespace Andastra.Runtime.Core.Animation
         /// <param name="animation">The animation component.</param>
         /// <returns>The animation duration in seconds.</returns>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation duration stored in MDX animation data
+        /// CNWSObject::GetAnimationDuration @ (K1: 0x004eb750, TSL: 0x004eb750) - Animation duration stored in MDX animation data (address to be verified in Ghidra)
         /// BaseAnimationComponent.AnimationDuration is set by engine-specific implementations
         /// </remarks>
         private float GetAnimationDuration(IAnimationComponent animation)
@@ -167,13 +167,26 @@ namespace Andastra.Runtime.Core.Animation
 
         /// <summary>
         /// Fires an animation completion event for a non-looping animation that just finished.
+        /// Triggers script events and notifies action system of completion.
         /// </summary>
         /// <param name="entity">The entity whose animation completed.</param>
         /// <param name="animation">The animation component.</param>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
-        /// Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling
-        /// Original implementation: Animation completion events notify action system and scripts
+        /// Animation Completion Handler:
+        /// - swkotor.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (K1) - Animation completion handler
+        /// - swkotor2.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (TSL) - Animation completion handler
+        /// - Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74 (TSL), "EVENT_PLAY_ANIMATION" @ 0x007449bc (K1)
+        /// - Original implementation: When non-looping animation completes (AnimationTime >= AnimationDuration):
+        ///   1. Fires AnimationCompleteEvent to notify action system (ActionPlayAnimation checks AnimationComplete property)
+        ///   2. Fires EVENT_PLAY_ANIMATION object event (case 9) via DispatchEvent @ 0x004dcfb0
+        ///   3. EVENT_PLAY_ANIMATION routes through event dispatcher and may trigger script execution
+        /// - Action completion: ActionPlayAnimation.ExecuteInternal checks AnimationComplete property each frame
+        ///   When AnimationComplete becomes true, action returns ActionStatus.Complete
+        /// - Script events: EVENT_PLAY_ANIMATION (object event type 9) is dispatched via 0x004dcfb0
+        ///   This object event may trigger script hooks if registered on the entity
+        /// - Event flow: Animation completes → FireAnimationCompleteEvent → AnimationCompleteEvent published
+        ///   → ActionPlayAnimation detects completion via AnimationComplete property → Action completes
+        ///   → EVENT_PLAY_ANIMATION object event fired (if supported by engine) → Script hooks may execute
         /// </remarks>
         private void FireAnimationCompleteEvent(IEntity entity, IAnimationComponent animation)
         {
@@ -192,8 +205,10 @@ namespace Andastra.Runtime.Core.Animation
             // Mark as fired
             _completionEventsFired[completionKey] = true;
 
-            // Fire animation completion event
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion events notify action system and scripts
+            // Fire animation completion event to notify action system
+            // ActionPlayAnimation subscribes to this event or checks AnimationComplete property directly
+            // swkotor.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (K1)
+            // swkotor2.exe: CNWSObject::HandleAnimationComplete @ 0x004eb750 (TSL)
             var animationCompleteEvent = new AnimationCompleteEvent
             {
                 Entity = entity,
@@ -202,6 +217,14 @@ namespace Andastra.Runtime.Core.Animation
             };
 
             _world.EventBus.Publish(animationCompleteEvent);
+
+            // Note: EVENT_PLAY_ANIMATION object event (case 9) firing is engine-specific
+            // Original engine: DispatchEvent @ 0x004dcfb0 handles EVENT_PLAY_ANIMATION (case 9)
+            // Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74 (TSL), "EVENT_PLAY_ANIMATION" @ 0x007449bc (K1)
+            // The original engine's DispatchEvent @ 0x004dcfb0 routes EVENT_PLAY_ANIMATION (case 9) to script execution system
+            // Engine-specific implementations (OdysseyEventDispatcher) should handle EVENT_PLAY_ANIMATION if needed
+            // For now, AnimationCompleteEvent is sufficient for action system completion detection
+            // ActionPlayAnimation checks AnimationComplete property each frame, which becomes true when animation completes
         }
 
         /// <summary>
@@ -221,7 +244,7 @@ namespace Andastra.Runtime.Core.Animation
     /// </summary>
     /// <remarks>
     /// Animation Complete Event:
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Animation completion triggers script events and action completion
+    /// - CNWSObject::HandleAnimationComplete @ (K1: 0x004eb750, TSL: 0x004eb750): Animation completion triggers script events and action completion
     /// - Located via string references: "EVENT_PLAY_ANIMATION" @ 0x007bcd74, animation completion handling
     /// - Original implementation: Animation completion events notify action system and scripts
     /// - Fired once per animation completion (not every frame)

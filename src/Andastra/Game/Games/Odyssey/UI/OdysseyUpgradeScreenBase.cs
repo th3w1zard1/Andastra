@@ -15,6 +15,7 @@ using Andastra.Runtime.Core.Interfaces;
 using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Game.Games.Odyssey.Components;
 using Andastra.Game.Games.Common;
+using Andastra.Game.Games.Common.Components;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using UTI = BioWare.NET.Resource.Formats.GFF.Generics.UTI.UTI;
@@ -1154,7 +1155,7 @@ namespace Andastra.Game.Games.Odyssey.UI
             // Based on swkotor.exe/swkotor2.exe: Item component configuration from UTI template
             // Located via string references: "ItemComponent" @ 0x007c41e4 (swkotor2.exe)
             // Original implementation: Item component is configured with BaseItem, StackSize, Charges, Cost, Identified, Properties, Upgrades from UTI template
-            var itemComponent = new OdysseyItemComponent
+            var itemComponent = new BaseItemComponent
             {
                 BaseItem = utiTemplate.BaseItem,
                 StackSize = utiTemplate.StackSize,

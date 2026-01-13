@@ -14,16 +14,36 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
     /// </summary>
     /// <remarks>
     /// LIP Data Loader (Odyssey-specific):
-    /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): LIP file loading system
-    /// - Located via string references: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668, "LIP V1.0" @ 0x007d98d4
-    /// - LIP directories: ".\lips" @ 0x007c6838, "d:\lips" @ 0x007c6840 (LIP file search directories)
+    /// - CLIP::LoadLip @ (K1: swkotor.exe: 0x0070c590, TSL: swkotor2.exe: 0x0077fb30): LIP file loading system
+    /// - Located via string references:
+    ///   - K1: "LIPS:localization" @ 0x00745898, "LIPS:%s_loc" @ 0x007458ac, "LIP V1.0" @ 0x0075fb14
+    ///   - TSL: "LIPS:localization" @ 0x007be654, "LIPS:%s_loc" @ 0x007be668, "LIP V1.0" @ 0x007d98d4
+    /// - LIP directories:
+    ///   - K1: "d:\lips" @ 0x0074ddd8
+    ///   - TSL: "d:\lips" @ 0x007c6840
     /// - Cross-engine analysis:
     ///   - Aurora (nwmain.exe): No LIP file support found - uses different lip sync system (if any)
-    ///   - Eclipse (daorigins.exe, DragonAge2.exe, ): No LIP file support found - uses UnrealScript-based lip sync system
+    ///   - Eclipse (daorigins.exe, DragonAge2.exe): No LIP file support found - uses UnrealScript-based lip sync system
     /// - Inheritance: Base class BaseLipDataLoader (Runtime.Games.Common) - abstract lip sync loading, Odyssey override (Runtime.Games.Odyssey) - LIP file format
     /// - Original implementation: Loads LIP files from resource system (LIPS directory or module archives)
-    /// - LIP file format: "LIP V1.0" signature, duration (float), keyframe count (uint32), keyframes (time + shape)
+    /// - LIP file format: "LIP V1.0" signature (8 bytes), duration (float, 4 bytes), keyframe count (uint32, 4 bytes), keyframes (time + shape pairs)
     /// - LIP files are paired with WAV voice-over files (same ResRef, different extension)
+    /// - Original engine behavior (1:1 parity):
+    ///   - K1 (swkotor.exe: 0x0070c590): CLIP::LoadLip (thiscall, member function)
+    ///     * Creates CResRef from CExoString parameter
+    ///     * Sets resource reference via CResHelper&lt;CResLIP,3004&gt;::SetResRef
+    ///     * Demands resource via CRes::Demand
+    ///     * Validates "LIP V1.0" signature (8 bytes)
+    ///     * Parses duration (float at offset 0x8), entry_count (uint32 at offset 0xC), keyframes (array at offset 0x10)
+    ///     * Sets field5_0x20 to 1 on success
+    ///   - TSL (swkotor2.exe: 0x0077fb30): CLIP::LoadLip (fastcall, member function)
+    ///     * Creates CResRef from CExoString parameter (via FUN_00406e70)
+    ///     * Sets resource reference via FUN_0077f8f0 (equivalent to CResHelper&lt;CResLIP,3004&gt;::SetResRef)
+    ///     * Demands resource via FUN_00409df0 (equivalent to CRes::Demand)
+    ///     * Gets resource data pointer via FUN_00404cf0 (equivalent to GetProperty0x30)
+    ///     * Validates "LIP V1.0" signature (8 bytes)
+    ///     * Parses duration (float at offset 0x8 -> stored at offset 0x28), entry_count (uint32 at offset 0xC -> stored at offset 0x24), keyframes (array at offset 0x10 -> stored at offset 0x2c)
+    ///     * Sets field at offset 0x20 to 1 on success
     /// - Based on LIP file format documentation in vendor/PyKotor/wiki/LIP-File-Format.md
     /// </remarks>
     public class KotorLipDataLoader : ILipDataLoader
@@ -42,6 +62,11 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
         /// </summary>
         /// <param name="resRef">The LIP file resource reference.</param>
         /// <returns>The loaded lip sync data, or null if not found.</returns>
+        /// <remarks>
+        /// Original engine implementation:
+        /// - K1: swkotor.exe: 0x0070c590 (CLIP::LoadLip)
+        /// - TSL: swkotor2.exe: 0x0077fb30 (CLIP::LoadLip)
+        /// </remarks>
         public LipSyncData LoadLipData(string resRef)
         {
             if (string.IsNullOrEmpty(resRef))

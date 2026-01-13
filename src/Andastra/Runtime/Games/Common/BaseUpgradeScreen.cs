@@ -649,19 +649,11 @@ namespace Andastra.Runtime.Games.Common
                     }
                 }
                 // ITEM_PROPERTY_IMPROVED_SAVING_THROW (26): Saving throw bonus (all saves)
-                // ApplyImprovedSavingThrow @ (K1: TODO: Find via Ghidra - search for constant 0x1A (26) near 0x004e5c60, TSL: TODO: Find via Ghidra - search for constant 0x1A (26) in swkotor2.exe): Property type 26 (0x1A) = saving throw bonus, affects all saves
-                // 
-                // To find addresses in Ghidra:
-                // 1. Open swkotor.exe (K1) or swkotor2.exe (TSL) in Ghidra
-                // 2. Search for constant 0x1A (26 decimal) - Search > For Scalars > Value: 26 or 0x1A
-                // 3. Look for references near ApplyDamageBonus (0x004e5c60 in K1) - property handlers are typically in the same class/switch statement
-                // 4. Find the function that checks for property type 0x1A (similar pattern to ApplyDamageBonus checking for 0x0B)
-                // 5. The function should follow pattern: CSWSItemPropertyHandler::ApplyImprovedSavingThrow
-                // 6. Pattern to look for: if/switch statement checking (*param_2 == 0x1A) or (propertyType == 26)
-                // 7. Once found, rename function to ApplyImprovedSavingThrow and add comment with address
-                //
-                // Located via constant search: Property type 26 (0x1A) check in CSWSItemPropertyHandler::ApplyImprovedSavingThrow function (pattern similar to ApplyDamageBonus at 0x004e5c60)
-                // Original implementation: CSWSItemPropertyHandler::ApplyImprovedSavingThrow checks if (*param_2 == 0x1A) 
+                // ApplyImprovedSavingThrow @ (K1: 0x004e9230, TSL: 0x0051bc70): Property type 26 (0x1A) = saving throw bonus, affects all saves
+                // Located via constant search: Property type 26 (0x1A) check in CSWSItemPropertyHandler::ApplyImprovedSavingThrow function
+                // K1: Found at 0x004e9230 in swkotor.exe - function checks for property type 0x1A (26)
+                // TSL: Found at 0x0051bc70 in swkotor2.exe - FUN_0051bc70 handles property type 0x1A (26) via call from FUN_0051dc70 at line 50
+                // Original implementation: CSWSItemPropertyHandler::ApplyImprovedSavingThrow checks if (*param_2 == 0x1A)
                 // Property amount stored in param_2[3] (CostValue), applied as saving throw bonus to all three save types (Fortitude, Reflex, Will)
                 // The bonus is applied cumulatively to totalSavingThrowBonus and individually to each save type
                 // This property type provides a universal saving throw bonus that affects all saving throw types equally

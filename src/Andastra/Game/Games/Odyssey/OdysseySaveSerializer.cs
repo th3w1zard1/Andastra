@@ -2396,7 +2396,7 @@ namespace Andastra.Game.Games.Odyssey
         ///   - EncounterList: List of encounter entity states
         ///   - CameraList: List of camera entity states
         ///   - DestroyedList: List of destroyed entity ObjectIds
-        ///   - SpawnedList: List of dynamically spawned entities
+        ///   - SpawnedList: List of dynamically spawned entities (CUSTOM EXTENSION - not in original engine)
         ///   - LocalVariables: Area-level local variables
         /// </remarks>
         public override byte[] SerializeArea(IArea area)
@@ -2942,7 +2942,10 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // Spawned entities (dynamically created, not in original GIT)
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spawned entities stored with BlueprintResRef
+            // Custom extension: Original engine (K1/TSL) does not store dynamically spawned entities in save files.
+            // The original engine only saves state changes to entities that exist in the GIT file.
+            // This implementation extends the save format with "SpawnedList" (custom GFF list) and "BlueprintResRef" (custom GFF field)
+            // to support runtime entity spawning. Spawned entities are stored with their BlueprintResRef template reference.
             if (areaState.SpawnedEntities != null && areaState.SpawnedEntities.Count > 0)
             {
                 var spawnedList = new GFFList();
@@ -3251,7 +3254,7 @@ namespace Andastra.Game.Games.Odyssey
         ///   - EncounterList: List of encounter entity states
         ///   - CameraList: List of camera entity states
         ///   - DestroyedList: List of destroyed entity ObjectIds
-        ///   - SpawnedList: List of dynamically spawned entities
+        ///   - SpawnedList: List of dynamically spawned entities (CUSTOM EXTENSION - not in original engine)
         ///   - LocalVariables: Area-level local variables
         ///
         /// Implementation flow:
@@ -3312,7 +3315,9 @@ namespace Andastra.Game.Games.Odyssey
             }
 
             // 3. Spawn dynamically created entities
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spawned entities are created from BlueprintResRef
+            // Custom extension: Original engine (K1/TSL) does not restore dynamically spawned entities from save files.
+            // This implementation extends the save format to restore entities from "SpawnedList" using their BlueprintResRef template.
+            // Entities are created from BlueprintResRef template and added to the area at their saved position.
             if (areaState.SpawnedEntities != null && areaState.SpawnedEntities.Count > 0)
             {
                 SpawnDynamicEntities(areaState.SpawnedEntities, odysseyArea);
@@ -3412,7 +3417,9 @@ namespace Andastra.Game.Games.Odyssey
                 }
 
                 // Spawned entities (dynamically created, not in original GIT)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Spawned entities stored with BlueprintResRef
+                // Custom extension: Original engine (K1/TSL) does not load dynamically spawned entities from save files.
+                // This implementation extends the save format to load entities from "SpawnedList" using their BlueprintResRef template.
+                // Spawned entities are deserialized with BlueprintResRef field to identify the template to load.
                 if (root.Exists("SpawnedList"))
                 {
                     GFFList spawnedList = root.GetList("SpawnedList");
@@ -4442,7 +4449,9 @@ namespace Andastra.Game.Games.Odyssey
             var entityFactory = new Loading.EntityFactory();
 
             // Spawn each dynamically created entity
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Entities are spawned from BlueprintResRef
+            // Custom extension: Original engine (K1/TSL) does not spawn entities from save files.
+            // This implementation creates entities from BlueprintResRef templates and applies their saved state.
+            // Entities are spawned using EntityFactory to load templates (UTC, UTP, UTD, etc.) and create runtime entities.
             foreach (SpawnedEntityState spawnedState in spawnedEntities)
             {
                 if (spawnedState == null || string.IsNullOrEmpty(spawnedState.BlueprintResRef))

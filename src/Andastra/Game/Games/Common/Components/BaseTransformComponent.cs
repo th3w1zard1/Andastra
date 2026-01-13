@@ -35,8 +35,10 @@ namespace Andastra.Game.Games.Common.Components
     /// - GFF field names may vary slightly between engines
     /// - Serialization format details differ (handled by entity Serialize/Deserialize methods)
     /// - Memory layout offsets differ (handled by engine-specific entity implementations)
+    /// - Engine-specific transform component classes (OdysseyTransformComponent, AuroraTransformComponent, EclipseTransformComponent) have been merged
+    /// - Odyssey-specific: Up property (Vector3.UnitZ), FacingDegrees property (convenience for degrees)
     /// </remarks>
-    public abstract class BaseTransformComponent : IComponent, ITransformComponent
+    public class BaseTransformComponent : IComponent, ITransformComponent
     {
         private Vector3 _position;
         private float _facing;
@@ -57,7 +59,10 @@ namespace Andastra.Game.Games.Common.Components
             _parent = null;
         }
 
-        protected BaseTransformComponent()
+        /// <summary>
+        /// Creates a new transform component with default values.
+        /// </summary>
+        public BaseTransformComponent()
         {
             _position = Vector3.Zero;
             _facing = 0f;
@@ -66,7 +71,12 @@ namespace Andastra.Game.Games.Common.Components
             _worldMatrixDirty = true;
         }
 
-        protected BaseTransformComponent(Vector3 position, float facing) : this()
+        /// <summary>
+        /// Creates a new transform component with specified position and facing.
+        /// </summary>
+        /// <param name="position">Initial world position.</param>
+        /// <param name="facing">Initial facing angle in radians.</param>
+        public BaseTransformComponent(Vector3 position, float facing) : this()
         {
             _position = position;
             _facing = facing;

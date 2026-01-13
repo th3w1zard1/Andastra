@@ -10,7 +10,8 @@ namespace Andastra.Runtime.Core.Interfaces.Components
     /// Item Component Interface:
     /// - Common interface for item components across all BioWare engines
     /// - Base implementation: BaseItemComponent in Runtime.Games.Common.Components
-    /// - Engine-specific implementations: OdysseyItemComponent, AuroraItemComponent, EclipseItemComponent, InfinityItemComponent
+    /// - Single implementation: BaseItemComponent (Andastra.Game.Games.Common.Components) handles all engines
+    ///   - Engine-specific item component classes (OdysseyItemComponent, AuroraItemComponent, EclipseItemComponent) have been merged
     ///
     /// Based on verified components of:
     /// - Odyssey (swkotor.exe, swkotor2.exe): UTI GFF format

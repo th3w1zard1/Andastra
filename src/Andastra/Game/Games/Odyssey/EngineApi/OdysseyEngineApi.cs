@@ -23,6 +23,7 @@ using Andastra.Runtime.Core.Interfaces.Components;
 using Andastra.Runtime.Core.Module;
 using Andastra.Game.Games.Odyssey.Combat;
 using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Common.Components;
 using Andastra.Game.Games.Odyssey.Dialogue;
 using Andastra.Game.Games.Odyssey.Game;
 using Andastra.Game.Games.Odyssey.Loading;
@@ -2648,7 +2649,7 @@ namespace Andastra.Game.Games.Odyssey.EngineApi
                 // Add item component with UTI template data
                 if (utiTemplate != null)
                 {
-                    var itemComponent = new OdysseyItemComponent
+                    var itemComponent = new BaseItemComponent
                     {
                         BaseItem = utiTemplate.BaseItem,
                         StackSize = utiTemplate.StackSize,

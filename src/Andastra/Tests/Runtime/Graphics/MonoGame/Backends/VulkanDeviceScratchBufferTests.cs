@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Andastra.Runtime.Graphics.MonoGame.Backends;
-using Andastra.Runtime.Graphics.MonoGame.Interfaces;
+using Andastra.Game.Graphics.MonoGame.Interfaces;
 using FluentAssertions;
 using Xunit;
 
