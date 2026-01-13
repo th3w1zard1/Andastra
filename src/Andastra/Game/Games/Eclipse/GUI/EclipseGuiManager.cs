@@ -11,7 +11,7 @@ using BioWare.NET.Resource.Formats.GFF.Generics.GUI;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Eclipse.Fonts;
 using Andastra.Runtime.Graphics;
-using Andastra.Runtime.Graphics.MonoGame.Graphics;
+using Andastra.Game.Graphics.MonoGame.Graphics;
 using JetBrains.Annotations;
 using Microsoft.Xna.Framework.Input;
 using NumericsVector2 = System.Numerics.Vector2;
@@ -462,8 +462,8 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 if (fillTexture != null)
                 {
                     float alpha = panel.Alpha;
-                    var color = new Graphics.Color(255, 255, 255, (byte)(255 * alpha));
-                    _spriteBatch.Draw(fillTexture, new Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
+                    var color = new Andastra.Runtime.Color(255, 255, 255, (byte)(255 * alpha));
+                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
         }
@@ -492,21 +492,21 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 ITexture2D fillTexture = LoadTexture(borderToUse.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    var color = new Graphics.Color(255, 255, 255, 255);
-                    _spriteBatch.Draw(fillTexture, new Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
+                    var color = new Color(255, 255, 255, 255);
+                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
 
             if (button.GuiText != null && !string.IsNullOrEmpty(button.GuiText.Text))
             {
                 string text = button.GuiText.Text;
-                var textColor = new Graphics.Color(
+                var textColor = new Color(
                     button.GuiText.Color.R, button.GuiText.Color.G, button.GuiText.Color.B, button.GuiText.Color.A);
 
                 BaseBitmapFont font = LoadFont(button.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Graphics.Vector2 textSizeGraphics = font.MeasureString(text);
+                    Vector2 textSizeGraphics = font.MeasureString(text);
                     NumericsVector2 textSize = new NumericsVector2(textSizeGraphics.X, textSizeGraphics.Y);
                     NumericsVector2 textPos = CalculateTextPosition(button.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
@@ -519,13 +519,13 @@ namespace Andastra.Game.Games.Eclipse.GUI
             if (label.GuiText != null && !string.IsNullOrEmpty(label.GuiText.Text))
             {
                 string text = label.GuiText.Text;
-                var textColor = new Graphics.Color(
+                var textColor = new Color(
                     label.GuiText.Color.R, label.GuiText.Color.G, label.GuiText.Color.B, label.GuiText.Color.A);
 
                 BaseBitmapFont font = LoadFont(label.GuiText.Font.ToString());
                 if (font != null)
                 {
-                    Graphics.Vector2 textSizeGraphics = font.MeasureString(text);
+                    Vector2 textSizeGraphics = font.MeasureString(text);
                     NumericsVector2 textSize = new NumericsVector2(textSizeGraphics.X, textSizeGraphics.Y);
                     NumericsVector2 textPos = CalculateTextPosition(label.GuiText.Alignment, position, size, textSize);
                     RenderBitmapText(font, text, textPos, textColor);
@@ -540,13 +540,13 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 ITexture2D fillTexture = LoadTexture(control.Border.Fill.ToString());
                 if (fillTexture != null)
                 {
-                    var color = new Graphics.Color(255, 255, 255, 255);
-                    _spriteBatch.Draw(fillTexture, new Graphics.Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
+                    var color = new Color(255, 255, 255, 255);
+                    _spriteBatch.Draw(fillTexture, new Rectangle((int)position.X, (int)position.Y, (int)size.X, (int)size.Y), color);
                 }
             }
         }
 
-        private void RenderBitmapText(BaseBitmapFont font, string text, NumericsVector2 position, Graphics.Color color)
+        private void RenderBitmapText(BaseBitmapFont font, string text, NumericsVector2 position, Microsoft.Xna.Framework.Color color)
         {
             if (font == null || string.IsNullOrEmpty(text)) return;
 
@@ -567,9 +567,9 @@ namespace Andastra.Game.Games.Eclipse.GUI
                 {
                     var g = glyph.Value;
                     ITexture2D texture = font.Texture;
-                    var sourceRect = new Graphics.Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
-                    var destRect = new Graphics.Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
-                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Graphics.Vector2.Zero, Graphics.SpriteEffects.None, 0.0f);
+                    var sourceRect = new Rectangle(g.SourceX, g.SourceY, g.SourceWidth, g.SourceHeight);
+                    var destRect = new Rectangle((int)x, (int)y, (int)g.Width, (int)g.Height);
+                    _spriteBatch.Draw(texture, destRect, sourceRect, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
                     x += g.Width + font.SpacingR;
                 }
                 else
