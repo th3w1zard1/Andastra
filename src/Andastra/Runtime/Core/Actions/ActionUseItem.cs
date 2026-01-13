@@ -10,6 +10,28 @@ using JetBrains.Annotations;
 namespace Andastra.Runtime.Core.Actions
 {
     /// <summary>
+    /// Item category determined from item class string in baseitems.2da.
+    /// </summary>
+    /// <remarks>
+    /// Item categories are determined from the itemclass string column in baseitems.2da.
+    /// These categories determine item behavior and usage effects.
+    /// </remarks>
+    private enum ItemCategory
+    {
+        Unknown,
+        Weapon,
+        Armor,
+        Shield,
+        Medical,
+        Stimulant,
+        Grenade,
+        DroidRepair,
+        Quest,
+        Upgrade,
+        Misc
+    }
+
+    /// <summary>
     /// Action to use an item (consumables, usable items, etc.).
     /// </summary>
     /// <remarks>
@@ -181,9 +203,10 @@ namespace Andastra.Runtime.Core.Actions
             }
 
             // For consumable items, apply effects based on baseitems.2da item class if no properties found
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage checks baseitems.2da for item class and chargesstarting
-            // Located via string references: "baseitems" @ 0x007c4594, "BASEITEMS" @ 0x007c4594
-            // Original implementation: 0x005fb0f0 loads base item data from baseitems.2da
+            // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item usage checks baseitems.2da for item class and chargesstarting
+            // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Item usage checks baseitems.2da for item class and chargesstarting
+            // Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
+            // swkotor2.exe: 0x005fb0f0 (FUN_005fb0f0) loads base item data from baseitems.2da
             // Items with chargesstarting > 0 in baseitems.2da are consumables that apply effects when used
             if (itemComponent.Properties.Count == 0 && itemComponent.Charges > 0)
             {
@@ -192,7 +215,8 @@ namespace Andastra.Runtime.Core.Actions
                 if (baseItemId >= 0)
                 {
                     // Load baseitems.2da to get item class and consumable information
-                    // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Base item stats loaded from baseitems.2da via GameDataProvider
+                    // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Base item stats loaded from baseitems.2da via GameDataProvider
+                    // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Base item stats loaded from baseitems.2da via GameDataProvider
                     TwoDA baseitemsTable = null;
                     if (caster.World.GameDataProvider != null)
                     {
@@ -215,15 +239,19 @@ namespace Andastra.Runtime.Core.Actions
                             if (baseItemRow != null)
                             {
                                 // Get item class from baseitems.2da
-                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item class determines item category and behavior
-                                int? itemClass = baseItemRow.GetInteger("itemclass", null);
+                                // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read via C2DA::GetCExoStringEntry as string
+                                // swkotor2.exe: 0x005ff170 (FUN_005ff170) - ItemClass read via C2DA::GetCExoStringEntry as string
+                                // Item class determines item category and behavior (weapon, armor, consumable, etc.)
+                                string itemClass = baseItemRow.GetString("itemclass", "").ToLowerInvariant();
 
                                 // Get chargesstarting to confirm it's a consumable
-                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Items with chargesstarting > 0 are consumables
+                                // swkotor2.exe: 0x007c4438 "ChargesStarting" string reference - Items with chargesstarting > 0 are consumables
+                                // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Items with chargesstarting > 0 are consumables
                                 int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
 
                                 // Apply effects based on item class for consumable items
-                                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Different item classes have different effects when used
+                                // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Different item classes have different effects when used
+                                // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Different item classes have different effects when used
                                 if (chargesStarting.HasValue && chargesStarting.Value > 0)
                                 {
                                     ApplyEffectsByItemClass(effectSystem, target, caster, baseItemRow, itemClass, itemComponent);
@@ -265,17 +293,19 @@ namespace Andastra.Runtime.Core.Actions
         /// </summary>
         /// <remarks>
         /// Item Class-Based Effect Application:
-        /// - [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item usage checks baseitems.2da itemclass column to determine effects
-        /// - Located via string references: "baseitems" @ 0x007c4594, itemclass column in baseitems.2da
+        /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass determines item category and behavior
+        /// - swkotor2.exe: 0x005ff170 (FUN_005ff170) - ItemClass determines item category and behavior
+        /// - Located via string references: "baseitems" @ 0x007c4594 (swkotor2.exe), "BASEITEMS" @ 0x0074b294 (swkotor.exe)
         /// - Original implementation: Different item classes have different effects when used
+        /// - Item class is a string column in baseitems.2da (read via C2DA::GetCExoStringEntry)
         /// - Common consumable item classes:
-        ///   - Medpacs: Apply healing effects (typically itemclass values for medical consumables)
-        ///   - Stims: Apply ability/attack bonuses (typically itemclass values for stimulants)
-        ///   - Grenades: Apply damage effects (typically itemclass values for grenades)
-        ///   - Other consumables: Apply effects based on item class patterns
-        /// - Uses item class value from baseitems.2da to determine appropriate effects
+        ///   - Medpacs: Apply healing effects (medical consumables)
+        ///   - Stims: Apply ability/attack bonuses (stimulants/adrenaline)
+        ///   - Grenades: Apply damage effects (typically thrown, not consumed)
+        ///   - Other consumables: Apply effects based on item class string patterns
+        /// - Uses item class string from baseitems.2da to determine appropriate effects
         /// </remarks>
-        private void ApplyEffectsByItemClass(EffectSystem effectSystem, IEntity target, IEntity caster, TwoDARow baseItemRow, int? itemClass, IItemComponent itemComponent)
+        private void ApplyEffectsByItemClass(EffectSystem effectSystem, IEntity target, IEntity caster, TwoDARow baseItemRow, string itemClass, IItemComponent itemComponent)
         {
             if (effectSystem == null || target == null || baseItemRow == null)
             {
@@ -286,106 +316,82 @@ namespace Andastra.Runtime.Core.Actions
             string label = baseItemRow.GetString("label", "");
             int? chargesStarting = baseItemRow.GetInteger("chargesstarting", null);
 
-            // Determine effect based on item class and label
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item class determines what effects are applied when item is used
-            // Common patterns:
-            // - Medical consumables (medpacs): Apply healing
-            // - Stimulants (stims): Apply ability/attack bonuses
-            // - Grenades: Apply damage effects
-            // - Other consumables: Apply effects based on item class value ranges
+            // Determine effect based on item class string and label
+            // swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Item class determines what effects are applied when item is used
+            // swkotor2.exe: 0x005ff170 (FUN_005ff170) - Item class determines what effects are applied when item is used
+            // Item class is a string that identifies the item category (weapon, armor, consumable, etc.)
+            ItemCategory category = GetItemCategoryFromItemClass(itemClass);
 
-            if (itemClass.HasValue)
+            // Check label for common consumable types (case-insensitive) as secondary check
+            string labelLower = label.ToLowerInvariant();
+
+            // Medical consumables (medpacs, medkits, etc.)
+            // Medical consumables typically have itemclass strings like "medical", "medpac", "heal", or numeric strings for medical items
+            // BASE_ITEM_MEDICAL_EQUIPMENT = 55 in baseitems.2da
+            if (category == ItemCategory.Medical || labelLower.Contains("medpac") || labelLower.Contains("medkit") || labelLower.Contains("heal"))
             {
-                int itemClassValue = itemClass.Value;
+                // Apply healing effect
+                // Amount based on charges or default healing value
+                int healAmount = CalculateHealingAmount(itemComponent, chargesStarting);
+                Effect healEffect = Combat.Effect.Heal(healAmount);
+                effectSystem.ApplyEffect(target, healEffect, caster);
+                return;
+            }
 
-                // Check label for common consumable types (case-insensitive)
-                string labelLower = label.ToLowerInvariant();
+            // Stimulants (stims, stimulants, adrenaline, etc.)
+            // Stims apply temporary ability/attack bonuses
+            // BASE_ITEM_ADRENALINE = 53, BASE_ITEM_COMBAT_SHOTS = 54 in baseitems.2da
+            if (category == ItemCategory.Stimulant || labelLower.Contains("stim") || labelLower.Contains("adrenal") || labelLower.Contains("combat"))
+            {
+                // Apply ability bonuses and attack bonuses
+                // Typical stim effects: +2 to +4 ability bonuses, +1 to +3 attack bonus
+                int bonusAmount = CalculateStimBonusAmount(itemComponent, chargesStarting);
 
-                // Medical consumables (medpacs, medkits, etc.)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Medical consumables typically have specific itemclass values or labels
-                if (labelLower.Contains("medpac") || labelLower.Contains("medkit") || labelLower.Contains("heal"))
-                {
-                    // Apply healing effect
-                    // Amount based on charges or default healing value
-                    int healAmount = CalculateHealingAmount(itemComponent, chargesStarting);
-                    Effect healEffect = Combat.Effect.Heal(healAmount);
-                    effectSystem.ApplyEffect(target, healEffect, caster);
-                    return;
-                }
+                // Apply strength bonus (common stim effect)
+                Effect strBonus = Combat.Effect.AbilityModifier(Enums.Ability.Strength, bonusAmount, 0);
+                strBonus.DurationType = EffectDurationType.Temporary;
+                strBonus.DurationRounds = 30; // Stims typically last 30 rounds
+                effectSystem.ApplyEffect(target, strBonus, caster);
 
-                // Stimulants (stims, stimulants, etc.)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stims apply temporary ability/attack bonuses
-                if (labelLower.Contains("stim") || labelLower.Contains("adrenal"))
-                {
-                    // Apply ability bonuses and attack bonuses
-                    // Typical stim effects: +2 to +4 ability bonuses, +1 to +3 attack bonus
-                    int bonusAmount = CalculateStimBonusAmount(itemComponent, chargesStarting);
+                // Apply dexterity bonus (common stim effect)
+                Effect dexBonus = Combat.Effect.AbilityModifier(Enums.Ability.Dexterity, bonusAmount, 0);
+                dexBonus.DurationType = EffectDurationType.Temporary;
+                dexBonus.DurationRounds = 30;
+                effectSystem.ApplyEffect(target, dexBonus, caster);
 
-                    // Apply strength bonus (common stim effect)
-                    Effect strBonus = Combat.Effect.AbilityModifier(Enums.Ability.Strength, bonusAmount, 0);
-                    strBonus.DurationType = EffectDurationType.Temporary;
-                    strBonus.DurationRounds = 30; // Stims typically last 30 rounds
-                    effectSystem.ApplyEffect(target, strBonus, caster);
+                // Apply attack bonus (common stim effect)
+                Effect attackBonus = new Effect(EffectType.AttackIncrease);
+                attackBonus.Amount = bonusAmount;
+                attackBonus.DurationType = EffectDurationType.Temporary;
+                attackBonus.DurationRounds = 30;
+                effectSystem.ApplyEffect(target, attackBonus, caster);
 
-                    // Apply dexterity bonus (common stim effect)
-                    Effect dexBonus = Combat.Effect.AbilityModifier(Enums.Ability.Dexterity, bonusAmount, 0);
-                    dexBonus.DurationType = EffectDurationType.Temporary;
-                    dexBonus.DurationRounds = 30;
-                    effectSystem.ApplyEffect(target, dexBonus, caster);
+                return;
+            }
 
-                    // Apply attack bonus (common stim effect)
-                    Effect attackBonus = new Effect(EffectType.AttackIncrease);
-                    attackBonus.Amount = bonusAmount;
-                    attackBonus.DurationType = EffectDurationType.Temporary;
-                    attackBonus.DurationRounds = 30;
-                    effectSystem.ApplyEffect(target, attackBonus, caster);
+            // Grenades (grenades, mines, etc.)
+            // Grenades are typically thrown in combat, not consumed from inventory
+            // Note: In actual gameplay, grenades are thrown as weapons, not consumed from inventory like medpacs
+            // If a grenade is somehow used as a consumable, it typically doesn't apply effects directly
+            // Instead, grenades are handled by the combat system when thrown
+            // BASE_ITEM_FRAGMENTATION_GRENADES = 25, BASE_ITEM_STUN_GRENADES = 26, etc. in baseitems.2da
+            if (category == ItemCategory.Grenade || labelLower.Contains("grenade") || labelLower.Contains("mine") || labelLower.Contains("explosive") || labelLower.Contains("detonator"))
+            {
+                // Grenades are thrown, not consumed - no effect to apply
+                // The combat system handles grenade damage when thrown
+                return;
+            }
 
-                    return;
-                }
-
-                // Grenades (grenades, mines, etc.)
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Grenades are typically thrown in combat, not consumed from inventory
-                // Note: In actual gameplay, grenades are thrown as weapons, not consumed from inventory like medpacs
-                // If a grenade is somehow used as a consumable, it typically doesn't apply effects directly
-                // Instead, grenades are handled by the combat system when thrown
-                // For this edge case, we'll skip applying effects (grenades shouldn't be consumed this way)
-                if (labelLower.Contains("grenade") || labelLower.Contains("mine") || labelLower.Contains("explosive"))
-                {
-                    // Grenades are thrown, not consumed - no effect to apply
-                    // The combat system handles grenade damage when thrown
-                    return;
-                }
-
-                // Item class-based effect determination
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Item class values determine item category and effects
-                // Common item class ranges:
-                // - 0-10: Weapons (not consumables)
-                // - 11-30: Armor/Shields (not consumables)
-                // - 31-50: Quest items, grenades, medical supplies (consumables)
-                // - 51-70: Upgrades, armbands, belts (not consumables)
-                // - 71-90: Droid equipment, special items (may be consumables)
-
-                if (itemClassValue >= 31 && itemClassValue <= 50)
-                {
-                    // Quest items, grenades, medical supplies range
-                    // Most items in this range are consumables
-                    // Apply healing as default for medical consumables
-                    int healAmount = CalculateHealingAmount(itemComponent, chargesStarting);
-                    Effect healEffect = Combat.Effect.Heal(healAmount);
-                    effectSystem.ApplyEffect(target, healEffect, caster);
-                    return;
-                }
-
-                if (itemClassValue >= 71 && itemClassValue <= 90)
-                {
-                    // Droid equipment, special items range
-                    // Some items in this range may be consumables
-                    // Apply healing as default
-                    int healAmount = CalculateHealingAmount(itemComponent, chargesStarting);
-                    Effect healEffect = Combat.Effect.Heal(healAmount);
-                    effectSystem.ApplyEffect(target, healEffect, caster);
-                    return;
-                }
+            // Droid repair equipment
+            // BASE_ITEM_DROID_REPAIR_EQUIPMENT = 56 in baseitems.2da
+            if (category == ItemCategory.DroidRepair || labelLower.Contains("droid") && (labelLower.Contains("repair") || labelLower.Contains("heal")))
+            {
+                // Apply healing effect (droid repair restores HP for droids)
+                // Amount based on charges or default healing value
+                int healAmount = CalculateHealingAmount(itemComponent, chargesStarting);
+                Effect healEffect = Combat.Effect.Heal(healAmount);
+                effectSystem.ApplyEffect(target, healEffect, caster);
+                return;
             }
 
             // Fallback: Apply default consumable effect if item class doesn't match known patterns
@@ -447,10 +453,147 @@ namespace Andastra.Runtime.Core.Actions
         }
 
         /// <summary>
+        /// Determines item category from item class string in baseitems.2da.
+        /// </summary>
+        /// <param name="itemClass">Item class string from baseitems.2da (lowercase).</param>
+        /// <returns>Item category determined from item class string.</returns>
+        /// <remarks>
+        /// Item Class Category Determination:
+        /// - swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - ItemClass read as string via C2DA::GetCExoStringEntry
+        /// - swkotor2.exe: 0x005ff170 (FUN_005ff170) - ItemClass read as string via C2DA::GetCExoStringEntry
+        /// - Item class string determines item category and behavior:
+        ///   - Medical consumables: "medical", "medpac", "heal" patterns, or numeric strings for BASE_ITEM_MEDICAL_EQUIPMENT (55)
+        ///   - Stimulants: "stim", "adrenal", "combat" patterns, or numeric strings for BASE_ITEM_ADRENALINE (53), BASE_ITEM_COMBAT_SHOTS (54)
+        ///   - Grenades: "grenade", "mine", "explosive" patterns, or numeric strings for BASE_ITEM_FRAGMENTATION_GRENADES (25-34)
+        ///   - Droid repair: "droid", "repair" patterns, or numeric strings for BASE_ITEM_DROID_REPAIR_EQUIPMENT (56)
+        ///   - Weapons: numeric strings for BASE_ITEM_* weapon types (0-24)
+        ///   - Armor: numeric strings for BASE_ITEM_JEDI_ROBE, BASE_ITEM_ARMOR_CLASS_* (35-43)
+        ///   - Other: numeric strings or category strings for other item types
+        /// - Handles both string category names and numeric string representations
+        /// </remarks>
+        private ItemCategory GetItemCategoryFromItemClass(string itemClass)
+        {
+            if (string.IsNullOrEmpty(itemClass))
+            {
+                return ItemCategory.Unknown;
+            }
+
+            string itemClassLower = itemClass.ToLowerInvariant().Trim();
+
+            // Check for string-based category patterns
+            if (itemClassLower.Contains("weapon") || itemClassLower.Contains("blade") || itemClassLower.Contains("blaster") || itemClassLower.Contains("saber"))
+            {
+                return ItemCategory.Weapon;
+            }
+
+            if (itemClassLower.Contains("armor") || itemClassLower.Contains("robe"))
+            {
+                return ItemCategory.Armor;
+            }
+
+            if (itemClassLower.Contains("shield"))
+            {
+                return ItemCategory.Shield;
+            }
+
+            if (itemClassLower.Contains("medical") || itemClassLower.Contains("medpac") || itemClassLower.Contains("heal"))
+            {
+                return ItemCategory.Medical;
+            }
+
+            if (itemClassLower.Contains("stim") || itemClassLower.Contains("adrenal") || itemClassLower.Contains("combat"))
+            {
+                return ItemCategory.Stimulant;
+            }
+
+            if (itemClassLower.Contains("grenade") || itemClassLower.Contains("mine") || itemClassLower.Contains("explosive") || itemClassLower.Contains("detonator"))
+            {
+                return ItemCategory.Grenade;
+            }
+
+            if (itemClassLower.Contains("droid") && (itemClassLower.Contains("repair") || itemClassLower.Contains("heal")))
+            {
+                return ItemCategory.DroidRepair;
+            }
+
+            if (itemClassLower.Contains("quest") || itemClassLower.Contains("datapad"))
+            {
+                return ItemCategory.Quest;
+            }
+
+            if (itemClassLower.Contains("upgrade") || itemClassLower.Contains("crystal") || itemClassLower.Contains("implant"))
+            {
+                return ItemCategory.Upgrade;
+            }
+
+            // Check for numeric string representations (common in baseitems.2da)
+            // Parse numeric strings to determine category based on BASE_ITEM_* constants
+            if (int.TryParse(itemClassLower, out int itemClassNum))
+            {
+                // Weapons: 0-24 (BASE_ITEM_* weapon types)
+                if (itemClassNum >= 0 && itemClassNum <= 24)
+                {
+                    // Check for grenades in weapon range (25-34 are grenades, but 0-24 are melee/ranged weapons)
+                    // Grenades are 25-34
+                    if (itemClassNum >= 25 && itemClassNum <= 34)
+                    {
+                        return ItemCategory.Grenade;
+                    }
+                    return ItemCategory.Weapon;
+                }
+
+                // Armor: 35-50 (BASE_ITEM_JEDI_ROBE, BASE_ITEM_ARMOR_CLASS_*, BASE_ITEM_MASK, etc.)
+                if (itemClassNum >= 35 && itemClassNum <= 43)
+                {
+                    return ItemCategory.Armor;
+                }
+
+                // Accessories: 44-50 (BASE_ITEM_MASK, BASE_ITEM_GAUNTLETS, BASE_ITEM_BELT, BASE_ITEM_IMPLANT_*)
+                if (itemClassNum >= 44 && itemClassNum <= 50)
+                {
+                    return ItemCategory.Upgrade;
+                }
+
+                // Quest/Utility: 51-52 (BASE_ITEM_DATA_PAD, etc.)
+                if (itemClassNum >= 51 && itemClassNum <= 52)
+                {
+                    return ItemCategory.Quest;
+                }
+
+                // Consumables: 53-56
+                // BASE_ITEM_ADRENALINE = 53, BASE_ITEM_COMBAT_SHOTS = 54, BASE_ITEM_MEDICAL_EQUIPMENT = 55, BASE_ITEM_DROID_REPAIR_EQUIPMENT = 56
+                if (itemClassNum == 53 || itemClassNum == 54)
+                {
+                    return ItemCategory.Stimulant;
+                }
+
+                if (itemClassNum == 55)
+                {
+                    return ItemCategory.Medical;
+                }
+
+                if (itemClassNum == 56)
+                {
+                    return ItemCategory.DroidRepair;
+                }
+
+                // Other items: 57+ (BASE_ITEM_CREDITS = 57, BASE_ITEM_TRAP_KIT = 58, etc.)
+                if (itemClassNum >= 57)
+                {
+                    return ItemCategory.Misc;
+                }
+            }
+
+            // Default: Unknown category
+            return ItemCategory.Unknown;
+        }
+
+        /// <summary>
         /// Calculates bonus amount for stimulants based on charges and chargesstarting.
         /// </summary>
         /// <remarks>
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Stim bonus amounts scale with item quality (chargesstarting)
+        /// swkotor.exe: 0x005b31d0 (CSWBaseItemArray::Load) - Stim bonus amounts scale with item quality (chargesstarting)
+        /// swkotor2.exe: 0x005ff170 (FUN_005ff170) - Stim bonus amounts scale with item quality (chargesstarting)
         /// </remarks>
         private int CalculateStimBonusAmount(IItemComponent itemComponent, int? chargesStarting)
         {
