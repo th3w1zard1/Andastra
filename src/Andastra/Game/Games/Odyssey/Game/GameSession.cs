@@ -412,8 +412,14 @@ namespace Andastra.Game.Games.Odyssey.Game
         ///
         /// ENTRY POINT FUNCTIONS:
         /// - swkotor.exe: CSWGuiMainMenu::OnNewGamePicked @ 0x0067afb0
-        /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00
+        /// - swkotor2.exe: OnNewGameButtonClicked @ 0x006d0b00 (registered by FUN_006d2350 @ 0x006d2350 via FUN_0041a340 @ 0x0041a340 with event type 0x27 at line 89)
         /// - swkotor2_aspyr.exe: FUN_00882230 @ 0x00882230
+        ///
+        /// EVENT HANDLER REGISTRATION (swkotor2.exe only):
+        /// - Main menu handler: FUN_006d2350 @ 0x006d2350 (constructor/initializer)
+        /// - Event registration function: FUN_0041a340 @ 0x0041a340 (registers event handlers with event type and callback address)
+        /// - New Game button hover event (0x27): Registered at FUN_006d2350 line 89, callback @ 0x006d0b00
+        /// - New Game button click event (0x2d): Registered at FUN_006d2350 line 96, callback @ 0x006d0b00
         ///
         /// STRING REFERENCES:
         /// - Module name "END_M01AA": swkotor.exe @ 0x00752f58 (referenced at 0x0067b01b, 0x0067b0b9)
@@ -433,7 +439,24 @@ namespace Andastra.Game.Games.Odyssey.Game
         /// RESOURCE TYPE CONSTANTS:
         /// - MOD (Module): 0x7db (2011 decimal) - Used in swkotor2.exe @ 0x006d0c22 (FUN_00408df0 call), swkotor2_aspyr.exe @ 0x008822d1 (FUN_00711ed0 call). swkotor.exe uses MOD type constant via CExoResMan::Exists() @ 0x00408bc0 with MOD parameter (no explicit constant value, uses ResourceType enum).
         /// - RIM (Resource Information Module): 0xbba (3002 decimal) - Used in swkotor2.exe @ 0x006d0c4b (FUN_00408df0 call), swkotor2_aspyr.exe @ 0x008822e4 (FUN_00711ed0 call). swkotor.exe uses RIM type constant via CExoResMan::Exists() @ 0x00408bc0 with RIM parameter (no explicit constant value, uses ResourceType enum).
-        /// - DIRECTORY: Used in swkotor.exe @ 0x00408800 (CExoResMan::AddResourceDirectory calls AddKeyTable with DIRECTORY parameter), swkotor2.exe @ 0x00408a30 (FUN_00408a30), swkotor2_aspyr.exe @ 0x00711690 (FUN_00711690)
+        /// - DIRECTORY: Used in swkotor.exe @ 0x00408800 (CExoResMan::AddResourceDirectory calls AddKeyTable with DIRECTORY parameter), swkotor2.exe @ 0x00408a30 (FUN_00408a30 calls FUN_00406ef0 with DIRECTORY parameter 2), swkotor2_aspyr.exe @ 0x00711690 (FUN_00711690 calls FUN_00711750 with DIRECTORY parameter 2)
+        ///
+        /// UTILITY FUNCTIONS:
+        /// - CExoString constructors: swkotor.exe @ 0x005b3190 (empty), @ 0x005e5a90 (from char*), swkotor2.exe @ 0x005ff130 (empty), @ 0x00630a90 (from char*), swkotor2_aspyr.exe @ 0x00733540 (empty), @ 0x00733570 (from uint*)
+        /// - CExoString destructors: swkotor.exe @ 0x005e5c20, swkotor2.exe @ 0x00630c20, swkotor2_aspyr.exe @ 0x00733780
+        /// - CExoString assignment: swkotor.exe @ 0x005e5140 (operator= from char*)
+        /// - CResRef constructors: swkotor.exe @ 0x00406d60 (from CExoString*), swkotor2.exe @ 0x00406e70 (from undefined4*), swkotor2_aspyr.exe @ 0x00710810 (from int*)
+        /// - Memory allocation: swkotor.exe @ 0x006fa7e6 (operator_new), swkotor2.exe @ 0x0076d9f6 (operator_new), swkotor2_aspyr.exe @ 0x00919723 (FUN_00919723 via _malloc)
+        /// - CExoIni constructors/destructors: swkotor.exe @ 0x005e6750 (constructor), @ 0x005e67e0 (destructor)
+        /// - Temporary object management: swkotor2.exe @ 0x00631f70 (FUN_00631f70 constructor), @ 0x00632000 (FUN_00632000 destructor), swkotor2_aspyr.exe @ 0x00736240 (FUN_00736240 constructor), @ 0x007362c0 (FUN_007362c0 destructor)
+        /// - Resource directory operations: swkotor2.exe @ 0x004087d0 (FUN_004087d0 copy assignment), swkotor2_aspyr.exe @ 0x00716da0 (FUN_00716da0 copy assignment)
+        /// - Module resource existence checks: swkotor2.exe @ 0x00408df0 (FUN_00408df0), swkotor2_aspyr.exe @ 0x00711ed0 (FUN_00711ed0)
+        /// - Panel management: swkotor2.exe @ 0x0040bf90 (FUN_0040bf90 AddPanel equivalent), swkotor2_aspyr.exe @ 0x00410530 (FUN_00410530 AddPanel equivalent)
+        /// - Sound mode setting: swkotor2.exe @ 0x00621ab0 (FUN_00621ab0), swkotor2_aspyr.exe @ 0x0070bc60 (FUN_0070bc60)
+        /// - Game time/system initialization: swkotor2.exe @ 0x0057a400 (FUN_0057a400), swkotor2_aspyr.exe @ 0x005ff000 (FUN_005ff000)
+        /// - Module loading system initialization: swkotor2.exe @ 0x00401380 (FUN_00401380), swkotor2_aspyr.exe @ 0x00401bc0 (FUN_00401bc0)
+        /// - Post-cleanup checks: swkotor2.exe @ 0x006387d0 (FUN_006387d0), @ 0x00682b40 (FUN_00682b40), swkotor2_aspyr.exe @ 0x0073f750 (FUN_0073f750), @ 0x007d21e0 (FUN_007d21e0)
+        /// - Module directory setup: swkotor2_aspyr.exe @ 0x005564b0 (FUN_005564b0 adds module directories), @ 0x00556590 (FUN_00556590 removes module directories)
         ///
         /// PANEL FLAG CONSTANTS:
         /// - 0x600 (1536): Bit mask for panel state flags (swkotor.exe @ 0x0067afce)
