@@ -3050,7 +3050,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Eclipse
             System.Numerics.Vector2 mapPt1 = new System.Numerics.Vector2(0.0f, 0.0f);
             System.Numerics.Vector2 mapPt2 = new System.Numerics.Vector2(1.0f, 1.0f);
             System.Numerics.Vector2 worldPt1 = new System.Numerics.Vector2(-100.0f, -100.0f);
-            Vector2 worldPt2 = new Vector2(100.0f, 100.0f);
+            System.Numerics.Vector2 worldPt2 = new System.Numerics.Vector2(100.0f, 100.0f);
 
             // Try to get map data from area (would be stored in ARE file Map structure)
             // For now, use default mapping - full implementation would read from ARE file
