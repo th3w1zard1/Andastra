@@ -48,7 +48,7 @@ namespace Andastra.Game.Games.Odyssey.Dialogue
             // Try to find in world by tag (Odyssey-specific: searches module areas)
             if (World != null)
             {
-                IModule module = World.CurrentModule;
+                Runtime.Core.Interfaces.IModule module = World.CurrentModule;
                 if (module != null)
                 {
                     foreach (IArea area in module.Areas)

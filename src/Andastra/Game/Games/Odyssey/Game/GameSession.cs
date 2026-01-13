@@ -880,7 +880,7 @@ namespace Andastra.Game.Games.Odyssey.Game
             }
 
             // Map Gender enum to integer (Male=0, Female=1)
-            int genderValue = characterData.Gender == Gender.Male ? 0 : 1;
+            int genderValue = characterData.Gender == Andastra.Runtime.Core.Game.Gender.Male ? 0 : 1;
 
             // Get class data for HP/FP calculations
             GameDataManager.ClassData classData = _gameDataManager?.GetClass(classId);
