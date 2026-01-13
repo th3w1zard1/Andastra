@@ -463,8 +463,25 @@ namespace Andastra.Game.Games.Odyssey.Loading
         /// Creates a placeable from GIT instance struct.
         /// </summary>
         /// <remarks>
-        /// Based on swkotor2.exe: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90.
-        /// Located via string reference: "AreaId" @ 0x007bef48
+        /// Based on swkotor2.exe: [LoadPlaceablesFromGIT] @ (K1: TODO: Find this address via string reference "Placeable List" in swkotor.exe, TSL: 0x004e5d80) - load placeable instances from GIT "Placeable List"
+        /// - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
+        /// - Function signature: `undefined4 __thiscall LoadPlaceablesFromGIT(void *this, void *param_1, uint *param_2, void *param_3, int param_4)`
+        /// - Original implementation (from decompiled 0x004e5d80):
+        ///   - Iterates through "Placeable List" GFF list field
+        ///   - For each placeable struct (type 9 = GFFStruct):
+        ///     - Reads "ObjectId" (default 0x7F000000) via FUN_00412d40
+        ///     - Allocates placeable object (0x4b0 bytes = 1200 bytes) via operator_new
+        ///     - Initializes placeable via FUN_0058a480 with ObjectId
+        ///     - If param_4 == 0: Loads placeable data directly from GIT struct via FUN_00588010 (LoadPlaceableFromGFF)
+        ///     - If param_4 != 0: Loads template from "TemplateResRef" via FUN_0058a730, then loads "UseTweakColor" and "TweakColor" from GIT
+        ///     - Reads "Bearing" (float, rotation around Z axis) and converts to quaternion via FUN_004da020 and FUN_00587d60
+        ///     - Sets orientation quaternion via FUN_00587d60
+        ///     - If param_3 != 0: Loads script hooks from GIT struct via FUN_0050b650
+        ///     - Reads position: "X", "Y", "Z" (float, not XPosition/YPosition/ZPosition) via FUN_00412e20
+        ///     - Adds placeable to area via AddToArea
+        ///     - Registers with ObjectId list if needed via FUN_00482570
+        /// - AreaId loading: 0x005223a0 @ 0x005223a0 loads AreaId from GFF at offset 0x90
+        /// - Located via string reference: "AreaId" @ 0x007bef48
         /// </remarks>
         [CanBeNull]
         public IEntity CreatePlaceableFromGit(GFFStruct gitStruct, Module module)
@@ -472,7 +489,15 @@ namespace Andastra.Game.Games.Odyssey.Loading
             uint objectId = GetObjectIdFromGit(gitStruct);
             var entity = new Entity(objectId, ObjectType.Placeable);
 
-            System.Numerics.Vector3 position = GetPosition(gitStruct);
+            // Placeables use "X", "Y", "Z" fields (not XPosition/YPosition/ZPosition) per 0x004e5d80
+            // Fallback to XPosition/YPosition/ZPosition for compatibility
+            float x = gitStruct.Exists("X") ? gitStruct.GetSingle("X") : (gitStruct.Exists("XPosition") ? gitStruct.GetSingle("XPosition") : 0f);
+            float y = gitStruct.Exists("Y") ? gitStruct.GetSingle("Y") : (gitStruct.Exists("YPosition") ? gitStruct.GetSingle("YPosition") : 0f);
+            float z = gitStruct.Exists("Z") ? gitStruct.GetSingle("Z") : (gitStruct.Exists("ZPosition") ? gitStruct.GetSingle("ZPosition") : 0f);
+            System.Numerics.Vector3 position = new System.Numerics.Vector3(x, y, z);
+
+            // Placeables use "Bearing" field (rotation around Z axis) per 0x004e5d80
+            // Bearing is converted to quaternion in original implementation
             float facing = GetFacing(gitStruct);
 
             entity.Tag = GetResRefField(gitStruct, "Tag");
@@ -484,14 +509,77 @@ namespace Andastra.Game.Games.Odyssey.Loading
             entity.Position = position;
             entity.Facing = facing;
 
+            // Load UseTweakColor and TweakColor from GIT (used when loading from template, param_4 != 0)
+            // Per 0x004e5d80: These fields are loaded when TemplateResRef is used
+            bool useTweakColor = GetIntField(gitStruct, "UseTweakColor", 0) != 0;
+            int tweakColor = GetIntField(gitStruct, "TweakColor", 0);
+            if (useTweakColor)
+            {
+                entity.SetData("UseTweakColor", true);
+                entity.SetData("TweakColor", tweakColor);
+            }
+
             // Load template
             string templateResRef = GetResRefField(gitStruct, "TemplateResRef");
             if (!string.IsNullOrEmpty(templateResRef))
             {
                 LoadPlaceableTemplate(entity, module, templateResRef);
             }
+            else
+            {
+                // If no template, load placeable data directly from GIT struct (param_4 == 0 path)
+                // This matches FUN_00588010 (LoadPlaceableFromGFF) behavior
+                LoadPlaceableFromGitStruct(entity, gitStruct);
+            }
 
             return entity;
+        }
+
+        /// <summary>
+        /// Loads placeable instance data directly from GIT struct (when no template is used).
+        /// </summary>
+        /// <remarks>
+        /// Based on swkotor2.exe: FUN_00588010 @ 0x00588010 (LoadPlaceableFromGFF) loads placeable data from GIT struct
+        /// - Called when param_4 == 0 in LoadPlaceablesFromGIT (0x004e5d80)
+        /// - Loads all placeable properties from GIT struct instead of from UTP template
+        /// - This is used for placeables that don't have a TemplateResRef or when loading from saved state
+        /// </remarks>
+        private void LoadPlaceableFromGitStruct(Entity entity, GFFStruct gitStruct)
+        {
+            // Load all placeable properties from GIT struct
+            // Based on FUN_00588010 which loads placeable data from GFF struct
+            entity.SetData("Appearance", GetIntField(gitStruct, "Appearance", 0));
+            entity.SetData("Useable", GetIntField(gitStruct, "Useable", 0) != 0);
+            entity.SetData("Locked", GetIntField(gitStruct, "Locked", 0) != 0);
+            entity.SetData("Lockable", GetIntField(gitStruct, "Lockable", 0) != 0);
+            entity.SetData("KeyRequired", GetIntField(gitStruct, "KeyRequired", 0) != 0);
+            entity.SetData("KeyName", GetStringField(gitStruct, "KeyName"));
+            entity.SetData("OpenLockDC", GetIntField(gitStruct, "OpenLockDC", 0));
+            entity.SetData("Hardness", GetIntField(gitStruct, "Hardness", 0));
+            entity.SetData("HP", GetIntField(gitStruct, "HP", 1));
+            entity.SetData("CurrentHP", GetIntField(gitStruct, "CurrentHP", 1));
+            entity.SetData("HasInventory", GetIntField(gitStruct, "HasInventory", 0) != 0);
+            entity.SetData("Static", GetIntField(gitStruct, "Static", 0) != 0);
+            entity.SetData("BodyBag", GetIntField(gitStruct, "BodyBag", 0) != 0);
+
+            // Load script hooks from GIT struct (if param_3 != 0 in original, we always load them)
+            SetEntityScripts(entity, gitStruct, new Dictionary<string, ScriptEvent>
+            {
+                { "OnClosed", ScriptEvent.OnClose },
+                { "OnDamaged", ScriptEvent.OnDamaged },
+                { "OnDeath", ScriptEvent.OnDeath },
+                { "OnDisarm", ScriptEvent.OnDisarm },
+                { "OnHeartbeat", ScriptEvent.OnHeartbeat },
+                { "OnInvDisturbed", ScriptEvent.OnDisturbed },
+                { "OnLock", ScriptEvent.OnLock },
+                { "OnMeleeAttacked", ScriptEvent.OnPhysicalAttacked },
+                { "OnOpen", ScriptEvent.OnOpen },
+                { "OnSpellCastAt", ScriptEvent.OnSpellCastAt },
+                { "OnTrapTriggered", ScriptEvent.OnTrapTriggered },
+                { "OnUnlock", ScriptEvent.OnUnlock },
+                { "OnUsed", ScriptEvent.OnUsed },
+                { "OnUserDefined", ScriptEvent.OnUserDefined }
+            });
         }
 
         /// <summary>

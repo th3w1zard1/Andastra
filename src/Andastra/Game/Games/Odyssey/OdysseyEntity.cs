@@ -374,7 +374,27 @@ namespace Andastra.Game.Games.Odyssey
         /// - [SavePlaceableToGFF] @ (K1: TODO: Find this address, TSL: 0x00589520) - Saves placeable data to GFF save data
         ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
         ///   - Writes Tag, LocName, AutoRemoveKey, Faction, Plot, NotBlastable, Min1HP, OpenLockDC, OpenLockDiff, OpenLockDiffMod, KeyName, TrapDisarmable, TrapDetectable, DisarmDC, TrapDetectDC, OwnerDemolitionsSkill, TrapFlag, TrapOneShot, TrapType, Useable, Static, GroundPile, Appearance, UseTweakColor, TweakColor, HP, CurrentHP, Hardness, Fort, Will, Ref, Lockable, Locked, HasInventory, KeyRequired, CloseLockDC, Open, PartyInteract, Portrait, Conversation, BodyBag, DieWhenEmpty, LightState, Description, OnClosed, OnDamaged, OnDeath, OnDisarm, OnHeartbeat, OnInvDisturbed, OnLock, OnMeleeAttacked, OnOpen, OnSpellCastAt, OnUnlock, OnUsed, OnUserDefined, OnDialog, OnEndDialogue, OnTrapTriggered, OnFailToOpen, Animation, ItemList (ObjectId) for each item in placeable inventory, Bearing, position (X, Y, Z), IsBodyBag, IsBodyBagVisible, IsCorpse, PCLevel
-        /// - Original implementation: [0x004e08e0] @ (K1: TODO: Find this address, TSL: 0x004e08e0) - load placeable instances from GIT
+        /// - Original implementation: [LoadPlaceablesFromGIT] @ (K1: TODO: Find this address via string reference "Placeable List" in swkotor.exe, TSL: 0x004e5d80) - load placeable instances from GIT "Placeable List"
+        ///   - Located via string reference: "Placeable List" @ (K1: TODO: Find this address, TSL: 0x007bd260)
+        ///   - Function signature: `undefined4 __thiscall LoadPlaceablesFromGIT(void *this, void *param_1, uint *param_2, void *param_3, int param_4)`
+        ///   - param_1: GFF structure pointer
+        ///   - param_2: GFF field pointer
+        ///   - param_3: Script hooks context (non-null to load script hooks from GIT)
+        ///   - param_4: Template loading flag (0 = load from GIT struct directly, non-zero = load from TemplateResRef)
+        ///   - Iterates through "Placeable List" GFF list field
+        ///   - For each placeable struct (type 9 = GFFStruct):
+        ///     - Reads "ObjectId" (default 0x7F000000) via FUN_00412d40
+        ///     - Allocates placeable object (0x4b0 bytes = 1200 bytes) via operator_new
+        ///     - Initializes placeable via FUN_0058a480 with ObjectId
+        ///     - If param_4 == 0: Loads placeable data directly from GIT struct via FUN_00588010 (LoadPlaceableFromGFF)
+        ///     - If param_4 != 0: Loads template from "TemplateResRef" via FUN_0058a730, then loads "UseTweakColor" and "TweakColor" from GIT
+        ///     - Reads "Bearing" (float, rotation around Z axis) and converts to quaternion via FUN_004da020 and FUN_00587d60
+        ///     - Sets orientation quaternion via FUN_00587d60
+        ///     - If param_3 != 0: Loads script hooks from GIT struct via FUN_0050b650
+        ///     - Reads position: "X", "Y", "Z" (float, not XPosition/YPosition/ZPosition) via FUN_00412e20
+        ///     - Adds placeable to area via AddToArea
+        ///     - Registers with ObjectId list if needed via FUN_00482570
+        ///   - Returns 1 on success
         /// - Placeables have appearance, useability, locks, inventory, HP, traps
         /// - Based on UTP file format (GFF with "UTP " signature)
         /// - Script events: OnUsed ([CSWSSCRIPTEVENT_EVENTTYPE_ON_USED] @ (K1: TODO: Find this address, TSL: 0x007bc7d8), [0x19]), OnOpen, OnClose, OnLock, OnUnlock, OnDamaged, OnDeath
