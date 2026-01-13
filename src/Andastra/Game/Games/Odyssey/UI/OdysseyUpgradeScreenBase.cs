@@ -463,7 +463,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         ///   2. Clears flag/bit associated with upgrade slot
         ///   3. Checks if upgrade is in upgrade list (K1: offset 0x2f68, K2: offset 0x3d48)
         ///   4. If found in list: removes from array (K1: 0x006857a0, K2: 0x00431ec0)
-        ///   5. Returns upgrade item to inventory (K1: 0x0055d330, K2: 0x00567ce0)
+        ///   5. Returns upgrade item to inventory (K1: 0x0055d330 CItemRepository::AddItem, K2: 0x00567ce0 CItemRepository::AddItem)
         ///   6. Removes from upgrade list (K1: 0x00671c00, K2: 0x00482570)
         ///   7. Sets slot to 0 (clears upgrade from slot array)
         ///   8. Updates item stats (removes upgrade bonuses)
@@ -547,11 +547,12 @@ namespace Andastra.Game.Games.Odyssey.UI
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 171 - returns to inventory using 0x0055d330
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using 0x00567ce0
-            // swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - creates item entity and adds to inventory
-            // swkotor.exe: 0x0055d330 @ 0x0055d330 - creates item entity and adds to inventory
+            // Based on swkotor.exe: 0x006c6500 @ 0x006c6500 line 171 - returns to inventory using CItemRepository::AddItem (0x0055d330)
+            // Based on swkotor2.exe: 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using CItemRepository::AddItem (0x00567ce0)
+            // swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem (adds item to inventory container)
+            // swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
             // Original implementation: Creates upgrade item entity from UTI template and adds to character's inventory
+            // This function combines item creation (from UTI template) and inventory addition into one operation
             CreateItemFromTemplateAndAddToInventory(upgradeResRef, _character);
 
             return true;
@@ -1037,14 +1038,19 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// <param name="character">Character to add the item to (null uses player).</param>
         /// <returns>True if item was created and added successfully, false otherwise.</returns>
         /// <remarks>
-        /// Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - creates item entity and adds to inventory
-        /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - creates item entity and adds to inventory
-        /// Original implementation:
-        /// - Loads UTI template from installation
-        /// - Creates item entity using World.CreateEntity
-        /// - Configures item component with UTI template data
-        /// - Adds item to character's inventory
-        /// - If inventory is full, item entity is destroyed
+        /// Item Creation and Inventory Addition (Odyssey Engine - K1 and K2):
+        /// - Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem (adds item to inventory container)
+        /// - Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
+        /// - Note: The original engine functions (AddItem) only add already-created items to inventory
+        /// - This function implements a higher-level operation that creates the item entity AND adds it to inventory
+        /// - Original implementation flow for creating items from UTI templates:
+        ///   1. Load UTI template from installation (GFF file)
+        ///   2. Create item entity using World.CreateEntity/ObjectType.Item
+        ///   3. Configure item component with UTI template data (BaseItem, StackSize, Charges, Cost, Properties, Upgrades)
+        ///   4. Add item to character's inventory using CItemRepository::AddItem (0x0055d330/0x00567ce0)
+        ///   5. If inventory is full, item entity is destroyed and function returns false
+        /// - swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem - handles stacking, inventory capacity, special items (gold, pazaak cards)
+        /// - swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem - equivalent function with same behavior
         /// </remarks>
         protected bool CreateItemFromTemplateAndAddToInventory(string templateResRef, IEntity character)
         {
@@ -1122,8 +1128,10 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Create item entity
-            // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - creates item entity using World.CreateEntity
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - creates item entity using World.CreateEntity
+            // Based on swkotor.exe/swkotor2.exe: Item entity creation via World.CreateEntity
+            // Located via string references: "CreateEntity" @ various addresses, ObjectType.Item enum
+            // Original implementation: Creates item entity with ObjectType.Item, position Vector3.Zero, facing 0.0f
+            // Item entities are created before being added to inventory containers
             IEntity itemEntity = _world.CreateEntity(Runtime.Core.Enums.ObjectType.Item, System.Numerics.Vector3.Zero, 0f);
             if (itemEntity == null)
             {
@@ -1144,9 +1152,9 @@ namespace Andastra.Game.Games.Odyssey.UI
             }
 
             // Add item component with UTI template data
-            // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - configures item component
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - configures item component
+            // Based on swkotor.exe/swkotor2.exe: Item component configuration from UTI template
             // Located via string references: "ItemComponent" @ 0x007c41e4 (swkotor2.exe)
+            // Original implementation: Item component is configured with BaseItem, StackSize, Charges, Cost, Identified, Properties, Upgrades from UTI template
             var itemComponent = new OdysseyItemComponent
             {
                 BaseItem = utiTemplate.BaseItem,
@@ -1192,14 +1200,15 @@ namespace Andastra.Game.Games.Odyssey.UI
             itemEntity.AddComponent(itemComponent);
 
             // Add item to character's inventory
-            // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - adds item to inventory, destroys if full
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - adds item to inventory, destroys if full
-            // Original implementation: If inventory is full, item entity is destroyed and function returns false
+            // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - CItemRepository::AddItem - adds item to inventory container
+            // Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem - adds item to inventory container
+            // Original implementation: CItemRepository::AddItem handles stacking, inventory capacity, special items (gold, pazaak cards)
+            // If inventory is full, item entity must be destroyed and function returns false
             if (!characterInventory.AddItem(itemEntity))
             {
                 // Inventory full - destroy item entity
-                // Based on swkotor.exe: 0x0055d330 @ 0x0055d330 - destroys item if inventory full
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - destroys item if inventory full
+                // Based on swkotor.exe/swkotor2.exe: Item entity destruction when inventory is full
+                // Original implementation: Failed AddItem calls require item entity to be destroyed to prevent memory leaks
                 _world.DestroyEntity(itemEntity.ObjectId);
                 return false;
             }

@@ -292,7 +292,7 @@ namespace Andastra.Game.Games.Odyssey.UI
         /// - Original implementation:
         ///   1. Gets upgrade item from slot array (offset 0x3d54)
         ///   2. Removes upgrade from slot array (sets to 0)
-        ///   3. Returns upgrade item to inventory (0x00567ce0 @ 0x00567ce0)
+        ///   3. Returns upgrade item to inventory (0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem)
         ///   4. Updates item stats (removes upgrade bonuses via 0x0055e160)
         ///   5. Recalculates item stats
         /// - Removal: 0x00431ec0 @ 0x00431ec0 - removes from array
@@ -364,18 +364,15 @@ namespace Andastra.Game.Games.Odyssey.UI
             RecalculateItemStats(item);
 
             // Return upgrade item to inventory
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using 0x00567ce0
-            // Original implementation: 0x00567ce0 @ 0x00567ce0 creates item entity from UTI template and adds to inventory
-            // Located via string references: "CreateItem" @ 0x007d07c8, "ItemComponent" @ 0x007c41e4
-            // Function signature: 0x00567ce0(void *param_1, void *param_2, int param_3)
-            // - param_1: Character entity pointer
-            // - param_2: UTI template data pointer
-            // - param_3: Stack size (default 1)
-            // Implementation:
+            // Based on swkotor2.exe: 0x0072e260 @ 0x0072e260 line 221 - returns to inventory using CItemRepository::AddItem (0x00567ce0)
+            // Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
+            // Located via string references: "ItemComponent" @ 0x007c41e4 (swkotor2.exe)
+            // Note: CItemRepository::AddItem only adds already-created items to inventory
+            // This function (CreateItemFromTemplateAndAddToInventory) implements a higher-level operation that:
             //   1. Loads UTI template from ResRef
             //   2. Creates item entity using World.CreateEntity(ObjectType.Item, Vector3.Zero, 0f)
-            //   3. Configures item component with UTI template data (BaseItem, StackSize, Charges, Cost, Properties)
-            //   4. Adds item to character's inventory using InventoryComponent.AddItem
+            //   3. Configures item component with UTI template data (BaseItem, StackSize, Charges, Cost, Properties, Upgrades)
+            //   4. Adds item to character's inventory using CItemRepository::AddItem (0x00567ce0)
             //   5. If inventory is full, destroys item entity and returns false
             // This matches the implementation in OdysseyUpgradeScreenBase.CreateItemFromTemplateAndAddToInventory
             if (!string.IsNullOrEmpty(upgradeResRef))
@@ -385,7 +382,7 @@ namespace Andastra.Game.Games.Odyssey.UI
                 IEntity character = base.GetCharacterEntity();
 
                 // Create upgrade item entity and add to inventory
-                // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): 0x00567ce0 @ 0x00567ce0 - creates item and adds to inventory
+                // Based on swkotor2.exe: 0x00567ce0 @ 0x00567ce0 - CItemRepository::AddItem (adds item to inventory container)
                 // Uses base class method which implements the full creation and inventory addition logic
                 if (character != null)
                 {
