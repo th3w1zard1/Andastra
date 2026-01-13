@@ -927,7 +927,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// Draws a texture at the specified position.
         /// Based on xoreos: guiquad.cpp render() @ lines 322-331
         /// </summary>
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Color color)
+        public void Draw(ITexture2D texture, Runtime.Graphics.Vector2 position, Color color)
         {
             if (!_inBatch || texture == null) return;
 
@@ -939,7 +939,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 Height = texture.Height
             };
 
-            Draw(texture, destinationRect, null, color, 0.0f, System.Numerics.Vector2.Zero, SpriteEffects.None, 0.0f);
+            Draw(texture, destinationRect, null, color, 0.0f, new Runtime.Graphics.Vector2(0, 0), SpriteEffects.None, 0.0f);
         }
 
         /// <summary>
@@ -949,13 +949,13 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         {
             if (!_inBatch || texture == null) return;
 
-            Draw(texture, destinationRectangle, null, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+            Draw(texture, destinationRectangle, null, color, 0.0f, new Runtime.Graphics.Vector2(0, 0), SpriteEffects.None, 0.0f);
         }
 
         /// <summary>
         /// Draws a texture with source rectangle.
         /// </summary>
-        public void Draw(ITexture2D texture, Andastra.Runtime.Graphics.Vector2 position, Rectangle? sourceRectangle, Color color)
+        public void Draw(ITexture2D texture, Runtime.Graphics.Vector2 position, Rectangle? sourceRectangle, Color color)
         {
             if (!_inBatch || texture == null) return;
 
@@ -967,14 +967,14 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
                 Height = sourceRectangle.HasValue ? sourceRectangle.Value.Height : texture.Height
             };
 
-            Draw(texture, destinationRect, sourceRectangle, color, 0.0f, Vector2.Zero, SpriteEffects.None, 0.0f);
+            Draw(texture, destinationRect, sourceRectangle, color, 0.0f, new Runtime.Graphics.Vector2(0, 0), SpriteEffects.None, 0.0f);
         }
 
         /// <summary>
         /// Draws a texture with full parameters (rotation, origin, effects, layer depth).
         /// Based on xoreos: guiquad.cpp render() @ lines 274-344
         /// </summary>
-        public void Draw(ITexture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Andastra.Runtime.Graphics.Vector2 origin, SpriteEffects effects, float layerDepth)
+        public void Draw(ITexture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, float rotation, Runtime.Graphics.Vector2 origin, SpriteEffects effects, float layerDepth)
         {
             if (!_inBatch || texture == null) return;
 
@@ -1073,7 +1073,7 @@ namespace Andastra.Game.Graphics.Common.Backends.Odyssey
         /// Based on xoreos: texturefont.cpp render() @ lines 52-94
         /// [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Font rendering system @ 0x007b6380 (dialogfont16x16)
         /// </summary>
-        public void DrawString(IFont font, string text, Andastra.Runtime.Graphics.Vector2 position, Color color)
+        public void DrawString(IFont font, string text, Runtime.Graphics.Vector2 position, Color color)
         {
             if (!_inBatch || font == null || string.IsNullOrEmpty(text)) return;
 

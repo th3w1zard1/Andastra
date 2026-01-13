@@ -6,6 +6,8 @@ using Andastra.Game.Graphics.MonoGame.Enums;
 using Andastra.Game.Graphics.MonoGame.Interfaces;
 using Microsoft.Xna.Framework;
 using XnaVector3 = Microsoft.Xna.Framework.Vector3;
+using XnaVector4 = Microsoft.Xna.Framework.Vector4;
+using XnaRectangle = Microsoft.Xna.Framework.Rectangle;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Andastra.Game.Graphics.MonoGame.Lighting
@@ -59,7 +61,7 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
         {
             if (light == null || light.Type != LightType.Area || !light.Enabled)
             {
-                return XnaVector3.Zero;
+                return System.Numerics.Vector3.Zero;
             }
 
             // Calculate area light surface corners and orientation
@@ -490,7 +492,7 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
                     // R32_Float: Single-precision float stored in red channel
                     // Read a single pixel as float
                     float[] depthData = new float[1];
-                    texture.GetData(0, new Rectangle(x, y, 1, 1), depthData, 0, 1);
+                    texture.GetData(0, new XnaRectangle(x, y, 1, 1), depthData, 0, 1);
                     return depthData[0];
                 }
                 else if (format == SurfaceFormat.HalfSingle)
@@ -498,7 +500,7 @@ namespace Andastra.Game.Graphics.MonoGame.Lighting
                     // R16_Float: Half-precision float
                     // MonoGame may convert this automatically, but we read as float
                     float[] depthData = new float[1];
-                    texture.GetData(0, new Rectangle(x, y, 1, 1), depthData, 0, 1);
+                    texture.GetData(0, new XnaRectangle(x, y, 1, 1), depthData, 0, 1);
                     return depthData[0];
                 }
                 else if (format == SurfaceFormat.Color)
