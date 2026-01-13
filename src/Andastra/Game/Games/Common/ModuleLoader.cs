@@ -21,6 +21,7 @@ using Andastra.Runtime.Core.Module;
 using Andastra.Runtime.Core.Navigation;
 using Andastra.Game.Games.Common;
 using Andastra.Game.Games.Odyssey.Components;
+using Andastra.Game.Games.Aurora;
 using Andastra.Game.Games.Aurora.Components;
 using Andastra.Game.Games.Common.Components;
 using JetBrains.Annotations;
@@ -273,37 +274,124 @@ namespace Andastra.Game.Games.Engines.Common
             await Task.CompletedTask;
         }
 
-        // TODO: STUB - Odyssey module existence check
+        // Odyssey module existence check
         private bool HasModuleOdyssey(string moduleName)
         {
-            return false;
+            try
+            {
+                var module = new BioWare.NET.Common.Module(moduleName, _installation);
+                return module.Info() != null;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        // TODO: STUB - Aurora module existence check
+        // Aurora module existence check
         private bool HasModuleAurora(string moduleName)
         {
-            return false;
+            try
+            {
+                // Check for Module.ifo in module directory
+                string modulePath = _auroraResourceProvider.ModulePath();
+                string moduleIfoPath = Path.Combine(modulePath, moduleName, "Module.ifo");
+                if (File.Exists(moduleIfoPath))
+                {
+                    return true;
+                }
+
+                // Check HAK files for Module.ifo (Aurora-specific)
+                string hakPath = _auroraResourceProvider.HakPath();
+                if (Directory.Exists(hakPath))
+                {
+                    string[] hakFiles = Directory.GetFiles(hakPath, "*.hak", SearchOption.TopDirectoryOnly);
+                    foreach (string hakFilePath in hakFiles)
+                    {
+                        try
+                        {
+                            var erf = ERFAuto.ReadErf(hakFilePath);
+                            byte[] moduleIfoData = erf.Get(moduleName, ResourceType.IFO);
+                            if (moduleIfoData != null && moduleIfoData.Length > 0)
+                            {
+                                return true;
+                            }
+                        }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                }
+
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        // TODO: STUB - Eclipse module existence check
+        // Eclipse module existence check
         private bool HasModuleEclipse(string moduleName)
         {
-            return false;
+            try
+            {
+                // Eclipse games use packages directory
+                string packagesPath = _eclipseResourceProvider.PackagePath();
+                if (Directory.Exists(packagesPath))
+                {
+                    string modulePackagePath = Path.Combine(packagesPath, moduleName);
+                    if (Directory.Exists(modulePackagePath))
+                    {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        // TODO: STUB - Odyssey module unload cleanup
+        // Odyssey module unload cleanup
         private void OnUnloadModuleOdyssey()
         {
+            if (_currentRuntimeModule != null)
+            {
+                _currentRuntimeModule = null;
+            }
         }
 
-        // TODO: STUB - Aurora module unload cleanup
+        // Aurora module unload cleanup
         private void OnUnloadModuleAurora()
         {
+            if (_currentAuroraArea != null)
+            {
+                _currentAuroraArea = null;
+            }
+            _currentModuleInfo = null;
+            if (_loadedHakFiles != null)
+            {
+                _loadedHakFiles.Clear();
+            }
         }
 
-        // TODO: STUB - Eclipse module unload cleanup
+        // Eclipse module unload cleanup
         private void OnUnloadModuleEclipse()
         {
+            _currentModuleId = null;
+            if (!string.IsNullOrEmpty(_loadedModuleRimPath))
+            {
+                _eclipseResourceProvider.RemoveRimFile(_loadedModuleRimPath);
+                _loadedModuleRimPath = null;
+            }
+            foreach (string extensionRimPath in _loadedModuleExtensionRimPaths)
+            {
+                _eclipseResourceProvider.RemoveRimFile(extensionRimPath);
+            }
+            _loadedModuleExtensionRimPaths.Clear();
         }
     }
 }
