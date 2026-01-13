@@ -914,10 +914,13 @@ namespace Andastra.Game.Games.Odyssey.Save
         private void LoadModuleStateERF(ERF erf, SaveGameData saveData)
         {
             // Load area states from module RIM
-            // [TODO: Function name] @ (K1: TODO: Find this address, TSL: TODO: Find this address address): Module state loading from [module]_s.rim ERF archive
-            // Located via string references: Module state loading in save system
-            // Original implementation: Iterates through ARE resources in module RIM, loads each area state
-            // Each ARE resource contains GFF data with entity positions, door/placeable states, etc.
+            // LoadSavegame @ (K1: 0x00708990, TSL: 0x008529e0): Module state loading from [module]_s.rim ERF archive
+            // Located via string references: "GAMEINPROGRESS:" @ 0x00993e84, "_s.rim" @ 0x009a5ab8, "savenfo" @ 0x009940b8
+            // Original implementation: Main save game loading function (0x008529e0 in TSL) loads ERF archive, extracts [module]_s.rim resource
+            // Calls FUN_007221c0 to iterate through ERF resources with "GAMEINPROGRESS:" prefix, processes each nested ERF/RIM resource
+            // Module state ERF ([module]_s.rim) contains ARE resources (area state GFF files) for each visited area in the module
+            // Each ARE resource contains GFF data with entity positions, door/placeable states, destroyed entities, spawned entities, etc.
+            // Function flow: LoadSavegame (0x008529e0) -> Loads main ERF -> Extracts [module]_s.rim -> Iterates ARE resources -> Loads area state GFF
 
             if (erf == null || saveData == null)
             {
